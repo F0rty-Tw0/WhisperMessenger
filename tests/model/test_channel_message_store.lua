@@ -262,4 +262,12 @@ return function()
     ChannelMessageStore.Record(state, nil, "hello", "Trade", 100)
     assert(state.entryCount == 0, "a line without a sender must not be recorded")
   end
+
+  -- test_restore_keeps_zone_channel_id
+  do
+    local state = ChannelMessageStore.New()
+    ChannelMessageStore.Record(state, "Seller", "WTS ore", "Handel", 100, 2)
+    local restored = ChannelMessageStore.Restore(state, nil, 100)
+    assert(ChannelMessageStore.GetLatest(restored, "seller").zoneChannelID == 2, "a saved line keeps its zone channel ID")
+  end
 end

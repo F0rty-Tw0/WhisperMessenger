@@ -1,0 +1,102 @@
+local CompactWindow = require("tests.helpers.compact_window")
+local Rig = require("tests.helpers.grow_rig")
+local Theme = require("WhisperMessenger.UI.Theme")
+
+local DONE = Theme.LAYOUT.COMPACT_RIDE_SECONDS + 0.1
+
+local function classic(extra)
+  local options = { compactLayout = false }
+  for key, value in pairs(extra or {}) do
+    options[key] = value
+  end
+  local case = CompactWindow.Build(options)
+  Rig.rect(case.window.frame, 100, 100, 460, 740)
+  return case
+end
+
+return function()
+  -- test_classic_window_grows_from_the_source_through_its_real_scripts
+  do
+    local icon = Rig.icon(80, 720, 122, 762)
+    local case = classic({
+      getGrowSource = function()
+        return icon
+      end,
+    })
+    local frame = case.window.frame
+    frame:Show()
+    assert(frame:GetAlpha() == 0, "the panel does the growing")
+    local ghost = Rig.ghostOf(frame)
+    assert(ghost:IsShown() and Rig.running(ghost), "panel growing on its own clock")
+    Rig.tick(ghost, DONE)
+    assert(frame:GetAlpha() == 1, "back at the player's opacity, got " .. tostring(frame:GetAlpha()))
+  end
+
+  -- test_the_windows_own_show_script_stays_in_place
+  do
+    local case = classic()
+    local frame = case.window.frame
+    assert(type(frame.scripts.OnShow) == "function", "the window's own OnShow is still set")
+    assert(#frame._hookScripts.OnShow >= 1, "the grow hooks on top of it")
+  end
+
+  -- test_missing_grow_options_open_the_classic_window_at_once
+  do
+    local case = classic({ getGrowSource = false }) -- the harness otherwise defaults the source to its stub button
+    local frame = case.window.frame
+    frame:Show()
+    assert(frame:GetAlpha() == 1, "no source: never held unseen")
+    assert(not Rig.running(Rig.ghostOf(frame)), "no OnUpdate")
+  end
+
+  -- test_switch_off_opens_the_classic_window_at_once
+  do
+    local icon = Rig.icon(80, 720, 122, 762)
+    local case = classic({
+      getGrowSource = function()
+        return icon
+      end,
+      isGrowAnimationOn = function()
+        return false
+      end,
+    })
+    case.window.frame:Show()
+    assert(case.window.frame:GetAlpha() == 1 and not Rig.running(Rig.ghostOf(case.window.frame)), "instant")
+  end
+
+  -- test_a_hide_before_the_first_open_plays_no_shrink
+  do
+    local case = classic()
+    case.window.frame:Hide()
+    local ghost = Rig.ghostOf(case.window.frame)
+    assert(not ghost:IsShown() and not Rig.running(ghost), "never opened: nothing to shrink")
+  end
+
+  -- test_opening_with_the_switch_off_forgets_the_old_source
+  do
+    local iconA, iconB, on = Rig.icon(80, 720, 122, 762), Rig.icon(900, 300, 942, 342), true
+    local source = iconA
+    local case = classic({
+      getGrowSource = function()
+        return source
+      end,
+      isGrowAnimationOn = function()
+        return on
+      end,
+    })
+    local frame = case.window.frame
+    frame:Show()
+    local ghost = Rig.ghostOf(frame)
+    Rig.tick(ghost, DONE)
+    frame:Hide()
+    Rig.tick(ghost, DONE) -- closed; icon A was remembered
+    on = false
+    frame:Show() -- instant: must drop icon A
+    on = true
+    source = iconB -- icon A is still shown, but not what resolves now
+    frame:Hide()
+    Rig.tick(ghost, 0.2)
+    local x = Rig.center(ghost)
+    assert(math.abs(x - 921) < 10, "shrinks into what resolves now, got " .. x)
+  end
+end

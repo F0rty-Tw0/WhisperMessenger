@@ -145,11 +145,13 @@ function WindowSurface.Build(parts)
   if parts.panelHost and parts.windowVisibility then
     addPanelFields(window, parts.panelHost, parts.windowVisibility)
   end
-  if parts.phone then
-    window.isPhoneLayout = true
-    window.phoneViewport = layout.phoneViewport
-    window.showPhoneList = parts.phone.showList
-    window.dockPhoneIcon = parts.phone.dock
+  if parts.dock then
+    window.dockCompactIcon = parts.dock
+  end
+  if parts.compactMode then
+    window.isCompactLayout = true
+    window.compactViewport = layout.compactViewport
+    window.showCompactList = parts.compactMode.showList
   end
   return setmetatable(window, { __index = parts.settingsResult })
 end

@@ -24,15 +24,22 @@ SquareLook.GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_gly
 SquareLook.ACCENT_GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_back.png"
 
 -- Halo around the two bubbles' outline (clear inside them), for the glyph
--- drawn without the background and the square look's pulse. Its canvas is
--- BUBBLE_GLOW_SCALE times the glyph's, glyph centred, so the halo has room
--- past the glyph's edges.
+-- drawn without the background. Its canvas is BUBBLE_GLOW_SCALE times the
+-- glyph's, glyph centred, so the halo has room past the glyph's edges.
 SquareLook.BUBBLE_GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_glow.png"
 SquareLook.BUBBLE_GLOW_SCALE = 1.5
+
+-- The unread pulse's art on the square look: a glow fading inward from the
+-- square's edge, stretched over the whole button.
+SquareLook.SQUARE_GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\inner-glow-square.png"
 
 -- Thin outline around both bubbles (filling the gap between them), so the
 -- gray back bubble still reads over bright ground without the background.
 SquareLook.OUTLINE_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_outline.png"
+
+-- White rounded square: the mask that rounds the square's corners.
+SquareLook.MASK_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\mask_rounded_square.png"
+local MASK_WRAP = "CLAMPTOBLACKADDITIVE"
 
 local OUTLINE_COLOR = { 0, 0, 0, 0.85 }
 
@@ -83,6 +90,43 @@ local function createHoverGlow(frame)
   return glow
 end
 
+local function addMask(texture, mask)
+  if texture and texture.AddMaskTexture then
+    texture:AddMaskTexture(mask)
+  end
+end
+
+-- Rounds the square's corners: one mask over the frame, added once to the
+-- square's textures (kept on the circle, where they are hidden or a circle
+-- that fits inside it), and the gold frame swapped for its rounded art.
+-- Returns the mask, or nil on a client without mask textures (sharp square).
+local function roundCorners(frame, textures, squareFrame)
+  if not frame.CreateMaskTexture then
+    return nil
+  end
+  local mask = frame:CreateMaskTexture()
+  mask:SetTexture(SquareLook.MASK_TEXTURE, MASK_WRAP, MASK_WRAP)
+  mask:SetAllPoints(frame)
+  for _, texture in ipairs(textures) do
+    addMask(texture, mask)
+  end
+  if squareFrame then
+    addMask(squareFrame, mask)
+    squareFrame:SetTexture(IconBorder.SQUARE_FRAME_ROUNDED_TEXTURE)
+  end
+  return mask
+end
+
+local function squareTextures(parts, backdrop, hoverEffect, pushEffect)
+  local textures = { parts.background, backdrop, hoverEffect.fill, pushEffect.fill }
+  for _, effect in ipairs({ hoverEffect, pushEffect }) do
+    for _, edge in pairs(effect.edges) do
+      table.insert(textures, edge)
+    end
+  end
+  return textures
+end
+
 -- parts: { background, glyph, roundBackground, getShowBackground, getWidgetShape,
 -- getShowBorder, getBorderThemed, border, pulse } where roundBackground is the
 -- texture path of the round look's circle; getShowBackground() false leaves
@@ -94,7 +138,9 @@ end
 -- The square is drawn like EllesmereUI's action buttons (EllesmereButtonLook):
 -- the slot background and its hover and pushed effects; the square frame from
 -- IconBorder (theme accent, or gold) replaces EllesmereUI's border.
--- The unread pulse (a PulseGlow) glows around the bubbles on the square look.
+-- The unread pulse (a PulseGlow) glows along the square's edge on the square look.
+-- When the client has mask textures, the square's corners are rounded (the
+-- returned mask is nil without them).
 function SquareLook.Create(frame, parts)
   local function isSquare()
     return parts.getWidgetShape ~= nil and parts.getWidgetShape() == "square"
@@ -108,6 +154,14 @@ function SquareLook.Create(frame, parts)
   outline:SetTexture(SquareLook.OUTLINE_TEXTURE)
   applyVertexColor(outline, OUTLINE_COLOR)
   local glow = createHoverGlow(frame)
+  -- Solid square in the icon's background color under the slot fill (which
+  -- is see-through), like the circle's disc: the ground never shows behind
+  -- the bubbles.
+  local backdrop = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
+  backdrop:SetAllPoints(frame)
+  backdrop:SetTexture(SquareLook.SQUARE_TEXTURE)
+  setShown(backdrop, false)
+  local mask = roundCorners(frame, squareTextures(parts, backdrop, hoverEffect, pushEffect), parts.border.squareFrame)
   local hovered = false
   local pushed = false
   local lastDesaturated = false
@@ -148,19 +202,16 @@ function SquareLook.Create(frame, parts)
   end
 
   -- The pulse's round art is made for the round button; on the square look
-  -- it glows around the bubbles' outline instead, square shown or not.
+  -- it glows along the square's edge instead, square shown or not. Both
+  -- arts fill the glow frame, which covers the whole button.
   local function shapePulse()
     local pulse = parts.pulse and parts.pulse.glowTexture
     if not pulse then
       return
     end
-    if isSquare() then
-      fitBubbleGlow(pulse, parts.glyph)
-    else
-      pulse:SetTexture(PulseGlow.TEXTURE)
-      pulse:ClearAllPoints()
-      pulse:SetAllPoints(parts.pulse.glowFrame)
-    end
+    pulse:SetTexture(isSquare() and SquareLook.SQUARE_GLOW_TEXTURE or PulseGlow.TEXTURE)
+    pulse:ClearAllPoints()
+    pulse:SetAllPoints(parts.pulse.glowFrame)
   end
 
   local function apply(desaturated)
@@ -174,6 +225,8 @@ function SquareLook.Create(frame, parts)
     pushEffect.paint(look.push, look.borderPx)
     parts.background:SetTexture(square and SquareLook.SQUARE_TEXTURE or parts.roundBackground)
     setShown(parts.background, backgroundShown())
+    setShown(backdrop, squareBackgroundShown())
+    applyVertexColor(backdrop, Theme.COLORS.toggle_icon_bg)
     setShown(outline, bubblesOnly())
     lastDesaturated = desaturated == true
     paintHover()
@@ -201,8 +254,12 @@ function SquareLook.Create(frame, parts)
   return {
     hoverEffect = hoverEffect.fill,
     pushEffect = pushEffect.fill,
+    hoverEdges = hoverEffect.edges,
+    pushEdges = pushEffect.edges,
+    mask = mask,
     accentGlyph = accent.texture,
     outline = outline,
+    backdrop = backdrop,
     hoverGlow = glow,
     apply = apply,
     setHover = setHover,

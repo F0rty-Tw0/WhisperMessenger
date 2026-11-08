@@ -10,6 +10,8 @@ local PublicContactInfo = ns.PublicApiContactInfo or require("WhisperMessenger.C
 local BlockList = ns.PublicApiBlockList or require("WhisperMessenger.Core.PublicApi.BlockList")
 local UnreadCount = ns.PublicApiUnreadCount or require("WhisperMessenger.Core.PublicApi.UnreadCount")
 local Look = ns.PublicApiLook or require("WhisperMessenger.Core.PublicApi.Look")
+local Animation = ns.PublicApiAnimation or require("WhisperMessenger.Core.PublicApi.Animation")
+local CompactWindow = ns.PublicApiCompactWindow or require("WhisperMessenger.Core.PublicApi.CompactWindow")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local PublicApi = {}
@@ -38,12 +40,26 @@ local function hideOpenPanel(runtime)
   end
 end
 
+-- options.afterSend: the caller just sent this player a whisper, so the
+-- window opens only as far as "Auto-open on outgoing whisper" allows. An
+-- open window still moves to the chat.
+local function blockedAfterSend(runtime, options)
+  if options == nil or options.afterSend ~= true or runtime.isWindowVisible() then
+    return false
+  end
+  local settings = runtime.accountState and runtime.accountState.settings
+  return not (settings and settings.autoOpenOutgoing == true)
+end
+
 local function buildOpenConversation(runtime)
-  return Guards.Wrap(function(playerName, draftText)
+  return Guards.Wrap(function(playerName, draftText, options)
     if not Guards.IsNonEmptyString(playerName) or not isValidDraft(draftText) then
       return false
     end
-    if Guards.IsRefused(runtime) then
+    if options ~= nil and type(options) ~= "table" then
+      return false
+    end
+    if Guards.IsRefused(runtime) or blockedAfterSend(runtime, options) then
       return false
     end
 
@@ -95,6 +111,8 @@ function PublicApi.Build(runtime)
   BlockList.Install(api, runtime)
   UnreadCount.Install(api, runtime)
   Look.Install(api, runtime)
+  Animation.Install(api, runtime)
+  CompactWindow.Install(api, runtime)
   if not integrationAllowed(runtime) then
     -- Same keys, so callers never nil-error; every call is refused.
     for key, value in pairs(api) do

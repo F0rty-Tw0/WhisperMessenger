@@ -4,22 +4,10 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
-local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.ConversationPane")
-local Composer = ns.Composer or require("WhisperMessenger.UI.Composer")
-local AlphaController = ns.MessengerWindowAlphaController or require("WhisperMessenger.UI.MessengerWindow.AlphaController")
-local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
-local WindowScale = ns.MessengerWindowWindowScale or require("WhisperMessenger.UI.MessengerWindow.WindowScale")
-local ChromeBuilder = ns.MessengerWindowChromeBuilder or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
-local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
-local SettingsRuntime = ns.MessengerWindowSettingsRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsRuntime")
-local SelectionSync = ns.MessengerWindowSelectionSync or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionSync")
-local SelectionController = ns.MessengerWindowSelectionController
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionController")
-local PanelWiring = ns.MessengerWindowPanelWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PanelWiring")
-local WindowAlpha = ns.MessengerWindowWindowAlpha or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowAlpha")
-local WindowGeometry = ns.MessengerWindowWindowGeometry or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGeometry")
 local LifecycleWiring = ns.MessengerWindowLifecycleWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
+local WindowShell = ns.MessengerWindowWindowShell or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowShell")
+local PanelWiring = ns.MessengerWindowPanelWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PanelWiring")
+local ComposerRuntime = ns.MessengerWindowComposerRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ComposerRuntime")
 local PatchNotesRuntime = ns.MessengerWindowPatchNotesRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PatchNotesRuntime")
 local LanguageRefresh = ns.MessengerWindowLanguageRefresh or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LanguageRefresh")
 local ContactsRail = ns.MessengerWindowContactsRail or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsRail")
@@ -27,38 +15,23 @@ local ContactsWiring = ns.MessengerWindowContactsWiring or require("WhisperMesse
 local ConversationWiring = ns.MessengerWindowConversationWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ConversationWiring")
 local WindowSizing = ns.MessengerWindowWindowSizing or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSizing")
 local WindowSurface = ns.MessengerWindowWindowSurface or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSurface")
-local PhoneWiring = ns.MessengerWindowPhoneWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneWiring")
-local PhoneDock = ns.MessengerWindowPhoneDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDock")
-local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
-local sizeValue = UIHelpers.sizeValue
-local captureFramePosition = UIHelpers.captureFramePosition
+local CompactWiring = ns.MessengerWindowCompactWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.CompactWiring")
+local DockWiring = ns.MessengerWindowDockWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.DockWiring")
 
 local MessengerWindow = {}
 
 function MessengerWindow.Create(factory, options)
   options = options or {}
 
-  local parent = options.parent or _G.UIParent
-  local settingsConfig = options.settingsConfig or {}
-  local initialScale = WindowScale.Normalize(settingsConfig.windowScale)
-  settingsConfig.windowScale = initialScale
-  local state = options.state or {}
-  local phoneLayout = options.phoneLayout == true
-  local phone = PhoneWiring.Hooks()
-  local initialState = WindowSizing.InitialState(parent, state, initialScale, phoneLayout)
-  local windowGeometry = WindowGeometry.Create({
-    parent = parent,
-    theme = Theme,
-    clampState = WindowBounds.ClampState,
-    clampContactsWidth = LayoutBuilder.ClampContactsWidth,
-    captureFramePosition = phoneLayout and PhoneDock.CapturePosition or captureFramePosition,
-    sizeValue = sizeValue,
-    initialState = initialState,
-    initialContactsWidth = state.contactsWidth,
-    initialScale = initialScale,
-  })
-  local currentContactsWidth = windowGeometry.getContactsWidth()
+  local shell = WindowShell.Build(factory, options)
+  local settingsConfig, compactLayout = shell.settingsConfig, shell.compactLayout
+  local initialState, windowGeometry = shell.initialState, shell.windowGeometry
+  local currentContactsWidth = shell.contactsWidth
+  local chrome, frame, layout = shell.chrome, shell.frame, shell.layout
+  local settingsRuntime = shell.settingsRuntime
+  local settingsPanels = settingsRuntime.settingsPanels
+  local compactMode = CompactWiring.Hooks()
+  local dock = DockWiring.Hooks()
 
   local function isShown(target)
     if target and target.IsShown then
@@ -66,40 +39,6 @@ function MessengerWindow.Create(factory, options)
     end
     return target ~= nil and target.shown == true
   end
-
-  -- Build chrome (outer frame, buttons, etc.). useNativeChrome flips the
-  -- frame to the HUD style's Blizzard template (see ChromeBuilder), set at
-  -- boot, so a change applies after /reload.
-  local nativeChrome = Hud.IsOn()
-  StyledTextInputPopup.nativeChrome = nativeChrome
-  local chrome = ChromeBuilder.Build(factory, parent, initialState, {
-    title = options.title,
-    useNativeChrome = nativeChrome,
-    windowScale = initialScale,
-    onMarkAllRead = options.onMarkAllRead,
-    phoneLayout = phoneLayout,
-  })
-  local frame = chrome.frame
-
-  -- Build layout (panes)
-  local layout = LayoutBuilder.Build(factory, frame, initialState, { contactsWidth = currentContactsWidth, phoneLayout = phoneLayout })
-  currentContactsWidth = layout.expandedContactsWidth or layout.contactsWidth or currentContactsWidth
-  windowGeometry.setContactsWidth(currentContactsWidth)
-  local optionsScrollContent = layout.optionsScrollView and layout.optionsScrollView.content or layout.optionsContentPane
-  -- Construct each settings panel when its tab is selected.
-  local settingsResult, onPanelCreated = WindowSurface.CollectSettings()
-  local settingsRuntime = SettingsRuntime.Create(factory, {
-    parent = optionsScrollContent,
-    settingsConfig = settingsConfig,
-    storeConfig = options.storeConfig or {},
-    filters = options.filters,
-    onSettingChanged = options.onSettingChanged,
-    theme = Theme,
-    chrome = chrome,
-    layout = layout,
-    onPanelCreated = onPanelCreated,
-  })
-  local settingsPanels = settingsRuntime.settingsPanels
 
   -- Contacts runtime. The selection controller and conversation pane are
   -- built after it, so its callbacks read these locals at call time.
@@ -131,15 +70,13 @@ function MessengerWindow.Create(factory, options)
   local conversationWiring = ConversationWiring.Create(factory, {
     threadPane = layout.threadPane,
     windowOptions = options,
-    nativeChrome = nativeChrome,
+    nativeChrome = shell.nativeChrome,
     tabMode = contactsRuntime.getTabMode(),
   })
   conversation = conversationWiring.conversation
   local messageActions = conversationWiring.messageActions
 
-  -- Composer (created before wiring alpha so we have composer.input)
   local contactsRail -- forward declaration (settings, divider drags and resets drive it)
-  local composerSelectedContact = {}
 
   local panelWiring = PanelWiring.Create({
     factory = factory,
@@ -151,10 +88,10 @@ function MessengerWindow.Create(factory, options)
     onPanelShown = options.onPanelShown,
     onConversationUncovered = options.onConversationUncovered,
     onCoverChanged = function(covered)
-      phone.onCoverChanged(covered)
+      compactMode.onCoverChanged(covered)
     end,
     onPanesShown = function()
-      phone.onPanesShown()
+      compactMode.onPanesShown()
     end,
     getContactsRail = function()
       return contactsRail
@@ -166,75 +103,30 @@ function MessengerWindow.Create(factory, options)
   local setOptionsVisible = windowVisibility.setOptionsVisible
   local closeWindow = windowVisibility.closeWindow
 
-  local composerOptions = {
-    nativeChrome = layout.nativeChrome == true,
-    onDraftChanged = options.onDraftChanged,
-    onReplyChanged = messageActions.onReplyChanged,
-    getQuickReplies = function()
-      return settingsConfig.quickReplies
-    end,
-    getDeselectOnSend = function()
-      return settingsConfig.deselectComposerOnSend == true
-    end,
-  }
-  local composer = Composer.Create(factory, layout.composerPane, composerSelectedContact, options.onSend or function(...)
-    local _ = ...
-  end, closeWindow, function()
-    return settingsConfig.doubleEscapeToClose == true
-  end, options.onTyping, composerOptions)
-  settingsRuntime.setThemeTargets(conversation, composer)
-  messageActions.bind(conversation, composer)
-
-  -- Alpha helpers (capture composer.input now that composer exists)
-  local composerInput = composer.input
-  local windowAlpha = WindowAlpha.Create({
-    alphaController = AlphaController,
+  local composerRuntime = ComposerRuntime.Create(factory, {
     frame = frame,
-    composerInput = composerInput,
+    layout = layout,
     settingsConfig = settingsConfig,
-  })
-  local refreshWindowAlpha = windowAlpha.refreshWindowAlpha
-
-  -- Selection management
-  selectionController = SelectionController.Create({
+    windowOptions = options,
+    conversation = conversation,
+    messageActions = messageActions,
+    settingsRuntime = settingsRuntime,
+    closeWindow = closeWindow,
     refreshContacts = refreshContacts,
-    refreshConversationPane = function(selectedContact, selectedConversation, selectedStatus, noticeText)
-      ConversationPane.Refresh(conversation, selectedContact, selectedConversation, selectedStatus, noticeText)
-    end,
-    syncComposerSelectedContact = function(selectedContact)
-      SelectionSync.SyncComposerSelectedContact(composerSelectedContact, selectedContact, composer, options.getDraft)
-    end,
-    setComposerEnabled = function(selectedContact, noticeText)
-      SelectionSync.SetComposerEnabled(composer, selectedContact, noticeText)
-    end,
-    onSelectConversation = options.onSelectConversation,
     onSelectionChanged = function(key)
-      phone.onSelection(key)
+      compactMode.onSelection(key)
     end,
-    getSelectedContact = options.getSelectedContact,
-    getConversation = options.getConversation,
-    getStatus = options.getStatus,
   })
+  local composer = composerRuntime.composer
+  local composerInput = composer.input
+  local windowAlpha = composerRuntime.windowAlpha
+  local refreshWindowAlpha = windowAlpha.refreshWindowAlpha
+  selectionController = composerRuntime.selectionController
+  local refreshSelection = composerRuntime.refreshSelection
+  local isComposerFocusHeld = composerRuntime.isComposerFocusHeld
 
-  local function refreshSelection(nextState, resetPaging)
-    selectionController.refresh(nextState, resetPaging)
-  end
-
-  local handleContactSelected = selectionController.handleContactSelected
-
-  -- OnShow focuses the composer when the setting is on; an open the player
-  -- did not ask for (combat end) shows the window with that focus held back.
-  local holdComposerFocus = false
-  local function showWithoutComposerFocus()
-    holdComposerFocus = true
-    local ok, err = pcall(frame.Show, frame)
-    holdComposerFocus = false
-    if not ok then
-      error(err, 0)
-    end
-  end
-
-  local onPositionChanged, onResetWindowPosition = PhoneWiring.WrapPosition(phone, options)
+  local wrappedPosition, onResetWindowPosition = CompactWiring.WrapPosition(compactMode, options)
+  local onPositionChanged = DockWiring.WrapPosition(dock, wrappedPosition)
 
   local relayoutWindow, scriptResult = LifecycleWiring.Setup({
     layout = layout,
@@ -258,6 +150,9 @@ function MessengerWindow.Create(factory, options)
     settingsPanels = settingsPanels,
     closeWindow = closeWindow,
     onResetWindowPosition = onResetWindowPosition,
+    onWindowMoved = function()
+      dock.onWindowMoved()
+    end,
     onResetIconPosition = options.onResetIconPosition,
     onClearAllChats = options.onClearAllChats,
     onStartConversation = options.onStartConversation,
@@ -267,18 +162,18 @@ function MessengerWindow.Create(factory, options)
     refreshWindowAlpha = refreshWindowAlpha,
     onPositionChanged = onPositionChanged,
     onBack = function()
-      return phone.onBack()
+      return compactMode.onBack()
     end,
     theme = Theme,
     composerInput = composerInput,
     getAutoFocusChatInput = function()
-      return not holdComposerFocus and settingsConfig.autoFocusComposer == true and not phone.isListView()
+      return not isComposerFocusHeld() and settingsConfig.autoFocusComposer == true and not compactMode.isListView()
     end,
     onStrataChanged = function(strata)
-      phone.onStrataChanged(strata)
+      dock.onStrataChanged(strata)
     end,
     isWindowPart = function(candidate)
-      return phone.isWindowPart(candidate)
+      return dock.isWindowPart(candidate)
     end,
     isContactsCollapsed = windowGeometry.isCollapsed,
     setContactsCollapsed = function(collapsed, pointerWidth)
@@ -318,25 +213,31 @@ function MessengerWindow.Create(factory, options)
     relayoutWindow = relayoutWindow,
   })
 
-  if phoneLayout then
-    PhoneWiring.Attach(phone, {
-      factory = factory,
+  -- Compact first: its hide finishes a slide before the dock's hide closes.
+  if compactLayout then
+    CompactWiring.Attach(compactMode, {
       frame = frame,
       layout = layout,
       chrome = chrome,
       tabToggle = contactsRuntime.tabToggle,
       composerInput = composerInput,
-      windowAlpha = windowAlpha,
       windowVisibility = windowVisibility,
       windowOptions = options,
       settingsConfig = settingsConfig,
       getSelectedKey = getSelectedConversationKey,
       refreshSelection = refreshSelection,
       applyWindowSize = scriptResult.applyWindowSize,
-      onPositionChanged = onPositionChanged,
-      buildState = windowGeometry.buildState,
     })
   end
+  DockWiring.Attach(frame, {
+    hooks = dock,
+    factory = factory,
+    chrome = chrome,
+    windowOptions = options,
+    windowAlpha = windowAlpha,
+    onPositionChanged = onPositionChanged,
+    buildState = windowGeometry.buildState,
+  })
 
   local refreshLanguage = LanguageRefresh.Create({
     layout = layout,
@@ -356,23 +257,24 @@ function MessengerWindow.Create(factory, options)
     chrome = chrome,
     layout = layout,
     settingsRuntime = settingsRuntime,
-    settingsResult = settingsResult,
+    settingsResult = shell.settingsResult,
     contactsRuntime = contactsRuntime,
     conversation = conversation,
     composer = composer,
     refreshSelection = refreshSelection,
-    handleContactSelected = handleContactSelected,
+    handleContactSelected = selectionController.handleContactSelected,
     setScale = function(nextScale)
       local scale = windowSizing.setScale(nextScale)
-      phone.dock()
+      dock.dock()
       return scale
     end,
     relayoutCurrentSize = windowSizing.relayoutCurrentSize,
     refreshLanguage = refreshLanguage,
     panelHost = panelHost,
     windowVisibility = windowVisibility,
-    showWithoutComposerFocus = showWithoutComposerFocus,
-    phone = phoneLayout and phone or nil,
+    showWithoutComposerFocus = composerRuntime.showWithoutComposerFocus,
+    compactMode = compactLayout and compactMode or nil,
+    dock = dock.dock,
   })
 end
 

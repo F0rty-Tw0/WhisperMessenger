@@ -6,8 +6,11 @@ table.unpack = table.unpack or unpack
 
 local Texture = require("tests.helpers.fake_ui.texture")
 local Templates = require("tests.helpers.fake_ui.templates")
+local Mask = require("tests.helpers.fake_ui.mask")
 
-local function makeCreateFrame()
+-- options (optional): { masks = true } adds the mask stubs (mask.lua).
+local function makeCreateFrame(options)
+  local masks = options ~= nil and options.masks == true
   local function createFrame(frameType, name, parent, template)
     local frame = {
       frameType = frameType,
@@ -420,6 +423,9 @@ local function makeCreateFrame()
     function frame:CreateTexture(childName, layer, inheritedTemplate, sublevel)
       local texture = createFrame("Texture", childName or (self.name or "frame") .. "Texture", self, inheritedTemplate)
       Texture.Augment(texture)
+      if masks then
+        Mask.AugmentTexture(texture)
+      end
       texture.drawLayer = layer
       texture.drawSublevel = sublevel
       return texture
@@ -638,6 +644,10 @@ local function makeCreateFrame()
 
     -- Apply template wiring (e.g. BasicFrameTemplateWithInset).
     Templates.Apply(frame, template, createFrame)
+
+    if masks and frameType ~= "Texture" and frameType ~= "FontString" and frameType ~= "MaskTexture" then
+      Mask.AugmentFrame(frame, createFrame)
+    end
 
     return frame
   end

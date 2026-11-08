@@ -25,22 +25,22 @@ local Layout = {
   CONTACTS_RAIL_WIDTH = 50,
   CONTACTS_RAIL_COLLAPSE_BELOW = 110,
   CONTACTS_RAIL_EXPAND_ABOVE = 125,
-  -- Phone layout: a portrait window the floating button rides on. The ride
+  -- Compact layout: a portrait window the floating button rides on. The ride
   -- level keeps the button and its badge above the raised window (level 2000).
-  PHONE_WINDOW_WIDTH = 360,
-  PHONE_WINDOW_HEIGHT = 640,
-  PHONE_WINDOW_MIN_WIDTH = 352,
-  PHONE_WINDOW_MIN_HEIGHT = 420,
-  PHONE_RIDE_FRAME_LEVEL = 3000,
-  PHONE_RIDE_SECONDS = 0.24,
+  COMPACT_WINDOW_WIDTH = 360,
+  COMPACT_WINDOW_HEIGHT = 640,
+  COMPACT_WINDOW_MIN_WIDTH = 352,
+  COMPACT_WINDOW_MIN_HEIGHT = 420,
+  COMPACT_RIDE_FRAME_LEVEL = 3000,
+  COMPACT_RIDE_SECONDS = 0.24,
   -- The icon's spot on a window with no portrait of its own: centred this far
   -- from the top-left corner, like the Retail portrait. The title buttons
   -- start CLEARANCE further right to make room.
-  PHONE_ICON_SLOT_SIZE = 46,
-  PHONE_ICON_SLOT_X = 16,
-  PHONE_ICON_SLOT_Y = -6,
-  PHONE_ICON_SLOT_CLEARANCE = 40,
-  PHONE_SLIDE_SECONDS = 0.2,
+  COMPACT_ICON_SLOT_SIZE = 46,
+  COMPACT_ICON_SLOT_X = 16,
+  COMPACT_ICON_SLOT_Y = -6,
+  COMPACT_ICON_SLOT_CLEARANCE = 40,
+  COMPACT_SLIDE_SECONDS = 0.2,
   TOP_BAR_HEIGHT = 24,
   CONTENT_PADDING = 16,
   COMPOSER_HEIGHT = 44,

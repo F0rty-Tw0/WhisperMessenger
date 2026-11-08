@@ -2,9 +2,10 @@ local IconRide = require("WhisperMessenger.UI.ToggleIcon.IconRide")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
 
-local SECONDS = Theme.LAYOUT.PHONE_RIDE_SECONDS
+local SECONDS = Theme.LAYOUT.COMPACT_RIDE_SECONDS
 
-local function build()
+local function build(options)
+  options = options or {}
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
   local frame = factory.CreateFrame("Button", "Fab", parent)
@@ -13,7 +14,7 @@ local function build()
   frame:SetFrameLevel(5)
   parent:Show()
   frame:Show()
-  local case = { frame = frame, parent = parent, levels = {} }
+  local case = { frame = frame, parent = parent, levels = {}, ridingChanges = {} }
   rawset(frame, "GetCenter", function()
     local _, _, _, x, y = frame:GetPoint()
     return x, y
@@ -26,8 +27,13 @@ local function build()
   case.ride = IconRide.Create(frame, {
     theme = Theme,
     parent = parent,
+    isLocked = options.isLocked,
+    onPositionChanged = options.onPositionChanged,
     onLevel = function(level)
       case.levels[#case.levels + 1] = level
+    end,
+    onRidingChanged = function(riding)
+      case.ridingChanges[#case.ridingChanges + 1] = tostring(riding)
     end,
   })
   return case
@@ -60,6 +66,17 @@ return function()
     assert(case.frame:GetScale() == 2, "full portrait size")
     local _, relativeTo, relativePoint = case.frame:GetPoint()
     assert(relativeTo == case.region and relativePoint == "CENTER", "pinned, so it follows the window")
+  end
+
+  -- test_riding_is_reported_on_leaving_and_on_landing_home
+  do
+    local case = build()
+    case.ride.rideTo(case.target)
+    tick(case, SECONDS + 0.01)
+    case.ride.rideHome()
+    assert(table.concat(case.ridingChanges, ",") == "true", "still away while gliding home")
+    tick(case, SECONDS + 0.01)
+    assert(table.concat(case.ridingChanges, ",") == "true,false", "home once landed: " .. table.concat(case.ridingChanges, ","))
   end
 
   -- test_ride_home_restores_the_exact_anchor_scale_and_level
@@ -266,5 +283,106 @@ return function()
     case.ride.rideHome()
     tick(case, SECONDS + 0.01)
     assert(select(4, case.frame:GetPoint()) == -20, "home unchanged")
+  end
+
+  -- test_instant_ride_arrives_at_once_and_reports_one
+  do
+    local case = build()
+    local steps = {}
+    case.ride.rideTo(case.target, function(t, p)
+      steps[#steps + 1] = { t, p }
+    end, true)
+    assert(case.frame.scripts.OnUpdate == nil, "no glide: nothing ticks")
+    assert(case.ride.isRiding(), "riding from the start")
+    assert(case.frame:GetScale() == 2 and case.frame:GetFrameLevel() == 3000, "landed: size and level")
+    local _, relativeTo, relativePoint = case.frame:GetPoint()
+    assert(relativeTo == case.region and relativePoint == "CENTER", "pinned to the target")
+    assert(#steps == 1 and steps[1][1] == 1 and steps[1][2] == 1, "one step, ending on one")
+  end
+
+  -- test_instant_ride_home_restores_at_once_and_reports_one
+  do
+    local case = build()
+    case.ride.rideTo(case.target)
+    tick(case, SECONDS + 0.01)
+    local steps = {}
+    case.ride.rideHome(function(t, p)
+      steps[#steps + 1] = { t, p }
+    end, true)
+    assert(case.frame.scripts.OnUpdate == nil, "no glide home")
+    local point, relativeTo, relativePoint, x, y = case.frame:GetPoint()
+    assert(point == "BOTTOMRIGHT" and relativeTo == case.parent and relativePoint == "BOTTOMRIGHT", "saved anchor back")
+    assert(x == -20 and y == 40 and case.frame:GetScale() == 1 and case.frame:GetFrameLevel() == 5, "saved offsets, size, level back")
+    assert(not case.ride.isRiding(), "no longer riding")
+    assert(table.concat(case.ridingChanges, ",") == "true,false", "landing home reported")
+    assert(#steps == 1 and steps[1][1] == 1 and steps[1][2] == 1, "one step, ending on one")
+  end
+
+  -- test_instant_ride_home_cancels_a_glide_in_progress
+  do
+    local case = build()
+    case.ride.rideTo(case.target)
+    tick(case, SECONDS / 2)
+    assert(case.frame.scripts.OnUpdate ~= nil, "gliding out")
+    case.ride.rideHome(nil, true)
+    assert(case.frame.scripts.OnUpdate == nil, "the old glide is gone")
+    assert(select(4, case.frame:GetPoint()) == -20 and case.frame:GetScale() == 1, "home at once")
+  end
+
+  -- test_adopt_ride_position_saves_the_current_spot_through_the_icon
+  do
+    local saved = {}
+    local case = build({
+      onPositionChanged = function(state)
+        saved[#saved + 1] = state
+      end,
+    })
+    case.ride.rideTo(case.target, nil, true)
+    rawset(case.frame, "GetCenter", function()
+      return 150, 350
+    end)
+    case.ride.adoptRidePosition()
+    assert(#saved == 1 and saved[1].anchorPoint == "CENTER" and saved[1].relativePoint == "BOTTOMLEFT", "one save from the screen corner")
+  end
+
+  -- test_a_locked_icon_keeps_its_home_whatever_the_window_does
+  do
+    local saved = 0
+    local case = build({
+      isLocked = function()
+        return true
+      end,
+      onPositionChanged = function()
+        saved = saved + 1
+      end,
+    })
+    case.ride.rideTo(case.target, nil, true)
+    rawset(case.frame, "GetCenter", function()
+      return 150, 350
+    end)
+    case.ride.adoptRidePosition()
+    assert(saved == 0, "nothing saved while locked")
+  end
+
+  -- test_adopt_ride_position_makes_the_glide_home_end_at_the_adopted_centre
+  do
+    local case = build({
+      onPositionChanged = function() end,
+    })
+    local centre = case.frame.GetCenter
+    case.ride.rideTo(case.target, nil, true)
+    rawset(case.frame, "GetCenter", function()
+      return 150, 350
+    end)
+    case.ride.adoptRidePosition()
+    rawset(case.frame, "GetCenter", centre)
+    case.ride.rideHome()
+    tick(case, SECONDS * 0.9)
+    assert(case.frame.scripts.OnUpdate ~= nil, "still on its way")
+    local _, _, _, x, y = case.frame:GetPoint()
+    assert(
+      math.abs(x - 300) < 40 and math.abs(y - 700) < 40,
+      "gliding to the adopted centre (150,350 at scale 2), not the first home, got " .. x .. "," .. y
+    )
   end
 end

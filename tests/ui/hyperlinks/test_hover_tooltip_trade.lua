@@ -2,7 +2,7 @@
 -- treats SetHyperlink("trade:...") as a request to open the profession
 -- window rather than showing a tooltip, so hovering a profession link in a
 -- chat bubble popped open the trade-skill UI. Clicking still works via
--- SetItemRef (Hyperlinks.HandleClick), which is untouched by this fix.
+-- SetItemRef (Hyperlinks.BindClick), which is untouched by this fix.
 local Hyperlinks = require("WhisperMessenger.UI.Hyperlinks")
 
 local function newTooltipStub()

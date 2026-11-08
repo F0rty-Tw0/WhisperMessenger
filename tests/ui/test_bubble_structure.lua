@@ -33,6 +33,19 @@ return function()
     assert(type(frame.scripts.OnHyperlinkClick) == "function", "expected OnHyperlinkClick script")
   end
 
+  -- test_create_structure_starts_link_clicks_in_blizzard_chat_handler
+  -- (another player's profession link only opens when the click starts in
+  --  Blizzard code, not in an addon function)
+  do
+    local savedMixin = rawget(_G, "ChatFrameMixin")
+    local mixin = { OnHyperlinkClick = function() end }
+    rawset(_G, "ChatFrameMixin", mixin)
+    local frame = factory.CreateFrame("Frame", nil, nil)
+    BubbleStructure.createStructure(frame)
+    rawset(_G, "ChatFrameMixin", savedMixin)
+    assert(frame.scripts.OnHyperlinkClick == mixin.OnHyperlinkClick, "bubble link clicks should start in Blizzard's chat click handler")
+  end
+
   -- test_measure_text_height_returns_number
   do
     local frame = factory.CreateFrame("Frame", nil, nil)
@@ -60,7 +73,7 @@ return function()
 
     local frame = factory.CreateFrame("Frame", nil, nil)
     BubbleStructure.createStructure(frame)
-    frame.scripts.OnHyperlinkClick(frame, "url:https://example.com/path?q=1", "https://example.com/path?q=1", "LeftButton")
+    frame.scripts.OnHyperlinkClick(frame, "addon:WhisperMessenger:url:https://example.com/path?q=1", "https://example.com/path?q=1", "LeftButton")
 
     assert(launchAttempted == false, "expected URL click to avoid protected LaunchURL APIs")
     assert(copied.text == "https://example.com/path?q=1", "expected URL click to copy URL as safe fallback")

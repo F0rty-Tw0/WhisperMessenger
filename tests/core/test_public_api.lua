@@ -28,6 +28,7 @@ local function makeRuntime(opts)
     isMythicLockdown = function()
       return opts.mythic == true
     end,
+    accountState = { settings = opts.settings or {} },
     window = {
       composer = {
         input = {
@@ -136,6 +137,32 @@ return function()
     assert(PublicApi.Build(r).OpenConversation("Jaina") == false)
   end
 
+  local AFTER_SEND = { afterSend = true }
+
+  local function test_after_send_opens_nothing_with_outgoing_auto_open_off()
+    local r, calls = makeRuntime({ settings = { autoOpenOutgoing = false } })
+    assert(PublicApi.Build(r).OpenConversation("Jaina", nil, AFTER_SEND) == false)
+    expect(calls, "")
+  end
+
+  local function test_after_send_opens_with_outgoing_auto_open_on()
+    local r, calls = makeRuntime({ settings = { autoOpenOutgoing = true } })
+    assert(PublicApi.Build(r).OpenConversation("Jaina", nil, AFTER_SEND) == true)
+    expect(calls, "ensure,visible:true,start:Jaina")
+  end
+
+  local function test_after_send_selects_the_chat_in_an_open_window()
+    local r, calls = makeRuntime({ settings = { autoOpenOutgoing = false }, visible = true })
+    assert(PublicApi.Build(r).OpenConversation("Jaina", nil, AFTER_SEND) == true)
+    expect(calls, "ensure,visible:true,start:Jaina")
+  end
+
+  local function test_options_that_are_not_a_table_open_nothing()
+    local r, calls = makeRuntime({ settings = { autoOpenOutgoing = true } })
+    assert(PublicApi.Build(r).OpenConversation("Jaina", nil, true) == false)
+    expect(calls, "")
+  end
+
   test_publish_sets_the_global_with_version_1()
   test_open_runs_ensure_show_start_in_order()
   test_draft_replaces_composer_text_cursor_at_end()
@@ -147,4 +174,8 @@ return function()
   test_failed_start_closes_what_it_opened()
   test_failed_start_keeps_an_open_window_open()
   test_internal_error_returns_false()
+  test_after_send_opens_nothing_with_outgoing_auto_open_off()
+  test_after_send_opens_with_outgoing_auto_open_on()
+  test_after_send_selects_the_chat_in_an_open_window()
+  test_options_that_are_not_a_table_open_nothing()
 end

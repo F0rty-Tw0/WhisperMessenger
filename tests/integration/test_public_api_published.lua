@@ -61,6 +61,8 @@ return function()
     "Block",
     "Unblock",
     "GetUnreadCount",
+    "IsAnimationEnabled",
+    "IsCompactWindow",
   }) do
     if not (api and type(api[name]) == "function") then
       missing[#missing + 1] = name

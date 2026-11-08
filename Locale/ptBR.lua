@@ -132,8 +132,14 @@ local Portuguese = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Configure o comportamento da janela.",
-  ["Phone-style window"] = "Janela estilo celular",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "O botão flutuante abre uma lista de conversas do tamanho de um celular presa a ele. Clique em uma conversa para deslizar até ela.",
+  ["Compact window"] = "Janela compacta",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "O botão flutuante abre uma lista de conversas estreita presa a ele. Clique em uma conversa para deslizar até ela.",
+  ["Window animation"] = "Animação da janela",
+  ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "A janela cresce a partir do ícone ao abrir e encolhe de volta para ele ao fechar, e as páginas deslizam. Desative para que tudo apareça na hora.",
+  ["Dock button on the window"] = "Acoplar o botão à janela",
+  ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "Enquanto a janela está aberta, o botão flutuante fica no canto superior esquerdo da janela. Desative para deixar o botão onde está.",
+  ["Open at saved spot"] = "Abrir na posição salva",
+  ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "A janela abre onde você a moveu por último. Desative para abrir a janela no botão flutuante e mover o botão junto quando você mover a janela. Apenas com «Acoplar o botão à janela» ativado.",
   ["Reload the interface now to switch the window style?"] = "Recarregar a interface agora para mudar o estilo da janela?",
   ["Dim when moving"] = "Esmaecer em movimento",
   ["Reduces window opacity while your character is moving."] = "Reduz a opacidade da janela enquanto seu personagem se move.",
@@ -141,6 +147,7 @@ local Portuguese = {
   ["Places the cursor in the text box when you open the messenger."] = "Posiciona o cursor no campo de texto ao abrir.",
   ["Deselect chat input after sending"] = "Desmarcar o chat após enviar",
   ["After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."] = "Depois de enviar uma mensagem, o cursor sai do campo de texto para que suas teclas voltem a controlar o jogo. Com a janela aberta, Enter traz o cursor de volta.",
+  ["In combat, only while the mouse is over the window."] = "Em combate, apenas enquanto o mouse estiver sobre a janela.",
   ["Hide whispers from default chat"] = "Ocultar sussurros do chat padrão",
   ["Prevents whisper messages from appearing in the default WoW chat frame."] = "Impede que sussurros apareçam na janela de chat padrão do WoW.",
   ["|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."] = "|cffff8080Nota:|r Em conteúdo Mítico+, a resposta /r da Blizzard e a tecla R podem falhar com isto ativado (taint de secret-value em chatEditLastTell no WoW 12.0). Use |cffffff00/wr|r (ou atribua /wr a R via macro) para responder com segurança.",
@@ -149,7 +156,7 @@ local Portuguese = {
   ["Auto-open on incoming whisper"] = "Abrir ao receber sussurro",
   ["Opens the messenger when you receive a whisper. Disabled during combat."] = "Abre o mensageiro ao receber um sussurro. Desativado em combate.",
   ["Auto-open on outgoing whisper"] = "Abrir ao enviar sussurro",
-  ["Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat."] = "Abre o mensageiro ao enviar sussurro, pressionar Responder ou sussurrar pela lista de amigos. Desativado em combate.",
+  ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "Abre o mensageiro ao enviar sussurro ou sussurrar pela lista de amigos. Desativado em combate.",
   ["Hide on entering combat"] = "Ocultar ao entrar em combate",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "Oculta o mensageiro quando o combate começa e o reabre quando o combate termina. Se você o fechar durante o combate, ele continua fechado.",
   ["Double ESC to close"] = "ESC duplo para fechar",
@@ -501,9 +508,7 @@ local Portuguese = {
   ["Export conversation"] = "Exportar conversa",
   ["Conversation with %s"] = "Conversa com %s",
   ["Export: %s"] = "Exportar: %s",
-  ["Show more"] = "Mostrar mais",
-  ["Show all"] = "Mostrar tudo",
-  ["%d of %d lines · Ctrl+C copies"] = "%d de %d linhas · Ctrl+C copia",
+  ["%d lines · Ctrl+C copies"] = "%d linhas · Ctrl+C copia",
   ["Block sender…"] = "Bloquear remetente…",
   ["Blocked"] = "Bloqueado",
   ["Unblock"] = "Desbloquear",
@@ -523,6 +528,7 @@ local Portuguese = {
   ["Add friend"] = "Adicionar amigo",
   -- Contact menu: Guild invite
   ["Guild invite"] = "Convidar para a guilda",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "Pressione Ctrl+C para copiar o comando e cole-o no chat.",
 }
 
 ns.Locale_ptBR = Portuguese

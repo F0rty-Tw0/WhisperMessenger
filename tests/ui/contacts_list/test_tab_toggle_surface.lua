@@ -82,6 +82,19 @@ return function()
   t.setShown(false)
   assert(select(4, window:GetClampRectInsets()) == 0, "hidden tabs restore the window's clamp")
 
+  -- test_squeezed_active_tab_underline_shrinks_with_it
+  -- 260 wide overflows, so the shown run is drawn tight: Whispers is 8 px
+  -- narrower and its underline too: 7 * 8 chars = 56 label + 12 padding = 68
+  -- natural, 68 - 8 = 60 (badge hidden).
+  t.setModes({ "whispers", "groups", "channels", "requests" })
+  t.frame:SetWidth(600)
+  t.frame.scripts.OnSizeChanged(t.frame, 600, TabToggle.HEIGHT)
+  assert(TabParts.whispers(t).underline:GetWidth() == 68, "natural underline, got " .. tostring(TabParts.whispers(t).underline:GetWidth()))
+  t.frame:SetWidth(260)
+  t.frame.scripts.OnSizeChanged(t.frame, 260, TabToggle.HEIGHT)
+  assert(TabParts.whispers(t).btn:GetWidth() == 78, "Whispers drawn tight, got " .. tostring(TabParts.whispers(t).btn:GetWidth()))
+  assert(TabParts.whispers(t).underline:GetWidth() == 60, "underline 8 px narrower, got " .. tostring(TabParts.whispers(t).underline:GetWidth()))
+
   -- test_azeroth_has_the_same_hover_and_surface_tint
   Theme.SetPreset("wow_native")
   local a = createToggle(factory)

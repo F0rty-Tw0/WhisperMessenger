@@ -9,7 +9,10 @@ local URL_CHARACTER_CLASS = "[%w%-%._~:/%?#%[%]@!$&'()*+,;=%%]"
 local HTTP_URL_PATTERN = "[Hh][Tt][Tt][Pp][Ss]?://" .. URL_CHARACTER_CLASS .. "+"
 local WWW_URL_PATTERN = "www%." .. URL_CHARACTER_CLASS .. "+"
 local URL_TRAILING_PUNCTUATION = ".,!?:;)]}"
-local EXTERNAL_LINK_TYPE = "url"
+-- An "addon:" link: Blizzard's SetItemRef treats it as handled and opens
+-- nothing, so a URL click can go through Blizzard's own chat click handler
+-- without falling through to the item tooltip.
+local EXTERNAL_LINK_PREFIX = "addon:WhisperMessenger:url:"
 
 local function hasWordCharacterBefore(text, index)
   if index <= 1 then
@@ -105,7 +108,7 @@ local function buildExternalUrlHyperlink(rawUrl, needsScheme)
     return rawUrl
   end
 
-  local hyperlink = "|cff71d5ff|H" .. EXTERNAL_LINK_TYPE .. ":" .. normalizedUrl .. "|h" .. displayUrl .. "|h|r"
+  local hyperlink = "|cff71d5ff|H" .. EXTERNAL_LINK_PREFIX .. normalizedUrl .. "|h" .. displayUrl .. "|h|r"
   return hyperlink .. (trailing or "")
 end
 
@@ -156,16 +159,16 @@ function UrlFormatter.ExtractExternalUrlFromLink(link)
     return nil
   end
 
-  local linkType, payload = string.match(link, "^(.-):(.*)$")
-  if type(linkType) ~= "string" or type(payload) ~= "string" then
+  local prefixLength = #EXTERNAL_LINK_PREFIX
+  if string.lower(string.sub(link, 1, prefixLength)) ~= string.lower(EXTERNAL_LINK_PREFIX) then
     return nil
   end
 
-  if string.lower(linkType) ~= EXTERNAL_LINK_TYPE or payload == "" then
+  local normalizedUrl = string.sub(link, prefixLength + 1)
+  if normalizedUrl == "" then
     return nil
   end
 
-  local normalizedUrl = payload
   if string.match(string.lower(normalizedUrl), "^https?://") == nil then
     normalizedUrl = "https://" .. normalizedUrl
   end

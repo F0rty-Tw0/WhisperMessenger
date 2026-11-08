@@ -51,7 +51,7 @@ function PanelWiring.Create(options)
     onPanesShown = options.onPanesShown,
     onPanelVisibilityChanged = function(visible, key)
       chrome.setBackVisible(visible)
-      onCoverChanged(visible)
+      onCoverChanged(visible and not panelHost.isCompact(key))
       if tabToggle then
         tabToggle.setSelectedPanel(visible and key or nil)
       end

@@ -132,8 +132,14 @@ local Korean = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "메신저 창의 동작을 설정합니다.",
-  ["Phone-style window"] = "휴대폰 스타일 창",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "떠 있는 버튼을 누르면 버튼에 붙은 휴대폰 크기의 대화 목록이 열립니다. 대화를 클릭하면 해당 대화로 넘어갑니다.",
+  ["Compact window"] = "컴팩트 창",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "떠 있는 버튼을 누르면 버튼에 붙은 좁은 대화 목록이 열립니다. 대화를 클릭하면 해당 대화로 넘어갑니다.",
+  ["Window animation"] = "창 애니메이션",
+  ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "창이 열릴 때 아이콘에서 커지며 나타나고, 닫힐 때 아이콘으로 줄어들며 사라지고, 페이지는 밀려 들어옵니다. 끄면 모든 것이 즉시 나타납니다.",
+  ["Dock button on the window"] = "버튼을 창에 고정",
+  ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "창이 열려 있는 동안 떠 있는 버튼이 창의 왼쪽 위 모서리에 놓입니다. 끄면 버튼이 있던 자리에 그대로 둡니다.",
+  ["Open at saved spot"] = "저장된 위치에서 열기",
+  ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "창이 마지막으로 옮긴 위치에서 열립니다. 끄면 떠 있는 버튼 위치에서 창이 열리고, 창을 옮길 때 버튼도 함께 옮겨집니다. '버튼을 창에 고정'이 켜져 있을 때만 적용됩니다.",
   ["Reload the interface now to switch the window style?"] = "창 스타일을 바꾸려면 지금 인터페이스를 다시 불러올까요?",
   ["Dim when moving"] = "이동 시 어둡게",
   ["Reduces window opacity while your character is moving."] = "캐릭터가 이동할 때 창 투명도를 낮춥니다.",
@@ -141,6 +147,7 @@ local Korean = {
   ["Places the cursor in the text box when you open the messenger."] = "메신저를 열 때 커서를 입력 칸에 둡니다.",
   ["Deselect chat input after sending"] = "전송 후 채팅 입력 선택 해제",
   ["After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."] = "메시지를 보내면 커서가 입력 칸에서 벗어나 키로 다시 게임을 조작할 수 있습니다. 메신저가 열려 있는 동안 Enter 키를 누르면 커서가 돌아옵니다.",
+  ["In combat, only while the mouse is over the window."] = "전투 중에는 마우스가 창 위에 있을 때만 적용됩니다.",
   ["Hide whispers from default chat"] = "기본 채팅에서 귓속말 숨기기",
   ["Prevents whisper messages from appearing in the default WoW chat frame."] = "귓속말이 기본 WoW 채팅 창에 표시되지 않도록 합니다.",
   ["|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."] = "|cffff8080참고:|r 신화+ 콘텐츠에서 이 옵션이 켜져 있으면 블리자드의 /r 응답과 R 키 바인딩이 실패할 수 있습니다 (WoW 12.0의 chatEditLastTell secret-value taint). 안전하게 응답하려면 |cffffff00/wr|r을 사용하거나 매크로로 /wr을 R에 바인딩하세요.",
@@ -149,7 +156,7 @@ local Korean = {
   ["Auto-open on incoming whisper"] = "귓속말 수신 시 자동 열기",
   ["Opens the messenger when you receive a whisper. Disabled during combat."] = "귓속말을 받으면 메신저를 엽니다. 전투 중에는 비활성화됩니다.",
   ["Auto-open on outgoing whisper"] = "귓속말 발신 시 자동 열기",
-  ["Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat."] = "귓속말을 보내거나 답장 키를 누르거나 친구 목록에서 귓속말을 보낼 때 메신저를 엽니다. 전투 중에는 비활성화됩니다.",
+  ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "귓속말을 보내거나 친구 목록에서 귓속말을 보낼 때 메신저를 엽니다. 전투 중에는 비활성화됩니다.",
   ["Hide on entering combat"] = "전투 시작 시 숨기기",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "전투가 시작되면 메신저를 숨기고 전투가 끝나면 다시 엽니다. 전투 중에 직접 닫으면 닫힌 상태로 유지됩니다.",
   ["Double ESC to close"] = "더블 ESC로 닫기",
@@ -501,9 +508,7 @@ local Korean = {
   ["Export conversation"] = "대화 내보내기",
   ["Conversation with %s"] = "%s 님과의 대화",
   ["Export: %s"] = "내보내기: %s",
-  ["Show more"] = "더 보기",
-  ["Show all"] = "모두 보기",
-  ["%d of %d lines · Ctrl+C copies"] = "%d/%d줄 · Ctrl+C로 복사",
+  ["%d lines · Ctrl+C copies"] = "%d줄 · Ctrl+C로 복사",
   ["Block sender…"] = "보낸 사람 차단…",
   ["Blocked"] = "차단됨",
   ["Unblock"] = "차단 해제",
@@ -523,6 +528,7 @@ local Korean = {
   ["Add friend"] = "친구 추가",
   -- Contact menu: Guild invite
   ["Guild invite"] = "길드 초대",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "Ctrl+C를 눌러 명령어를 복사한 다음 대화창에 붙여넣으세요.",
 }
 
 ns.Locale_koKR = Korean

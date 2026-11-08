@@ -10,12 +10,16 @@ local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local NativeTabToggle = ns.ContactsListNativeTabToggle or require("WhisperMessenger.UI.ContactsList.NativeTabToggle")
 local TabLayout = ns.ContactsListTabLayout or require("WhisperMessenger.UI.ContactsList.TabLayout")
+local TabScroller = ns.ContactsListTabScroller or require("WhisperMessenger.UI.ContactsList.TabScroller")
+local TabArrows = ns.ContactsListTabArrows or require("WhisperMessenger.UI.ContactsList.TabArrows")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 -- Whispers/Groups(/Channels/Requests) tabs. They hang below the window's bottom-left
 -- edge, each at its natural width (like the game's own window tabs), so the
--- contact list keeps its full height. The Native WoW HUD uses Blizzard's tab
--- art (NativeTabToggle); the modern skin draws its own.
+-- contact list keeps its full height. When they don't all fit, TabScroller
+-- shows whole tabs with back/forward arrows at the window's two edges, and
+-- may draw the tabs up to 8 px narrower so more fit. The Native WoW HUD uses
+-- Blizzard's tab art (NativeTabToggle); the modern skin draws its own.
 local TabToggle = {}
 
 local TAB_HEIGHT = 24
@@ -88,7 +92,7 @@ local function layoutGroup(tab)
   local extra = tab.badge.frame:IsShown() and (BADGE_GAP + BADGE_SIZE) or 0
   local labelWidth = tab.label:GetStringWidth() or 0
   tab.label:SetPoint("CENTER", tab.btn, "CENTER", -extra / 2, 0)
-  tab.underline:SetWidth(labelWidth + extra + UNDERLINE_PADDING)
+  tab.underline:SetWidth(labelWidth + extra + UNDERLINE_PADDING - (tab.squeeze or 0))
 end
 
 -- Width a tab needs; the badge is always counted so tabs never shift with
@@ -121,21 +125,6 @@ local function paintTab(tab, active)
   tab.hoverFade.set(tab.hovered and not active)
 end
 
--- Visible tabs side by side from the strip's left edge.
-local function chainTabs(frame, visible)
-  local previous = nil
-  for _, tab in ipairs(visible) do
-    tab.btn:ClearAllPoints()
-    tab.btn:SetSize(naturalWidth(tab), TAB_HEIGHT)
-    if previous then
-      tab.btn:SetPoint("TOPLEFT", previous.btn, "TOPRIGHT", HANG_SPACING, 0)
-    else
-      tab.btn:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-    end
-    previous = tab
-  end
-end
-
 -- options:
 --   initialMode   : "whispers" | "groups" | "channels" | "requests" (default "whispers")
 --   onModeChanged : function(mode)
@@ -146,7 +135,7 @@ end
 -- addon panel). Returns the toggle TabLayout.BindController builds:
 --   { frame, setMode, getMode, setModes, setShown, setOptionsShown,
 --     setUnreadCounts, setLanguage, addPanelTab, setSelectedPanel,
---     getSelectedPanel, setModeClickHandler }
+--     getSelectedPanel, setModeClickHandler, setCurrentModeClickHandler }
 function TabToggle.Create(factory, parent, options)
   options = options or {}
   if options.nativeChrome then
@@ -168,6 +157,21 @@ function TabToggle.Create(factory, parent, options)
     channels = createTab(factory, frame, "Channels", "channels"),
   }
   local toggle = { frame = frame }
+  local scroller = TabScroller.Attach(factory, frame, {
+    spacing = HANG_SPACING,
+    endReserve = 0,
+    arrowWidth = TabArrows.MODERN_WIDTH,
+    arrowOutset = HANG_LEFT_OFFSET,
+    squeeze = function(tab, px)
+      tab.squeeze = px
+      tab.btn:SetWidth(naturalWidth(tab) - px)
+      layoutGroup(tab)
+    end,
+    createArrows = function(holder)
+      return TabArrows.CreateModern(factory, holder)
+    end,
+    paintArrow = TabArrows.PaintModern,
+  })
   -- Replaced by the controller's painter below, before any hover can fire.
   local paintTabs = function() end
 
@@ -193,12 +197,18 @@ function TabToggle.Create(factory, parent, options)
       for _, tab in ipairs(panelTabs) do
         paintTab(tab, TabLayout.IsActive(tab, currentMode, selectedPanel))
       end
+      scroller.paintArrows()
     end,
     relabel = function(tab)
       tab.label:SetText(Localization.Text(tab.textKey))
     end,
-    anchor = function(visible)
-      chainTabs(frame, visible)
+    -- Sizes the tabs; the scroller places them (all while they fit, else
+    -- whole tabs from its scroll position, with the active one in view).
+    anchor = function(visible, activeTab)
+      for _, tab in ipairs(visible) do
+        tab.btn:SetSize(naturalWidth(tab), TAB_HEIGHT)
+      end
+      scroller.layout(visible, activeTab)
     end,
     createPanelTab = function(title)
       local tab = createTab(factory, frame, nil, nil, title)

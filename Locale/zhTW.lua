@@ -132,8 +132,14 @@ local TraditionalChinese = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "控制信使視窗的行為。",
-  ["Phone-style window"] = "手機樣式視窗",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "浮動按鈕會開啟一個附著於其上的手機大小聊天清單。點擊聊天即可滑入。",
+  ["Compact window"] = "精簡視窗",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "浮動按鈕會開啟一個附著於其上的窄版聊天清單。點擊聊天即可滑入。",
+  ["Window animation"] = "視窗動畫",
+  ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "視窗開啟時會從圖示處展開，關閉時會縮回圖示，頁面也會滑動切換。關閉此選項後，所有內容將立即顯示。",
+  ["Dock button on the window"] = "將按鈕停靠在視窗上",
+  ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "視窗開啟時，浮動按鈕會停在視窗的左上角。關閉此選項後，按鈕將留在原處。",
+  ["Open at saved spot"] = "在儲存的位置開啟",
+  ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "視窗會在你上次移動的位置開啟。關閉此選項後，視窗將在浮動按鈕處開啟，並且移動視窗時按鈕會隨之移動。僅在開啟「將按鈕停靠在視窗上」時有效。",
   ["Reload the interface now to switch the window style?"] = "現在重新載入介面以切換視窗樣式嗎?",
   ["Dim when moving"] = "移動時變暗",
   ["Reduces window opacity while your character is moving."] = "在角色移動時降低視窗透明度。",
@@ -141,6 +147,7 @@ local TraditionalChinese = {
   ["Places the cursor in the text box when you open the messenger."] = "開啟信使時將游標置於輸入框。",
   ["Deselect chat input after sending"] = "傳送後取消選取輸入框",
   ["After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."] = "傳送訊息後，游標會離開輸入框，按鍵將重新控制遊戲。信使開啟時，按 Enter 可將游標移回。",
+  ["In combat, only while the mouse is over the window."] = "戰鬥中，僅在滑鼠位於視窗上方時有效。",
   ["Hide whispers from default chat"] = "在預設聊天中隱藏密語",
   ["Prevents whisper messages from appearing in the default WoW chat frame."] = "阻止密語顯示在預設WoW聊天框中。",
   ["|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."] = "|cffff8080注意:|r 在傳奇鑰石+內容中,啟用此項時暴雪的 /r 回覆和 R 鍵可能失敗 (WoW 12.0 chatEditLastTell 上的 secret-value taint)。請使用 |cffffff00/wr|r (或透過宏將 /wr 綁定到 R) 安全回覆。",
@@ -149,7 +156,7 @@ local TraditionalChinese = {
   ["Auto-open on incoming whisper"] = "收到密語時自動開啟",
   ["Opens the messenger when you receive a whisper. Disabled during combat."] = "收到密語時開啟信使。戰鬥中停用。",
   ["Auto-open on outgoing whisper"] = "傳送密語時自動開啟",
-  ["Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat."] = "傳送密語、按回覆鍵或從好友列表傳送密語時開啟信使。戰鬥中停用。",
+  ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "傳送密語或從好友列表傳送密語時開啟信使。戰鬥中停用。",
   ["Hide on entering combat"] = "進入戰鬥時隱藏",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "戰鬥開始時隱藏信使，戰鬥結束後重新開啟。如果你在戰鬥中手動關閉它，它會保持關閉。",
   ["Double ESC to close"] = "雙擊 ESC 關閉",
@@ -501,9 +508,7 @@ local TraditionalChinese = {
   ["Export conversation"] = "匯出對話",
   ["Conversation with %s"] = "與 %s 的對話",
   ["Export: %s"] = "匯出：%s",
-  ["Show more"] = "顯示更多",
-  ["Show all"] = "全部顯示",
-  ["%d of %d lines · Ctrl+C copies"] = "%d / %d 行 · Ctrl+C 複製",
+  ["%d lines · Ctrl+C copies"] = "%d 行 · Ctrl+C 複製",
   ["Block sender…"] = "封鎖發送者…",
   ["Blocked"] = "已封鎖",
   ["Unblock"] = "解除封鎖",
@@ -523,6 +528,7 @@ local TraditionalChinese = {
   ["Add friend"] = "加為好友",
   -- Contact menu: Guild invite
   ["Guild invite"] = "邀請加入公會",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "按 Ctrl+C 複製指令，然後貼到聊天框中。",
 }
 
 ns.Locale_zhTW = TraditionalChinese

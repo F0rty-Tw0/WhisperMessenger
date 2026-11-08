@@ -8,13 +8,10 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local PreviewMetrics = ns.ToggleIconPreviewMetrics or require("WhisperMessenger.UI.ToggleIcon.PreviewMetrics")
 local PreviewAutoDismiss = ns.ToggleIconPreviewAutoDismiss or require("WhisperMessenger.UI.ToggleIcon.PreviewAutoDismiss")
-local PreviewChrome = ns.ToggleIconPreviewChrome or require("WhisperMessenger.UI.ToggleIcon.PreviewChrome")
 local PreviewLinks = ns.ToggleIconPreviewLinks or require("WhisperMessenger.UI.ToggleIcon.PreviewLinks")
-local PreviewDetailRow = ns.ToggleIconPreviewDetailRow or require("WhisperMessenger.UI.ToggleIcon.PreviewDetailRow")
-local PreviewDismissButton = ns.ToggleIconPreviewDismissButton or require("WhisperMessenger.UI.ToggleIcon.PreviewDismissButton")
 local PreviewReplyHold = ns.ToggleIconPreviewReplyHold or require("WhisperMessenger.UI.ToggleIcon.PreviewReplyHold")
+local PreviewCard = ns.ToggleIconPreviewCard or require("WhisperMessenger.UI.ToggleIcon.PreviewCard")
 local applyClassColor = UIHelpers.applyClassColor
-local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
 local IncomingPreview = {}
@@ -23,48 +20,13 @@ function IncomingPreview.Create(factory, frame, options)
   options = options or {}
 
   local theme = options.theme or Theme
-  local previewFrame, previewBackground = PreviewChrome.Create(factory, frame)
-  previewFrame:SetSize(PreviewMetrics.MAX_WIDTH, PreviewMetrics.HEIGHT)
-
-  local positioner = PreviewMetrics.NewPositioner(previewFrame, frame, options.getPreviewPosition)
-  positioner.apply(positioner.resolve())
-  if previewFrame.SetFrameLevel then
-    previewFrame:SetFrameLevel(frame:GetFrameLevel() + 1)
-  end
-  -- The minimap icon reparents this frame to UIParent, which would otherwise drop it to MEDIUM strata.
-  if previewFrame.SetFrameStrata then
-    previewFrame:SetFrameStrata("HIGH")
-  end
-  -- A button riding the phone window changes strata; its preview stays up.
-  if previewFrame.SetFixedFrameStrata then
-    previewFrame:SetFixedFrameStrata(true)
-  end
-  if previewFrame.EnableMouse then
-    previewFrame:EnableMouse(true)
-  end
-
-  local previewClassIconResult = UIHelpers.createCircularIcon(factory, previewFrame, PreviewMetrics.CLASS_ICON_SIZE)
-  local previewClassIconFrame = previewClassIconResult.frame
-  local previewClassIcon = previewClassIconResult.texture
-  previewClassIconFrame:SetPoint("LEFT", previewFrame, "LEFT", PreviewMetrics.LEFT_PAD, 0)
-  previewClassIconFrame:Hide()
-
-  local dismiss = PreviewDismissButton.Create(factory, previewFrame, theme)
-
-  local senderLeft = PreviewMetrics.LEFT_PAD + PreviewMetrics.CLASS_ICON_SIZE + PreviewMetrics.ICON_GAP
-  local previewSenderLabel = previewFrame:CreateFontString(nil, "OVERLAY")
-  -- Font objects only: a raw SetFont on a FontString overrides the engine's
-  -- Unicode glyph-fallback chain and blanks Cyrillic/Greek characters.
-  setFontObject(previewSenderLabel, theme.FONTS.message_text)
-  previewSenderLabel:SetPoint("TOPLEFT", previewFrame, "TOPLEFT", senderLeft, PreviewMetrics.SENDER_TOP_OFFSET)
-  PreviewChrome.SingleLine(previewSenderLabel)
-
-  local previewMessageLabel = previewFrame:CreateFontString(nil, "OVERLAY")
-  setFontObject(previewMessageLabel, theme.FONTS.message_text)
-  previewMessageLabel:SetPoint("TOPLEFT", previewSenderLabel, "BOTTOMLEFT", 0, PreviewMetrics.MESSAGE_GAP)
-  PreviewChrome.SingleLine(previewMessageLabel)
-  local detailRow = PreviewDetailRow.Create(previewFrame, previewMessageLabel, theme.FONTS.message_text)
-  previewFrame:Hide()
+  local card = PreviewCard.Create(factory, frame, theme, options.getPreviewPosition)
+  local previewFrame, previewBackground = card.frame, card.background
+  local positioner = card.positioner
+  local previewClassIconFrame, previewClassIcon = card.classIconFrame, card.classIcon
+  local previewSenderLabel, previewMessageLabel = card.senderLabel, card.messageLabel
+  local dismiss = card.dismiss
+  local detailRow = card.detailRow
 
   local autoDismiss
   local hold
@@ -73,6 +35,7 @@ function IncomingPreview.Create(factory, frame, options)
   local lastPreviewClassTag = nil
   -- A preview another addon put here; its callbacks come pre-wrapped.
   local externalEntry = nil
+  local suppressed = false
 
   local function notifyExternalChanged(changed)
     if changed and options.onExternalChanged then
@@ -124,12 +87,33 @@ function IncomingPreview.Create(factory, frame, options)
     end,
     onExpire = triggerDismiss,
   })
+  if previewFrame.SetScript and previewFrame.HookScript then
+    PreviewAutoDismiss.HoldWhileHovered(previewFrame, autoDismiss)
+  end
   hold = PreviewReplyHold.Create(factory, previewFrame, {
     theme = theme,
     quickReply = options.quickReply,
     autoDismiss = autoDismiss,
     hideCard = clearIncomingPreview,
   })
+
+  -- Opens the whisper on the card; true when the chat opened. The owner
+  -- acknowledges the whisper, and the refresh then clears the preview.
+  local function openOwnPreview()
+    local handled, opened = hold.onOpen()
+    if handled then
+      return opened
+    end
+    return options.onOpenPreview ~= nil and options.onOpenPreview() == true
+  end
+
+  -- The button click: only a whisper card on screen opens, not another addon's.
+  local function openShownPreview()
+    if externalEntry ~= nil or lastPreviewSenderName == nil or not previewFrame:IsVisible() then
+      return false
+    end
+    return openOwnPreview()
+  end
 
   if dismiss.button.SetScript then
     dismiss.button:SetScript("OnClick", dismissCurrent)
@@ -146,11 +130,8 @@ function IncomingPreview.Create(factory, frame, options)
         if externalEntry == current then
           clearIncomingPreview()
         end
-      elseif button == "LeftButton" and hold.onOpen() then
-        return
-      elseif button == "LeftButton" and options.onOpenPreview then
-        -- The owner acknowledges the whisper; the refresh then clears the preview.
-        options.onOpenPreview()
+      elseif button == "LeftButton" then
+        openOwnPreview()
       end
     end)
     previewFrame:SetScript("OnShow", function()
@@ -196,7 +177,9 @@ function IncomingPreview.Create(factory, frame, options)
     if hold.route(hasMessage and meta or nil, false) == "ignore" then
       return
     end
-    if not hasMessage then
+    -- Docked: the card would cover the title bar, and closing the window
+    -- acknowledges the whispers, so the card never needs to show.
+    if not hasMessage or suppressed then
       clearIncomingPreview()
       return
     end
@@ -238,12 +221,26 @@ function IncomingPreview.Create(factory, frame, options)
     externalEntry = entry
     renderContent(entry.sender, entry.text, entry.classTag, entry.detail)
     fitWidth()
-    if previewFrame:IsVisible() then
+    if suppressed then
+      return
+    elseif previewFrame:IsVisible() then
       entry.onShown()
     else
       previewFrame:Show()
     end
     notifyExternalChanged(true)
+  end
+
+  -- The button sits on the open window, where the card would cover the title
+  -- bar. Another addon's card waits and comes back once the button is home.
+  local function setSuppressed(on)
+    suppressed = on == true
+    if suppressed and externalEntry == nil then
+      clearIncomingPreview()
+    elseif externalEntry ~= nil then
+      previewFrame:SetShown(not suppressed)
+      notifyExternalChanged(true)
+    end
   end
 
   local function isExternalShown()
@@ -274,6 +271,8 @@ function IncomingPreview.Create(factory, frame, options)
     setIncomingPreview = setIncomingPreview,
     setExternalPreview = setExternalPreview,
     isExternalShown = isExternalShown,
+    openShownPreview = openShownPreview,
+    setSuppressed = setSuppressed,
     applyPreviewPosition = positioner.apply,
     applyTheme = applyTheme,
     replyHold = hold,

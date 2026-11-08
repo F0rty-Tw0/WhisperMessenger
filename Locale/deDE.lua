@@ -132,8 +132,14 @@ local German = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Verhalten des Messenger-Fensters steuern.",
-  ["Phone-style window"] = "Fenster im Handy-Stil",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "Die schwebende Schaltfläche öffnet eine handygroße, daran befestigte Chatliste. Klicke auf einen Chat, um zu ihm zu gleiten.",
+  ["Compact window"] = "Kompaktes Fenster",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "Die schwebende Schaltfläche öffnet eine schmale, daran befestigte Chatliste. Klicke auf einen Chat, um zu ihm zu gleiten.",
+  ["Window animation"] = "Fensteranimation",
+  ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "Das Fenster wächst beim Öffnen aus seinem Symbol heraus und schrumpft beim Schließen wieder hinein, und Seiten gleiten herein. Schalte sie aus, damit alles sofort erscheint.",
+  ["Dock button on the window"] = "Schaltfläche am Fenster andocken",
+  ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "Solange das Fenster geöffnet ist, sitzt die schwebende Schaltfläche in der oberen linken Ecke des Fensters. Schalte die Option aus, damit die Schaltfläche dort bleibt, wo sie ist.",
+  ["Open at saved spot"] = "Am gespeicherten Ort öffnen",
+  ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "Das Fenster öffnet sich dort, wo du es zuletzt verschoben hast. Schalte sie aus, um das Fenster an der schwebenden Schaltfläche zu öffnen und die Schaltfläche mitzubewegen, wenn du das Fenster verschiebst. Gilt nur, solange „Schaltfläche am Fenster andocken“ eingeschaltet ist.",
   ["Reload the interface now to switch the window style?"] = "Benutzeroberfläche jetzt neu laden, um den Fensterstil zu wechseln?",
   ["Dim when moving"] = "Beim Bewegen abdunkeln",
   ["Reduces window opacity while your character is moving."] = "Reduziert die Fensterdeckkraft, während sich der Charakter bewegt.",
@@ -141,6 +147,7 @@ local German = {
   ["Places the cursor in the text box when you open the messenger."] = "Setzt den Cursor beim Öffnen ins Eingabefeld.",
   ["Deselect chat input after sending"] = "Eingabefeld nach dem Senden abwählen",
   ["After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."] = "Nach dem Senden verlässt der Cursor das Eingabefeld, damit deine Tasten wieder das Spiel steuern. Solange der Messenger geöffnet ist, setzt Enter den Cursor zurück.",
+  ["In combat, only while the mouse is over the window."] = "Im Kampf nur, solange die Maus über dem Fenster ist.",
   ["Hide whispers from default chat"] = "Flüstern aus Standardchat ausblenden",
   ["Prevents whisper messages from appearing in the default WoW chat frame."] = "Verhindert, dass Flüsternachrichten im WoW-Standardchat erscheinen.",
   ["|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."] = "|cffff8080Hinweis:|r In Mythisch+ können Blizzards /r-Antwort und die R-Taste fehlschlagen, wenn dies aktiviert ist (WoW 12.0 secret-value-Taint auf chatEditLastTell). Nutze |cffffff00/wr|r (oder lege /wr per Makro auf R), um sicher zu antworten.",
@@ -149,7 +156,7 @@ local German = {
   ["Auto-open on incoming whisper"] = "Bei eingehendem Flüstern öffnen",
   ["Opens the messenger when you receive a whisper. Disabled during combat."] = "Öffnet den Messenger bei einem eingehenden Flüstern. Im Kampf deaktiviert.",
   ["Auto-open on outgoing whisper"] = "Bei ausgehendem Flüstern öffnen",
-  ["Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat."] = "Öffnet den Messenger beim Senden eines Flüsterns, beim Antworten oder beim Flüstern aus der Freundesliste. Im Kampf deaktiviert.",
+  ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "Öffnet den Messenger beim Senden eines Flüsterns oder beim Flüstern aus der Freundesliste. Im Kampf deaktiviert.",
   ["Hide on entering combat"] = "Beim Kampfbeginn ausblenden",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "Blendet den Messenger beim Kampfbeginn aus und öffnet ihn nach dem Kampf wieder. Schließt du ihn während des Kampfes selbst, bleibt er geschlossen.",
   ["Double ESC to close"] = "Doppel-ESC zum Schließen",
@@ -501,9 +508,7 @@ local German = {
   ["Export conversation"] = "Unterhaltung exportieren",
   ["Conversation with %s"] = "Unterhaltung mit %s",
   ["Export: %s"] = "Export: %s",
-  ["Show more"] = "Mehr anzeigen",
-  ["Show all"] = "Alle anzeigen",
-  ["%d of %d lines · Ctrl+C copies"] = "%d von %d Zeilen · Strg+C kopiert",
+  ["%d lines · Ctrl+C copies"] = "%d Zeilen · Strg+C kopiert",
   ["Block sender…"] = "Absender blockieren…",
   ["Blocked"] = "Blockiert",
   ["Unblock"] = "Blockierung aufheben",
@@ -523,6 +528,7 @@ local German = {
   ["Add friend"] = "Als Freund hinzufügen",
   -- Contact menu: Guild invite
   ["Guild invite"] = "In Gilde einladen",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "Strg+C drücken, um den Befehl zu kopieren, und ihn dann in den Chat einfügen.",
 }
 
 ns.Locale_deDE = German

@@ -42,5 +42,35 @@ function ChatPrefill.IsOpening()
   return opening
 end
 
+-- Opening the box from addon code makes the game parse the text under the
+-- addon's taint, and that parse moves every pending slash command (raw
+-- SlashCmdList entries) into hash_SlashCmdList. Done under our taint, the
+-- moved handlers stay tainted and the game blocks the protected call they
+-- make when the player presses Enter (ADDON_ACTION_FORBIDDEN). So a slash
+-- command is safe to prefill only when the game already moved it securely
+-- and nothing is waiting to be moved.
+local function slashCommandSafe(text)
+  local command = string.match(text, "^(/[^%s]+)")
+  local hash = _G.hash_SlashCmdList
+  local pending = _G.SlashCmdList
+  local isSecure = _G.issecurevariable
+  if command == nil or type(hash) ~= "table" or type(pending) ~= "table" or type(isSecure) ~= "function" then
+    return false
+  end
+  local key = string.upper(command)
+  if hash[key] == nil or next(pending) ~= nil then
+    return false
+  end
+
+  return isSecure(hash, key) == true
+end
+
+-- Any error answers "not safe".
+function ChatPrefill.IsSafe(text)
+  local ok, safe = pcall(slashCommandSafe, text)
+
+  return ok and safe == true
+end
+
 ns.ChatPrefill = ChatPrefill
 return ChatPrefill

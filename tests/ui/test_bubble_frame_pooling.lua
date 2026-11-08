@@ -54,7 +54,7 @@ return function()
     })
 
     assert(
-      bubble.text:GetText() == "Visit |cff71d5ff|Hurl:https://example.com/docs|hhttps://example.com/docs|h|r for details.",
+      bubble.text:GetText() == "Visit |cff71d5ff|Haddon:WhisperMessenger:url:https://example.com/docs|hhttps://example.com/docs|h|r for details.",
       "expected BubbleFrame to render plain URLs as clickable hyperlinks"
     )
   end
@@ -78,7 +78,7 @@ return function()
 
     assert(
       bubble.text:GetText()
-        == "Wiki |cff71d5ff|Hurl:https://en.wikipedia.org/wiki/Function_(mathematics)|hhttps://en.wikipedia.org/wiki/Function_(mathematics)|h|r.",
+        == "Wiki |cff71d5ff|Haddon:WhisperMessenger:url:https://en.wikipedia.org/wiki/Function_(mathematics)|hhttps://en.wikipedia.org/wiki/Function_(mathematics)|h|r.",
       "expected BubbleFrame to preserve balanced trailing ')' in URLs"
     )
   end
@@ -101,7 +101,7 @@ return function()
     })
 
     assert(
-      bubble.text:GetText() == "Server |cff71d5ff|Hurl:https://[2001:db8::1]/docs|hhttps://[2001:db8::1]/docs|h|r",
+      bubble.text:GetText() == "Server |cff71d5ff|Haddon:WhisperMessenger:url:https://[2001:db8::1]/docs|hhttps://[2001:db8::1]/docs|h|r",
       "expected BubbleFrame to preserve IPv6 brackets in URLs"
     )
   end
@@ -125,7 +125,7 @@ return function()
     })
 
     assert(
-      bubble.text:GetText() == "Loot " .. itemLink .. " and |cff71d5ff|Hurl:https://example.com|hhttps://example.com|h|r",
+      bubble.text:GetText() == "Loot " .. itemLink .. " and |cff71d5ff|Haddon:WhisperMessenger:url:https://example.com|hhttps://example.com|h|r",
       "expected BubbleFrame to preserve existing item hyperlinks while linkifying plain URLs"
     )
   end

@@ -108,25 +108,22 @@ return function()
     assert(groups.width == 72, "HUD: short label still fits both edge pieces, got " .. tostring(groups.width))
   end
 
-  -- test_hud_tabs_shrink_to_fit_the_window
+  -- test_hud_tabs_never_shrink_below_label_plus_sides_minus_the_squeeze
   do
-    -- Each visible tab is capped at an equal share of the strip, less the
-    -- last tab's 7px of art overhang and the 1px gaps.
+    -- No equal-share cap: a strip too narrow for every tab scrolls them
+    -- instead of cutting labels short. At 260 the shown run needs the 8 px
+    -- squeeze (tight 3 tabs 192 fit the 214 room, natural 216 do not); at
+    -- 160 (room 114) only Whispers shows and its natural 76 fits.
     local toggle = createToggle(FakeUI.NewFactory(), true)
     local strip = toggle.frame
     strip:SetWidth(260)
     strip.scripts.OnSizeChanged(strip, 260, NativeTabToggle.HEIGHT)
     toggle.setModes({ "whispers", "groups", "channels", "requests" })
-    assert(strip.maxTabWidth == 62, "HUD: four tabs share 260px, got " .. tostring(strip.maxTabWidth))
     local whispers = tabs(toggle)[1]
-    assert(whispers.width == 62, "HUD: a long tab is capped, got " .. tostring(whispers.width))
-    assert(whispers.Text == nil or whispers.Text.width == 42, "HUD: its label shortens to fit")
-    toggle.setModes({ "whispers", "groups" })
-    assert(strip.maxTabWidth == 126, "HUD: two tabs get a wider cap, got " .. tostring(strip.maxTabWidth))
-    assert(whispers.width == whispers:GetTextWidth() + 20, "HUD: under the cap a tab keeps its natural width")
+    assert(whispers.width == whispers:GetTextWidth() + 20 - 8, "HUD: tab squeezes 8 px to fit more, got " .. tostring(whispers.width))
     strip:SetWidth(160)
     strip.scripts.OnSizeChanged(strip, 160, NativeTabToggle.HEIGHT)
-    assert(strip.maxTabWidth == 76 and whispers.width == 76, "HUD: a narrower window shrinks the cap, got " .. tostring(strip.maxTabWidth))
+    assert(whispers.width == whispers:GetTextWidth() + 20, "HUD: a run that fits natural is drawn natural, got " .. tostring(whispers.width))
   end
 
   -- test_hud_tab_show_keeps_our_size
@@ -200,9 +197,11 @@ return function()
   do
     local toggle = createToggle(FakeUI.NewFactory(), true)
     assert(#FindUI.ofType(toggle.frame, "Texture") == 0, "HUD: no custom paint on the strip")
-    for _, child in ipairs(FindUI.ofType(toggle.frame, "Frame")) do
-      assert(child:GetParent() ~= toggle.frame, "HUD: no overlay line layer, Blizzard tabs have no seams")
-    end
+    -- The only Frame child is the arrow holder: no overlay line layer.
+    local frames = FindUI.ofType(toggle.frame, "Frame")
+    assert(#frames == 1, "HUD: one Frame child (the arrow holder), got " .. #frames)
+    assert(#FindUI.ofType(frames[1], "Texture") == 0, "HUD: the arrow holder draws no lines")
+    assert(#FindUI.ofType(frames[1], "Button") == 2, "HUD: the arrow holder holds the two arrows")
   end
 
   -- test_hud_clamp_counts_the_hanging_tabs

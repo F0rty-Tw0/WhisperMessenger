@@ -57,6 +57,10 @@ read_globals = {
   "time",
   "unpack",
 
+  -- Secure environment: taint checks and the game's imported slash commands
+  "issecurevariable",
+  "hash_SlashCmdList",
+
   -- Core frame/widget API
   "CreateFrame",
   "CreateFont",

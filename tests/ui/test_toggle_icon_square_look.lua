@@ -54,6 +54,16 @@ local function fillsButton(texture, button)
     and glowFrame.allPoints == button
 end
 
+-- The square edge-glow art, stretched over the pulse's glow frame, which covers the whole button.
+local function fillsWithSquareGlow(texture, button)
+  local glowFrame = texture.allPoints
+  return texture.texturePath == SquareLook.SQUARE_GLOW_TEXTURE
+    and texture.point == nil
+    and glowFrame ~= nil
+    and glowFrame == texture.parent
+    and glowFrame.allPoints == button
+end
+
 -- shape: "circle" | "square" | any value | a function returning one
 local function iconWithShape(shape, options, factory)
   options = options or {}
@@ -220,7 +230,7 @@ return function()
     assert(outline.shown == true, "outline around the bubbles on the round widget without its circle")
   end
 
-  -- test_unread_pulse_glows_around_the_bubbles
+  -- test_unread_pulse_glows_along_the_square_edge
   do
     local shape = "square"
     local showBackground = false
@@ -231,12 +241,12 @@ return function()
         return showBackground
       end,
     })
-    assert(onBubbles(icon.pulseTexture, icon.label), "pulse follows the bubbles, got " .. tostring(icon.pulseTexture.texturePath))
+    assert(fillsWithSquareGlow(icon.pulseTexture, icon.frame), "pulse follows the edge, got " .. tostring(icon.pulseTexture.texturePath))
     icon.applyIconSize(60)
-    assert(onBubbles(icon.pulseTexture, icon.label), "pulse resized with the icon")
+    assert(fillsWithSquareGlow(icon.pulseTexture, icon.frame), "pulse resized with the icon")
     showBackground = true
     icon.refreshTheme()
-    assert(onBubbles(icon.pulseTexture, icon.label), "square shown: still around the bubbles")
+    assert(fillsWithSquareGlow(icon.pulseTexture, icon.frame), "square shown: still along the edge")
     shape = "circle"
     icon.refreshTheme()
     assert(fillsButton(icon.pulseTexture, icon.frame), "round again on other presets")

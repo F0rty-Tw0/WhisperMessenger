@@ -7,13 +7,18 @@ local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local TabLayout = ns.ContactsListTabLayout or require("WhisperMessenger.UI.ContactsList.TabLayout")
+local TabScroller = ns.ContactsListTabScroller or require("WhisperMessenger.UI.ContactsList.TabScroller")
+local TabArrows = ns.ContactsListTabArrows or require("WhisperMessenger.UI.ContactsList.TabArrows")
 
 -- Native WoW HUD Whispers/Groups/Channels/Requests tabs: Blizzard PanelTabButtonTemplate
 -- tabs hanging below the window's bottom-left edge, each sized to its label,
--- like the Character or Professions frame tabs. The strip is the window's
--- child (so it stays up beside an addon panel) and anchored to the window
--- frame. Same interface as TabToggle.Create; returns nil when the template is
--- unavailable so the caller builds the modern bar instead.
+-- like the Character or Professions frame tabs. When they don't all fit,
+-- TabScroller shows whole tabs with the spellbook page arrows at the window's
+-- two edges, and may draw the tabs up to 8 px narrower (never below their
+-- edge art) so more fit. The strip is the window's child (so it stays up
+-- beside an addon panel) and anchored to the window frame. Same interface as
+-- TabToggle.Create; returns nil when the template is unavailable so the
+-- caller builds the modern bar instead.
 local NativeTabToggle = {}
 
 local TAB_TEMPLATE = "PanelTabButtonTemplate"
@@ -40,7 +45,8 @@ local BADGE_LEVEL_LIFT = 1
 -- Classic clients' PanelTemplates_TabResize adds both edge pieces on top of
 -- label + 24 and caps only the label, making tabs about twice as wide.
 local TAB_SIDES = 20
--- The last tab's right art reaches this far past its button.
+-- The last tab's right art reaches this far past its button; the scroller
+-- keeps it free at the strip's right end.
 local RIGHT_ART_OVERHANG = 7
 
 -- Blizzard helpers vary per flavor; never let them error our UI.
@@ -57,10 +63,9 @@ local function regionWidth(region)
   return region and region.GetWidth and region:GetWidth() or 0
 end
 
--- Never narrower than the left + right edge art, which would overlap.
--- maxWidth: the strip's cap (nil = natural width); a capped label truncates
--- and the template's OnEnter shows it in full.
-local function sizeTab(tab, maxWidth)
+-- Label width plus the sides, minus the scroller's squeeze, never narrower
+-- than the left + right edge art, which would overlap.
+local function sizeTab(tab)
   local btn = tab.btn
   local label = btn.Text
   if label and label.SetWidth then
@@ -68,30 +73,7 @@ local function sizeTab(tab, maxWidth)
   end
   local textWidth = btn.GetTextWidth and btn:GetTextWidth() or 0
   local artWidth = regionWidth(btn.Left) + regionWidth(btn.Right)
-  local width = math.max(textWidth + TAB_SIDES, artWidth)
-  if maxWidth and width > maxWidth then
-    width = math.max(maxWidth, artWidth)
-    if label and label.SetWidth then
-      label:SetWidth(math.max(0, width - TAB_SIDES))
-    end
-  end
-  btn:SetWidth(width)
-end
-
--- Caps every visible tab at an equal share of the strip so the row never
--- runs past the window. maxTabWidth is also read by each tab's OnShow /
--- DISPLAY_SIZE_CHANGED resize (set in createTab).
-local function fitTabs(frame, visible)
-  local count = #visible
-  local width = frame.GetWidth and frame:GetWidth() or 0
-  local cap = nil
-  if count > 0 and width > 0 then
-    cap = math.floor((width - RIGHT_ART_OVERHANG - TAB_SPACING * (count - 1)) / count)
-  end
-  frame.maxTabWidth = cap
-  for _, tab in ipairs(visible) do
-    sizeTab(tab, cap)
-  end
+  btn:SetWidth(math.max(textWidth + TAB_SIDES - (tab.squeeze or 0), artWidth))
 end
 
 local function liftAboveBorder(badgeFrame, window)
@@ -117,7 +99,7 @@ local function createTab(factory, frame, window, name, label, mode)
   -- Replaces the template's OnShow / DISPLAY_SIZE_CHANGED handlers, which
   -- would re-run the flavor's own TabResize.
   local function resize()
-    sizeTab(tab, frame.maxTabWidth)
+    sizeTab(tab)
   end
   btn:SetScript("OnShow", resize)
   btn:SetScript("OnEvent", resize)
@@ -137,20 +119,6 @@ local function paintBadges(tabs)
   for _, tab in ipairs(tabs) do
     tab.badge.setCount(tab.unread)
     tab.badge.paint()
-  end
-end
-
--- Visible tabs in a row from the strip's left edge, Blizzard spacing.
-local function chainTabs(frame, visible)
-  local previous = nil
-  for _, tab in ipairs(visible) do
-    tab.btn:ClearAllPoints()
-    if previous then
-      tab.btn:SetPoint("TOPLEFT", previous.btn, "TOPRIGHT", TAB_SPACING, 0)
-    else
-      tab.btn:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-    end
-    previous = tab
   end
 end
 
@@ -174,10 +142,19 @@ function NativeTabToggle.Create(factory, parent, options)
   end
   local tabs = { whispers, groups, requests, channels }
   local toggle = { frame = frame }
-  local visibleTabs = {}
-  frame:SetScript("OnSizeChanged", function()
-    fitTabs(frame, visibleTabs)
-  end)
+  local scroller = TabScroller.Attach(factory, frame, {
+    spacing = TAB_SPACING,
+    endReserve = RIGHT_ART_OVERHANG,
+    arrowWidth = TabArrows.NATIVE_SIZE,
+    arrowOutset = WINDOW_LEFT_OFFSET,
+    squeeze = function(tab, px)
+      tab.squeeze = px
+      sizeTab(tab)
+    end,
+    createArrows = function(holder)
+      return TabArrows.CreateNative(factory, holder)
+    end,
+  })
 
   local function paintTabs(currentMode, visible, selectedPanel, panelTabs)
     paintBadges(tabs)
@@ -194,12 +171,15 @@ function NativeTabToggle.Create(factory, parent, options)
     paint = paintTabs,
     relabel = function(tab)
       tab.btn:SetText(Localization.Text(tab.textKey))
-      sizeTab(tab, frame.maxTabWidth)
+      sizeTab(tab)
     end,
-    anchor = function(visible)
-      visibleTabs = visible
-      fitTabs(frame, visible)
-      chainTabs(frame, visible)
+    -- The scroller sizes the tabs (through the squeeze hook) and places them
+    -- (all while they fit, else whole tabs from its scroll position, with the
+    -- active one in view). It records the new list before its own width
+    -- reads; a resize fired earlier (a tab's OnShow) may lay out the old
+    -- list, and the scroller hides what that showed.
+    anchor = function(visible, activeTab)
+      scroller.layout(visible, activeTab)
     end,
     createPanelTab = function(title, index)
       return createTab(factory, frame, window, "WhisperMessengerPanelTab" .. index, title, nil)

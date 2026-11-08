@@ -6,7 +6,7 @@ end
 local IconPosition = {}
 
 function IconPosition.Apply(icon, nextState, uiParent)
-  -- A button riding the phone window stays there; home is what moved.
+  -- A button riding the compact window stays there; home is what moved.
   if icon and icon.isRiding and icon.isRiding() then
     icon.setRideHome(nextState)
     return nextState

@@ -118,6 +118,7 @@ Persistence/Migrations.lua
 Persistence/Helpers.lua
 Persistence/SavedState/LegacyMigration.lua
 Persistence/SavedState/PrefixMigration.lua
+Persistence/SavedState/CompactRename.lua
 Persistence/SavedState/SavedState.lua
 
 Transport/Types.lua
@@ -265,6 +266,9 @@ UI/ContactsList/RowScripts.lua
 UI/ContactsList/ActionButtons.lua
 UI/ContactsList/EmptyState.lua
 UI/ContactsList/TabLayout.lua
+UI/ContactsList/TabScrollerFit.lua
+UI/ContactsList/TabScroller.lua
+UI/ContactsList/TabArrows.lua
 UI/ContactsList/NativeTabToggle.lua
 UI/ContactsList/TabToggle.lua
 UI/ContactsList/RowView.lua
@@ -301,7 +305,10 @@ UI/Composer/ComposerSurface.lua
 UI/Composer/SendButtonStyle.lua
 UI/Composer/ReplyState.lua
 UI/Composer/ComposerLimit.lua
+UI/MessengerWindow/WindowScripts/Frame/PointerFocus.lua
+UI/Composer/ComposerEnterButton.lua
 UI/Composer/ComposerSendFocus.lua
+UI/Composer/SlashCommand.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
@@ -313,6 +320,7 @@ UI/ToggleIcon/PreviewDetailRow.lua
 UI/ToggleIcon/PreviewDismissButton.lua
 UI/ToggleIcon/PreviewReplyRow.lua
 UI/ToggleIcon/PreviewReplyHold.lua
+UI/ToggleIcon/PreviewCard.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
 UI/ToggleIcon/PulseState.lua
@@ -325,7 +333,12 @@ UI/ToggleIcon/IconArt.lua
 UI/ToggleIcon/LockGlyph.lua
 UI/ToggleIcon/IconTooltip.lua
 UI/ToggleIcon/IconDrag.lua
+UI/ToggleIcon/IconScripts.lua
+UI/Shared/GlideClock.lua
 UI/ToggleIcon/IconRide.lua
+UI/MessengerWindow/IconSettings/Options.lua
+UI/ToggleIcon/DockedLook.lua
+UI/ToggleIcon/IconTransparency.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MinimapIcon/IconTooltip.lua
 UI/MinimapIcon/MinimapIcon.lua
@@ -346,7 +359,7 @@ UI/MessengerWindow/ChromeBuilder/MarkAllReadButton.lua
 UI/MessengerWindow/ChromeBuilder/TitleBarLayout.lua
 UI/MessengerWindow/ChromeBuilder.lua
 UI/MessengerWindow/LayoutBuilder/Metrics.lua
-UI/MessengerWindow/LayoutBuilder/PhoneViewport.lua
+UI/MessengerWindow/LayoutBuilder/CompactViewport.lua
 UI/MessengerWindow/LayoutBuilder/Apply.lua
 UI/MessengerWindow/LayoutBuilder/ThemeApply.lua
 UI/MessengerWindow/LayoutBuilder/ContactsSearchUI.lua
@@ -365,7 +378,6 @@ UI/MessengerWindow/WindowScripts/Buttons.lua
 UI/MessengerWindow/WindowScripts/Frame/ResizeBounds.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
-UI/MessengerWindow/WindowScripts/Frame/PointerFocus.lua
 UI/MessengerWindow/WindowScripts/Frame/EscapeKey.lua
 UI/MessengerWindow/WindowScripts/Frame/EscapeOrder.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowStrata.lua
@@ -390,6 +402,7 @@ UI/MessengerWindow/GeneralSettings/RetentionRow.lua
 UI/ContactsList/ExportPanel.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/Options.lua
+UI/MessengerWindow/AppearanceSettings/WindowStyleSpecs.lua
 UI/MessengerWindow/AppearanceSettings.lua
 UI/MessengerWindow/QuickRepliesSettings.lua
 UI/MessengerWindow/BehaviorSettings/ToggleSpecs.lua
@@ -410,7 +423,6 @@ UI/MessengerWindow/FiltersSettings/RulesSection.lua
 UI/MessengerWindow/FiltersSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua
 UI/MessengerWindow/NotificationSettings.lua
-UI/MessengerWindow/IconSettings/Options.lua
 UI/MessengerWindow/IconSettings/UnreadRows.lua
 UI/MessengerWindow/IconSettings/LookRows.lua
 UI/MessengerWindow/IconSettings.lua
@@ -438,11 +450,15 @@ UI/MessengerWindow/MessengerWindow/ContactsWiring.lua
 UI/MessengerWindow/MessengerWindow/ConversationWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowSizing.lua
 UI/MessengerWindow/MessengerWindow/WindowSurface.lua
-UI/MessengerWindow/MessengerWindow/PhoneSlide.lua
-UI/MessengerWindow/MessengerWindow/PhoneNavigator.lua
-UI/MessengerWindow/MessengerWindow/PhoneDock.lua
-UI/MessengerWindow/MessengerWindow/PhoneOpenAnimation.lua
-UI/MessengerWindow/MessengerWindow/PhoneWiring.lua
+UI/MessengerWindow/MessengerWindow/CompactSlide.lua
+UI/MessengerWindow/MessengerWindow/CompactNavigator.lua
+UI/MessengerWindow/MessengerWindow/CompactDock.lua
+UI/MessengerWindow/MessengerWindow/WindowGrowAnimation.lua
+UI/MessengerWindow/MessengerWindow/CompactDockFlow.lua
+UI/MessengerWindow/MessengerWindow/CompactWiring.lua
+UI/MessengerWindow/MessengerWindow/DockWiring.lua
+UI/MessengerWindow/MessengerWindow/WindowShell.lua
+UI/MessengerWindow/MessengerWindow/ComposerRuntime.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/Bootstrap/RuntimeFactory.lua
@@ -490,7 +506,7 @@ Core/Bootstrap/AutoOpenCoordinator/Poller.lua
 Core/Bootstrap/AutoOpenCoordinator.lua
 Core/Bootstrap/FirstRunTip.lua
 Core/Bootstrap/WindowRuntime/HudStyleSetting.lua
-Core/Bootstrap/WindowRuntime/PhoneLayoutSetting.lua
+Core/Bootstrap/WindowRuntime/CompactLayoutSetting.lua
 Core/Bootstrap/WindowRuntime/IntegrationSetting.lua
 Core/Bootstrap/WindowRuntime/LanguageSetting.lua
 Core/Bootstrap/WindowRuntime/DisplayNameSetting.lua
@@ -519,6 +535,7 @@ Core/Bootstrap/WindowRuntime/IconToggle.lua
 Core/Bootstrap/WindowRuntime/PreviewOpen.lua
 Core/Bootstrap/WindowRuntime/PreviewReplyRuntime.lua
 Core/Bootstrap/WindowRuntime/LiveThemeSync.lua
+Core/Bootstrap/WindowRuntime/GrowSource.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/WhisperIngestFailsafe.lua
 Core/Bootstrap/AddonEventFrame.lua
@@ -528,5 +545,7 @@ Core/PublicApi/Preview.lua
 Core/PublicApi/BlockList.lua
 Core/PublicApi/UnreadCount.lua
 Core/PublicApi/Look.lua
+Core/PublicApi/Animation.lua
+Core/PublicApi/CompactWindow.lua
 Core/PublicApi.lua
 Bootstrap.lua

@@ -132,8 +132,14 @@ local Russian = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Настройте поведение окна мессенджера.",
-  ["Phone-style window"] = "Окно в стиле телефона",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "Плавающая кнопка открывает прикреплённый к ней список чатов размером с телефон. Нажмите на чат, чтобы перейти к нему.",
+  ["Compact window"] = "Компактное окно",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "Плавающая кнопка открывает прикреплённый к ней узкий список чатов. Нажмите на чат, чтобы перейти к нему.",
+  ["Window animation"] = "Анимация окна",
+  ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "Окно вырастает из своего значка при открытии и сворачивается обратно в него при закрытии, а страницы плавно сдвигаются. Отключите, чтобы всё появлялось сразу.",
+  ["Dock button on the window"] = "Закреплять кнопку на окне",
+  ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "Пока окно открыто, плавающая кнопка находится в его левом верхнем углу. Отключите, чтобы кнопка оставалась на своём месте.",
+  ["Open at saved spot"] = "Открывать в сохранённом месте",
+  ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "Окно открывается там, куда вы переместили его в последний раз. Отключите, чтобы окно открывалось у плавающей кнопки, а кнопка перемещалась вместе с окном. Только когда включено «Закреплять кнопку на окне».",
   ["Reload the interface now to switch the window style?"] = "Перезагрузить интерфейс сейчас, чтобы сменить стиль окна?",
   ["Dim when moving"] = "Затемнять при движении",
   ["Reduces window opacity while your character is moving."] = "Уменьшает прозрачность окна, пока персонаж движется.",
@@ -141,6 +147,7 @@ local Russian = {
   ["Places the cursor in the text box when you open the messenger."] = "Помещает курсор в поле ввода при открытии мессенджера.",
   ["Deselect chat input after sending"] = "Снимать фокус с ввода после отправки",
   ["After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."] = "После отправки сообщения курсор покидает поле ввода, и клавиши снова управляют игрой. Пока мессенджер открыт, Enter возвращает курсор.",
+  ["In combat, only while the mouse is over the window."] = "В бою — только пока курсор мыши находится над окном.",
   ["Hide whispers from default chat"] = "Скрывать шепот из стандартного чата",
   ["Prevents whisper messages from appearing in the default WoW chat frame."] = "Не показывает шепот в стандартном окне чата WoW.",
   ["|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."] = "|cffff8080Примечание:|r В эпохальном+ контенте ответ Blizzard через /r и клавишу R может не работать, пока это включено (WoW 12.0 secret-value taint в chatEditLastTell). Используйте |cffffff00/wr|r или назначьте /wr на R через макрос.",
@@ -149,7 +156,7 @@ local Russian = {
   ["Auto-open on incoming whisper"] = "Открывать при входящем шепоте",
   ["Opens the messenger when you receive a whisper. Disabled during combat."] = "Открывает мессенджер при получении шепота. Отключено в бою.",
   ["Auto-open on outgoing whisper"] = "Открывать при исходящем шепоте",
-  ["Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat."] = "Открывает мессенджер при отправке шепота, ответе или шепоте из списка друзей. Отключено в бою.",
+  ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "Открывает мессенджер при отправке шепота или шепоте из списка друзей. Отключено в бою.",
   ["Hide on entering combat"] = "Скрывать при вступлении в бой",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "Скрывает мессенджер в начале боя и снова открывает его после боя. Если закрыть его самостоятельно во время боя, он останется закрытым.",
   ["Double ESC to close"] = "Двойной ESC для закрытия",
@@ -501,9 +508,7 @@ local Russian = {
   ["Export conversation"] = "Экспортировать переписку",
   ["Conversation with %s"] = "Переписка с %s",
   ["Export: %s"] = "Экспорт: %s",
-  ["Show more"] = "Показать ещё",
-  ["Show all"] = "Показать всё",
-  ["%d of %d lines · Ctrl+C copies"] = "%d из %d строк · Ctrl+C — копировать",
+  ["%d lines · Ctrl+C copies"] = "Строк: %d · Ctrl+C — копировать",
   ["Block sender…"] = "Заблокировать отправителя…",
   ["Blocked"] = "Заблокирован",
   ["Unblock"] = "Разблокировать",
@@ -523,6 +528,7 @@ local Russian = {
   ["Add friend"] = "Добавить в друзья",
   -- Contact menu: Guild invite
   ["Guild invite"] = "Пригласить в гильдию",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "Нажмите Ctrl+C, чтобы скопировать команду, затем вставьте её в чат.",
 }
 
 ns.Locale_ruRU = Russian

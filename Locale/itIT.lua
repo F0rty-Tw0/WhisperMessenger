@@ -132,8 +132,14 @@ local Italian = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Imposta il comportamento della finestra.",
-  ["Phone-style window"] = "Finestra stile telefono",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "Il pulsante mobile apre un elenco di chat in formato telefono collegato a esso. Fai clic su una chat per scorrere fino a essa.",
+  ["Compact window"] = "Finestra compatta",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "Il pulsante mobile apre un elenco di chat stretto collegato a esso. Fai clic su una chat per scorrere fino a essa.",
+  ["Window animation"] = "Animazione della finestra",
+  ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "La finestra cresce dalla sua icona quando si apre e si rimpicciolisce al suo interno quando si chiude, e le pagine scorrono. Disattivala per far apparire tutto subito.",
+  ["Dock button on the window"] = "Aggancia il pulsante alla finestra",
+  ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "Finché la finestra è aperta, il pulsante mobile resta nell'angolo in alto a sinistra della finestra. Disattivala per lasciare il pulsante dov'è.",
+  ["Open at saved spot"] = "Apri nella posizione salvata",
+  ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "La finestra si apre dove l'hai spostata l'ultima volta. Disattivala per aprire la finestra sul pulsante mobile e spostare il pulsante insieme alla finestra quando la sposti. Solo quando «Aggancia il pulsante alla finestra» è attivo.",
   ["Reload the interface now to switch the window style?"] = "Ricaricare ora l'interfaccia per cambiare lo stile della finestra?",
   ["Dim when moving"] = "Attenua durante il movimento",
   ["Reduces window opacity while your character is moving."] = "Riduce l'opacità della finestra mentre il personaggio si muove.",
@@ -141,6 +147,7 @@ local Italian = {
   ["Places the cursor in the text box when you open the messenger."] = "Posiziona il cursore nel campo di testo all'apertura.",
   ["Deselect chat input after sending"] = "Deseleziona la chat dopo l'invio",
   ["After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."] = "Dopo l'invio di un messaggio, il cursore lascia il campo di testo e i tuoi tasti tornano a controllare il gioco. A finestra aperta, Invio riporta il cursore nel campo.",
+  ["In combat, only while the mouse is over the window."] = "In combattimento, solo mentre il mouse è sopra la finestra.",
   ["Hide whispers from default chat"] = "Nascondi sussurri dalla chat predefinita",
   ["Prevents whisper messages from appearing in the default WoW chat frame."] = "Impedisce ai sussurri di apparire nella finestra di chat predefinita di WoW.",
   ["|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."] = "|cffff8080Nota:|r In Mitico+, la risposta /r di Blizzard e il tasto R possono non funzionare se questa opzione è attiva (WoW 12.0 secret-value taint su chatEditLastTell). Usa |cffffff00/wr|r (o assegna /wr a R con una macro) per rispondere senza problemi.",
@@ -149,7 +156,7 @@ local Italian = {
   ["Auto-open on incoming whisper"] = "Apri al sussurro in entrata",
   ["Opens the messenger when you receive a whisper. Disabled during combat."] = "Apre il messenger quando ricevi un sussurro. Disattivato in combattimento.",
   ["Auto-open on outgoing whisper"] = "Apri al sussurro in uscita",
-  ["Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat."] = "Apre il messenger quando invii un sussurro, premi Rispondi o sussurri dalla lista amici. Disattivato in combattimento.",
+  ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "Apre il messenger quando invii un sussurro o sussurri dalla lista amici. Disattivato in combattimento.",
   ["Hide on entering combat"] = "Nascondi entrando in combattimento",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "Nasconde il messenger all'inizio del combattimento e lo riapre alla fine. Se lo chiudi tu durante il combattimento, resta chiuso.",
   ["Double ESC to close"] = "Doppio ESC per chiudere",
@@ -501,9 +508,7 @@ local Italian = {
   ["Export conversation"] = "Esporta conversazione",
   ["Conversation with %s"] = "Conversazione con %s",
   ["Export: %s"] = "Esporta: %s",
-  ["Show more"] = "Mostra altro",
-  ["Show all"] = "Mostra tutto",
-  ["%d of %d lines · Ctrl+C copies"] = "%d di %d righe · Ctrl+C copia",
+  ["%d lines · Ctrl+C copies"] = "%d righe · Ctrl+C copia",
   ["Block sender…"] = "Blocca mittente…",
   ["Blocked"] = "Bloccato",
   ["Unblock"] = "Sblocca",
@@ -523,6 +528,7 @@ local Italian = {
   ["Add friend"] = "Aggiungi amico",
   -- Contact menu: Guild invite
   ["Guild invite"] = "Invita nella gilda",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "Premi Ctrl+C per copiare il comando, poi incollalo nella chat.",
 }
 
 ns.Locale_itIT = Italian

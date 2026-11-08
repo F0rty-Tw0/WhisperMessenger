@@ -3,6 +3,7 @@
 -- slots (%s, %d, ...) in the same count and order.
 local LOCALES = { "deDE", "esES", "esMX", "frFR", "itIT", "koKR", "ptBR", "ruRU", "zhCN", "zhTW" }
 local INVITE_TOOLTIP_KEY = "Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."
+local TOOLTIP_KEY = "The floating button opens a narrow chat list attached to it. Click a chat to slide into it."
 local REPLY_PLACEHOLDER_KEY = "Reply…"
 local REPLY_REASON_KEY = 'Turn on "Show widget message preview" to use this.'
 local PREVIEW_REPLY_KEYS = {
@@ -34,6 +35,28 @@ local REMOVED_KEYS = {
   "Square button background",
   "Shows a square behind the widget icon when the widget shape is square. Turn it off to show only the two chat bubbles.",
   "Only with the square widget shape.",
+  "The window grows out of its icon when it opens and shrinks back into it when it closes. Turn it off to open and close it at once.",
+  "Button glide",
+  "The floating button glides onto the window's corner when it opens and back when it closes. Turn it off to make it jump.",
+  "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window.",
+  "Show more",
+  "Show all",
+  "%d of %d lines · Ctrl+C copies",
+  "Phone-style window",
+  "The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it.",
+}
+local COMPACT_WINDOW_KEYS = { "Compact window", TOOLTIP_KEY }
+local WINDOW_ANIMATION_KEYS = {
+  "Window animation",
+  "The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once.",
+}
+local DOCK_KEYS = {
+  "Dock button on the window",
+  "While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is.",
+}
+local SAVED_SPOT_KEYS = {
+  "Open at saved spot",
+  "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on.",
 }
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 
@@ -112,6 +135,26 @@ return function()
     -- test_removed_icon_strings_are_gone
     for _, key in ipairs(REMOVED_KEYS) do
       assert(catalog[key] == nil, code .. " still has the removed string '" .. key .. "'")
+    end
+
+    -- test_window_animation_strings_are_translated
+    for _, key in ipairs(WINDOW_ANIMATION_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_compact_window_strings_are_translated
+    for _, key in ipairs(COMPACT_WINDOW_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_dock_button_strings_are_translated
+    for _, key in ipairs(DOCK_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_open_at_saved_spot_strings_are_translated
+    for _, key in ipairs(SAVED_SPOT_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 
     -- test_language_reload_prompt_is_translated

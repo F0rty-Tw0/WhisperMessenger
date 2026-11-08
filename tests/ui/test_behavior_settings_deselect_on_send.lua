@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local BehaviorSettings = require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
 local FindUI = require("tests.helpers.find_ui")
+local ToggleSpecs = require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings.ToggleSpecs")
 
 local LABEL = "Deselect chat input after sending"
 
@@ -43,5 +44,21 @@ return function()
     local reset = FindUI.byLabel(result.frame, "Reset to Defaults")
     reset:GetScript("OnClick")(reset)
     assert(changes.deselectComposerOnSend == false, "Reset to Defaults must turn it off")
+  end
+
+  -- test_tooltip_explains_the_combat_limit
+  do
+    local lines
+    for _, spec in ipairs(ToggleSpecs.Build({}, function() end)) do
+      if spec.key == "deselectComposerOnSend" then
+        lines = spec.tooltipLines
+      end
+    end
+    assert(lines ~= nil, "the spec must exist")
+    local found = false
+    for _, line in ipairs(lines) do
+      found = found or line == "In combat, only while the mouse is over the window."
+    end
+    assert(found, "the tooltip must say Enter works in combat only while the mouse is over the window")
   end
 end

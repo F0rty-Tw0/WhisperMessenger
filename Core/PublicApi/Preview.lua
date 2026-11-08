@@ -41,12 +41,19 @@ local function previewsTurnedOff(runtime)
   return settings ~= nil and settings.showWidgetMessagePreview == false
 end
 
+-- On the compact window the button hides every card, so a true here would tell
+-- the caller "shown" while the player sees nothing; false keeps its own toast.
+local function buttonRidesWindow(icon)
+  return icon.isRiding ~= nil and icon.isRiding() == true
+end
+
 function Preview.Install(api, runtime)
   api.ShowPreview = Guards.Wrap(function(sourceKey, preview)
     if not Guards.IsNonEmptyString(sourceKey) or not isValidPreview(preview) then
       return false
     end
-    if previewsTurnedOff(runtime) or runtime.getWidgetIcon() == nil then
+    local icon = runtime.getWidgetIcon()
+    if previewsTurnedOff(runtime) or icon == nil or buttonRidesWindow(icon) then
       return false
     end
     runtime.externalPreview.set(sourceKey, preview, isPanelShown(runtime, sourceKey))

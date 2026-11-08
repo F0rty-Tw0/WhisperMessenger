@@ -132,8 +132,14 @@ local French = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Configurez le comportement de la fenêtre.",
-  ["Phone-style window"] = "Fenêtre style téléphone",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "Le bouton flottant ouvre une liste de discussions au format téléphone, attachée à lui. Cliquez sur une discussion pour y glisser.",
+  ["Compact window"] = "Fenêtre compacte",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "Le bouton flottant ouvre une liste de discussions étroite, attachée à lui. Cliquez sur une discussion pour y glisser.",
+  ["Window animation"] = "Animation de la fenêtre",
+  ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "La fenêtre sort de son icône à l'ouverture et s'y résorbe à la fermeture, et les pages glissent. Désactivez-la pour que tout apparaisse instantanément.",
+  ["Dock button on the window"] = "Ancrer le bouton à la fenêtre",
+  ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "Tant que la fenêtre est ouverte, le bouton flottant se place dans son coin supérieur gauche. Désactivez l'option pour laisser le bouton là où il est.",
+  ["Open at saved spot"] = "Ouvrir à l'emplacement enregistré",
+  ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "La fenêtre s'ouvre là où vous l'avez déplacée en dernier. Désactivez l'option pour ouvrir la fenêtre au niveau du bouton flottant et déplacer le bouton avec la fenêtre. Uniquement quand « Ancrer le bouton à la fenêtre » est activé.",
   ["Reload the interface now to switch the window style?"] = "Recharger l'interface maintenant pour changer le style de la fenêtre ?",
   ["Dim when moving"] = "Atténuer pendant les déplacements",
   ["Reduces window opacity while your character is moving."] = "Réduit l'opacité de la fenêtre quand votre personnage se déplace.",
@@ -141,6 +147,7 @@ local French = {
   ["Places the cursor in the text box when you open the messenger."] = "Place le curseur dans la zone de texte à l'ouverture.",
   ["Deselect chat input after sending"] = "Désélectionner la saisie après l'envoi",
   ["After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."] = "Après l'envoi d'un message, le curseur quitte la zone de texte pour que vos touches contrôlent à nouveau le jeu. Tant que la fenêtre est ouverte, Entrée y replace le curseur.",
+  ["In combat, only while the mouse is over the window."] = "En combat, uniquement tant que la souris est sur la fenêtre.",
   ["Hide whispers from default chat"] = "Masquer les chuchotements du chat par défaut",
   ["Prevents whisper messages from appearing in the default WoW chat frame."] = "Empêche les chuchotements d'apparaître dans la fenêtre de chat par défaut.",
   ["|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."] = "|cffff8080Remarque :|r En Mythique+, la réponse /r de Blizzard et la touche R peuvent échouer si cette option est activée (WoW 12.0 secret-value taint sur chatEditLastTell). Utilisez |cffffff00/wr|r (ou liez /wr à R via une macro) pour répondre sans problème.",
@@ -149,7 +156,7 @@ local French = {
   ["Auto-open on incoming whisper"] = "Ouvrir à la réception d'un chuchotement",
   ["Opens the messenger when you receive a whisper. Disabled during combat."] = "Ouvre la fenêtre lors d'un chuchotement reçu. Désactivé en combat.",
   ["Auto-open on outgoing whisper"] = "Ouvrir à l'envoi d'un chuchotement",
-  ["Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat."] = "Ouvre la fenêtre à l'envoi d'un chuchotement, à la touche Répondre ou depuis la liste d'amis. Désactivé en combat.",
+  ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "Ouvre la fenêtre à l'envoi d'un chuchotement ou depuis la liste d'amis. Désactivé en combat.",
   ["Hide on entering combat"] = "Masquer en entrant en combat",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "Masque le messager au début du combat et le rouvre à la fin du combat. Si vous le fermez vous-même pendant le combat, il reste fermé.",
   ["Double ESC to close"] = "Double ESC pour fermer",
@@ -501,9 +508,7 @@ local French = {
   ["Export conversation"] = "Exporter la conversation",
   ["Conversation with %s"] = "Conversation avec %s",
   ["Export: %s"] = "Export : %s",
-  ["Show more"] = "Afficher plus",
-  ["Show all"] = "Tout afficher",
-  ["%d of %d lines · Ctrl+C copies"] = "%d sur %d lignes · Ctrl+C pour copier",
+  ["%d lines · Ctrl+C copies"] = "%d lignes · Ctrl+C pour copier",
   ["Block sender…"] = "Bloquer l'expéditeur…",
   ["Blocked"] = "Bloqué",
   ["Unblock"] = "Débloquer",
@@ -523,6 +528,7 @@ local French = {
   ["Add friend"] = "Ajouter en ami",
   -- Contact menu: Guild invite
   ["Guild invite"] = "Inviter dans la guilde",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "Appuyez sur Ctrl+C pour copier la commande, puis collez-la dans le chat.",
 }
 
 ns.Locale_frFR = French

@@ -17,6 +17,10 @@ local function isOptionalFunction(value)
   return value == nil or type(value) == "function"
 end
 
+local function isOptionalBoolean(value)
+  return value == nil or type(value) == "boolean"
+end
+
 local function isValidPanel(panel)
   return type(panel) == "table"
     and type(panel.title) == "string"
@@ -24,11 +28,13 @@ local function isValidPanel(panel)
     and isOptionalFunction(panel.onHide)
     and isOptionalFunction(panel.onSplit)
     and isOptionalFunction(panel.badge)
+    and isOptionalBoolean(panel.compact)
 end
 
 -- options: factory, parent, nativeChrome, theme, listWidth (the divider's x
 -- from the left edge, the seed for onSplit), addTab(key, title, onClick)
--- -> { setBadge(n) }, onTabClick(key).
+-- -> { setBadge(n) }, onTabClick(key). Returns { register, setSplit, show,
+-- hide, refreshBadge, has, frameOf, isCompact(key) }.
 function PanelHost.Create(options)
   local factory = options.factory
   local parent = options.parent
@@ -110,6 +116,9 @@ function PanelHost.Create(options)
     end,
     frameOf = function(key)
       return entries[key] and entries[key].frame
+    end,
+    isCompact = function(key)
+      return entries[key] ~= nil and entries[key].panel.compact == true
     end,
   }
 end

@@ -164,11 +164,11 @@ function WindowCallbacks.Create(options)
       ConversationDrafts.Set(runtime.store, conversationKey, text)
     end,
 
-    -- The phone window keeps its own size and position, so the classic
+    -- The compact window keeps its own size and position, so the classic
     -- window is as it was if the player switches back.
     onPositionChanged = function(nextState)
-      if runtime.phoneLayoutActive then
-        characterState.phoneWindow = tableUtils.copyState(nextState)
+      if runtime.compactLayoutActive then
+        characterState.compactWindow = tableUtils.copyState(nextState)
         return
       end
       characterState.window = tableUtils.copyState(nextState)
@@ -179,8 +179,8 @@ function WindowCallbacks.Create(options)
     end,
 
     onResetWindowPosition = function()
-      if runtime.phoneLayoutActive then
-        characterState.phoneWindow = nil
+      if runtime.compactLayoutActive then
+        characterState.compactWindow = nil
         return nil
       end
       local nextState = tableUtils.copyState(defaultCharacterState.window)

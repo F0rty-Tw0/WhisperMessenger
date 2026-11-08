@@ -57,6 +57,16 @@ return function()
     assert(result[#result].text == "LFW " .. LINK, "persisted post must keep its hyperlink intact")
   end
 
+  -- test_persisted_post_keeps_zone_channel_id
+  do
+    local conversation = addConversation(newStore(), "wow::WOW::crafter", 1000)
+    local channelState = ChannelMessageStore.New()
+    ChannelMessageStore.Record(channelState, "Crafter-Kazzak", "LFW", "Handel", 1100, 2)
+    merge(channelState, conversation, 1200)
+    local row = conversation.messages[#conversation.messages]
+    assert(row.kind == "channel_context" and row.zoneChannelID == 2, "the saved row keeps the channel's zone ID, not just its label")
+  end
+
   -- test_persisted_post_does_not_touch_unread_or_activity
   do
     local store = newStore()

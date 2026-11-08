@@ -80,7 +80,7 @@ function ToggleSpecs.Build(config, onChange)
       end,
       tooltipLines = {
         text("Auto-open on outgoing whisper"),
-        text("Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat."),
+        text("Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."),
       },
     },
     {

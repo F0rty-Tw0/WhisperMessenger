@@ -12,6 +12,7 @@ local CALLS = {
   { "SetContactInfo", { "ca", "Jaina-Proudmoore", "x" } },
   { "Block", { "Jaina-Proudmoore" } },
   { "Unblock", { "Jaina-Proudmoore" } },
+  { "IsAnimationEnabled", {} },
 }
 
 local function boot(settings)

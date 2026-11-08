@@ -58,6 +58,7 @@ function LifecycleWiring.Setup(options)
     onClose = options.closeWindow,
     onStartConversation = options.onStartConversation,
     onResetWindowPosition = options.onResetWindowPosition,
+    onWindowMoved = options.onWindowMoved,
     onResetIconPosition = options.onResetIconPosition,
     onClearAllChats = options.onClearAllChats,
     setOptionsVisible = options.setOptionsVisible,

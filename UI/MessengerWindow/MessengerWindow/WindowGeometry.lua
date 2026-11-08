@@ -72,7 +72,7 @@ function WindowGeometry.Create(options)
     pos.contactsWidth = clampContactsWidth(pos.width, currentContactsWidth, theme, collapsed)
     pos.contactsCollapsed = collapsed
     pos.minimized = false
-    pos.phoneLayout = initialState.phoneLayout
+    pos.compactLayout = initialState.compactLayout
     return clampState(parent, pos, theme, currentScale)
   end
 
