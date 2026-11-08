@@ -11,6 +11,8 @@ local LinkHooks = ns.ComposerLinkHooks or require("WhisperMessenger.UI.Composer.
 local SendButtonStyle = ns.ComposerSendButtonStyle or require("WhisperMessenger.UI.Composer.SendButtonStyle")
 local ComposerLimit = ns.ComposerLimit or require("WhisperMessenger.UI.Composer.ComposerLimit")
 local PreviewMetrics = ns.ToggleIconPreviewMetrics or require("WhisperMessenger.UI.ToggleIcon.PreviewMetrics")
+local ComposerSurface = ns.ComposerSurface or require("WhisperMessenger.UI.Composer.ComposerSurface")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local setTextColor = UIHelpers.setTextColor
 
 -- The preview card's one-line reply input plus send arrow. UI only: the
@@ -72,7 +74,14 @@ function PreviewReplyRow.Create(factory, parentFrame, options)
 
   local rowFrame = factory.CreateFrame("Frame", nil, parentFrame)
   local input = createInput(factory, rowFrame, theme)
-  local fill = UIHelpers.createRoundedBackground(input, INPUT_RADIUS)
+  -- Native WoW HUD: Blizzard's input border instead of the rounded fill.
+  local native = Hud.IsOn()
+  local fill
+  if native then
+    ComposerSurface.CreateNativeBorder(input)
+  else
+    fill = UIHelpers.createRoundedBackground(input, INPUT_RADIUS)
+  end
   local sendButton = factory.CreateFrame("Button", nil, rowFrame)
   local paintSend = SendButtonStyle.Create(sendButton)
   local cover = factory.CreateFrame("Frame", nil, rowFrame)
@@ -82,7 +91,7 @@ function PreviewReplyRow.Create(factory, parentFrame, options)
   end
   cover:Hide()
 
-  -- Parented to the input so the rounded fill never covers it.
+  -- Parented to the input so the fill or border art never covers it.
   local placeholder = input:CreateFontString(nil, "OVERLAY")
   UIHelpers.setFontObject(placeholder, theme.FONTS.composer_input)
   placeholder:SetPoint("LEFT", input, "LEFT", TEXT_INSET, 0)
@@ -234,9 +243,14 @@ function PreviewReplyRow.Create(factory, parentFrame, options)
   function row.applyTheme(activeTheme)
     theme = activeTheme or theme
     local colors = theme.COLORS
-    fill.setColor(colors.bg_message_input or colors.bg_input)
-    setTextColor(input, colors.text_primary)
-    setTextColor(placeholder, colors.text_secondary)
+    if native then
+      setTextColor(input, ComposerSurface.NATIVE_TEXT_COLOR)
+      setTextColor(placeholder, ComposerSurface.NATIVE_PLACEHOLDER_COLOR)
+    else
+      fill.setColor(colors.bg_message_input or colors.bg_input)
+      setTextColor(input, colors.text_primary)
+      setTextColor(placeholder, colors.text_secondary)
+    end
     paint()
   end
 
