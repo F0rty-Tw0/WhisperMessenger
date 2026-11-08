@@ -70,9 +70,8 @@ function Bootstrap.Initialize(factory, options)
     accountState.settings.hideFromDefaultChat = true
     accountState.settings.hudStyle = Hud.DefaultStyle()
     accountState.settings.themePreset = Hud.DefaultPreset()
-    accountState.settings.compactLayout = true
   end
-  -- Saved either way, so a new install is not read as an update next login.
+  -- The compact window is opt-in for everyone; saved explicitly either way.
   if accountState.settings.compactLayout == nil then
     accountState.settings.compactLayout = false
   end
