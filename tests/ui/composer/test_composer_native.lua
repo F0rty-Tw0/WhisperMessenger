@@ -49,6 +49,12 @@ local function anyEdgeShown(border)
 end
 
 return function()
+  -- test_native_border_texture_is_blizzards_input_border_path
+  do
+    local expected = "Interface\\Common\\Common-Input-Border"
+    assert(ComposerSurface.NATIVE_BORDER_TEXTURE == expected, "file art path, got " .. tostring(ComposerSurface.NATIVE_BORDER_TEXTURE))
+  end
+
   -- test_hud_composer_draws_blizzard_input_border_on_existing_edit_box
   do
     local composer = create(true)

@@ -36,7 +36,7 @@ end
 -- composer EditBox (re-templating it would replace its scripts and insets).
 -- Retail HUD uses the search-box atlases when the client has them; every
 -- other case uses the file art, which ships with every flavor.
-ComposerSurface.NATIVE_BORDER_TEXTURE = "InterfaceCommonCommon-Input-Border"
+ComposerSurface.NATIVE_BORDER_TEXTURE = "Interface\\Common\\Common-Input-Border"
 ComposerSurface.NATIVE_SEARCH_ATLAS = {
   left = "common-search-border-left",
   middle = "common-search-border-middle",
