@@ -433,6 +433,7 @@ UI/MessengerWindow/PatchNotesSettings.lua
 UI/MessengerWindow/MessengerWindow/SelectionSync.lua
 UI/MessengerWindow/MessengerWindow/MessageActions.lua
 UI/MessengerWindow/MessengerWindow/ContactSearch.lua
+UI/MessengerWindow/MessengerWindow/SettingsPanelFrame.lua
 UI/MessengerWindow/MessengerWindow/SettingsPanels.lua
 UI/MessengerWindow/MessengerWindow/SettingsRuntime.lua
 UI/MessengerWindow/MessengerWindow/ContactsSearchController.lua
