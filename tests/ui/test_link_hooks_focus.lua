@@ -160,6 +160,15 @@ return function()
     assert(took == false and #env.inserts == 0, "a plain click must not insert the name, got: " .. tostring(env.inserts[1]))
   end
 
+  -- test_insert_clicked_player_name_does_nothing_while_suspended
+  do
+    reset(true)
+    rawset(_G, "_wmSuspended", true)
+    local took = env.LinkHooks.InsertClickedPlayerName("player:Ambush Rasit:3901:CHANNEL:2")
+    rawset(_G, "_wmSuspended", nil)
+    assert(took == false and #env.inserts == 0, "a suspended addon must not insert the name, got: " .. tostring(env.inserts[1]))
+  end
+
   -- test_unmodified_community_player_click_inserts_nothing
   do
     reset(true)
