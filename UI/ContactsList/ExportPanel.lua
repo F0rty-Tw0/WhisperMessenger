@@ -79,24 +79,28 @@ local function hideTextures(frame)
 end
 
 -- Modern look: the themed well replaces Blizzard's border, and the scroll
--- bar keeps only its thumb, painted in theme colours. Returns the thumb.
+-- bar (Back/Forward arrows, a Track holding the Thumb knob, as on WoW:
+-- Forever) keeps only a slim knob. Returns the knob's fill for painting;
+-- a bar of any other shape keeps Blizzard's art.
 local function slimTemplateArt(scroll)
   hideTextures(scroll)
-  for _, child in ipairs({ scroll:GetChildren() }) do
-    if child:GetObjectType() == "Slider" then
-      local thumb = child:GetThumbTexture()
-      hideTextures(child)
-      for _, button in ipairs({ child:GetChildren() }) do
-        button:Hide()
-      end
-      if thumb then
-        thumb:Show()
-        thumb:SetWidth(Theme.LAYOUT.SCROLLBAR_WIDTH)
-      end
-      return thumb
-    end
+  local bar = scroll.ScrollBar
+  local thumb = bar and bar.Track and bar.Track.Thumb
+  if thumb == nil then
+    return nil
   end
-  return nil
+  for _, arrow in ipairs({ bar.Back, bar.Forward }) do
+    arrow:Hide()
+  end
+  hideTextures(bar)
+  hideTextures(bar.Track)
+  hideTextures(thumb)
+  local fill = thumb:CreateTexture(nil, "OVERLAY")
+  fill:SetPoint("TOP", thumb, "TOP", 0, 0)
+  fill:SetPoint("BOTTOM", thumb, "BOTTOM", 0, 0)
+  fill:SetWidth(Theme.LAYOUT.SCROLLBAR_WIDTH)
+  fill:Show()
+  return fill
 end
 
 -- Blizzard's input scroll box, nil on a client without the template.
