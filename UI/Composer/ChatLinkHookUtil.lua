@@ -35,10 +35,14 @@ end
 -- the callback runs at once and the hooks skip whatever is missing. Hooks are
 -- registered while our composer is built, so a throw here (an addon the flavor
 -- does not have, a hook that trips) is contained: that group just goes unhooked.
+-- EventUtil may run the callback later from its own event handler, so the
+-- callback carries its own pcall.
 function ChatLinkHookUtil.OnAddOnLoaded(blizzardAddOn, callback)
   local eventUtil = _G.EventUtil
   if type(eventUtil) == "table" and type(eventUtil.ContinueOnAddOnLoaded) == "function" then
-    pcall(eventUtil.ContinueOnAddOnLoaded, blizzardAddOn, callback)
+    pcall(eventUtil.ContinueOnAddOnLoaded, blizzardAddOn, function()
+      pcall(callback)
+    end)
     return
   end
   pcall(callback)

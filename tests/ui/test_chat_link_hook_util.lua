@@ -38,6 +38,21 @@ return function()
     assert(ok, "a throw from ContinueOnAddOnLoaded must not escape: " .. tostring(err))
   end)
 
+  -- test_on_addon_loaded_contains_a_throwing_deferred_callback
+  -- (EventUtil runs the callback later, from its own event handler)
+  local deferred
+  withEventUtil({
+    ContinueOnAddOnLoaded = function(_name, callback)
+      deferred = callback
+    end,
+  }, function()
+    Util.OnAddOnLoaded("Blizzard_GlyphUI", function()
+      error("hook tripped")
+    end)
+  end)
+  local deferredOk, deferredErr = pcall(deferred)
+  assert(deferredOk, "a throw from a deferred callback must not escape: " .. tostring(deferredErr))
+
   -- test_on_addon_loaded_contains_a_throwing_callback_without_event_util
   withEventUtil(nil, function()
     local ok, err = pcall(Util.OnAddOnLoaded, "Blizzard_GlyphUI", function()
