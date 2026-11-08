@@ -1,73 +1,11 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local ComposerSendFocus = require("WhisperMessenger.UI.Composer.ComposerSendFocus")
+local Env = require("tests.helpers.composer_send_focus_env")
 
--- Builds a ComposerSendFocus with recorded binding calls. env.on, env.enabled
--- and env.combat drive its state; env.bound lists the keys bound now, and
--- env.blocked counts binding calls made in combat, which the game refuses.
-local function newEnv(overrides)
-  local factory = FakeUI.NewFactory()
-  local env = { on = true, enabled = true, combat = false, keys = { "ENTER" }, bound = {}, binds = 0, blocked = 0 }
-  for key, value in pairs(overrides or {}) do
-    env[key] = value
-  end
-  env.pane = factory.CreateFrame("Frame", nil, nil)
-  env.input = factory.CreateFrame("EditBox", nil, env.pane)
-  env.focus = ComposerSendFocus.Create(env.pane, env.input, {
-    isOn = function()
-      return env.on
-    end,
-    isEnabled = function()
-      return env.enabled
-    end,
-  }, {
-    createFrame = function(...)
-      env.button = factory.CreateFrame(...)
-      function env.button:RegisterForClicks(...)
-        self.clickTypes = { ... }
-      end
-      return env.button
-    end,
-    getBindingKey = function(action)
-      assert(action == "OPENCHAT", "the override follows the open-chat binding")
-      return table.unpack(env.keys)
-    end,
-    inCombat = function()
-      return env.combat
-    end,
-    setOverrideBindingClick = function(owner, priority, key, buttonName)
-      if env.combat then
-        env.blocked = env.blocked + 1
-      end
-      assert(priority == true, "the override must beat the game's chat binding")
-      assert(owner == env.button, "the override belongs to the module's button")
-      env.buttonName = buttonName
-      env.binds = env.binds + 1
-      table.insert(env.bound, key)
-    end,
-    clearOverrideBindings = function(owner)
-      if env.combat then
-        env.blocked = env.blocked + 1
-      end
-      assert(owner == env.button, "clear only the overrides this button owns")
-      env.bound = {}
-    end,
-  })
-  function env.fire(event)
-    env.button:GetScript("OnEvent")(env.button, event)
-  end
-  function env.startCombat()
-    env.fire("PLAYER_REGEN_DISABLED")
-    env.combat = true
-  end
-  function env.endCombat()
-    env.combat = false
-    env.fire("PLAYER_REGEN_ENABLED")
-  end
-  env.pane:Show()
-  return env
-end
+local newEnv = Env.NewEnv
 
 return function()
+  local savedUIParent = _G.UIParent
+
   -- test_after_send_clears_focus_when_on
   do
     local env = newEnv()
@@ -82,15 +20,6 @@ return function()
     env.input:SetFocus()
     env.focus.afterSend()
     assert(env.input._hasFocus == true, "a send must keep focus when the setting is off")
-  end
-
-  -- test_after_send_clears_focus_in_combat
-  do
-    local env = newEnv()
-    env.startCombat()
-    env.input:SetFocus()
-    env.focus.afterSend()
-    assert(env.input._hasFocus == false, "combat blocks bindings, not focus: a send still clears it")
   end
 
   -- test_binds_every_open_chat_key_while_eligible
@@ -171,53 +100,6 @@ return function()
     assert(#env.bound == 1, "an enabled composer takes the key again")
   end
 
-  -- test_combat_start_unbinds
-  do
-    local env = newEnv()
-    env.fire("PLAYER_REGEN_DISABLED")
-    assert(#env.bound == 0, "the key goes back to the game before the lockdown")
-  end
-
-  -- test_no_binding_calls_in_combat
-  do
-    local env = newEnv()
-    env.startCombat()
-    env.focus.sync()
-    env.pane:Hide()
-    env.pane:Show()
-    env.fire("UPDATE_BINDINGS")
-    env.fire("PLAYER_ENTERING_WORLD")
-    assert(env.blocked == 0, "bindings can't change in combat")
-    assert(#env.bound == 0, "the key stays with the game for the whole fight")
-  end
-
-  -- test_combat_end_rebinds_when_eligible
-  do
-    local env = newEnv()
-    env.startCombat()
-    env.endCombat()
-    assert(#env.bound == 1, "the key comes back after combat")
-  end
-
-  -- test_disabled_during_combat_stays_unbound_after
-  do
-    local env = newEnv()
-    env.startCombat()
-    env.enabled = false
-    env.endCombat()
-    assert(#env.bound == 0, "a composer disabled in combat must not take the key after it")
-  end
-
-  -- test_keys_changed_in_combat_bind_after
-  do
-    local env = newEnv()
-    env.startCombat()
-    env.keys = { "F1" }
-    env.fire("UPDATE_BINDINGS")
-    env.endCombat()
-    assert(#env.bound == 1 and env.bound[1] == "F1", "the new key is bound after combat")
-  end
-
   -- test_update_bindings_rebinds_changed_keys
   do
     local env = newEnv()
@@ -271,4 +153,6 @@ return function()
     env.fire("PLAYER_ENTERING_WORLD")
     assert(env.binds == 0, "the setting is off: no override")
   end
+
+  _G.UIParent = savedUIParent
 end

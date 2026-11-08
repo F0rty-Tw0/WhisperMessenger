@@ -147,6 +147,7 @@ local Italian = {
   ["Places the cursor in the text box when you open the messenger."] = "Posiziona il cursore nel campo di testo all'apertura.",
   ["Deselect chat input after sending"] = "Deseleziona la chat dopo l'invio",
   ["After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."] = "Dopo l'invio di un messaggio, il cursore lascia il campo di testo e i tuoi tasti tornano a controllare il gioco. A finestra aperta, Invio riporta il cursore nel campo.",
+  ["In combat, only while the mouse is over the window."] = "In combattimento, solo mentre il mouse è sopra la finestra.",
   ["Hide whispers from default chat"] = "Nascondi sussurri dalla chat predefinita",
   ["Prevents whisper messages from appearing in the default WoW chat frame."] = "Impedisce ai sussurri di apparire nella finestra di chat predefinita di WoW.",
   ["|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."] = "|cffff8080Nota:|r In Mitico+, la risposta /r di Blizzard e il tasto R possono non funzionare se questa opzione è attiva (WoW 12.0 secret-value taint su chatEditLastTell). Usa |cffffff00/wr|r (o assegna /wr a R con una macro) per rispondere senza problemi.",

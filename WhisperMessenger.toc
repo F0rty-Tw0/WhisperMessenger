@@ -305,6 +305,7 @@ UI/Composer/ComposerSurface.lua
 UI/Composer/SendButtonStyle.lua
 UI/Composer/ReplyState.lua
 UI/Composer/ComposerLimit.lua
+UI/MessengerWindow/WindowScripts/Frame/PointerFocus.lua
 UI/Composer/ComposerSendFocus.lua
 UI/Composer/SlashCommand.lua
 UI/Composer/Composer.lua
@@ -376,7 +377,6 @@ UI/MessengerWindow/WindowScripts/Buttons.lua
 UI/MessengerWindow/WindowScripts/Frame/ResizeBounds.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
-UI/MessengerWindow/WindowScripts/Frame/PointerFocus.lua
 UI/MessengerWindow/WindowScripts/Frame/EscapeKey.lua
 UI/MessengerWindow/WindowScripts/Frame/EscapeOrder.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowStrata.lua

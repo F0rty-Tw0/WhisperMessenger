@@ -147,6 +147,7 @@ local SimplifiedChinese = {
   ["Places the cursor in the text box when you open the messenger."] = "打开信使时将光标置于输入框。",
   ["Deselect chat input after sending"] = "发送后取消选中输入框",
   ["After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."] = "发送消息后，光标会离开输入框，按键将重新控制游戏。信使打开时，按 Enter 可将光标移回。",
+  ["In combat, only while the mouse is over the window."] = "战斗中，仅当鼠标位于窗口上方时有效。",
   ["Hide whispers from default chat"] = "在默认聊天中隐藏密语",
   ["Prevents whisper messages from appearing in the default WoW chat frame."] = "阻止密语显示在默认WoW聊天框中。",
   ["|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."] = "|cffff8080注意:|r 在史诗钥石+内容中,启用此项时暴雪的 /r 回复和 R 键可能失败 (WoW 12.0 chatEditLastTell 上的 secret-value taint)。请使用 |cffffff00/wr|r (或通过宏将 /wr 绑定到 R) 安全回复。",

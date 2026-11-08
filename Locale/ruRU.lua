@@ -147,6 +147,7 @@ local Russian = {
   ["Places the cursor in the text box when you open the messenger."] = "Помещает курсор в поле ввода при открытии мессенджера.",
   ["Deselect chat input after sending"] = "Снимать фокус с ввода после отправки",
   ["After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."] = "После отправки сообщения курсор покидает поле ввода, и клавиши снова управляют игрой. Пока мессенджер открыт, Enter возвращает курсор.",
+  ["In combat, only while the mouse is over the window."] = "В бою — только пока курсор мыши находится над окном.",
   ["Hide whispers from default chat"] = "Скрывать шепот из стандартного чата",
   ["Prevents whisper messages from appearing in the default WoW chat frame."] = "Не показывает шепот в стандартном окне чата WoW.",
   ["|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."] = "|cffff8080Примечание:|r В эпохальном+ контенте ответ Blizzard через /r и клавишу R может не работать, пока это включено (WoW 12.0 secret-value taint в chatEditLastTell). Используйте |cffffff00/wr|r или назначьте /wr на R через макрос.",
