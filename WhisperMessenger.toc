@@ -74,6 +74,7 @@ Util/ChatReplyState.lua
 Util/ChatPrefill.lua
 Model/ConversationDrafts.lua
 Model/ContactInfo.lua
+Model/AddonIntegrations.lua
 Model/OutgoingDelivery.lua
 Model/ContactPrefs.lua
 Model/MessageRequests.lua
