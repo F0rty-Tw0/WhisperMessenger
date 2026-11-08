@@ -32,7 +32,7 @@ end
 local function clickInCombat(env)
   env.startCombat()
   env.window.mouseOver = false
-  env.button:GetScript("OnClick")(env.button)
+  env.pressKey()
 end
 
 return function()

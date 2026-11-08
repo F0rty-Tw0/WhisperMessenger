@@ -38,15 +38,15 @@ return function()
   -- test_click_focuses_input
   do
     local env = newEnv()
-    env.button:GetScript("OnClick")(env.button)
+    env.pressKey()
     assert(env.input._hasFocus == true, "the key must put the cursor in the composer")
   end
 
-  -- test_button_listens_for_its_events
+  -- test_listens_for_its_events
   do
     local env = newEnv()
     for _, event in ipairs({ "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "UPDATE_BINDINGS", "PLAYER_ENTERING_WORLD" }) do
-      assert(env.button:IsEventRegistered(event), "the button must listen for " .. event)
+      assert(env.events:IsEventRegistered(event), "the module must listen for " .. event)
     end
   end
 

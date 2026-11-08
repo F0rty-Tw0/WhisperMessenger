@@ -4,13 +4,15 @@ if type(ns) ~= "table" then
 end
 
 local BindingKeys = ns.BindingKeys or require("WhisperMessenger.Util.BindingKeys")
+local ComposerEnterButton = ns.ComposerEnterButton or require("WhisperMessenger.UI.Composer.ComposerEnterButton")
 local PointerFocus = ns.MessengerWindowWindowScriptsFramePointerFocus
   or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.PointerFocus")
 
 -- "Deselect chat input after sending": a send takes the cursor out of the
 -- composer, and while the composer is on screen the game's open-chat key puts
--- it back. The key is an override binding on a button, like the ESC override
--- (EscapeKey.lua), so it never touches Blizzard's chat box.
+-- it back. The key is an override binding on a button (ComposerEnterButton),
+-- so it never touches Blizzard's chat box. Bindings are only set outside
+-- combat, so the button is made at the first one, never in combat.
 --
 -- Bindings can't change in combat. PLAYER_REGEN_DISABLED fires just before the
 -- lockdown, so with the setting on and the window open it takes the key even
@@ -30,7 +32,6 @@ local PointerFocus = ns.MessengerWindowWindowScriptsFramePointerFocus
 -- toggle when they close.
 local ComposerSendFocus = {}
 
-local BUTTON_NAME = "WhisperMessengerComposerEnterButton"
 local OPEN_CHAT_ACTION = "OPENCHAT"
 local TOGGLE_ICON_NAME = "WhisperMessengerToggleIcon"
 local EVENTS = { "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "UPDATE_BINDINGS", "PLAYER_ENTERING_WORLD" }
@@ -130,21 +131,36 @@ function ComposerSendFocus.Create(pane, input, options, deps)
     boundKeys = nil
   end
 
-  local function bind()
-    if boundKeys ~= nil or button == nil or type(setOverrideBindingClick) ~= "function" then
+  local function isEligible()
+    return options.isOn() and options.isEnabled() and pane:IsVisible()
+  end
+
+  local function onPress()
+    if not isEligible() or (inCombat() and not mouseIsOver(pane)) then
       return
     end
-    local keys = openChatKeys()
-    for _, key in ipairs(keys) do
-      setOverrideBindingClick(button, true, key, BUTTON_NAME)
-    end
-    if #keys > 0 then
-      boundKeys = table.concat(keys, " ")
+    if input.SetFocus then
+      input:SetFocus()
     end
   end
 
-  local function isEligible()
-    return options.isOn() and options.isEnabled() and pane:IsVisible()
+  -- Only ever runs outside combat, so the secure button is made here.
+  local function bind()
+    if boundKeys ~= nil or type(createFrame) ~= "function" or type(setOverrideBindingClick) ~= "function" then
+      return
+    end
+    local keys = openChatKeys()
+    if #keys == 0 then
+      return
+    end
+    button = button or ComposerEnterButton.Create(createFrame, onPress)
+    if button == nil then
+      return
+    end
+    for _, key in ipairs(keys) do
+      setOverrideBindingClick(button, true, key, ComposerEnterButton.NAME)
+    end
+    boundKeys = table.concat(keys, " ")
   end
 
   local function sync()
@@ -216,27 +232,15 @@ function ComposerSendFocus.Create(pane, input, options, deps)
     sync()
   end
 
-  if type(createFrame) == "function" then
-    button = createFrame("Button", BUTTON_NAME, pane)
-  end
-  if button then
-    if type(button.RegisterForClicks) == "function" then
-      button:RegisterForClicks("AnyDown")
-    end
-    button:SetScript("OnClick", function()
-      if not isEligible() or (inCombat() and not mouseIsOver(pane)) then
-        return
-      end
-      if input.SetFocus then
-        input:SetFocus()
-      end
-    end)
-    if type(button.RegisterEvent) == "function" then
+  -- A plain frame takes the events, so it can be made even in combat.
+  local events = type(createFrame) == "function" and createFrame("Frame", nil, pane) or nil
+  if events then
+    if type(events.RegisterEvent) == "function" then
       for _, event in ipairs(EVENTS) do
-        button:RegisterEvent(event)
+        events:RegisterEvent(event)
       end
     end
-    button:SetScript("OnEvent", function(_self, event)
+    events:SetScript("OnEvent", function(_self, event)
       if event == "PLAYER_REGEN_DISABLED" then
         beforeCombat()
       elseif event == "PLAYER_REGEN_ENABLED" then
