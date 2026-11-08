@@ -6,6 +6,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+- Behavior settings now list every addon that uses Whisper Messenger under "Allow addon integration", each with its own checkbox. Untick one and it stops adding pages, previews and notes right away, with no reload. Addons that aren't loaded this session are greyed out and can be removed from the list with Forget.
+
 ## [2.1.5] - 2026-11-08
 
 - New compact window, off by default: turn it on with "Compact window" under Appearance settings. The messenger button grows into the window's top-left icon and opens a tall, narrow list of your chats. Click a chat to slide into it, and use the back arrow to slide back. The button keeps your unread count the whole time, and the window opens at the button, which flies onto it. New message pop-ups stay hidden while the window is open, so they never cover its title bar.

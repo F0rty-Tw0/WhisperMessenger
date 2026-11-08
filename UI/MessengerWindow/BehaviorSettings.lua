@@ -9,6 +9,7 @@ local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Sha
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local QuickRepliesSettings = ns.MessengerWindowQuickRepliesSettings or require("WhisperMessenger.UI.MessengerWindow.QuickRepliesSettings")
 local ToggleSpecs = ns.MessengerWindowBehaviorToggleSpecs or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings.ToggleSpecs")
+local IntegrationList = ns.MessengerWindowBehaviorIntegrationList or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings.IntegrationList")
 local KeybindRow = ns.MessengerWindowBehaviorKeybindRow or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings.KeybindRow")
 
 local BehaviorSettings = {}
@@ -42,7 +43,14 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local panel = SettingsControls.NewPanelRegistry()
   SettingsControls.BindToggleSpecs(panel, toggles, toggleSpecs, DEFAULTS)
 
-  local keybind = KeybindRow.Create(factory, frame, toggles[#toggles].row, { panel = panel })
+  -- Not bound to Reset to Defaults: the ticks are per addon, not a page default.
+  local list = options.integrations
+    and IntegrationList.Create(factory, frame, toggles[#toggles].row, {
+      integrations = options.integrations,
+      onLayoutChanged = options.onLayoutChanged,
+    })
+
+  local keybind = KeybindRow.Create(factory, frame, list and list.bottom or toggles[#toggles].row, { panel = panel })
 
   -- Not bound to Reset to Defaults: it would wipe replies the player typed.
   local quickReplies = QuickRepliesSettings.Create(factory, frame, keybind.bottom, {
@@ -79,6 +87,9 @@ function BehaviorSettings.Create(factory, parent, config, options)
     activeTheme = activeTheme or Theme
     header.refreshTheme(activeTheme)
     panel:refreshTheme(activeTheme)
+    if list then
+      list.refreshTheme()
+    end
     keybind.refreshTheme()
     quickReplies.refreshTheme()
   end
@@ -90,6 +101,9 @@ function BehaviorSettings.Create(factory, parent, config, options)
     header.hint:SetText(text("Control how the messenger window behaves."))
     SettingsControls.RelabelToggles(toggles, toggleSpecs, text)
     resetButton.label:SetText(text("Reset to Defaults"))
+    if list then
+      list.setLanguage()
+    end
     keybind.setLanguage()
     quickReplies.setLanguage()
     -- Tooltip lines were captured into closure-frozen arrays at construction
@@ -106,6 +120,9 @@ function BehaviorSettings.Create(factory, parent, config, options)
     local effective = math.min(maxWidth, math.max(160, math.floor(width)))
     header.refreshLayout(effective)
     panel:refreshLayout(effective)
+    if list then
+      list.refreshLayout(effective)
+    end
     quickReplies.refreshLayout(effective)
   end
 

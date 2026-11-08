@@ -409,6 +409,8 @@ UI/MessengerWindow/QuickRepliesSettings.lua
 UI/MessengerWindow/BehaviorSettings/ToggleSpecs.lua
 UI/MessengerWindow/BehaviorSettings/KeybindOpener.lua
 UI/MessengerWindow/BehaviorSettings/KeybindRow.lua
+UI/MessengerWindow/BehaviorSettings/IntegrationRow.lua
+UI/MessengerWindow/BehaviorSettings/IntegrationList.lua
 UI/MessengerWindow/BehaviorSettings.lua
 UI/MessengerWindow/WhispersSettings/ToggleSpecs.lua
 UI/MessengerWindow/WhispersSettings/AddonGreetingsSelector.lua
@@ -431,6 +433,7 @@ UI/MessengerWindow/PatchNotesSettings.lua
 UI/MessengerWindow/MessengerWindow/SelectionSync.lua
 UI/MessengerWindow/MessengerWindow/MessageActions.lua
 UI/MessengerWindow/MessengerWindow/ContactSearch.lua
+UI/MessengerWindow/MessengerWindow/SettingsPanelFrame.lua
 UI/MessengerWindow/MessengerWindow/SettingsPanels.lua
 UI/MessengerWindow/MessengerWindow/SettingsRuntime.lua
 UI/MessengerWindow/MessengerWindow/ContactsSearchController.lua

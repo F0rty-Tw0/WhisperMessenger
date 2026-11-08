@@ -3,77 +3,13 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local SettingsPanelFrame = ns.MessengerWindowSettingsPanelFrame or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanelFrame")
 
 local SettingsPanels = {}
 
 -- Single source of truth for the What's New tab position, so the "?" button
 -- and the sidebar tab select the same page without a magic number.
 SettingsPanels.PATCH_NOTES_INDEX = 9
-
--- Controls start CONTENT_PADDING in from the left; the same gap on the right
--- keeps right-aligned values and button art clear of the scroll clip. The
--- scroll view already narrows its viewport for its own bar.
-local function paneInnerWidth(outerWidth)
-  local padding = (Theme.CONTENT_PADDING or 16) * 2
-  if type(outerWidth) ~= "number" or outerWidth <= 0 then
-    return nil
-  end
-  return outerWidth - padding
-end
-
--- Centers the page's control column in a wide pane: the page frame is
--- inset by an equal side gap that shrinks to 0 as the pane narrows to the
--- column width. Returns the width the page lays out at.
-local function centerColumn(panel, settings, innerWidth)
-  local gap = math.max(0, math.floor((innerWidth - Theme.LAYOUT.SETTINGS_CONTROL_WIDTH) / 2))
-  local frame = settings.frame
-  if frame and frame.ClearAllPoints then
-    frame:ClearAllPoints()
-    frame:SetPoint("TOPLEFT", panel, "TOPLEFT", gap, 0)
-    frame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -gap, 0)
-  end
-  return innerWidth - 2 * gap
-end
-
-local function createSettingsPanel(factory, parent, createSettingsView, config, onSettingChanged)
-  local panel = factory.CreateFrame("Frame", nil, parent)
-  panel:SetAllPoints(parent)
-  local settings = createSettingsView(factory, panel, config, {
-    onChange = onSettingChanged,
-    onLayoutChanged = function()
-      if panel._wmRemeasure then
-        panel._wmRemeasure()
-      end
-    end,
-  })
-  -- Propagate the inner panel's bottom marker up to the wrapper so the
-  -- options scrollview's per-tab content sizing (in WindowScripts/Buttons)
-  -- can find it. centerColumn insets the inner frame sideways only, so its
-  -- top lines up with the wrapper's top — the SetPoint-chain walk gives the
-  -- same y-down offset whether we start from the wrapper or the inner.
-  if settings and settings.frame and settings.frame._wmBottomMarker then
-    panel._wmBottomMarker = settings.frame._wmBottomMarker
-  end
-  if settings and settings.refreshLayout then
-    local function relayout(outerWidth)
-      local inner = paneInnerWidth(outerWidth)
-      if inner then
-        settings.refreshLayout(centerColumn(panel, settings, inner))
-      end
-    end
-    panel._wmRelayout = relayout
-    if panel.SetScript then
-      panel:SetScript("OnSizeChanged", function(_, w)
-        relayout(w)
-      end)
-    end
-    if parent.GetWidth then
-      relayout(parent:GetWidth())
-    end
-  end
-  return panel, settings
-end
 
 function SettingsPanels.Create(factory, options)
   options = options or {}
@@ -126,6 +62,7 @@ function SettingsPanels.Create(factory, options)
       panelKey = "behaviorPanel",
       settingsKey = "behaviorSettings",
       create = options.behaviorCreate,
+      viewOptions = { integrations = options.integrations },
       config = {
         dimWhenMoving = settingsConfig.dimWhenMoving,
         autoFocusComposer = settingsConfig.autoFocusComposer,
@@ -231,7 +168,7 @@ function SettingsPanels.Create(factory, options)
     end
 
     local settings
-    panel, settings = createSettingsPanel(factory, parent, definition.create, definition.config, onSettingChanged)
+    panel, settings = SettingsPanelFrame.Create(factory, parent, definition.create, definition.config, onSettingChanged, definition.viewOptions)
     settingsPanels[index] = panel
     result[definition.panelKey] = panel
     result[definition.settingsKey] = settings
@@ -279,7 +216,7 @@ function SettingsPanels.Create(factory, options)
   end
 
   local function refreshLayout(outerWidth)
-    local inner = paneInnerWidth(outerWidth)
+    local inner = SettingsPanelFrame.PaneInnerWidth(outerWidth)
     if not inner then
       return
     end
