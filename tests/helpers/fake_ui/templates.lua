@@ -57,21 +57,23 @@ function Templates.Apply(frame, template, createFrame)
     end)
     frame.CharCount = frame:CreateFontString(nil, "OVERLAY")
     frame.CharCount:Show()
-    -- Assumed shape (key names not probed): a border texture on the scroll
-    -- frame, and a slider with up/down arrow buttons and a thumb.
-    frame.BorderTex = frame:CreateTexture(nil, "BACKGROUND")
-    frame.BorderTex:Show()
-    local bar = createFrame("Slider", nil, frame, nil)
-    bar:Show()
-    bar.Track = bar:CreateTexture(nil, "BACKGROUND")
-    bar.Track:Show()
-    bar.UpButton = createFrame("Button", nil, bar, nil)
-    bar.UpButton:Show()
-    bar.DownButton = createFrame("Button", nil, bar, nil)
-    bar.DownButton:Show()
-    local thumb = bar:CreateTexture(nil, "ARTWORK")
-    thumb:Show()
-    bar:SetThumbTexture(thumb)
+    -- Border textures (TopTex, MiddleTex, ...) and a Frame ScrollBar with
+    -- Track, Back and Forward, probed on WoW: Forever (2026-11-08). The
+    -- Track.Thumb button and the art inside each part are assumed.
+    frame.TopTex = frame:CreateTexture(nil, "BACKGROUND")
+    frame.TopTex:Show()
+    local function shownChild(frameType, parent)
+      local child = createFrame(frameType, nil, parent, nil)
+      child:Show()
+      child.Art = child:CreateTexture(nil, "ARTWORK")
+      child.Art:Show()
+      return child
+    end
+    local bar = shownChild("Frame", frame)
+    bar.Back = shownChild("Button", bar)
+    bar.Forward = shownChild("Button", bar)
+    bar.Track = shownChild("Frame", bar)
+    bar.Track.Thumb = shownChild("Button", bar.Track)
     frame.ScrollBar = bar
   elseif template == "UIPanelButtonTemplate" then
     -- Button widget methods only; the template's child keys are not faked.

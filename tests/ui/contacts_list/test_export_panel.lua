@@ -140,14 +140,17 @@ return function()
     local saved = StyledTextInputPopup.nativeChrome
     StyledTextInputPopup.nativeChrome = false
     local ok, err = pcall(function()
-      local scroll = show(3).editBox.parent
-      local bar = scroll.ScrollBar
-      assert(not scroll.BorderTex:IsShown(), "Blizzard border hidden")
-      assert(not bar.Track:IsShown(), "Blizzard track hidden")
-      assert(not bar.UpButton:IsShown() and not bar.DownButton:IsShown(), "arrow buttons hidden")
-      assert(bar:IsShown() and bar:GetThumbTexture():IsShown(), "scroll bar still usable")
-      local c, want = bar:GetThumbTexture().color, Theme.COLORS.scrollbar
-      assert(c and c[1] == want[1] and c[2] == want[2] and c[3] == want[3], "thumb in the theme's scroll bar colour")
+      local panel = show(3)
+      local scroll = panel.editBox.parent
+      local bar, thumb = scroll.ScrollBar, scroll.ScrollBar.Track.Thumb
+      assert(not scroll.TopTex:IsShown(), "Blizzard border hidden")
+      assert(not bar.Back:IsShown() and not bar.Forward:IsShown(), "arrow buttons hidden")
+      assert(not bar.Art:IsShown() and not bar.Track.Art:IsShown() and not thumb.Art:IsShown(), "gold art hidden")
+      assert(bar:IsShown() and bar.Track:IsShown() and thumb:IsShown(), "knob still there to drag")
+      local fill, want = panel.templateThumb, Theme.COLORS.scrollbar
+      assert(fill and fill.parent == thumb and fill:IsShown(), "theme fill drawn on the knob")
+      local c = fill.color
+      assert(c and c[1] == want[1] and c[2] == want[2] and c[3] == want[3], "knob in the theme's scroll bar colour")
     end)
     StyledTextInputPopup.nativeChrome = saved
     assert(ok, err)
@@ -159,8 +162,8 @@ return function()
     StyledTextInputPopup.nativeChrome = true
     local ok, err = pcall(function()
       local scroll = show(3).editBox.parent
-      assert(scroll.BorderTex:IsShown(), "Blizzard border kept")
-      assert(scroll.ScrollBar.UpButton:IsShown(), "arrow buttons kept")
+      assert(scroll.TopTex:IsShown(), "Blizzard border kept")
+      assert(scroll.ScrollBar.Back:IsShown() and scroll.ScrollBar.Track.Thumb.Art:IsShown(), "Blizzard scroll bar kept")
     end)
     StyledTextInputPopup.nativeChrome = saved
     assert(ok, err)
