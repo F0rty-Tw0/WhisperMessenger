@@ -38,6 +38,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - The square floating button now has slightly rounded corners, and its unread glow pulses along its edge like the round button's.
 - When the tabs below the window don't all fit, arrows appear at the window's edges to scroll through the rest, and the tabs squeeze together slightly so more of them fit; the mouse wheel works too. With the Native WoW HUD style, tabs now show their full names instead of being cut short.
 - Fixed: With "Deselect chat input after sending" on, pressing Enter in combat no longer opens the game's chat box; it puts the cursor back in the messenger while your mouse is over it. With your mouse elsewhere, Enter does nothing until the fight ends.
+- With the Native WoW HUD on, the message box now uses the game's newer input box look on Retail, and the quick-reply box on the message preview matches it on every version.
 
 ## [2.1.4] - 2026-11-05
 
