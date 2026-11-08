@@ -42,6 +42,17 @@ local function applyPanels(runtime, panelKeys)
   end
 end
 
+-- The tab was hidden while the panel kept counting: re-read its badge.
+local function refreshBadges(runtime, panelKeys)
+  local window = runtime.window
+  if not window or not window.refreshPanelBadge then
+    return
+  end
+  for _, key in ipairs(panelKeys) do
+    step(window.refreshPanelBadge, key)
+  end
+end
+
 local function clearPreviews(runtime, registry, name)
   for _, key in ipairs(registry.ownedBy("preview", name)) do
     step(runtime.externalPreview.clear, key)
@@ -71,7 +82,9 @@ local function onRefused(runtime, registry, name)
 end
 
 local function onAllowed(runtime, registry, name)
-  step(applyPanels, runtime, registry.ownedBy("panel", name))
+  local panelKeys = registry.ownedBy("panel", name)
+  step(applyPanels, runtime, panelKeys)
+  step(refreshBadges, runtime, panelKeys)
   step(runtime.updateIconSurfaces)
   if registry.connectedRefused(name) then
     step(ReloadPrompt.Show, text(QUESTION), nil, nil)

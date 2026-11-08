@@ -42,6 +42,12 @@ local function makeRuntime(saved, opts)
           error("boom")
         end
       end,
+      refreshPanelBadge = function(key)
+        calls[#calls + 1] = "badge:" .. key
+        if opts.badgeRaises then
+          error("boom")
+        end
+      end,
     },
   }
   IntegrationAccess.Attach(runtime)
@@ -100,8 +106,40 @@ return function()
     reg.claim("panel", "ca", "CraftAlert")
     reg.setAllowed("CraftAlert", false)
     reg.setAllowed("CraftAlert", true)
-    assert(calls[#calls - 1] == "apply:ca" and calls[#calls] == "icons", "tab back, icons refreshed")
+    assert(
+      calls[#calls - 2] == "apply:ca" and calls[#calls - 1] == "badge:ca" and calls[#calls] == "icons",
+      "tab back, badge re-read, icons refreshed"
+    )
     assert(#popups.shown == 0, "no popup for a row that connected allowed")
+  end)
+
+  -- test_allowing_again_refreshes_the_badge_of_each_owned_panel_even_if_one_raises
+  withPopups(function()
+    local runtime, calls = makeRuntime(nil, { badgeRaises = true })
+    local reg = runtime.addonIntegrations
+    reg.touch("CraftAlert")
+    reg.claim("panel", "a", "CraftAlert")
+    reg.claim("panel", "b", "CraftAlert")
+    reg.setAllowed("CraftAlert", false)
+    for i = #calls, 1, -1 do
+      calls[i] = nil
+    end
+    reg.setAllowed("CraftAlert", true)
+    local seen = table.concat(calls, ",")
+    assert(seen:find("badge:a", 1, true) and seen:find("badge:b", 1, true), "both badges refreshed, got " .. seen)
+    assert(calls[#calls] == "icons", "later steps still run, got " .. seen)
+  end)
+
+  -- test_allowing_again_without_a_window_still_applies_the_tab
+  withPopups(function()
+    local runtime, calls = makeRuntime()
+    runtime.window = nil
+    local reg = runtime.addonIntegrations
+    reg.touch("CraftAlert")
+    reg.claim("panel", "ca", "CraftAlert")
+    reg.setAllowed("CraftAlert", false)
+    reg.setAllowed("CraftAlert", true)
+    assert(calls[#calls - 1] == "apply:ca" and calls[#calls] == "icons")
   end)
 
   -- test_ticking_a_row_that_connected_refused_asks_for_a_reload
