@@ -116,6 +116,7 @@ read_globals = {
   "C_Texture",
   "C_Seasons",
   "C_GuildInfo",
+  "C_AddOns",
 
   -- Unit and player info
   "UnitName",
@@ -180,6 +181,7 @@ read_globals = {
   "GetTime",
   "GetServerTime",
   "GetAddOnMetadata",
+  "GetAddOnInfo",
   "GetInstanceInfo",
   "GetLocale",
   "GetChannelName",
