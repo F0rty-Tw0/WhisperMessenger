@@ -6,8 +6,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
-- New compact window: the messenger button grows into the window's top-left icon and opens a tall, narrow list of your chats. Click a chat to slide into it, and use the back arrow to slide back. The button keeps your unread count the whole time, and the window opens at the button, which flies onto it. New message pop-ups stay hidden while the window is open, so they never cover its title bar.
-- New installs start with the compact window. If you already use the addon, your window stays as it is, and you can turn the new one on with "Compact window" under Appearance settings.
+- New compact window, off by default: turn it on with "Compact window" under Appearance settings. The messenger button grows into the window's top-left icon and opens a tall, narrow list of your chats. Click a chat to slide into it, and use the back arrow to slide back. The button keeps your unread count the whole time, and the window opens at the button, which flies onto it. New message pop-ups stay hidden while the window is open, so they never cover its title bar.
 - Closing the compact window sends the icon back to where it came from. Settings open wider while they're showing, then the window returns to compact size.
 - Addons that support it (Craft Alert) now open their page inside the compact window without widening it.
 - The regular (non-compact) window now grows out of its icon when it opens and shrinks back into it when it closes.
@@ -16,6 +15,12 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - New option under Appearance: Open at saved spot (off by default). Off, the window opens at the floating button, and the button follows when you move the window (while Dock button on the window is on). On, the window opens where you last moved it and the button stays where it is.
 - The regular (non-compact) window now holds the floating button in its top-left corner while it is open, like the compact window does. A square button turns into the same round corner icon while it sits on the window; its border and background settings only change the floating button. You can still click the button to close the window or drag it to move the window. New message pop-ups stay hidden while the button sits on the open window.
 - In the compact window, the tabs now stay below the window while a conversation is open; tap a tab to go back to its list.
+- The Export conversation window now shows the whole saved conversation at once, with a taller text box; the Show more and Show all buttons are gone.
+- Clicking the floating button while a message preview is showing now opens that conversation, in both the compact and the regular window. With no preview showing, the button works as before.
+- Right-clicking a player in the contact list now offers "Guild invite" when you're allowed to invite: it types the invite command into your chat box, and you press Enter to send it. When the game wouldn't let that invite go through (often until you've used a chat command such as /say since logging in), it shows the command in a small box instead, ready to copy with Ctrl+C and paste into chat. Players on your own realm are named without the realm. It's hidden for your guildmates, and (with "Show player levels" on) for players the game has shown you in another guild this session.
+- The square floating button now has slightly rounded corners, and its unread glow pulses along its edge like the round button's.
+- When the tabs below the window don't all fit, arrows appear at the window's edges to scroll through the rest, and the tabs squeeze together slightly so more of them fit; the mouse wheel works too. With the Native WoW HUD style, tabs now show their full names instead of being cut short.
+- With the Native WoW HUD on, the message box now uses the game's newer input box look on Retail and WoW: Forever, and the quick-reply box on the message preview matches it on every version.
 - Fixed: In the compact window, the title no longer runs into the buttons next to it.
 - Fixed: Turning off a tab such as Requests or Channels could leave it on screen on top of another tab until a reload.
 - Fixed: Dragging the button while it sits on the open window no longer makes the window jump.
@@ -32,13 +37,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: The square floating button now has a solid dark background behind the chat bubbles, like the round one, instead of letting the ground show through.
 - Fixed: The widget's message preview closes on its timer again after you click out of its Reply box, even with text left in it (the text is kept as a draft for that chat). The timer now also waits while your mouse is over the preview, and starts over once you move away.
 - Fixed: In WoW: Forever, the Export conversation window no longer opens empty. The conversation's text now shows, ready to copy.
-- The Export conversation window now shows the whole saved conversation at once, with a taller text box; the Show more and Show all buttons are gone.
-- Clicking the floating button while a message preview is showing now opens that conversation, in both the compact and the regular window. With no preview showing, the button works as before.
-- Right-clicking a player in the contact list now offers "Guild invite" when you're allowed to invite: it types the invite command into your chat box, and you press Enter to send it. When the game wouldn't let that invite go through (often until you've used a chat command such as /say since logging in), it shows the command in a small box instead, ready to copy with Ctrl+C and paste into chat. Players on your own realm are named without the realm. It's hidden for your guildmates, and (with "Show player levels" on) for players the game has shown you in another guild this session.
-- The square floating button now has slightly rounded corners, and its unread glow pulses along its edge like the round button's.
-- When the tabs below the window don't all fit, arrows appear at the window's edges to scroll through the rest, and the tabs squeeze together slightly so more of them fit; the mouse wheel works too. With the Native WoW HUD style, tabs now show their full names instead of being cut short.
 - Fixed: With "Deselect chat input after sending" on, pressing Enter in combat no longer opens the game's chat box; it puts the cursor back in the messenger while your mouse is over it. With your mouse elsewhere, Enter does nothing until the fight ends.
-- With the Native WoW HUD on, the message box now uses the game's newer input box look on Retail and WoW: Forever, and the quick-reply box on the message preview matches it on every version.
 
 ## [2.1.4] - 2026-11-05
 

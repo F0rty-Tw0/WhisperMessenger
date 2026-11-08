@@ -1,8 +1,8 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 
--- New installs start on the compact window; players updating the addon keep the
--- classic window until they ask for the other one.
+-- The compact window is opt-in for everyone: new installs and updates start on
+-- the classic window, and a saved choice stands.
 
 local function boot(accountState)
   local factory = FakeUI.NewFactory()
@@ -22,17 +22,17 @@ local function savedAccount(settings)
 end
 
 return function()
-  -- test_a_new_install_gets_the_compact_window
+  -- test_a_new_install_gets_the_regular_window
   do
     local runtime = boot(nil)
-    assert(runtime.accountState.settings.compactLayout == true, "saved, so the next login is not read as an update")
+    assert(runtime.accountState.settings.compactLayout == false, "compact is opt-in; saved so the value is explicit")
   end
 
-  -- test_a_new_install_keeps_the_compact_window_on_the_next_login
+  -- test_a_new_install_keeps_the_regular_window_on_the_next_login
   do
     local first = boot(nil)
     local second = boot(first.accountState)
-    assert(second.accountState.settings.compactLayout == true, "got " .. tostring(second.accountState.settings.compactLayout))
+    assert(second.accountState.settings.compactLayout == false, "got " .. tostring(second.accountState.settings.compactLayout))
   end
 
   -- test_an_update_keeps_the_classic_window
