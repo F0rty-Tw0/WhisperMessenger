@@ -22,7 +22,14 @@ local function whisperUnread(contact)
   return tonumber(contact.unreadCount) or 0
 end
 
-function PanelRegistry.New()
+local function alwaysActive(_key)
+  return true
+end
+
+-- options.isActive(key): false leaves that panel out of the icon number, the
+-- read and unread calls, and hides its tab. Default: every panel is active.
+function PanelRegistry.New(options)
+  local isActive = options and options.isActive or alwaysActive
   local panels = {}
   local order = {}
   local window = nil
@@ -49,6 +56,22 @@ function PanelRegistry.New()
     for _, key in ipairs(order) do
       window.registerPanel(key, panels[key])
     end
+    if window.setPanelTabShown == nil then
+      return
+    end
+    for _, key in ipairs(order) do
+      if not isActive(key) then
+        window.setPanelTabShown(key, false)
+      end
+    end
+  end
+
+  -- Re-reads one panel's check and shows or hides its tab to match.
+  local function applyActive(key)
+    if window == nil or window.setPanelTabShown == nil or panels[key] == nil then
+      return
+    end
+    window.setPanelTabShown(key, isActive(key) == true)
   end
 
   -- Read the way the panel's tab reads it, so the numbers agree.
@@ -60,7 +83,9 @@ function PanelRegistry.New()
   local function badgeSum()
     local sum = 0
     for _, key in ipairs(order) do
-      sum = sum + readBadge(key)
+      if isActive(key) then
+        sum = sum + readBadge(key)
+      end
     end
     return sum
   end
@@ -68,7 +93,7 @@ function PanelRegistry.New()
   -- The first panel, in registration order, with something waiting.
   local function firstBadgedKey()
     for _, key in ipairs(order) do
-      if readBadge(key) > 0 then
+      if isActive(key) and readBadge(key) > 0 then
         return key
       end
     end
@@ -80,7 +105,7 @@ function PanelRegistry.New()
   local function markAllRead()
     for _, key in ipairs(order) do
       local callback = panels[key].onMarkAllRead
-      if callback ~= nil then
+      if callback ~= nil and isActive(key) then
         pcall(callback)
       end
     end
@@ -88,7 +113,9 @@ function PanelRegistry.New()
       return
     end
     for _, key in ipairs(order) do
-      pcall(window.refreshPanelBadge, key)
+      if isActive(key) then
+        pcall(window.refreshPanelBadge, key)
+      end
     end
   end
 
@@ -127,7 +154,7 @@ function PanelRegistry.New()
     pending = false
     for _, key in ipairs(order) do
       local callback = panels[key].onUnreadChanged
-      if callback ~= nil then
+      if callback ~= nil and isActive(key) then
         pcall(callback)
       end
     end
@@ -135,7 +162,7 @@ function PanelRegistry.New()
 
   local function hasUnreadListener()
     for _, key in ipairs(order) do
-      if panels[key].onUnreadChanged ~= nil then
+      if panels[key].onUnreadChanged ~= nil and isActive(key) then
         return true
       end
     end
@@ -175,6 +202,8 @@ function PanelRegistry.New()
       return panels[key]
     end,
     bind = bind,
+    isActive = isActive,
+    applyActive = applyActive,
   }
 end
 

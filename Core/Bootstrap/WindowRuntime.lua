@@ -361,6 +361,8 @@ function WindowRuntime.Create(options)
       storeConfig = runtime.store.config,
       settingsConfig = settingsState,
       filters = accountState.filters,
+      integrations = runtime.addonIntegrations and { registry = runtime.addonIntegrations, enabled = runtime.integrationAllowedAtLoad == true }
+        or nil,
       onSettingChanged = onSettingChanged,
       getContactInfoLines = function(contact)
         return ContactInfo.LinesFor(runtime, contact)

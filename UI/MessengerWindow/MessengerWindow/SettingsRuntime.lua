@@ -66,6 +66,7 @@ function SettingsRuntime.Create(factory, options)
     settingsConfig = options.settingsConfig or {},
     storeConfig = options.storeConfig or {},
     filters = options.filters,
+    integrations = options.integrations,
     onSettingChanged = onSettingChanged,
     generalCreate = generalCreate,
     appearanceCreate = appearanceCreate,

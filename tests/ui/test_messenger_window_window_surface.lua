@@ -96,4 +96,26 @@ return function()
     assert(window.dockCompactIcon == parts.dock, "the regular window re-docks too")
     assert(window.isCompactLayout == nil and window.showCompactList == nil, "compact-only fields stay compact-only")
   end
+
+  -- test_set_panel_tab_shown_forwards_to_the_tab_toggle
+  do
+    local parts = makeParts()
+    local seen = {}
+    parts.contactsRuntime.tabToggle.setPanelTabShown = function(key, shown)
+      seen[#seen + 1] = key .. ":" .. tostring(shown)
+    end
+    local window = WindowSurface.Build(parts)
+    window.setPanelTabShown("ca", false)
+    assert(seen[1] == "ca:false", "forwarded, got " .. tostring(seen[1]))
+  end
+
+  -- test_set_panel_tab_shown_is_safe_without_a_toggle_or_the_method
+  do
+    local parts = makeParts()
+    local window = WindowSurface.Build(parts)
+    window.setPanelTabShown("ca", false)
+    parts = makeParts()
+    parts.contactsRuntime.tabToggle = nil
+    WindowSurface.Build(parts).setPanelTabShown("ca", true)
+  end
 end

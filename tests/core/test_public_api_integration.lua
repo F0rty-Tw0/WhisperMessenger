@@ -57,7 +57,7 @@ return function()
     runtime.store.conversations["wow::WOW::jaina-proudmoore"] = { channel = "WOW", displayName = "Jaina-Proudmoore", unreadCount = 2 }
     assert(api.GetUnreadCount("Jaina-Proudmoore") == 0, "a refused GetUnreadCount still returns the integer 0")
     for key, value in pairs(api) do
-      if type(value) == "function" then
+      if type(value) == "function" and key ~= "Connect" then
         local expected = key == "GetUnreadCount" and 0 or false
         assert(value() == expected, key .. " returns " .. tostring(expected))
       end
@@ -74,5 +74,17 @@ return function()
     assert(type(_G.WhisperMessengerAPI) == "table" and _G.WhisperMessengerAPI == offApi, "the global is still a table")
     assert(offApi.version == 1, "version still published, got " .. tostring(offApi.version))
     assert(sortedFunctionKeys(offApi) == onKeys, "same functions as when on, got " .. sortedFunctionKeys(offApi))
+  end)
+
+  -- test_setting_off_connect_returns_a_handle_whose_calls_are_refused
+  each(function()
+    local _, api = boot({ allowAddonIntegration = false })
+    local handle = api.Connect("CraftAlert")
+    assert(type(handle) == "table", "Connect is not refused when integration is off")
+    for key, value in pairs(handle) do
+      if type(value) == "function" then
+        assert(value() == (key == "GetUnreadCount" and 0 or false), key .. " is refused")
+      end
+    end
   end)
 end

@@ -162,4 +162,24 @@ return function()
     assert(#lines == 1, "the selected chat still gets its line")
     assert(reads <= 1000, "conversation reads must not grow with the notes, got " .. reads)
   end
+
+  -- test_clear_source_removes_that_sources_notes_for_every_player
+  do
+    local runtime = makeRuntime()
+    ContactInfo.Set(runtime.contactInfo, "ca", "Jaina-Proudmoore", "A")
+    ContactInfo.Set(runtime.contactInfo, "ca", "Arthas", "B")
+    ContactInfo.Set(runtime.contactInfo, "other", "Arthas", "C")
+    assert(ContactInfo.ClearSource(runtime.contactInfo, "ca") == true)
+    assert(runtime.contactInfo["jaina-proudmoore"] == nil, "a player left with no note is dropped")
+    assert(runtime.contactInfo["arthas"].other.text == "C" and runtime.contactInfo["arthas"].ca == nil, "other sources stay")
+  end
+
+  -- test_clear_source_with_nothing_to_clear_returns_false
+  do
+    local runtime = makeRuntime()
+    ContactInfo.Set(runtime.contactInfo, "other", "Arthas", "C")
+    assert(ContactInfo.ClearSource(runtime.contactInfo, "ca") == false)
+    assert(ContactInfo.ClearSource(runtime.contactInfo, nil) == false, "a nil source clears nothing")
+    assert(runtime.contactInfo["arthas"].other.text == "C")
+  end
 end

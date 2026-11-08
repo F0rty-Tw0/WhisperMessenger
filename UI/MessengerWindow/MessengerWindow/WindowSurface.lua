@@ -109,6 +109,12 @@ function WindowSurface.Build(parts)
     resizeGrip = chrome.resizeGrip,
     contactsResizeHandle = layout.contactsResizeHandle,
     tabToggle = contactsRuntime.tabToggle,
+    setPanelTabShown = function(key, shown)
+      local tabToggle = contactsRuntime.tabToggle
+      if tabToggle and tabToggle.setPanelTabShown then
+        tabToggle.setPanelTabShown(key, shown)
+      end
+    end,
     contacts = contacts,
     conversation = parts.conversation,
     composer = parts.composer,

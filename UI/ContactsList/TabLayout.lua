@@ -73,10 +73,11 @@ local NO_PANEL_TAB = {
 
 -- Mode and unread controller shared by both tab skins. Sets setMode,
 -- getMode, setModes, setShown, setOptionsShown, setUnreadCounts,
--- setLanguage, addPanelTab, setSelectedPanel, getSelectedPanel,
--- setModeClickHandler and setCurrentModeClickHandler on toggle, binds each tab's OnClick, and returns the
--- paint function (for hover handlers). The strip shows while more than one
--- tab is visible and the options page is closed; setModes, addPanelTab and
+-- setLanguage, addPanelTab, setPanelTabShown, setSelectedPanel,
+-- getSelectedPanel, setModeClickHandler and setCurrentModeClickHandler on
+-- toggle, binds each tab's OnClick, and returns the paint function (for hover
+-- handlers). The strip shows while more than one tab is visible and the
+-- options page is closed; setModes, addPanelTab, setPanelTabShown and
 -- setOptionsShown apply that through toggle.setShown.
 --
 -- tabsByMode: one tab per TabLayout.MODES entry; each tab has
@@ -139,11 +140,13 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
     anchorIfActiveChanged()
   end
 
-  -- Panel tabs always follow the visible mode tabs.
+  -- Panel tabs always follow the visible mode tabs; a hidden one is skipped.
   local function relayout()
     visible = TabLayout.VisibleTabs(tabsByMode, visibleModes)
     for _, tab in ipairs(panelTabs) do
-      visible[#visible + 1] = tab
+      if not tab.hidden then
+        visible[#visible + 1] = tab
+      end
     end
     anchor()
   end
@@ -227,6 +230,22 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
         paint()
       end,
     }
+  end
+  -- Hides or shows an addon panel's tab; the tabs after it close the gap.
+  -- An unknown key changes nothing.
+  toggle.setPanelTabShown = function(key, shown)
+    for _, tab in ipairs(panelTabs) do
+      if tab.panelKey == key then
+        tab.hidden = shown == false
+        if tab.hidden then
+          tab.btn:Hide()
+        end
+        relayout()
+        paint()
+        applyShown()
+        return
+      end
+    end
   end
   toggle.setSelectedPanel = function(key)
     selectedPanel = key

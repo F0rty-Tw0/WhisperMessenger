@@ -12,6 +12,10 @@ local UnreadCount = ns.PublicApiUnreadCount or require("WhisperMessenger.Core.Pu
 local Look = ns.PublicApiLook or require("WhisperMessenger.Core.PublicApi.Look")
 local Animation = ns.PublicApiAnimation or require("WhisperMessenger.Core.PublicApi.Animation")
 local CompactWindow = ns.PublicApiCompactWindow or require("WhisperMessenger.Core.PublicApi.CompactWindow")
+local Connect = ns.PublicApiConnect or require("WhisperMessenger.Core.PublicApi.Connect")
+local IntegrationAccess = ns.BootstrapWindowRuntimeIntegrationAccess or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationAccess")
+local AddonIntegrations = ns.AddonIntegrations or require("WhisperMessenger.Model.AddonIntegrations")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local PublicApi = {}
@@ -85,15 +89,6 @@ local function buildOpenConversation(runtime)
   end)
 end
 
-local function refuse()
-  return false
-end
-
--- GetUnreadCount promises an integer, so its refusal is 0, not false.
-local function refuseCount(_name)
-  return 0
-end
-
 -- Allow addon integration, read once at load: changing it reloads.
 local function integrationAllowed(runtime)
   local settings = runtime.accountState and runtime.accountState.settings
@@ -101,6 +96,8 @@ local function integrationAllowed(runtime)
 end
 
 function PublicApi.Build(runtime)
+  runtime.addonIntegrations = AddonIntegrations.New(runtime.accountState, FlavorCompat.GetAddOnTitle)
+  runtime.integrationAllowedAtLoad = integrationAllowed(runtime)
   local api = {
     version = API_VERSION,
     OpenConversation = buildOpenConversation(runtime),
@@ -113,20 +110,23 @@ function PublicApi.Build(runtime)
   Look.Install(api, runtime)
   Animation.Install(api, runtime)
   CompactWindow.Install(api, runtime)
-  if not integrationAllowed(runtime) then
-    -- Same keys, so callers never nil-error; every call is refused.
+  Connect.Install(api, runtime)
+  if not runtime.integrationAllowedAtLoad then
+    -- Same keys, so callers never nil-error; every call is refused. Connect
+    -- still answers: its handles refuse, and the shared calls record nothing.
     for key, value in pairs(api) do
-      if type(value) == "function" then
-        api[key] = refuse
+      if type(value) == "function" and key ~= "Connect" then
+        api[key] = Connect.Refuse
       end
     end
-    api.GetUnreadCount = refuseCount
+    api.GetUnreadCount = Connect.RefuseCount
   end
   return api
 end
 
 function PublicApi.Publish(runtime)
   local api = PublicApi.Build(runtime)
+  IntegrationAccess.Attach(runtime)
   _G.WhisperMessengerAPI = api
   return api
 end
