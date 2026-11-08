@@ -75,6 +75,10 @@ function Bootstrap.Initialize(factory, options)
   if accountState.settings.compactLayout == nil then
     accountState.settings.compactLayout = false
   end
+  -- Open at saved spot is on unless the player turned it off.
+  if accountState.settings.openAtSavedSpot == nil then
+    accountState.settings.openAtSavedSpot = true
+  end
   -- hudStyle replaces the old nativeChrome flag, which stays saved for
   -- older addon versions after a downgrade.
   if accountState.settings.hudStyle == nil then

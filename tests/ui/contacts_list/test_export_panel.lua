@@ -33,6 +33,30 @@ local function status(panel)
   return panel.status:GetText()
 end
 
+-- Runs a script and its hooks, like the game does.
+local function fire(frame, event, ...)
+  local script = frame:GetScript(event)
+  if script then
+    script(frame, ...)
+  end
+  for _, hook in ipairs(frame._hookScripts and frame._hookScripts[event] or {}) do
+    hook(frame, ...)
+  end
+end
+
+-- A client without Blizzard's input scroll template.
+local function noTemplateFactory()
+  local factory = FakeUI.NewFactory()
+  local create = factory.CreateFrame
+  factory.CreateFrame = function(frameType, name, parent, template)
+    if template == "InputScrollFrameTemplate" then
+      error("Couldn't find inherited node")
+    end
+    return create(frameType, name, parent, template)
+  end
+  return factory
+end
+
 return function()
   Localization.Configure({ language = "enUS" })
 
@@ -87,20 +111,58 @@ return function()
     assert(status(again) == "3 lines · Ctrl+C copies", "status counts the new lines, got " .. tostring(status(again)))
   end
 
-  -- test_text_uses_the_game_chat_font
-  -- (WoW: Forever draws nothing in this box with the addon's own font)
+  -- test_text_box_is_blizzards_input_scroll_box
+  -- (WoW: Forever draws no letters in an edit box inside the addon's own scroll view)
   do
     local panel = show(3)
+    local scroll = panel.editBox.parent
+    assert(scroll.template == "InputScrollFrameTemplate", "box comes from Blizzard's template, got " .. tostring(scroll.template))
+    assert(panel.view == nil, "no addon scroll view")
+    assert(scroll:IsShown(), "scroll box shown")
+  end
+
+  -- test_template_character_counter_is_hidden
+  do
+    local panel = show(3)
+    assert(not panel.editBox.parent.CharCount:IsShown(), "no characters-left counter")
+  end
+
+  -- test_template_box_leaves_room_for_its_scroll_bar
+  do
+    local panel = show(3)
+    local box, scroll = panel.editBox, panel.editBox.parent
+    assert(box:GetWidth() > 0 and box:GetWidth() < scroll:GetWidth(), "text narrower than the scroll box, got " .. tostring(box:GetWidth()))
+  end
+
+  -- test_template_keeps_its_own_text_handler
+  do
+    local panel = show(3)
+    local before = panel.editBox.templateTextChanges
+    fire(panel.editBox, "OnTextChanged", false)
+    assert(panel.editBox.templateTextChanges == before + 1, "template still tracks text changes")
+  end
+
+  -- test_without_the_template_falls_back_to_the_scroll_view
+  do
+    local panel = show(450, noTemplateFactory())
+    local out = textLines(panel)
+    assert(panel.view ~= nil and panel.editBox.parent == panel.view.content, "box scrolls in the addon view")
+    assert(#out == 451 and out[451] == "line 450", "every line, got " .. #out)
+  end
+
+  -- test_fallback_text_uses_the_game_chat_font
+  do
+    local panel = show(3, noTemplateFactory())
     assert(_G.ChatFontNormal ~= nil, "fake UI provides ChatFontNormal")
     assert(panel.editBox.fontObject == _G.ChatFontNormal, "box uses ChatFontNormal")
   end
 
-  -- test_text_falls_back_to_the_addon_font_without_the_chat_font
+  -- test_fallback_text_uses_the_addon_font_without_the_chat_font
   do
     local saved = _G.ChatFontNormal
     _G.ChatFontNormal = nil
     local ok, err = pcall(function()
-      local panel = show(3)
+      local panel = show(3, noTemplateFactory())
       local expected = _G[Theme.FONTS.composer_input] or Theme.FONTS.composer_input
       assert(panel.editBox.fontObject == expected, "box falls back to the composer font, got " .. tostring(panel.editBox.fontObject))
     end)
@@ -113,8 +175,12 @@ return function()
     local panel = show(3)
     local before = panel.editBox:GetText()
     panel.editBox:SetText("typed over")
-    panel.editBox:GetScript("OnTextChanged")(panel.editBox, true)
+    fire(panel.editBox, "OnTextChanged", true)
     assert(panel.editBox:GetText() == before, "player edits are undone")
+    local fallback = show(3, noTemplateFactory())
+    fallback.editBox:SetText("typed over")
+    fire(fallback.editBox, "OnTextChanged", true)
+    assert(fallback.editBox:GetText() == before, "fallback undoes player edits too")
   end
 
   -- test_close_button_and_escape_hide_the_panel

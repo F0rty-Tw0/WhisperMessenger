@@ -165,7 +165,7 @@ return function()
   -- test_real_runtime_off_adopts_the_window_move_unless_the_icon_is_locked
   for _, layout in ipairs(LAYOUTS) do
     for _, locked in ipairs({ false, true }) do
-      CompactRuntime.Run({ compactLayout = layout.compactMode, lockToggleIcon = locked }, function(runtime)
+      CompactRuntime.Run({ compactLayout = layout.compactMode, lockToggleIcon = locked, openAtSavedSpot = false }, function(runtime)
         runtime.toggle()
         local icon, frame = runtime.icon, runtime.window.frame
         rawset(icon.frame, "GetCenter", function()

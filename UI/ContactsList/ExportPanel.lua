@@ -32,7 +32,11 @@ local STATUS_HEIGHT = 14
 local WELL_RADIUS = 6
 local TEXT_INSET = 8
 local SCROLL_STEP = 40
--- The addon's own font object leaves this multi-line box blank on WoW: Forever.
+-- WoW: Forever draws no letters in an edit box inside the addon's own scroll
+-- view; Blizzard's input scroll box draws them, with its own scroll bar.
+local INPUT_SCROLL_TEMPLATE = "InputScrollFrameTemplate"
+local TEMPLATE_BAR_WIDTH = 18
+-- Font for the fallback box, on clients without that template.
 local EXPORT_FONT = "ChatFontNormal"
 
 -- One panel per frame factory, reused on every Show.
@@ -55,7 +59,9 @@ local function load(panel)
   box:HighlightText()
   panel.status:SetText(format(Localization.Text("%d lines · Ctrl+C copies"), #panel.lines))
   panel.snapToEnd = true
-  ScrollView.RefreshMetrics(panel.view, box:GetHeight(), panel.snapToEnd)
+  if panel.view then
+    ScrollView.RefreshMetrics(panel.view, box:GetHeight(), panel.snapToEnd)
+  end
 end
 
 local function createText(parent, font, justify)
@@ -64,8 +70,42 @@ local function createText(parent, font, justify)
   return label
 end
 
+-- Blizzard's input scroll box, nil on a client without the template.
+local function createTemplateBox(factory, well, width, height)
+  local scroll = UIHelpers.createTemplatedFrame(factory, "ScrollFrame", nil, well, INPUT_SCROLL_TEMPLATE)
+  if scroll == nil or scroll.EditBox == nil then
+    return nil
+  end
+  scroll:SetPoint("TOPLEFT", well, "TOPLEFT", TEXT_INSET, -TEXT_INSET)
+  scroll:SetSize(width, height)
+  scroll:Show()
+  if scroll.CharCount then
+    scroll.CharCount:Hide()
+  end
+  local box = scroll.EditBox
+  box:SetWidth(width - TEMPLATE_BAR_WIDTH)
+  return box
+end
+
+-- The addon's scroll view with an edit box as its content.
+local function createViewBox(factory, panel, well, width, height)
+  local view = ScrollView.Create(factory, well, {
+    width = width,
+    height = height,
+    point = { "TOPLEFT", well, "TOPLEFT", TEXT_INSET, -TEXT_INSET },
+    step = SCROLL_STEP,
+  })
+  panel.view = view
+
+  local box = factory.CreateFrame("EditBox", nil, view.content)
+  box:SetPoint("TOPLEFT", view.content, "TOPLEFT", 0, 0)
+  box:SetPoint("TOPRIGHT", view.content, "TOPRIGHT", 0, 0)
+  UIHelpers.setFontObject(box, _G[EXPORT_FONT] and EXPORT_FONT or Theme.FONTS.composer_input)
+  return box
+end
+
 -- The text well: a themed input background (modern look only) holding the
--- scroll view, whose content is the edit box.
+-- scrolling edit box.
 local function createWell(factory, panel, body, top)
   local well = factory.CreateFrame("Frame", nil, body)
   local wellHeight = HEIGHT - top - PADDING - STATUS_HEIGHT - ROW_GAP
@@ -75,22 +115,13 @@ local function createWell(factory, panel, body, top)
     panel.wellBackground = UIHelpers.createRoundedBackground(well, WELL_RADIUS)
   end
 
-  local view = ScrollView.Create(factory, well, {
-    width = WIDTH - PADDING * 2 - TEXT_INSET * 2,
-    height = wellHeight - TEXT_INSET * 2,
-    point = { "TOPLEFT", well, "TOPLEFT", TEXT_INSET, -TEXT_INSET },
-    step = SCROLL_STEP,
-  })
-  panel.view = view
-
-  local box = factory.CreateFrame("EditBox", nil, view.content)
-  box:SetPoint("TOPLEFT", view.content, "TOPLEFT", 0, 0)
-  box:SetPoint("TOPRIGHT", view.content, "TOPRIGHT", 0, 0)
+  local width = WIDTH - PADDING * 2 - TEXT_INSET * 2
+  local height = wellHeight - TEXT_INSET * 2
+  local box = createTemplateBox(factory, well, width, height) or createViewBox(factory, panel, well, width, height)
   box:SetMultiLine(true)
   box:SetMaxLetters(0)
   box:SetMaxBytes(0)
   box:SetAutoFocus(false)
-  UIHelpers.setFontObject(box, _G[EXPORT_FONT] and EXPORT_FONT or Theme.FONTS.composer_input)
   panel.editBox = box
   return well
 end
@@ -101,20 +132,28 @@ local function wireScripts(panel)
     panel:Hide()
   end
   box:SetScript("OnEscapePressed", close)
-  -- Read-only: whatever the player types is put back.
-  box:SetScript("OnTextChanged", function(self, userInput)
+  -- Read-only: whatever the player types is put back. Hooked, so Blizzard's
+  -- box keeps its own handler.
+  local function undoTyping(self, userInput)
     if userInput and panel.text ~= nil and self:GetText() ~= panel.text then
       self:SetText(panel.text)
       self:HighlightText()
     end
-  end)
-  -- A multi-line edit box grows to fit its text once laid out.
-  box:SetScript("OnSizeChanged", function(_, _, height)
-    ScrollView.RefreshMetrics(panel.view, height, panel.snapToEnd)
-  end)
-  panel.view.scrollFrame:SetScript("OnMouseDown", function()
-    box:SetFocus()
-  end)
+  end
+  if box:GetScript("OnTextChanged") then
+    box:HookScript("OnTextChanged", undoTyping)
+  else
+    box:SetScript("OnTextChanged", undoTyping)
+  end
+  if panel.view then
+    -- A multi-line edit box grows to fit its text once laid out.
+    box:SetScript("OnSizeChanged", function(_, _, height)
+      ScrollView.RefreshMetrics(panel.view, height, panel.snapToEnd)
+    end)
+    panel.view.scrollFrame:SetScript("OnMouseDown", function()
+      box:SetFocus()
+    end)
+  end
   panel.closeButton:SetScript("OnClick", close)
   panel:SetScript("OnHide", function()
     box:ClearFocus()
@@ -170,7 +209,7 @@ local function paint(panel)
   UIHelpers.setTextColor(panel.title, titleColor)
   UIHelpers.setTextColor(panel.editBox, textColor)
   UIHelpers.setTextColor(panel.status, hintColor)
-  if panel.view.refreshSkin then
+  if panel.view and panel.view.refreshSkin then
     panel.view.refreshSkin()
   end
 end

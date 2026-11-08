@@ -12,7 +12,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - The regular (non-compact) window now grows out of its icon when it opens and shrinks back into it when it closes.
 - New option under Appearance: Window animation, to turn the opening and closing animation off. With it off, the compact window's pages also switch at once instead of sliding between the chat list and a chat.
 - New option under Appearance: Dock button on the window. Turn it off and the floating button stays where it is while the window is open.
-- New option under Appearance: Open at saved spot (off by default). Off, the window opens at the floating button, and the button follows when you move the window (while Dock button on the window is on). On, the window opens where you last moved it and the button stays where it is.
+- New option under Appearance: Open at saved spot (on by default). Off, the window opens at the floating button, and the button follows when you move the window (while Dock button on the window is on). On, the window opens where you last moved it and the button stays where it is.
 - The regular (non-compact) window now holds the floating button in its top-left corner while it is open, like the compact window does. A square button turns into the same round corner icon while it sits on the window; its border and background settings only change the floating button. You can still click the button to close the window or drag it to move the window. New message pop-ups stay hidden while the button sits on the open window.
 - In the compact window, the tabs now stay below the window while a conversation is open; tap a tab to go back to its list.
 - The Export conversation window now shows the whole saved conversation at once, with a taller text box; the Show more and Show all buttons are gone.
@@ -36,7 +36,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: Clicking another player's profession link in the messenger opens their profession again instead of showing an "Interface action failed" error.
 - Fixed: The square floating button now has a solid dark background behind the chat bubbles, like the round one, instead of letting the ground show through.
 - Fixed: The widget's message preview closes on its timer again after you click out of its Reply box, even with text left in it (the text is kept as a draft for that chat). The timer now also waits while your mouse is over the preview, and starts over once you move away.
-- Fixed: In WoW: Forever, the Export conversation window no longer opens empty. The conversation's text now shows, ready to copy.
+- Fixed: In WoW: Forever, the Export conversation window no longer opens as an empty black box. The conversation's text now shows, scrolls, and you can select all of it or just part of it to copy.
 - Fixed: With "Deselect chat input after sending" on, pressing Enter in combat no longer opens the game's chat box; it puts the cursor back in the messenger while your mouse is over it. With your mouse elsewhere, Enter does nothing until the fight ends.
 
 ## [2.1.4] - 2026-11-05

@@ -46,6 +46,17 @@ function Templates.Apply(frame, template, createFrame)
     function frame:IsProtected()
       return true, true
     end
+  elseif template == "InputScrollFrameTemplate" then
+    -- EditBox and CharCount seen on a live WoW: Forever client (2026-11-08).
+    -- The template's own OnTextChanged keeps its scroll range in step with
+    -- the text; frame.EditBox.templateTextChanges counts that handler.
+    frame.EditBox = createFrame("EditBox", nil, frame, nil)
+    frame.EditBox.templateTextChanges = 0
+    frame.EditBox:SetScript("OnTextChanged", function(self)
+      self.templateTextChanges = self.templateTextChanges + 1
+    end)
+    frame.CharCount = frame:CreateFontString(nil, "OVERLAY")
+    frame.CharCount:Show()
   elseif template == "UIPanelButtonTemplate" then
     -- Button widget methods only; the template's child keys are not faked.
     function frame:LockHighlight()
