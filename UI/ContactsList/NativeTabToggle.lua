@@ -173,12 +173,12 @@ function NativeTabToggle.Create(factory, parent, options)
       tab.btn:SetText(Localization.Text(tab.textKey))
       sizeTab(tab)
     end,
-    -- Sizes the tabs; the scroller places them (all while they fit, else
-    -- whole tabs from its scroll position, with the active one in view).
+    -- The scroller sizes the tabs (through the squeeze hook) and places them
+    -- (all while they fit, else whole tabs from its scroll position, with the
+    -- active one in view). It records the new list before its own width
+    -- reads; a resize fired earlier (a tab's OnShow) may lay out the old
+    -- list, and the scroller hides what that showed.
     anchor = function(visible, activeTab)
-      for _, tab in ipairs(visible) do
-        sizeTab(tab)
-      end
       scroller.layout(visible, activeTab)
     end,
     createPanelTab = function(title, index)
