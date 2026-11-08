@@ -198,6 +198,7 @@ UI/Shared/PanelBadge.lua
 UI/Shared/CloseGlyphButton.lua
 UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks/QuestLinkClassic.lua
+UI/Hyperlinks/CombatItemRef.lua
 UI/ChatBubble/ReactionAssets.lua
 UI/Hyperlinks.lua
 UI/ScrollView/Metrics.lua

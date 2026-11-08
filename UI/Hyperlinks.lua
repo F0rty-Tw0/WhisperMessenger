@@ -5,6 +5,7 @@ end
 
 local UrlFormatter = ns.UIHyperlinksUrlFormatter or require("WhisperMessenger.UI.Hyperlinks.UrlFormatter")
 local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
+local CombatItemRef = ns.UIHyperlinksCombatItemRef or require("WhisperMessenger.UI.Hyperlinks.CombatItemRef")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 
 local function restoreTrailingEmojiToken(hyperlink)
@@ -76,6 +77,21 @@ local function resolveManualCopy()
   return nil
 end
 
+local function resolveLinkHooks()
+  if type(ns.ComposerLinkHooks) == "table" then
+    return ns.ComposerLinkHooks
+  end
+
+  if type(require) == "function" then
+    local ok, loaded = pcall(require, "WhisperMessenger.UI.Composer.LinkHooks")
+    if ok and type(loaded) == "table" then
+      return loaded
+    end
+  end
+
+  return nil
+end
+
 local function copyExternalUrl(url)
   -- LaunchURL APIs are protected in addon context and trigger
   -- ADDON_ACTION_FORBIDDEN. Safe fallback is copy-to-clipboard.
@@ -122,6 +138,14 @@ function Hyperlinks.HandleClick(link, text, button, sourceFrame)
     end
 
     return false
+  end
+
+  -- A shift-clicked player name goes straight into the focused composer.
+  -- Blizzard's SetItemRef would also send a /who for it, because none of
+  -- Blizzard's chat boxes is open while our composer has focus.
+  local linkHooks = resolveLinkHooks()
+  if linkHooks ~= nil and linkHooks.InsertClickedPlayerName(link) then
+    return true
   end
 
   if type(_G.SetItemRef) == "function" then
@@ -190,31 +214,47 @@ local function blizzardChatClickHandler()
   return mixin.OnHyperlinkClick
 end
 
--- Link clicks on frame. The script is Blizzard's own chat-frame click handler,
--- so the click starts in Blizzard code and protected follow-ups (opening
--- another player's profession) are expected not to be blamed on the addon. The
--- URL copy and onLinkClick are hooked to run after it. Without that handler
--- (or HookScript), the click goes through HandleClick.
-function Hyperlinks.BindClick(frame, onLinkClick)
-  local chatClickHandler = blizzardChatClickHandler()
-  if chatClickHandler == nil or type(frame.HookScript) ~= "function" then
-    frame:SetScript("OnHyperlinkClick", function(self, link, text, button)
-      Hyperlinks.HandleClick(link, text, button, self)
-      if onLinkClick then
-        onLinkClick()
-      end
-    end)
+local function routeClick(frame, link, text, button)
+  -- Our composer has focus: a shift-clicked player name only goes into it.
+  -- Blizzard's handler would also send a /who (none of its chat boxes is open).
+  local linkHooks = resolveLinkHooks()
+  if linkHooks ~= nil and linkHooks.InsertClickedPlayerName(link) then
     return
   end
 
-  frame:SetScript("OnHyperlinkClick", chatClickHandler)
-  frame:HookScript("OnHyperlinkClick", function(_self, link)
-    local externalUrl = UrlFormatter.ExtractExternalUrlFromLink(link)
-    if externalUrl ~= nil then
-      copyExternalUrl(externalUrl)
-    end
+  if CombatItemRef.TryPin(link) then
+    return
+  end
+
+  local chatClickHandler = blizzardChatClickHandler()
+  if chatClickHandler == nil then
+    Hyperlinks.HandleClick(link, text, button, frame)
+    return
+  end
+
+  chatClickHandler(frame, link, text, button)
+  local externalUrl = UrlFormatter.ExtractExternalUrlFromLink(link)
+  if externalUrl ~= nil then
+    copyExternalUrl(externalUrl)
+  end
+end
+
+-- Link clicks on frame. The script is addon code, so the click runs tainted
+-- whatever it calls, even Blizzard's own chat-frame click handler (a plain
+-- item click in combat then made ShowUIPanel print "Interface action
+-- failed"). Clicks go to that handler, except a shift-clicked player name for
+-- the focused composer and a plain tooltip-link click in combat
+-- (CombatItemRef). Without the handler, the click goes through HandleClick.
+-- onLinkClick runs once after every click, even when a handler throws (the
+-- error is rethrown after it, so it still surfaces).
+function Hyperlinks.BindClick(frame, onLinkClick)
+  frame:SetScript("OnHyperlinkClick", function(self, link, text, button)
+    local routed, err = pcall(routeClick, self, link, text, button)
     if onLinkClick then
       onLinkClick()
+    end
+    if not routed then
+      error(err, 0)
     end
   end)
 end
