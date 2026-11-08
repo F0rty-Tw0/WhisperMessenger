@@ -23,10 +23,13 @@ end
 local PANEL_ATLASES = {
   ["Professions-background-summarylist"] = true,
   ["auctionhouse-background-index"] = true,
+  ["common-search-border-left"] = true,
+  ["common-search-border-middle"] = true,
+  ["common-search-border-right"] = true,
 }
 
 -- Runs a test body with a stubbed C_Texture that knows only the panel
--- background atlases (when `known`), so other atlas lookups (the retail
+-- background and search-box border atlases (when `known`), so other atlas lookups (the retail
 -- scrollbar width) keep their fallback. Restores the stub afterwards.
 function RetailHud.WithAtlas(known, fn)
   local saved = rawget(_G, "C_Texture")
