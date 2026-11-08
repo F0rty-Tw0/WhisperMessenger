@@ -189,7 +189,7 @@ local function wrapCentred(fontString)
 end
 
 -- nativeChrome: Native WoW HUD -> Blizzard button art.
-function HeaderElements.createEmptyState(pane, selectedContact, factory, nativeChrome)
+function HeaderElements.createEmptyState(pane, selectedContact, factory, nativeChrome, onStartNewWhisper)
   local createFrame = (factory and factory.CreateFrame) or _G.CreateFrame
   local container = createFrame("Frame", nil, pane)
   container:SetPoint("CENTER", pane, "CENTER", 0, 0)
@@ -249,8 +249,8 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory, nativeC
 
   if button.SetScript then
     button:SetScript("OnClick", function()
-      if type(_G.StaticPopup_Show) == "function" then
-        _G.StaticPopup_Show("WHISPER_MESSENGER_START_CONVERSATION")
+      if type(onStartNewWhisper) == "function" then
+        onStartNewWhisper()
       end
     end)
   end

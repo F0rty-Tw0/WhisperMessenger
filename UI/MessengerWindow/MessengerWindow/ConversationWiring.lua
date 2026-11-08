@@ -5,6 +5,8 @@ end
 
 local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.ConversationPane")
 local MessageActions = ns.MessengerWindowMessageActions or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.MessageActions")
+local StartConversationDialog = ns.MessengerWindowWindowScriptsButtonsStartConversationDialog
+  or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Buttons.StartConversationDialog")
 
 local ConversationWiring = {}
 
@@ -35,6 +37,7 @@ function ConversationWiring.Create(factory, options)
     getContactInfoLines = windowOptions.getContactInfoLines,
     hideEmptyHeader = nativeChrome,
     nativeChrome = nativeChrome,
+    onStartNewWhisper = StartConversationDialog.Open,
   })
   conversation.headerEmpty.setMode(options.tabMode)
   return { conversation = conversation, messageActions = messageActions }

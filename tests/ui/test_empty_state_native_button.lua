@@ -4,10 +4,10 @@ local TemplateFactory = require("tests.helpers.template_factory")
 local HeaderElements = require("WhisperMessenger.UI.ConversationPane.HeaderElements")
 local ConversationPane = require("WhisperMessenger.UI.ConversationPane.ConversationPane")
 
-local function build(factory, nativeChrome)
+local function build(factory, nativeChrome, onStartNewWhisper)
   local pane = factory.CreateFrame("Frame", nil, nil)
   pane:SetSize(600, 420)
-  local container = HeaderElements.createEmptyState(pane, nil, factory, nativeChrome)
+  local container = HeaderElements.createEmptyState(pane, nil, factory, nativeChrome, onStartNewWhisper)
   return container, FindUI.ofType(container, "Button")[1]
 end
 
@@ -22,14 +22,12 @@ return function()
 
   -- test_hud_empty_state_button_opens_new_whisper_popup
   do
-    local shown = nil
-    rawset(_G, "StaticPopup_Show", function(which)
-      shown = which
+    local opened = 0
+    local _, button = build(FakeUI.NewFactory(), true, function()
+      opened = opened + 1
     end)
-    local _, button = build(FakeUI.NewFactory(), true)
     button.scripts.OnClick(button)
-    assert(shown == "WHISPER_MESSENGER_START_CONVERSATION", "HUD: click still opens the new-whisper popup")
-    rawset(_G, "StaticPopup_Show", nil)
+    assert(opened == 1, "HUD: click still opens the new-whisper popup")
   end
 
   -- test_hud_empty_state_theme_and_language_refresh
