@@ -42,12 +42,18 @@ local function isValidName(name)
   return type(name) == "string" and name:find("%S") ~= nil and #name <= MAX_NAME_BYTES and not name:find("|", 1, true)
 end
 
+-- The public API never throws: a registry that raises refuses the call.
+local function isAllowed(registry, caller)
+  local ok, allowed = pcall(registry.isAllowed, caller)
+  return ok and allowed == true
+end
+
 -- runtime.apiCaller names who is calling while raw runs, and is always put
 -- back: a stuck caller would mis-own every later WoW-internal claim.
 local function wrap(raw, key, caller, runtime, registry)
   local refusal = refusalFor(key)
   return function(...)
-    if not registry.isAllowed(caller) then
+    if not isAllowed(registry, caller) then
       return refusal(...)
     end
     local previous = runtime.apiCaller
@@ -87,7 +93,7 @@ function Connect.Install(api, runtime)
   for key, raw in pairs(raws) do
     local sharedCall = wrap(raw, key, SHARED, runtime, registry)
     api[key] = function(...)
-      registry.touch(SHARED)
+      pcall(registry.touch, SHARED)
       return sharedCall(...)
     end
   end

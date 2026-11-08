@@ -174,4 +174,36 @@ return function()
     local api = PublicApi.Build({})
     assert(api.Connect("X").IsAnimationEnabled() == true)
   end
+
+  -- test_corrupt_saved_rows_do_not_make_the_api_throw
+  do
+    local PublicApi = require("WhisperMessenger.Core.PublicApi")
+    local api = PublicApi.Build({ accountState = { addonIntegrations = { [""] = 5, CraftAlert = true } } })
+    assert(api.IsAnimationEnabled() == true)
+    assert(api.Connect("CraftAlert").IsAnimationEnabled() == true)
+  end
+
+  -- test_registry_that_raises_makes_every_call_a_refusal_not_an_error
+  do
+    local PublicApi = require("WhisperMessenger.Core.PublicApi")
+    local armed = false
+    local backing = { addonIntegrations = {} }
+    local account = setmetatable({}, {
+      __index = function(_, key)
+        if armed then
+          error("boom " .. tostring(key))
+        end
+        return backing[key]
+      end,
+    })
+    local api = PublicApi.Build({ accountState = account })
+    local handle = api.Connect("CraftAlert")
+    armed = true
+    local ok, err = pcall(function()
+      assert(api.IsAnimationEnabled() == false and api.GetUnreadCount("x") == 0, "shared call refused")
+      assert(handle.IsAnimationEnabled() == false and handle.GetUnreadCount("x") == 0, "handle call refused")
+    end)
+    armed = false
+    assert(ok, err)
+  end
 end
