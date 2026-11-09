@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Guards")
+local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
 
 local PreviewOpen = {}
 
@@ -47,6 +48,8 @@ function PreviewOpen.Create(options)
       window.setTabMode("whispers")
     end
     selectConversation(conversationKey)
+    -- A click on a preview card is a hardware event: ask /who inside it.
+    WhoTriggers.AskFor(runtime, conversationKey)
     return true
   end
 end

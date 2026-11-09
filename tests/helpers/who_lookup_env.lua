@@ -1,10 +1,11 @@
 -- Fakes for WhoLookup tests: C_FriendList, FriendsFrame, a C_Timer that
 -- captures callbacks instead of running them, a hooksecurefunc that post-hooks
 -- like the real one, and GetTime plus a runtime sharing one controllable
--- clock. Case() restores every global afterwards.
+-- clock, plus a wall clock for time(). Case() restores every global afterwards.
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
+local SeenZone = require("WhisperMessenger.Model.SeenZone")
 
 local WhoLookupEnv = {}
 
@@ -19,6 +20,7 @@ local GLOBALS = {
   "C_ChatInfo",
   "_wmSuspended",
   "GetTime",
+  "time",
 }
 
 local function installFriendList(env, opts)
@@ -109,6 +111,10 @@ function WhoLookupEnv.New(opts)
   rawset(_G, "GetTime", function()
     return env.clock
   end)
+  env.wallClock = 100000
+  rawset(_G, "time", function()
+    return env.wallClock
+  end)
   rawset(_G, "InCombatLockdown", function()
     return env.inCombat == true
   end)
@@ -121,6 +127,7 @@ function WhoLookupEnv.New(opts)
   installRuntime(env)
   DisplayName.Configure({ showPlayerLevels = true })
   SeenLevel._reset()
+  SeenZone._reset()
   WhoLookup._reset()
   WhoLookup.Init(env.runtime)
   return env
@@ -132,6 +139,7 @@ function WhoLookupEnv.Restore(env)
   end
   DisplayName.Configure({ showPlayerLevels = false })
   SeenLevel._reset()
+  SeenZone._reset()
   WhoLookup._reset()
 end
 
