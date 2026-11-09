@@ -42,6 +42,15 @@ return function()
     assert(input:GetText() == "", "a rejected call must not touch the composer")
   end)
 
+  -- test_refused_when_the_composer_byte_cap_has_no_room
+  each({}, function(runtime, api)
+    local input = focusedComposer(runtime)
+    input:SetText("aaaaaaaaaa")
+    input:SetMaxBytes(20)
+    assert(api.InsertLink(itemLink) == false, "a link past the composer's byte cap must be refused")
+    assert(input:GetText() == "aaaaaaaaaa", "a refused call must not touch the composer")
+  end)
+
   -- test_refused_in_competitive_content
   each({}, function(runtime, api)
     local input = focusedComposer(runtime)
