@@ -16,6 +16,7 @@ local DisplayNameSetting = ns.BootstrapWindowRuntimeDisplayNameSetting or requir
 local TabVisibilitySetting = ns.BootstrapWindowRuntimeTabVisibilitySetting
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.TabVisibilitySetting")
 local RefreshingSettings = ns.BootstrapWindowRuntimeRefreshingSettings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RefreshingSettings")
+local EscapeSetting = ns.BootstrapWindowRuntimeEscapeSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.EscapeSetting")
 local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
 local WindowScale = ns.MessengerWindowWindowScale
   or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
@@ -202,6 +203,7 @@ function SettingsHandler.Create(options)
       ChatReplyState.ClearStaleWhisperReplyState(getNumChatWindows, getEditBox)
     end
     TabVisibilitySetting.Apply(runtime, accountSettings, key, persistedValue)
+    EscapeSetting.Apply(runtime, key)
     if RefreshingSettings.Has(key) and runtime.refreshWindow then
       runtime.refreshWindow()
     end
