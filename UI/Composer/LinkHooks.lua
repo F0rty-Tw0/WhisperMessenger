@@ -60,8 +60,10 @@ local function tryInsertLink(link, options)
   -- Classic vanilla shift-click of a quest produces plain `[Name (id)]` text
   -- with no |H...|h envelope. Rewrite to a real hyperlink so the link is
   -- clickable in the composer and survives transmission to the recipient.
+  -- API callers (keepText) send finished text: no rewrite, so the byte cap
+  -- they were checked against still holds.
   local insertable = link
-  if type(insertable) == "string" then
+  if type(insertable) == "string" and options.keepText ~= true then
     insertable = QuestLinkClassic.Rewrite(insertable)
   end
 
@@ -141,6 +143,36 @@ function LinkHooks.InsertClickedPlayerName(link)
     return false
   end
   return tryInsertLink(playerName, { allowVisibleWithoutFocus = false })
+end
+
+local function wouldPassByteCap(input, current, text)
+  if type(input.GetMaxBytes) ~= "function" then
+    return false
+  end
+  local maxBytes = input:GetMaxBytes()
+  if type(maxBytes) ~= "number" or maxBytes <= 0 then
+    return false
+  end
+  return #current + #text > maxBytes - 1
+end
+
+-- Public insert for other addons: puts text into the composer the player is
+-- typing in (shown and focused). Returns true only when the input's text really
+-- changed, so a deduped, capped or refused insert reports false.
+function LinkHooks.InsertText(text)
+  if _G._wmSuspended then
+    return false
+  end
+  local input = findInputForInsertion(false)
+  if input == nil or type(input.GetText) ~= "function" then
+    return false
+  end
+  local current = input:GetText() or ""
+  if wouldPassByteCap(input, current, text) then
+    return false
+  end
+  tryInsertLink(text, { allowVisibleWithoutFocus = false, keepText = true })
+  return input:GetText() ~= current
 end
 
 local function registerLinkHooks()

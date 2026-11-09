@@ -557,6 +557,7 @@ Core/PublicApi/UnreadCount.lua
 Core/PublicApi/Look.lua
 Core/PublicApi/Animation.lua
 Core/PublicApi/CompactWindow.lua
+Core/PublicApi/InsertLink.lua
 Core/PublicApi/Connect.lua
 Core/Bootstrap/WindowRuntime/IntegrationAccess.lua
 Core/PublicApi.lua
