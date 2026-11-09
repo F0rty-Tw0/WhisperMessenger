@@ -331,10 +331,6 @@ function WindowRuntime.Create(options)
       onDetachedSetting = function(key, value)
         DetachedPreviewRuntime.OnSettingChanged({
           accountState = accountState,
-          characterState = characterState,
-          getSurface = function()
-            return detachedPreview
-          end,
           ensureSurface = ensureDetachedPreview,
           updateIconSurfaces = coordinator.updateIconSurfaces,
         }, key, value)
