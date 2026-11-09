@@ -6,10 +6,12 @@ end
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
+local WhoFreshness = ns.WhoFreshness or require("WhisperMessenger.Transport.WhoFreshness")
 
--- A quiet /who for a whisper contact whose level is unknown, once per name
--- per session. SendWho is protected: it works only synchronously inside a
--- hardware event (a click or a key press), never from a timer.
+-- A quiet /who for a whisper contact whose level, zone and guild are older
+-- than STALE_SECONDS (or never fetched). SendWho is protected: it works only
+-- synchronously inside a hardware event (a click or a key press), never from
+-- a timer.
 -- FriendsFrame pops the Who window on WHO_LIST_UPDATE, and on WoW: Forever
 -- so does the Group Finder's Who tab, so their event stays unregistered
 -- while our query is in flight.
@@ -17,6 +19,7 @@ local WhoLookup = {}
 
 WhoLookup.WINDOW_SECONDS = 5
 WhoLookup.MIN_GAP_SECONDS = 5
+WhoLookup.STALE_SECONDS = WhoFreshness.STALE_SECONDS
 
 local WHO_EVENT = "WHO_LIST_UPDATE"
 local WHO_LISTENERS = { "FriendsFrame", "LFGWhoListFrame" }
@@ -31,7 +34,7 @@ local windowTimer = nil
 local inFlight = false
 local lastSentAt = nil
 local previousWhoToUi = false
-local askedThisSession = {}
+local lastAskedAt = {}
 local sendingOurs = false
 
 -- The client clock: runtime.now is whole-second time(), which can read a
@@ -189,20 +192,18 @@ local function isThrottled(rt)
   return lastSentAt ~= nil and now(rt) - lastSentAt < WhoLookup.MIN_GAP_SECONDS
 end
 
--- Returns the name to ask about, or nil when this contact needs no /who.
+-- Returns the name to ask about and its conversation, or nil when this
+-- contact is not a WoW chat with a name.
 local function lookupName(rt, conversationKey)
   local conversation = Store.Find(rt.store, conversationKey)
   if conversation == nil or conversation.channel ~= "WOW" then
     return nil
   end
   local name = conversation.displayName
-  if type(name) ~= "string" or conversation.characterLevel ~= nil then
+  if type(name) ~= "string" then
     return nil
   end
-  if SeenLevel.Get(conversation.guid, name) ~= nil then
-    return nil
-  end
-  return name
+  return name, conversation
 end
 
 local function sendQuery(shortName)
@@ -222,18 +223,18 @@ function WhoLookup.TryFor(rt, conversationKey)
   if rt == nil or not DisplayName.ShowPlayerLevels() then
     return false
   end
-  local name = lookupName(rt, conversationKey)
+  local name, conversation = lookupName(rt, conversationKey)
   if name == nil then
     return false
   end
   local nameKey = SeenLevel.NameKey(name)
-  if nameKey == nil or askedThisSession[nameKey] then
+  if nameKey == nil or WhoFreshness.IsFresh(conversation, name, lastAskedAt[nameKey], now(rt)) then
     return false
   end
   if isBlocked(rt) or isThrottled(rt) then
     return false
   end
-  askedThisSession[nameKey] = true
+  lastAskedAt[nameKey] = now(rt)
   lastSentAt = now(rt)
   inFlight = true
   local ok = pcall(sendQuery, string.match(name, "^[^-]+") or name)
@@ -273,7 +274,7 @@ function WhoLookup._reset()
   inFlight = false
   lastSentAt = nil
   previousWhoToUi = false
-  askedThisSession = {}
+  lastAskedAt = {}
   sendingOurs = false
 end
 
