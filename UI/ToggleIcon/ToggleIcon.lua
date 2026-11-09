@@ -41,6 +41,9 @@ function ToggleIcon.Create(factory, options)
   frame:SetSize(ICON_SIZE, ICON_SIZE)
   frame:SetPoint(anchorPoint, parent, relativePoint, x, y)
   frame:SetMovable(true)
+  if frame.SetClampedToScreen then
+    frame:SetClampedToScreen(true)
+  end
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
   -- Float above action bars and bags, same as the minimap icon.
