@@ -66,4 +66,20 @@ return function()
       assert(entry and entry.text == "realmless line", "the realm-less line should win, got: " .. tostring(entry and entry.text))
     end
   end
+
+  -- test_restore_merges_keys_that_normalize_alike_keeping_the_newer
+  do
+    local newLine = { text = "new", channelLabel = "Trade", playerName = "Thrall-Area 52", sentAt = 2000, sequence = 2 }
+    local oldLine = { text = "old", channelLabel = "Trade", playerName = "Thrall-Area52", sentAt = 1000, sequence = 1 }
+    local fixtures = {
+      { ["Thrall-Area 52"] = newLine, ["Thrall-Area52"] = oldLine },
+      { ["Thrall-Area 52"] = oldLine, ["Thrall-Area52"] = newLine },
+    }
+    for index, entries in ipairs(fixtures) do
+      local restored = ChannelMessageStore.Restore({ entries = entries })
+      assert(restored.entryCount == 1, "fixture " .. index .. " should count one key, got: " .. tostring(restored.entryCount))
+      local entry = ChannelMessageStore.GetLatest(restored, "thrall-area52")
+      assert(entry and entry.text == "new", "fixture " .. index .. " should keep the newer line, got: " .. tostring(entry and entry.text))
+    end
+  end
 end

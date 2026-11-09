@@ -201,10 +201,14 @@ function ChannelMessageStore.Restore(savedState, config, now)
     local normalizedKey = ChannelMessageKey.Normalize(key)
     local normalizedEntry = normalizeEntry(entry)
     if normalizedKey ~= "" and normalizedEntry ~= nil then
-      if restored.entries[normalizedKey] == nil then
+      -- Keys that normalize alike keep the newer line and count once.
+      local existing = restored.entries[normalizedKey]
+      if existing == nil then
         restored.entryCount = restored.entryCount + 1
       end
-      restored.entries[normalizedKey] = normalizedEntry
+      if existing == nil or isOlder(existing, normalizedEntry) then
+        restored.entries[normalizedKey] = normalizedEntry
+      end
       restored.nextSequence = math.max(restored.nextSequence, entrySequence(normalizedEntry))
     end
   end
