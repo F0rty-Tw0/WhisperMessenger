@@ -198,6 +198,7 @@ UI/Shared/PanelBadge.lua
 UI/Shared/CloseGlyphButton.lua
 UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks/QuestLinkClassic.lua
+UI/Hyperlinks/CombatItemRef.lua
 UI/ChatBubble/ReactionAssets.lua
 UI/Hyperlinks.lua
 UI/ScrollView/Metrics.lua
@@ -295,6 +296,9 @@ UI/ConversationPane/EdgeFade.lua
 UI/ConversationPane/InfoStrip.lua
 UI/ConversationPane/ThemeRefresh.lua
 UI/ConversationPane/ConversationPane.lua
+UI/Composer/ChatLinkHookUtil.lua
+UI/Composer/ChatLinkSourcesAddOns.lua
+UI/Composer/ChatLinkSources.lua
 UI/Composer/LinkHooks.lua
 UI/Composer/Popover.lua
 UI/Composer/EmojiPicker.lua
@@ -538,6 +542,7 @@ Core/PublicApi/Panels.lua
 Core/Bootstrap/WindowRuntime/IconToggle.lua
 Core/Bootstrap/WindowRuntime/PreviewOpen.lua
 Core/Bootstrap/WindowRuntime/PreviewReplyRuntime.lua
+Core/Bootstrap/WindowRuntime/DetachedPreviewRuntime.lua
 Core/Bootstrap/WindowRuntime/LiveThemeSync.lua
 Core/Bootstrap/WindowRuntime/GrowSource.lua
 Core/Bootstrap/WindowRuntime.lua

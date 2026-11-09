@@ -58,6 +58,25 @@ local function applyDialogText(dialog)
   dialog.button2 = L("Cancel")
 end
 
+-- Every opener (title-bar button, empty-state button) goes through here: the
+-- input is sized after the popup is laid out, which OnShow alone runs too early for.
+function StartConversationDialog.Open()
+  if type(_G.StaticPopup_Show) ~= "function" then
+    return
+  end
+
+  local popup = _G.StaticPopup_Show(DIALOG_NAME)
+  if type(popup) == "table" then
+    popup.data = ""
+    styleStartConversationDialog(popup, DIALOG_NAME, "")
+  end
+
+  local editBox = resolveConversationPopupEditBox(popup, DIALOG_NAME) or _G.StaticPopup1EditBox
+  if editBox and editBox.SetFocus then
+    editBox:SetFocus()
+  end
+end
+
 function StartConversationDialog.Wire(newConversationButton, options)
   options = options or {}
   if not newConversationButton or type(newConversationButton.SetScript) ~= "function" then
@@ -95,22 +114,7 @@ function StartConversationDialog.Wire(newConversationButton, options)
     restoreStartConversationDialog(popup, DIALOG_NAME)
   end
 
-  newConversationButton:SetScript("OnClick", function()
-    if type(_G.StaticPopup_Show) ~= "function" then
-      return
-    end
-
-    local popup = _G.StaticPopup_Show(DIALOG_NAME)
-    if type(popup) == "table" then
-      popup.data = ""
-      styleStartConversationDialog(popup, DIALOG_NAME, "")
-    end
-
-    local editBox = resolveConversationPopupEditBox(popup, DIALOG_NAME) or _G.StaticPopup1EditBox
-    if editBox and editBox.SetFocus then
-      editBox:SetFocus()
-    end
-  end)
+  newConversationButton:SetScript("OnClick", StartConversationDialog.Open)
 
   return {
     setLanguage = function()

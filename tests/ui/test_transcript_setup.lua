@@ -94,20 +94,22 @@ return function()
     _G.LaunchURL = savedLaunchURL
   end)
 
-  -- test_transcript_link_clicks_start_in_blizzard_chat_handler
-  -- (another player's profession link only opens when the click starts in
-  --  Blizzard code, not in an addon function)
-
+  -- test_transcript_link_clicks_reach_blizzard_chat_handler
   do
     local savedMixin = rawget(_G, "ChatFrameMixin")
-    local mixin = { OnHyperlinkClick = function() end }
-    rawset(_G, "ChatFrameMixin", mixin)
+    local clicked = nil
+    rawset(_G, "ChatFrameMixin", {
+      OnHyperlinkClick = function(_self, link)
+        clicked = link
+      end,
+    })
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
     TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
+    transcript.text.scripts.OnHyperlinkClick(transcript.text, "trade:Player-1:2259:171", "[Tailoring]", "LeftButton")
     rawset(_G, "ChatFrameMixin", savedMixin)
 
-    assert(transcript.text.scripts.OnHyperlinkClick == mixin.OnHyperlinkClick, "transcript link clicks should start in Blizzard's chat click handler")
+    assert(clicked == "trade:Player-1:2259:171", "transcript link clicks should reach Blizzard's chat click handler")
   end
 
   -- test_initial_layout_called

@@ -232,6 +232,7 @@ local TraditionalChinese = {
   ["Left"] = "左",
   ["Above"] = "上",
   ["Below"] = "下",
+  ["Detached"] = "獨立",
   ["Off"] = "關閉",
   ["Whisper"] = "密語",
   ["Ping"] = "Ping",

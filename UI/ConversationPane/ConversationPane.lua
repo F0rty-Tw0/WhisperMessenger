@@ -141,6 +141,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
   local header = HeaderView.Create(factory, pane, selectedContact, {
     HEADER_HEIGHT = Theme.HeaderHeight(),
     nativeChrome = options.nativeChrome == true,
+    onStartNewWhisper = options.onStartNewWhisper,
   })
   local headerFrame = header.headerFrame
 

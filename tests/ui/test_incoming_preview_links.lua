@@ -5,12 +5,12 @@ local IncomingPreview = require("WhisperMessenger.UI.ToggleIcon.IncomingPreview"
 local ITEM_LINK = "item:12345::"
 local ITEM_TEXT = "|cffa335ee|Hitem:12345::|h[Signet]|h|r"
 
-local function build()
+local function build(opts)
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
   parent:SetSize(48, 48)
   parent:Show()
-  return IncomingPreview.Create(factory, parent, {})
+  return IncomingPreview.Create(factory, parent, opts or {})
 end
 
 local function showExternal(preview, log)
@@ -142,7 +142,46 @@ return function()
     end
   end
 
+  local function test_ignored_mouse_up_neither_opens_nor_dismisses()
+    local log = {}
+    local preview = build({
+      shouldIgnoreMouseUp = function()
+        return true
+      end,
+      onOpenPreview = function()
+        log[#log + 1] = "open"
+        return true
+      end,
+      onDismissPreview = function()
+        log[#log + 1] = "dismiss"
+      end,
+    })
+    preview.setIncomingPreview("Arthas", "hi", "PALADIN", { sentAt = 1 })
+    fire(preview.frame, "OnMouseUp", "LeftButton")
+    fire(preview.frame, "OnMouseUp", "RightButton")
+    assert(#log == 0, "a guarded mouse-up does nothing")
+    assert(preview.frame:IsShown(), "the card stays up")
+  end
+
+  local function test_unguarded_mouse_up_still_opens()
+    local opened = false
+    local preview = build({
+      shouldIgnoreMouseUp = function()
+        return false
+      end,
+      onOpenPreview = function()
+        opened = true
+        return true
+      end,
+    })
+    preview.setIncomingPreview("Arthas", "hi", "PALADIN", { sentAt = 1 })
+    fire(preview.frame, "OnMouseUp", "LeftButton")
+    assert(opened, "a plain click still opens")
+  end
+
   test_preview_link_hover_shows_tooltip()
+  test_ignored_mouse_up_neither_opens_nor_dismisses()
+  test_unguarded_mouse_up_still_opens()
   test_preview_link_click_does_not_open_chat()
   test_preview_link_click_through_blizzard_handler_does_not_open_chat()
   test_preview_body_click_still_opens()

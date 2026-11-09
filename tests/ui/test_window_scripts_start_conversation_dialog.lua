@@ -128,4 +128,36 @@ return function()
     assert(fakePopup.button2._normalTexture == "orig-normal-cancel", "expected cancel button normal texture to restore exactly")
     _G.StaticPopupDialogs = nil
   end
+
+  -- Case 5: Open shows, clears, sizes the input and focuses it (shared by every opener)
+  do
+    local popup = factory.CreateFrame("Frame", nil, parent)
+    popup:SetWidth(420)
+    popup.data = "stale"
+    popup.editBox = factory.CreateFrame("EditBox", nil, popup)
+    popup.button1 = makePopupButton(factory, parent, "start")
+    popup.button2 = makePopupButton(factory, parent, "cancel")
+    popup.text = factory.CreateFrame("FontString", nil, popup)
+    local focused = false
+    popup.editBox.SetFocus = function()
+      focused = true
+    end
+    local shown = nil
+    rawset(_G, "StaticPopup_Show", function(which)
+      shown = which
+      return popup
+    end)
+    StartConversationDialog.Open()
+    rawset(_G, "StaticPopup_Show", nil)
+    assert(shown == "WHISPER_MESSENGER_START_CONVERSATION", "expected Open to show the start-conversation popup")
+    assert(popup.data == "", "expected Open to clear the popup data")
+    assert(popup.editBox.width == 392, "expected Open to size the input after the popup is laid out")
+    assert(focused == true, "expected Open to focus the input")
+  end
+
+  -- Case 6: Open does nothing when StaticPopup_Show is missing
+  do
+    rawset(_G, "StaticPopup_Show", nil)
+    assert(pcall(StartConversationDialog.Open) == true, "expected Open to be a no-op without StaticPopup_Show")
+  end
 end

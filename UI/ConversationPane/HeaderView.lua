@@ -98,7 +98,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
 
   local headerDivider = HeaderElements.createDivider(headerFrame)
 
-  local headerEmpty = HeaderElements.createEmptyState(pane, selectedContact, factory, options.nativeChrome == true)
+  local headerEmpty = HeaderElements.createEmptyState(pane, selectedContact, factory, options.nativeChrome == true, options.onStartNewWhisper)
 
   -- Channel chip: small label shown for group conversations to the right of
   -- the header name. Hidden for whisper conversations.

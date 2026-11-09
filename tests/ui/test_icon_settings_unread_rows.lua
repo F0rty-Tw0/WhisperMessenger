@@ -45,12 +45,21 @@ return function()
     assert(changedValue == false, "test_toggle_reports_its_setting_key: badge starts on, so a click turns it off")
   end
 
-  -- test_position_selector_offers_four_sides
+  -- test_position_selector_offers_five_choices
 
   do
     local frame = build({ widgetPreviewPosition = "left" })
     local buttons = FindUI.selectorButtons(frame, "Widget preview position")
-    assert(#buttons == 4, "test_position_selector_offers_four_sides: got " .. tostring(#buttons))
+    assert(#buttons == 5, "test_position_selector_offers_five_choices: got " .. tostring(#buttons))
+  end
+
+  -- test_position_selector_offers_detached_last
+
+  do
+    local frame = build({ widgetPreviewPosition = "left" })
+    local buttons = FindUI.selectorButtons(frame, "Widget preview position")
+    local last = buttons[#buttons]
+    assert(FindUI.text(last, "Detached") ~= nil, "test_position_selector_offers_detached_last: last button reads Detached")
   end
 
   -- test_auto_dismiss_row_sits_under_badge_pulse

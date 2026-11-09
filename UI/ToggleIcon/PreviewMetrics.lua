@@ -41,6 +41,7 @@ local ANCHORS = {
   above = { selfPoint = "BOTTOM", target = "TOP", x = 0, y = M.GAP },
   bottom = { selfPoint = "TOP", target = "BOTTOM", x = 0, y = -M.GAP },
   below = { selfPoint = "TOP", target = "BOTTOM", x = 0, y = -M.GAP },
+  detached = { selfPoint = "TOP", target = "TOP", x = 0, y = 0 },
 }
 
 function PreviewMetrics.ResolveAnchor(position)

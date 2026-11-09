@@ -232,6 +232,7 @@ local Korean = {
   ["Left"] = "왼쪽",
   ["Above"] = "위",
   ["Below"] = "아래",
+  ["Detached"] = "분리",
   ["Off"] = "꺼짐",
   ["Whisper"] = "귓속말",
   ["Ping"] = "핑",
