@@ -15,7 +15,8 @@ local EscapeOrder = {}
 -- control, a center panel opening) close it. It leaves the list while
 -- another window or one of its own popups or game menus has ESC, and comes
 -- back once that closes. While in front it also holds the ESC key (EscapeKey), since
--- other windows' ESC handlers run before that sweep. Retail's
+-- other windows' ESC handlers run before that sweep. With "Esc closes the
+-- window" off it does neither, so ESC and the sweeps leave it open. Retail's
 -- RegisterGameMenuEscHandler is not used: calling it
 -- from addon code taints the game's ESC handler list, and ESC then fails to
 -- stop casting.
@@ -76,8 +77,14 @@ end
 local MENU_CHECK_SECONDS = 0.1
 
 -- `escapeKey` (EscapeKey.New) hands the ESC key to the window while it is in
--- front; optional.
-function EscapeOrder.New(frame, escapeKey)
+-- front; optional. `isEnabled()` reads the "Esc closes the window" setting;
+-- while it returns false the window stays off the list and leaves the ESC
+-- key alone. No getter means always on.
+function EscapeOrder.New(frame, escapeKey, isEnabled)
+  local function enabled()
+    return isEnabled == nil or isEnabled() ~= false
+  end
+
   local yieldedTo = nil
   -- True when yieldedTo is one of the window's own popups or menus.
   local yieldedToOwn = false
@@ -132,6 +139,11 @@ function EscapeOrder.New(frame, escapeKey)
   -- A click inside an open popup or menu counts as a click on the window;
   -- ESC must still close that first.
   function order.claim()
+    if not enabled() then
+      setListed(false)
+      setKeyFocused(false)
+      return
+    end
     if yieldedToOwn and yieldedTo ~= nil and yieldedTo:IsShown() then
       return
     end
@@ -144,6 +156,17 @@ function EscapeOrder.New(frame, escapeKey)
   -- The window closed: ESC belongs to the game again.
   function order.release()
     setKeyFocused(false)
+  end
+
+  -- The setting changed: an open window takes or drops ESC now; a hidden
+  -- one waits for its next show.
+  function order.refresh()
+    if not enabled() then
+      setListed(false)
+      setKeyFocused(false)
+    elseif frame:IsShown() then
+      order.claim()
+    end
   end
 
   -- The game's close-all sweep hides the UI panels before it reads
@@ -220,6 +243,11 @@ function EscapeOrder.New(frame, escapeKey)
       hookHidden(shown)
     end
   end)
+
+  -- The window builder lists the window before this order exists.
+  if not enabled() then
+    setListed(false)
+  end
 
   return order
 end
