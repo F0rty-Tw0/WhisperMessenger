@@ -2,6 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local NotificationSettings = require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
 local SoundPlayer = require("WhisperMessenger.Core.SoundPlayer")
+local Localization = require("WhisperMessenger.Locale.Localization")
 
 -- The two request-sound rows on the Notifications panel: a toggle and its own
 -- sound picker, saved as playSoundOnRequest and requestSound.
@@ -67,6 +68,20 @@ return function()
     SoundPlayer.PlayKey = realPlayKey
     assert(ok, err)
     assert(#previewed == 1 and previewed[1] == "bell", "picking Bell auditions it once through PlayKey")
+  end
+
+  -- test_set_language_relabels_request_rows
+  do
+    Localization.Configure({ language = "enUS" })
+    local result = build()
+    Localization.Configure({ language = "ruRU" })
+    result.setLanguage()
+    local catalog = require("WhisperMessenger.Locale.ruRU")
+    local toggleLabel = catalog["Play sound on message request"]
+    local selectorLabel = catalog["Request sound"]
+    assert(FindUI.text(result.frame, toggleLabel) ~= nil, "the request toggle takes the new language")
+    assert(FindUI.text(result.frame, selectorLabel) ~= nil, "the request selector takes the new language")
+    Localization.Configure({ language = "enUS" })
   end
 
   rawset(_G, "PlaySound", savedPlaySound)
