@@ -520,6 +520,7 @@ Core/Bootstrap/WindowRuntime/IntegrationSetting.lua
 Core/Bootstrap/WindowRuntime/LanguageSetting.lua
 Core/Bootstrap/WindowRuntime/DisplayNameSetting.lua
 Core/Bootstrap/WindowRuntime/TabVisibilitySetting.lua
+Core/Bootstrap/WindowRuntime/RefreshingSettings.lua
 Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
 Core/Bootstrap/WindowRuntime/WidgetPreview.lua
