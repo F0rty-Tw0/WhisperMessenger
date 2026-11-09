@@ -78,6 +78,8 @@ return function()
     showUnreadBadge = false,
     notificationSound = "chime",
     flashTaskbarOnWhisper = false,
+    playSoundOnRequest = true,
+    requestSound = "bell",
     iconSize = 56,
     iconDesaturated = false,
     iconBackground = false,
@@ -191,6 +193,8 @@ return function()
     "expected notification config.notificationSound=chime, got: " .. tostring(notificationCapture.config.notificationSound)
   )
   assert(notificationCapture.config.flashTaskbarOnWhisper == false, "Notifications config should forward flashTaskbarOnWhisper")
+  assert(notificationCapture.config.playSoundOnRequest == true, "Notifications config should forward playSoundOnRequest")
+  assert(notificationCapture.config.requestSound == "bell", "Notifications config should forward requestSound")
   assert(notificationCapture.config.iconMode == nil, "Notifications config should not include iconMode")
   assert(notificationCapture.config.iconSize == nil, "Notifications config should not include iconSize")
 

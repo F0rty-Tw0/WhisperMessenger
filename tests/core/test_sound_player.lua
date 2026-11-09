@@ -116,7 +116,7 @@ return function()
       setCvarCalled = true
     end)
 
-    SoundPlayer.Preview("ping")
+    SoundPlayer.PlayKey("ping")
 
     assert(playedId == 5274, "test_preview: expected soundId 5274, got " .. tostring(playedId))
     assert(playedChannel == "Master", "test_preview: expected channel Master, got " .. tostring(playedChannel))
@@ -144,7 +144,7 @@ return function()
     local plays
     FakeSharedSounds.with(SHARED, function()
       plays = recordPlays(function()
-        SoundPlayer.Preview(SoundPlayer.SharedMediaKey("Boom"))
+        SoundPlayer.PlayKey(SoundPlayer.SharedMediaKey("Boom"))
       end)
     end)
     assert(#plays == 1 and plays[1].api == "PlaySoundFile", "SharedMedia pick previews through PlaySoundFile")

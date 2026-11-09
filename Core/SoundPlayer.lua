@@ -104,7 +104,7 @@ function SoundPlayer.Play(settings)
   playKey(settings.notificationSound or DEFAULT_SOUND_KEY)
 end
 
-function SoundPlayer.Preview(soundKey)
+function SoundPlayer.PlayKey(soundKey)
   playKey(soundKey)
 end
 

@@ -4,10 +4,26 @@ if type(ns) ~= "table" then
 end
 
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
+local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
 
 -- Sound + taskbar flash for an alerting message: a whisper that passed
 -- AlertPolicy.ShouldAlert, or a group line mentioning the player.
 local IncomingAlerts = {}
+
+IncomingAlerts.REQUEST_SOUND_DEFAULT = "ping"
+
+-- A request the player asked to hear: inbox on, sound on, not muted.
+function IncomingAlerts.IsAudibleRequest(conversation, settings)
+  return type(conversation) == "table"
+    and type(settings) == "table"
+    and MessageRequests.IsRequest(conversation, settings)
+    and conversation.muted ~= true
+    and settings.playSoundOnRequest == true
+end
+
+function IncomingAlerts.PlayRequestSound(settings)
+  SoundPlayer.PlayKey(settings.requestSound or IncomingAlerts.REQUEST_SOUND_DEFAULT)
+end
 
 -- The notification sound alone, when the player turned it on.
 function IncomingAlerts.PlaySound(settings)

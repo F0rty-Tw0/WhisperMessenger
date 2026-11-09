@@ -41,7 +41,7 @@ function SoundSelector.Create(factory, parent, opts)
   opts = opts or {}
   local onChange = opts.onChange
   return DropdownSelector.Create(factory, parent, {
-    labelText = Localization.Text("Notification sound"),
+    labelText = opts.labelText or Localization.Text("Notification sound"),
     optionsList = SoundSelector.Options(),
     getOptions = SoundSelector.Options,
     fallbackKey = SoundSelector.DEFAULT_SOUND,
@@ -53,7 +53,7 @@ function SoundSelector.Create(factory, parent, opts)
       end
       -- Preview the chosen sound on selection so the user can audition it
       -- without saving and reloading.
-      SoundPlayer.Preview(value)
+      SoundPlayer.PlayKey(value)
     end,
     rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
     labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,

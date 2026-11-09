@@ -17,6 +17,8 @@ local DEFAULTS = {
   playSoundOnWhisper = false,
   notificationSound = SoundSelector.DEFAULT_SOUND,
   flashTaskbarOnWhisper = true,
+  playSoundOnRequest = false,
+  requestSound = "ping",
 }
 
 local function text(key)
@@ -75,6 +77,40 @@ function NotificationSettings.Create(factory, parent, config, options)
   )
   soundSelector.row:SetPoint("TOPLEFT", playSoundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  local requestSoundToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text("Play sound on message request"),
+      config.playSoundOnRequest == true,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("playSoundOnRequest", value)
+      end,
+      {
+        text("Play sound on message request"),
+        text("Plays a sound when a whisper from a stranger lands in Requests. Pick the sound below."),
+        text('Turn on "Put whispers from strangers in Requests" to use this.'),
+      }
+    ),
+    { type = "toggle", key = "playSoundOnRequest", default = DEFAULTS.playSoundOnRequest }
+  )
+  requestSoundToggle.row:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  local requestSoundSelector = panel:bind(
+    SoundSelector.Create(factory, frame, {
+      labelText = text("Request sound"),
+      initial = config.requestSound or DEFAULTS.requestSound,
+      colors = selectorColors,
+      onChange = function(value)
+        onChange("requestSound", value)
+      end,
+    }),
+    { type = "selector", key = "requestSound", default = DEFAULTS.requestSound }
+  )
+  requestSoundSelector.row:SetPoint("TOPLEFT", requestSoundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
   local flashToggle = panel:bind(
     UIHelpers.createToggleRow(
       factory,
@@ -93,7 +129,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     ),
     { type = "toggle", key = "flashTaskbarOnWhisper", default = DEFAULTS.flashTaskbarOnWhisper }
   )
-  flashToggle.row:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, rowSpacing)
+  flashToggle.row:SetPoint("TOPLEFT", requestSoundSelector.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local resetButton = panel:bind(
     UIHelpers.createOptionButton(
@@ -129,6 +165,9 @@ function NotificationSettings.Create(factory, parent, config, options)
     playSoundToggle.label:SetText(text("Play sound on new whisper"))
     soundSelector.label:SetText(text("Notification sound"))
     soundSelector.setOptionsList(SoundSelector.Options())
+    requestSoundToggle.label:SetText(text("Play sound on message request"))
+    requestSoundSelector.label:SetText(text("Request sound"))
+    requestSoundSelector.setOptionsList(SoundSelector.Options())
     flashToggle.label:SetText(text("Flash taskbar on new whisper"))
     resetButton.label:SetText(text("Reset to Defaults"))
   end
