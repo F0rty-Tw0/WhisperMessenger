@@ -21,7 +21,7 @@ function ScriptBindings.Bind(options)
   local relayoutWindow = options.relayoutWindow
 
   local alphaTicker = nil
-  local escapeOrder = frame and EscapeOrder.New(frame, EscapeKey.New(frame)) or nil
+  local escapeOrder = frame and EscapeOrder.New(frame, EscapeKey.New(frame), options.getEscapeClosesWindow) or nil
 
   local function updateResizeFromCursor()
     contactsResize.updateFromCursor()
@@ -214,6 +214,14 @@ function ScriptBindings.Bind(options)
       updateFrameOnUpdate()
     end)
   end
+
+  return {
+    refreshEscape = function()
+      if escapeOrder then
+        escapeOrder.refresh()
+      end
+    end,
+  }
 end
 
 ns.MessengerWindowWindowScriptsFrameScriptBindings = ScriptBindings

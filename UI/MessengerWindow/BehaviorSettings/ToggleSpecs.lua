@@ -14,6 +14,7 @@ ToggleSpecs.DEFAULTS = {
   dimWhenMoving = true,
   autoFocusComposer = false,
   deselectComposerOnSend = false,
+  escapeClosesWindow = true,
   doubleEscapeToClose = false,
   hideOnCombat = false,
   allowAddonIntegration = true,
@@ -98,6 +99,18 @@ function ToggleSpecs.Build(config, onChange)
       tooltipLines = {
         text("Hide on entering combat"),
         text("Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."),
+      },
+    },
+    {
+      key = "escapeClosesWindow",
+      labelKey = "Esc closes the window",
+      initial = config.escapeClosesWindow ~= false,
+      onChange = function(value)
+        onChange("escapeClosesWindow", value)
+      end,
+      tooltipLines = {
+        text("Esc closes the window"),
+        text("Turn off to keep the messenger open when you press Esc. Close it with its button or your Toggle Window key."),
       },
     },
     {

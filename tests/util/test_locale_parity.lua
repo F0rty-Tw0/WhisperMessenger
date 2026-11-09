@@ -54,6 +54,10 @@ local DOCK_KEYS = {
   "Dock button on the window",
   "While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is.",
 }
+local ESCAPE_SETTING_KEYS = {
+  "Esc closes the window",
+  "Turn off to keep the messenger open when you press Esc. Close it with its button or your Toggle Window key.",
+}
 local REQUEST_SOUND_KEYS = {
   "Play sound on message request",
   "Plays a sound when a whisper from a stranger lands in Requests. Pick the sound below.",
@@ -154,6 +158,11 @@ return function()
 
     -- test_dock_button_strings_are_translated
     for _, key in ipairs(DOCK_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_escape_setting_strings_are_translated
+    for _, key in ipairs(ESCAPE_SETTING_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 

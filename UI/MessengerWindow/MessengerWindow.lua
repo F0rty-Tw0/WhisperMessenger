@@ -169,6 +169,9 @@ function MessengerWindow.Create(factory, options)
     getAutoFocusChatInput = function()
       return not isComposerFocusHeld() and settingsConfig.autoFocusComposer == true and not compactMode.isListView()
     end,
+    getEscapeClosesWindow = function()
+      return settingsConfig.escapeClosesWindow ~= false
+    end,
     onStrataChanged = function(strata)
       dock.onStrataChanged(strata)
     end,
@@ -273,6 +276,7 @@ function MessengerWindow.Create(factory, options)
     panelHost = panelHost,
     windowVisibility = windowVisibility,
     showWithoutComposerFocus = composerRuntime.showWithoutComposerFocus,
+    refreshEscapeSetting = scriptResult.refreshEscape,
     compactMode = compactLayout and compactMode or nil,
     dock = dock.dock,
   })

@@ -17,6 +17,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: opening Whisper Messenger with a key binding on a letter key (like Shift-G) no longer types that letter into the message box.
 - Other addons can now drop their chat links straight into your Whisper Messenger message while you're typing it. Total RP 3 needs an update on its side before its links show up there.
 - New option under Notifications: play a sound when a whisper lands in Requests, with its own sound so you can tell it apart from a friend's whisper. Off by default.
+- New Behavior option "Esc closes the window". Turn it off to keep Whisper Messenger open when you press Esc; close it with its button or your Toggle Window key. Dying or opening a big game panel no longer closes it either while the option is off.
 
 ## [2.1.5] - 2026-11-08
 

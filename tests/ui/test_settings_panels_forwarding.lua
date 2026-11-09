@@ -58,6 +58,7 @@ return function()
     autoOpenIncoming = true,
     autoOpenOutgoing = true,
     doubleEscapeToClose = true,
+    escapeClosesWindow = false,
     allowAddonIntegration = false,
     showGroupChats = false,
     requestsInbox = true,
@@ -137,6 +138,7 @@ return function()
   assert(behaviorCapture.config.quickReplies == settingsConfig.quickReplies, "behavior config should carry quickReplies")
   assert(behaviorCapture.config.allowAddonIntegration == false, "behavior config should carry allowAddonIntegration")
   assert(behaviorCapture.config.deselectComposerOnSend == true, "behavior config should carry deselectComposerOnSend")
+  assert(behaviorCapture.config.escapeClosesWindow == false, "behavior config should carry escapeClosesWindow")
   assert(behaviorCapture.config.hideFromDefaultChat == nil, "whisper keys moved off the Behavior page")
   assert(behaviorCapture.config.showGroupChats == nil, "group chat key moved off the Behavior page")
 
