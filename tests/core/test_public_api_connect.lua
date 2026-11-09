@@ -31,6 +31,7 @@ return function()
       "GetLook",
       "GetUnreadCount",
       "HidePreview",
+      "InsertLink",
       "IsAnimationEnabled",
       "IsBlocked",
       "IsCompactWindow",
