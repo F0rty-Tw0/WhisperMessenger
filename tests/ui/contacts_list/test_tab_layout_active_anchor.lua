@@ -135,4 +135,34 @@ do
   assert(lastCall(calls).active == tabs.whispers, "anchor names Whispers")
 end
 
+-- test_mode_click_handler_error_still_rethrows
+do
+  local toggle, tabs = build()
+  toggle.setModes(ALL_MODES)
+  toggle.addPanelTab("ca", "Alerts", noop)
+  toggle.setSelectedPanel("ca")
+  toggle.setModeClickHandler(function()
+    error("boom")
+  end)
+  local ok, err = pcall(tabs.groups.btn.scripts.OnClick, tabs.groups.btn)
+  assert(ok == false, "a throwing handler must not be swallowed")
+  assert(string.find(tostring(err), "boom", 1, true), "the handler's error comes through, got " .. tostring(err))
+end
+
+-- test_mode_click_handler_error_releases_the_anchor_hold
+do
+  local toggle, tabs, calls = build()
+  toggle.setModes(ALL_MODES)
+  toggle.addPanelTab("ca", "Alerts", noop)
+  toggle.setSelectedPanel("ca")
+  toggle.setModeClickHandler(function()
+    error("boom")
+  end)
+  pcall(tabs.groups.btn.scripts.OnClick, tabs.groups.btn)
+  toggle.setModeClickHandler(nil)
+  toggle.setSelectedPanel(nil)
+  toggle.setMode("channels")
+  assert(lastCall(calls).active == tabs.channels, "after a throwing click the row anchors again")
+end
+
 print("PASS: test_tab_layout_active_anchor")
