@@ -43,6 +43,7 @@ local PreviewReplyRuntime = ns.BootstrapWindowRuntimePreviewReplyRuntime
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewReplyRuntime")
 local LiveThemeSync = ns.BootstrapWindowRuntimeLiveThemeSync or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LiveThemeSync")
 local GrowSource = ns.BootstrapWindowRuntimeGrowSource or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GrowSource")
+local PositionSlots = ns.BootstrapWindowRuntimePositionSlots or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PositionSlots")
 local IconMode = ns.BootstrapWindowRuntimeIconMode or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconMode")
 local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
 local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
@@ -101,6 +102,7 @@ function WindowRuntime.Create(options)
     or function(chatApi, guid)
       return WhisperGateway.RequestAvailability(chatApi, guid)
     end
+  local positionSlots = PositionSlots.Create({ accountState = accountState, characterState = characterState, tableUtils = tableUtils })
   local window
   local icon
   local minimapRuntime
@@ -220,12 +222,16 @@ function WindowRuntime.Create(options)
 
   local controller = {}
 
+  -- Every surface that exists moves to the spot its slot now reads; the
+  -- window follows in a later slice (window = nil).
   local function onShareWidgetPositionChanged(enabled)
-    if enabled == true then
-      accountState.sharedWidgetPosition = tableUtils.copyState(characterState.icon)
-      return WindowCallbacks.ApplyIconPosition(icon, accountState.sharedWidgetPosition, uiParent)
-    end
-    return WindowCallbacks.ApplyIconPosition(icon, characterState.icon, uiParent)
+    positionSlots.onToggle(enabled)
+    PositionSlots.Reapply(positionSlots, {
+      icon = icon,
+      minimap = minimapIcon,
+      detached = detachedPreview,
+      uiParent = uiParent,
+    })
   end
 
   -- showOptions: see WindowCoordinator.setWindowVisible.
@@ -275,6 +281,7 @@ function WindowRuntime.Create(options)
   local startConversation = startConversationFlow.startConversation
 
   local windowCallbacks = WindowCallbacks.Create({
+    positionSlots = positionSlots,
     runtime = runtime,
     accountState = accountState,
     characterState = characterState,
@@ -442,6 +449,7 @@ function WindowRuntime.Create(options)
       return icon
     end
     icon = IconRuntime.Create({
+      positionSlots = positionSlots,
       accountState = accountState,
       characterState = characterState,
       uiFactory = uiFactory,
@@ -471,6 +479,7 @@ function WindowRuntime.Create(options)
       return minimapRuntime
     end
     minimapRuntime = minimapIconRuntimeModule.Create({
+      positionSlots = positionSlots,
       accountState = accountState,
       characterState = characterState,
       uiFactory = uiFactory,
@@ -493,6 +502,7 @@ function WindowRuntime.Create(options)
       return detachedPreview
     end
     detachedPreview = DetachedPreviewRuntime.Create({
+      positionSlots = positionSlots,
       uiFactory = uiFactory,
       uiParent = uiParent,
       accountState = accountState,
@@ -507,9 +517,7 @@ function WindowRuntime.Create(options)
     return detachedPreview
   end
 
-  if accountState.settings and accountState.settings.shareWidgetPosition == true and accountState.sharedWidgetPosition == nil then
-    accountState.sharedWidgetPosition = tableUtils.copyState(characterState.icon)
-  end
+  positionSlots.seedAll()
 
   applyIconMode()
   if DetachedPreviewRuntime.IsDetached(accountState.settings) then

@@ -208,6 +208,7 @@ local function makeRuntimeOptions()
           trackers.minimapPreviewInputs[#trackers.minimapPreviewInputs + 1] = { senderName, messageText, classTag }
         end,
         setUnreadCount = function() end,
+        applyRadialPosition = function() end,
         refreshTheme = function()
           trackers.minimapThemeRefreshes = (trackers.minimapThemeRefreshes or 0) + 1
         end,
