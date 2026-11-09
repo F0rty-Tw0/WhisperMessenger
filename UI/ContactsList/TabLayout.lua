@@ -161,8 +161,11 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
         -- The handler leaves the panel; anchoring the old mode's tab then
         -- would scroll it in and push the clicked tab a slot.
         holdAnchor = true
-        modeClickHandler(mode)
+        local ok, err = pcall(modeClickHandler, mode)
         holdAnchor = false
+        if not ok then
+          error(err, 0)
+        end
       end
       if currentMode ~= mode then
         setMode(mode)
