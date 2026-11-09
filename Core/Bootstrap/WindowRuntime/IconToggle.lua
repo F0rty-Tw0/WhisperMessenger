@@ -5,6 +5,7 @@ end
 
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local Panels = ns.PublicApiPanels or require("WhisperMessenger.Core.PublicApi.Panels")
+local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
 
 -- The click handler for the widget, minimap and LDB icons. Keybinds and slash
 -- commands keep the plain toggle.
@@ -59,8 +60,17 @@ end
 -- open window hides its card, so a click there closes the window instead.
 -- Otherwise a visible window hides, other whispers run the plain toggle, and an addon page with
 -- something waiting opens; with no such page, or when opening it is refused,
--- the plain toggle runs.
+-- the plain toggle runs. A toggle that opens onto a chat gets a /who for that
+-- chat, inside this click; the key it returns is the one shown, never
+-- runtime.activeConversationKey (it can sit on another tab).
 function IconToggle.Wrap(runtime, toggle, buildContacts)
+  local function open()
+    local openedKey = toggle()
+    if openedKey ~= nil then
+      WhoTriggers.AskFor(runtime, openedKey)
+    end
+  end
+
   return function()
     if openShownWhisperPreview(runtime) then
       return
@@ -69,7 +79,7 @@ function IconToggle.Wrap(runtime, toggle, buildContacts)
       return toggle()
     end
     if BadgeFilter.SumWhisperUnread(buildContacts()) > 0 then
-      return toggle()
+      return open()
     end
     local key = targetPanelKey(runtime)
     if key ~= nil and Panels.Open(runtime, key) then
@@ -78,7 +88,7 @@ function IconToggle.Wrap(runtime, toggle, buildContacts)
     -- No target or a refused open changed nothing; a failed showPanel left
     -- the window open, so it must not be toggled shut.
     if not runtime.isWindowVisible() then
-      return toggle()
+      return open()
     end
   end
 end

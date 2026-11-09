@@ -91,4 +91,17 @@ return function()
   flow.toggle()
   assert(setVisibleCalls[#setVisibleCalls] == false, "closing should hide window")
   assert(refreshes == 1, "closing should refresh once")
+
+  -- test_toggle_returns_selected_key
+  visible = false
+  unreadKey = "wow::jaina"
+  tabMode = "whispers"
+  assert(flow.toggle() == "wow::jaina", "opening onto a chat returns its key")
+
+  -- test_toggle_returns_nil_when_tab_does_not_match
+  visible = false
+  unreadKey = nil
+  runtime.activeConversationKey = "party::me"
+  tabMode = "whispers"
+  assert(flow.toggle() == nil, "opening with nothing selected returns nil")
 end

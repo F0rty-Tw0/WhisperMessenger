@@ -25,6 +25,8 @@ local function conversationMatchesTab(runtime, conversationKey, tabMode)
   return ContactsTabFilter.ModeOf(ConversationSnapshot.Build(conversationKey, conversation, settings)) == tabMode
 end
 
+-- toggle() returns the key of the chat it opened onto, nil when it selected
+-- none (closed, compact list, or no chat on the open tab).
 function ToggleFlow.Create(options)
   options = options or {}
 
@@ -78,7 +80,7 @@ function ToggleFlow.Create(options)
       local targetKey = unreadKey or runtime.activeConversationKey
       if targetKey ~= nil and matchesTab(targetKey, tabMode) then
         selectConversation(targetKey)
-        return
+        return targetKey
       end
     end
 
