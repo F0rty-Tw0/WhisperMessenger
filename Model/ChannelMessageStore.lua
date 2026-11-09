@@ -265,8 +265,9 @@ function ChannelMessageStore.GetLatest(state, canonicalName, now)
   local entryKey = key
   local entry = state.entries[key]
   if not entry then
-    -- Fallback: try base name match
-    entryKey = indexFor(state).baseLatest[ChannelMessageKey.Base(key)]
+    local base = ChannelMessageKey.Base(key)
+    -- A realm lookup falls back to a realm-less line only, never another realm's.
+    entryKey = ChannelMessageKey.HasRealm(key) and base or indexFor(state).baseLatest[base]
     if entryKey then
       entry = state.entries[entryKey]
     end

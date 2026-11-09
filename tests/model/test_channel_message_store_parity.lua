@@ -2,7 +2,8 @@ local ChannelMessageStore = require("WhisperMessenger.Model.ChannelMessageStore"
 
 -- A deliberately naive store with the documented rules: one line per sender,
 -- an older line never replaces a newer one, the oldest line (time, then
--- arrival) is evicted over the cap, and a bare name falls back to the newest
+-- arrival) is evicted over the cap, a realm lookup falls back to the bare
+-- name only (never another realm), and a bare name falls back to the newest
 -- line from any realm. The real store must answer exactly like it.
 local function newModel(maxEntries, ttl)
   return { entries = {}, count = 0, sequence = 0, maxEntries = maxEntries, ttl = ttl }
@@ -17,6 +18,27 @@ end
 
 local function baseOf(key)
   return string.match(key, "^([^-]+)") or key
+end
+
+-- Lowercase, split at the first hyphen, drop spaces, hyphens and apostrophes
+-- from the realm, and keep a bare name when no realm is left.
+local function modelKey(name)
+  local lowered = string.lower(name)
+  local dash = string.find(lowered, "-", 1, true)
+  if dash == nil then
+    return lowered
+  end
+  local realm = ""
+  for position = dash + 1, #lowered do
+    local char = string.sub(lowered, position, position)
+    if char ~= " " and char ~= "-" and char ~= "'" then
+      realm = realm .. char
+    end
+  end
+  if realm == "" then
+    return string.sub(lowered, 1, dash - 1)
+  end
+  return string.sub(lowered, 1, dash - 1) .. "-" .. realm
 end
 
 local function modelRemove(model, key)
@@ -37,7 +59,7 @@ local function modelEvict(model)
 end
 
 local function modelRecord(model, name, text, sentAt)
-  local key = string.lower(name)
+  local key = modelKey(name)
   local existing = model.entries[key]
   if existing and existing.sentAt > sentAt then
     return
@@ -51,11 +73,15 @@ local function modelRecord(model, name, text, sentAt)
 end
 
 local function modelGet(model, name, now)
-  local key = string.lower(name)
+  local key = modelKey(name)
   local entry = model.entries[key]
-  if entry == nil then
+  if entry == nil and baseOf(key) ~= key then
+    key = baseOf(key)
+    entry = model.entries[key]
+  elseif entry == nil then
+    local base = key
     for candidateKey, candidate in pairs(model.entries) do
-      if baseOf(candidateKey) == baseOf(key) and (entry == nil or isOlder(entry, candidate)) then
+      if baseOf(candidateKey) == base and (entry == nil or isOlder(entry, candidate)) then
         key, entry = candidateKey, candidate
       end
     end
@@ -86,7 +112,13 @@ return function()
     end
 
     local bases = { "Thrall", "Jaina", "Arthas", "Vol" }
-    local realms = { "Area52", "Draenor", "Kazzak" }
+    -- spelling variants of one realm, plus "" for a realm-less sender
+    local realms = { "Area52", "Area 52", "Draenor", "Kel'Thuzad", "KelThuzad", "" }
+    local function senderName()
+      local base = bases[random(#bases)]
+      local realm = realms[random(#realms)]
+      return realm == "" and base or base .. "-" .. realm
+    end
     local config = { maxEntries = 6, ttl = 40 }
     local state = ChannelMessageStore.New(config)
     local model = newModel(config.maxEntries, config.ttl)
@@ -94,7 +126,7 @@ return function()
 
     for step = 1, 4000 do
       clock = clock + random(4) - 1
-      local name = bases[random(#bases)] .. "-" .. realms[random(#realms)]
+      local name = senderName()
       local roll = random(100)
       local context = "step " .. step
       if roll <= 70 then
@@ -103,7 +135,8 @@ return function()
         ChannelMessageStore.Record(state, name, "line" .. step, "Trade", sentAt)
         modelRecord(model, name, "line" .. step, sentAt)
       elseif roll <= 97 then
-        local lookup = random(2) == 1 and name or bases[random(#bases)]
+        -- a full name spells its realm anew, so it often differs from the record
+        local lookup = random(2) == 1 and senderName() or bases[random(#bases)]
         local now = random(3) == 1 and clock or nil
         local actual = ChannelMessageStore.GetLatest(state, lookup, now)
         local expected = modelGet(model, lookup, now)
