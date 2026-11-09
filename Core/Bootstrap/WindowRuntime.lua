@@ -43,6 +43,7 @@ local PreviewReplyRuntime = ns.BootstrapWindowRuntimePreviewReplyRuntime
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewReplyRuntime")
 local LiveThemeSync = ns.BootstrapWindowRuntimeLiveThemeSync or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LiveThemeSync")
 local GrowSource = ns.BootstrapWindowRuntimeGrowSource or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GrowSource")
+local IconMode = ns.BootstrapWindowRuntimeIconMode or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconMode")
 local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
 local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DetachedPreviewRuntime")
@@ -115,41 +116,23 @@ function WindowRuntime.Create(options)
   -- Create the selected icon surface and initialize the minimap runtime for
   -- every non-none icon mode. Called at startup and whenever the setting changes.
   local function resolveIconMode()
-    local mode = accountState.settings and accountState.settings.iconMode
-    if mode == "minimap" or mode == "both" or mode == "none" then
-      return mode
-    end
-    return "widget"
+    return IconMode.Resolve(accountState.settings)
   end
 
   local ensureIcon
   local ensureMinimap
 
   local function applyIconMode()
-    local mode = resolveIconMode()
-    local showWidget = mode == "widget" or mode == "both"
-    local showMinimap = mode == "minimap" or mode == "both"
-
-    if showWidget then
-      ensureIcon()
-    end
-    if mode ~= "none" then
-      ensureMinimap()
-    end
-
-    if icon and icon.frame then
-      if showWidget then
-        icon.frame:Show()
-      else
-        icon.frame:Hide()
-        if icon.setIncomingPreview then
-          icon.setIncomingPreview(nil, nil, nil)
-        end
-      end
-    end
-    if minimapIcon and minimapIcon.setShown then
-      minimapIcon.setShown(showMinimap)
-    end
+    IconMode.Apply(resolveIconMode(), {
+      ensureIcon = ensureIcon,
+      ensureMinimap = ensureMinimap,
+      getIcon = function()
+        return icon
+      end,
+      getMinimap = function()
+        return minimapIcon
+      end,
+    })
   end
 
   local function isMythicRestricted()
