@@ -85,19 +85,14 @@ return function()
 
   -- test_create_empty_state_button_triggers_start_conversation_popup
   do
-    local popupShown = nil
-    _G.StaticPopupDialogs = {}
-    _G.StaticPopup_Show = function(dialogName)
-      popupShown = dialogName
-    end
-    local emptyState = HeaderElements.createEmptyState(pane, nil, factory)
+    local opened = 0
+    local emptyState = HeaderElements.createEmptyState(pane, nil, factory, false, function()
+      opened = opened + 1
+    end)
     local btn = assert(findNewWhisperButton(emptyState), "emptyState should have a new whisper button")
     assert(btn.scripts ~= nil and btn.scripts.OnClick ~= nil, "expected OnClick script on new whisper button")
     btn.scripts.OnClick(btn)
-    assert(
-      popupShown == "WHISPER_MESSENGER_START_CONVERSATION",
-      "expected button click to show start conversation popup, got: " .. tostring(popupShown)
-    )
+    assert(opened == 1, "expected button click to run the injected start-conversation opener")
   end
   -- test_empty_state_button_uses_title_bar_new_whisper_icon
   do

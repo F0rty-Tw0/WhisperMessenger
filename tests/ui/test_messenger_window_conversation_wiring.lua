@@ -1,5 +1,6 @@
 -- Conversation wiring builds the pane with the window's message callbacks.
 local FakeUI = require("tests.helpers.fake_ui")
+local FindUI = require("tests.helpers.find_ui")
 local ConversationWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ConversationWiring")
 
 local function makeWiring(windowOptions, nativeChrome)
@@ -48,6 +49,32 @@ return function()
   do
     local wiring = makeWiring({}, true)
     assert(wiring.conversation.hideEmptyHeader == true, "HUD chrome hides the empty header")
+  end
+
+  -- test_empty_state_button_opens_the_dialog_like_the_title_bar_button
+  do
+    local factory = FakeUI.NewFactory()
+    local popup = factory.CreateFrame("Frame", nil, nil)
+    popup:SetWidth(420)
+    popup.editBox = factory.CreateFrame("EditBox", nil, popup)
+    popup.button1 = factory.CreateFrame("Button", nil, popup)
+    popup.button2 = factory.CreateFrame("Button", nil, popup)
+    popup.text = factory.CreateFrame("FontString", nil, popup)
+    local focused = false
+    popup.editBox.SetFocus = function()
+      focused = true
+    end
+    rawset(_G, "StaticPopup_Show", function()
+      return popup
+    end)
+    local threadPane = factory.CreateFrame("Frame", nil, nil)
+    threadPane:SetSize(600, 400)
+    local wiring = ConversationWiring.Create(factory, { threadPane = threadPane, windowOptions = {}, tabMode = "whispers" })
+    local button = FindUI.ofType(wiring.conversation.headerEmpty, "Button")[1]
+    button.scripts.OnClick(button)
+    rawset(_G, "StaticPopup_Show", nil)
+    assert(popup.editBox.width == 392, "input is sized to the laid-out popup, not left at its stale width")
+    assert(focused == true, "input takes focus after the popup shows")
   end
 
   -- test_first_paint_hides_invite_link_when_disabled
