@@ -89,6 +89,19 @@ local function test_window_reset_while_sharing_resets_the_account_spot_and_expan
   assertSameSpot(shown, default, "reset returns the merged state")
 end
 
+local function test_window_drag_without_sharing_writes_only_this_characters_spot()
+  local account = { sharedWindow = windowState(300) }
+  local character = { window = windowState(40, { contactsCollapsed = false }) }
+  local slots = makeSlots(false, account, character)
+  local nextState = windowState(55, { contactsCollapsed = true })
+
+  slots.write("window", nextState)
+
+  assertSameSpot(character.window, nextState, "this character's spot takes the whole state")
+  assert(character.window ~= nextState, "the stored spot is a copy")
+  assertSameSpot(account.sharedWindow, windowState(300), "the account spot must not change")
+end
+
 local function test_toggle_on_without_a_compact_spot_stores_the_default_marker()
   local account = { sharedCompactWindow = windowState(9) }
   local character = { window = windowState(40, { contactsCollapsed = true }) }
@@ -109,6 +122,7 @@ local function test_compact_reset_while_sharing_stops_reseeding_from_this_charac
   slots.seedAll()
 
   assert(shown == nil, "compact reset returns nil so the window sizes and centers itself")
+  assert(slots.read("compactWindow").anchorPoint == nil, "a shared read never carries this character's geometry")
   assertSameSpot(account.sharedCompactWindow, {}, "the account spot stays the default marker")
   assertSameSpot(character.compactWindow, windowState(40, { compactLayout = true }), "this character's own spot is untouched")
 end
@@ -198,6 +212,7 @@ return function()
   test_window_read_while_sharing_never_uses_this_characters_geometry()
   test_window_drag_while_sharing_leaves_this_characters_geometry()
   test_window_reset_while_sharing_resets_the_account_spot_and_expands_the_rail()
+  test_window_drag_without_sharing_writes_only_this_characters_spot()
   test_toggle_on_without_a_compact_spot_stores_the_default_marker()
   test_compact_reset_while_sharing_stops_reseeding_from_this_character()
   test_compact_reset_without_sharing_clears_this_characters_spot()
