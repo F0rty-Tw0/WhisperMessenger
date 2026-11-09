@@ -5,6 +5,8 @@ end
 
 local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Guards")
 local Panels = ns.PublicApiPanels or require("WhisperMessenger.Core.PublicApi.Panels")
+local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DetachedPreviewRuntime")
 
 -- ShowPreview / HidePreview / IsPreviewShown: another addon's preview on the
 -- widget. One slot; a newer caller replaces the older one silently.
@@ -47,13 +49,40 @@ local function buttonRidesWindow(icon)
   return icon.isRiding ~= nil and icon.isRiding() == true
 end
 
+-- Where the previews show: the detached card when the runtime reports one,
+-- else the widget icon (nil in minimap mode).
+local function activeSurface(runtime)
+  if runtime.getActivePreviewSurface then
+    return runtime.getActivePreviewSurface()
+  end
+  return runtime.getWidgetIcon and runtime.getWidgetIcon() or nil
+end
+
+-- The detached card shows with or without a widget, and does not ride the
+-- window, so only the setting and an existing card decide.
+local function showsDetached(runtime)
+  return DetachedPreviewRuntime.IsDetached(runtime.accountState and runtime.accountState.settings)
+    and runtime.getActivePreviewSurface ~= nil
+    and runtime.getActivePreviewSurface() ~= nil
+end
+
+local function previewRefused(runtime)
+  if previewsTurnedOff(runtime) then
+    return true
+  end
+  if showsDetached(runtime) then
+    return false
+  end
+  local icon = runtime.getWidgetIcon()
+  return icon == nil or buttonRidesWindow(icon)
+end
+
 function Preview.Install(api, runtime)
   api.ShowPreview = Guards.Wrap(function(sourceKey, preview)
     if not Guards.IsNonEmptyString(sourceKey) or not isValidPreview(preview) then
       return false
     end
-    local icon = runtime.getWidgetIcon()
-    if previewsTurnedOff(runtime) or icon == nil or buttonRidesWindow(icon) then
+    if previewRefused(runtime) then
       return false
     end
     runtime.externalPreview.set(sourceKey, preview, isPanelShown(runtime, sourceKey))
@@ -74,8 +103,8 @@ function Preview.Install(api, runtime)
     if not Guards.IsNonEmptyString(sourceKey) or runtime.externalPreview.keyOf() ~= sourceKey then
       return false
     end
-    local icon = runtime.getWidgetIcon()
-    return icon ~= nil and icon.isExternalPreviewShown ~= nil and icon.isExternalPreviewShown()
+    local surface = activeSurface(runtime)
+    return surface ~= nil and surface.isExternalPreviewShown ~= nil and surface.isExternalPreviewShown()
   end)
 end
 

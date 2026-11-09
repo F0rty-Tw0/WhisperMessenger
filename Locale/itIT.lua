@@ -232,6 +232,7 @@ local Italian = {
   ["Left"] = "Sinistra",
   ["Above"] = "Sopra",
   ["Below"] = "Sotto",
+  ["Detached"] = "Libero",
   ["Off"] = "Disattivato",
   ["Whisper"] = "Sussurro",
   ["Ping"] = "Ping",

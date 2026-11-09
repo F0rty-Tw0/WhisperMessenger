@@ -121,6 +121,9 @@ function IncomingPreview.Create(factory, frame, options)
 
   if previewFrame.SetScript then
     PreviewLinks.SetMouseUp(previewFrame, function(_self, button)
+      if options.shouldIgnoreMouseUp and options.shouldIgnoreMouseUp() == true then
+        return
+      end
       local current = externalEntry
       if button == "RightButton" then
         dismissCurrent()

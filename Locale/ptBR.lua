@@ -232,6 +232,7 @@ local Portuguese = {
   ["Left"] = "Esquerda",
   ["Above"] = "Acima",
   ["Below"] = "Abaixo",
+  ["Detached"] = "Livre",
   ["Off"] = "Desligado",
   ["Whisper"] = "Sussurro",
   ["Ping"] = "Ping",

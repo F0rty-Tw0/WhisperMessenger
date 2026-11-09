@@ -44,6 +44,8 @@ local PreviewReplyRuntime = ns.BootstrapWindowRuntimePreviewReplyRuntime
 local LiveThemeSync = ns.BootstrapWindowRuntimeLiveThemeSync or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LiveThemeSync")
 local GrowSource = ns.BootstrapWindowRuntimeGrowSource or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GrowSource")
 local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
+local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DetachedPreviewRuntime")
 
 local WindowRuntime = {}
 
@@ -72,6 +74,8 @@ function WindowRuntime.Create(options)
   -- Defined below; the bridge only fires after login, once both exist.
   local getWidgetIcon
   local minimapIcon
+  local detachedPreview
+  local ensureDetachedPreview
   LiveThemeSync.Install(options.ellesmereBridge or EllesmereBridge, theme, function()
     return liveThemeSettingChanged
   end, function()
@@ -81,6 +85,9 @@ function WindowRuntime.Create(options)
     end
     if minimapIcon and minimapIcon.refreshTheme then
       minimapIcon.refreshTheme()
+    end
+    if detachedPreview then
+      detachedPreview.refreshTheme()
     end
   end)
 
@@ -201,6 +208,12 @@ function WindowRuntime.Create(options)
     end,
     getCompartment = function()
       return compartment
+    end,
+    getDetachedPreview = function()
+      return detachedPreview
+    end,
+    previewDetached = function()
+      return DetachedPreviewRuntime.IsDetached(accountState.settings)
     end,
     isMythicRestricted = isMythicRestricted,
     presenceCache = presenceCache,
@@ -329,6 +342,20 @@ function WindowRuntime.Create(options)
       buildContacts = buildContacts,
       applyIconMode = applyIconMode,
       onShareWidgetPositionChanged = onShareWidgetPositionChanged,
+      getDetachedPreview = function()
+        return detachedPreview
+      end,
+      onDetachedSetting = function(key, value)
+        DetachedPreviewRuntime.OnSettingChanged({
+          accountState = accountState,
+          characterState = characterState,
+          getSurface = function()
+            return detachedPreview
+          end,
+          ensureSurface = ensureDetachedPreview,
+          updateIconSurfaces = coordinator.updateIconSurfaces,
+        }, key, value)
+      end,
     })
     liveThemeSettingChanged = onSettingChanged
 
@@ -450,6 +477,11 @@ function WindowRuntime.Create(options)
       onOpenPreview = onOpenPreview,
       onMarkAllRead = windowCallbacks.onMarkAllRead,
       quickReply = previewReply.quickReply,
+      isExternalShownElsewhere = function()
+        return detachedPreview ~= nil
+          and DetachedPreviewRuntime.IsDetached(accountState.settings)
+          and detachedPreview.isExternalPreviewShown() == true
+      end,
     })
     runtime.icon = icon
     return icon
@@ -477,11 +509,34 @@ function WindowRuntime.Create(options)
     return minimapRuntime
   end
 
+  ensureDetachedPreview = function()
+    if detachedPreview then
+      return detachedPreview
+    end
+    detachedPreview = DetachedPreviewRuntime.Create({
+      uiFactory = uiFactory,
+      uiParent = uiParent,
+      accountState = accountState,
+      characterState = characterState,
+      buildContacts = buildContacts,
+      acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
+      refreshWindow = refreshWindow,
+      onOpenPreview = onOpenPreview,
+      quickReply = previewReply.quickReply,
+      getWidgetIcon = getWidgetIcon,
+    })
+    return detachedPreview
+  end
+
   if accountState.settings and accountState.settings.shareWidgetPosition == true and accountState.sharedWidgetPosition == nil then
     accountState.sharedWidgetPosition = tableUtils.copyState(characterState.icon)
   end
 
   applyIconMode()
+  if DetachedPreviewRuntime.IsDetached(accountState.settings) then
+    ensureDetachedPreview()
+    coordinator.updateIconSurfaces()
+  end
   compartment = MinimapIconRuntime.CreateCompartment({
     accountState = accountState,
     runtime = runtime,
@@ -514,6 +569,12 @@ function WindowRuntime.Create(options)
     getWidgetIcon = getWidgetIcon,
     updateIconSurfaces = coordinator.updateIconSurfaces,
   })
+
+  runtime.getActivePreviewSurface = function()
+    return DetachedPreviewRuntime.ActiveSurface(accountState.settings, function()
+      return detachedPreview
+    end, getWidgetIcon)
+  end
 
   return controller
 end

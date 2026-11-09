@@ -14,6 +14,7 @@ local function build(opts)
     getShowUnreadBadge = function()
       return opts.showBadge ~= false
     end,
+    isExternalShownElsewhere = opts.elsewhere,
   })
   icon.frame:Show()
   local function glowPlaying()
@@ -105,7 +106,22 @@ return function()
     assert(not glowPlaying(), "no preview, no glow")
   end
 
+  local function test_external_pulse_follows_a_card_shown_elsewhere()
+    local shownElsewhere = true
+    local icon, glowPlaying = build({
+      elsewhere = function()
+        return shownElsewhere
+      end,
+    })
+    icon.setExternalPulse(true)
+    assert(glowPlaying(), "glow pulses while the external preview shows on another card")
+    shownElsewhere = false
+    icon.refreshPulse()
+    assert(not glowPlaying(), "glow stops once the other card clears")
+  end
+
   test_external_pulse_glows()
+  test_external_pulse_follows_a_card_shown_elsewhere()
   test_an_unread_refresh_keeps_the_external_glow()
   test_turning_the_external_pulse_off_stops_the_glow()
   test_unread_pulse_survives_the_external_pulse_stopping()

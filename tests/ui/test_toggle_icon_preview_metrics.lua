@@ -22,6 +22,11 @@ return function()
   local right = M.ResolveAnchor("sideways")
   assert(right.selfPoint == "LEFT" and right.target == "RIGHT" and right.x == M.GAP, "unknown position falls back to right")
 
+  -- test_detached_hangs_from_the_holder_top
+  local detached = M.ResolveAnchor("detached")
+  assert(detached.selfPoint == "TOP" and detached.target == "TOP", "detached card hangs from the holder's top")
+  assert(detached.x == 0 and detached.y == 0, "detached card sits exactly on the holder")
+
   -- test_above_and_top_anchor_on_the_bottom_edge
   assert(M.ResolveAnchor("above").selfPoint == "BOTTOM", "above anchors the preview's bottom edge")
   assert(M.ResolveAnchor("top").y == M.GAP, "top sits one gap above the icon")

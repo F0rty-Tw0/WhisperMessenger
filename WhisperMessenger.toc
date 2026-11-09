@@ -542,6 +542,7 @@ Core/PublicApi/Panels.lua
 Core/Bootstrap/WindowRuntime/IconToggle.lua
 Core/Bootstrap/WindowRuntime/PreviewOpen.lua
 Core/Bootstrap/WindowRuntime/PreviewReplyRuntime.lua
+Core/Bootstrap/WindowRuntime/DetachedPreviewRuntime.lua
 Core/Bootstrap/WindowRuntime/LiveThemeSync.lua
 Core/Bootstrap/WindowRuntime/GrowSource.lua
 Core/Bootstrap/WindowRuntime.lua

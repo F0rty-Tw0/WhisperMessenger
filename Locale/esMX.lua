@@ -236,6 +236,7 @@ local Spanish = {
   ["Left"] = "Izquierda",
   ["Above"] = "Arriba",
   ["Below"] = "Abajo",
+  ["Detached"] = "Libre",
   ["Off"] = "Apagado",
   ["Whisper"] = "Susurro",
   ["Ping"] = "Ping",
