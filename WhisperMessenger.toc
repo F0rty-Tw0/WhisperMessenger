@@ -530,6 +530,7 @@ Core/Bootstrap/WindowRuntime/WidgetPreview.lua
 Core/Bootstrap/WindowRuntime/StartConversation.lua
 Core/Bootstrap/WindowRuntime/GroupSendPolicy.lua
 Core/Bootstrap/WindowRuntime/IconPosition.lua
+Core/Bootstrap/WindowRuntime/PositionSlots.lua
 Core/Bootstrap/WindowRuntime/WhoTriggers.lua
 Core/Bootstrap/WindowRuntime/AddonAlerts.lua
 Core/Bootstrap/WindowRuntime/GameWhisperTab.lua
