@@ -24,6 +24,7 @@
 
 Core/FlavorCompat.lua
 Core/Loader.lua
+Core/KeySettle.lua
 Core/Bindings.lua
 Core/Constants.lua
 Core/PatchNotes.lua

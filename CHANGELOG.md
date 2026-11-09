@@ -14,6 +14,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: right-clicking a player's name in chat while typing in Whisper Messenger no longer puts a broken link in your message that the game refuses to send.
 - Fixed: the "Start a new conversation" box opened from an empty chat no longer sticks out past the edges of its window.
 - Fixed: the Whisper Messenger button can no longer be dragged off the screen, and a button that was already off screen comes back to the edge.
+- Fixed: opening Whisper Messenger with a key binding on a letter key (like Shift-G) no longer types that letter into the message box.
 
 ## [2.1.5] - 2026-11-08
 

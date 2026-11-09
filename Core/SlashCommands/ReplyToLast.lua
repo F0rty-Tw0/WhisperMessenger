@@ -17,24 +17,9 @@ end
 -- sees the conversation context; composer stays disabled via the
 -- mythic-pause notice.
 
+local KeySettle = ns.KeySettle or require("WhisperMessenger.Core.KeySettle")
+
 local ReplyToLast = {}
-
--- The reply key runs /wr on key-down; the key's character event reaches
--- whatever has focus during the next frame's input phase, after that frame's
--- C_Timer callbacks. Waiting one frame plus a short delay (What The Whisper
--- uses the same 0.05s) keeps the composer unfocused until the "r" is gone.
-local REPLY_KEY_SETTLE_SECONDS = 0.05
-
-local function afterReplyKeySettles(fn)
-  local timer = _G.C_Timer
-  if type(timer) ~= "table" or type(timer.After) ~= "function" then
-    fn()
-    return
-  end
-  timer.After(0, function()
-    timer.After(REPLY_KEY_SETTLE_SECONDS, fn)
-  end)
-end
 
 local function isWhisperConversation(conv)
   if type(conv) ~= "table" then
@@ -117,7 +102,7 @@ function ReplyToLast.Create(deps)
   end
 
   return function()
-    afterReplyKeySettles(reply)
+    KeySettle.After(reply)
   end
 end
 
