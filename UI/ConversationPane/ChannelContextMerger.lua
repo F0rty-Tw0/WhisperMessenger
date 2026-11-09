@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
+
 local ChannelContextMerger = {}
 
 -- Only one conversation is on screen at a time, so a single memo slot is enough
@@ -23,6 +25,14 @@ local function lookupNameFor(selectedContact)
   local name = selectedContact.gameAccountName or selectedContact.displayName
   if type(name) ~= "string" or name == "" then
     return nil
+  end
+  -- A partner on your own realm arrives without a realm. Add yours so the
+  -- store never hands back a same-named player's line from another realm.
+  if selectedContact.channel == "WOW" and not string.find(name, "-", 1, true) then
+    local realm = LocalPlayer.NormalizedRealm()
+    if realm then
+      name = name .. "-" .. realm
+    end
   end
   return string.lower(name)
 end
