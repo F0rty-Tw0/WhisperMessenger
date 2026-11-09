@@ -132,7 +132,68 @@ local function test_compact_read_without_a_spot_is_the_default_marker()
   assert(slots.read("window") == nil, "a missing window spot is not invented")
 end
 
+local function makeSurfaces(compactLayoutActive)
+  local calls = { icon = {}, window = {}, minimap = {}, detached = 0 }
+  local uiParent = { name = "UIParent" }
+  local surfaces = {
+    uiParent = uiParent,
+    compactLayoutActive = compactLayoutActive,
+    icon = {
+      frame = {
+        ClearAllPoints = function() end,
+        SetPoint = function(_self, ...)
+          calls.icon[#calls.icon + 1] = { ... }
+        end,
+      },
+    },
+    window = {
+      applySavedState = function(state)
+        calls.window[#calls.window + 1] = state
+      end,
+    },
+    minimap = {
+      applyRadialPosition = function(state)
+        calls.minimap[#calls.minimap + 1] = state
+      end,
+    },
+    detached = {
+      applySavedSpot = function()
+        calls.detached = calls.detached + 1
+      end,
+    },
+  }
+  return surfaces, calls, uiParent
+end
+
+local function test_reapply_moves_every_created_surface_and_skips_missing_ones()
+  local character = {
+    icon = { anchorPoint = "TOP", relativePoint = "BOTTOM", x = 3, y = 4 },
+    minimapIcon = { degrees = 77 },
+    window = windowState(40),
+    compactWindow = windowState(12, { compactLayout = true }),
+  }
+  local slots = makeSlots(false, {}, character)
+
+  local surfaces, calls, uiParent = makeSurfaces(false)
+  PositionSlots.Reapply(slots, surfaces)
+
+  assert(#calls.icon == 1, "the icon moves once")
+  local setPoint = calls.icon[1]
+  assert(setPoint[1] == "TOP" and setPoint[2] == uiParent and setPoint[3] == "BOTTOM", "the icon anchors to the read spot")
+  assert(setPoint[4] == 3 and setPoint[5] == 4, "the icon offsets come from the read spot")
+  assert(#calls.window == 1 and calls.window[1] == character.window, "the window gets the window spot")
+  assert(#calls.minimap == 1 and calls.minimap[1] == character.minimapIcon, "the minimap gets the minimap spot")
+  assert(calls.detached == 1, "the preview re-reads its own spot once")
+
+  local compactSurfaces, compactCalls = makeSurfaces(true)
+  PositionSlots.Reapply(slots, compactSurfaces)
+  assert(compactCalls.window[1] == character.compactWindow, "the compact flag picks the compact spot")
+
+  PositionSlots.Reapply(slots, { uiParent = uiParent })
+end
+
 return function()
+  test_reapply_moves_every_created_surface_and_skips_missing_ones()
   test_window_share_keeps_collapsed_rail_and_minimized_per_character()
   test_window_read_while_sharing_never_uses_this_characters_geometry()
   test_window_drag_while_sharing_leaves_this_characters_geometry()

@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local IconPosition = ns.BootstrapWindowRuntimeIconPosition or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconPosition")
+
 local PositionSlots = {}
 
 -- The window fields one account spot carries. Everything else a window state
@@ -154,6 +156,24 @@ function PositionSlots.Create(options)
   end
 
   return slots
+end
+
+-- Moves every created surface to its slot's spot. Each surface may be nil
+-- (the widget, minimap button and preview are created lazily).
+function PositionSlots.Reapply(slots, surfaces)
+  if surfaces.icon then
+    IconPosition.Apply(surfaces.icon, slots.read("icon"), surfaces.uiParent)
+  end
+  if surfaces.window then
+    local windowSlot = surfaces.compactLayoutActive and "compactWindow" or "window"
+    surfaces.window.applySavedState(slots.read(windowSlot))
+  end
+  if surfaces.minimap then
+    surfaces.minimap.applyRadialPosition(slots.read("minimapIcon"))
+  end
+  if surfaces.detached then
+    surfaces.detached.applySavedSpot()
+  end
 end
 
 ns.BootstrapWindowRuntimePositionSlots = PositionSlots
