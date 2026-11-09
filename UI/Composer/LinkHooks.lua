@@ -60,8 +60,10 @@ local function tryInsertLink(link, options)
   -- Classic vanilla shift-click of a quest produces plain `[Name (id)]` text
   -- with no |H...|h envelope. Rewrite to a real hyperlink so the link is
   -- clickable in the composer and survives transmission to the recipient.
+  -- API callers (keepText) send finished text: no rewrite, so the byte cap
+  -- they were checked against still holds.
   local insertable = link
-  if type(insertable) == "string" then
+  if type(insertable) == "string" and options.keepText ~= true then
     insertable = QuestLinkClassic.Rewrite(insertable)
   end
 
@@ -169,7 +171,7 @@ function LinkHooks.InsertText(text)
   if wouldPassByteCap(input, current, text) then
     return false
   end
-  tryInsertLink(text, { allowVisibleWithoutFocus = false })
+  tryInsertLink(text, { allowVisibleWithoutFocus = false, keepText = true })
   return input:GetText() ~= current
 end
 

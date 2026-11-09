@@ -94,5 +94,32 @@ return function()
     assert(input:GetText() == itemLink, "only the first link may land, got: " .. input:GetText())
   end
 
+  -- test_inserts_caller_text_verbatim_without_the_quest_rewrite
+  do
+    reset(true)
+    local took = env.LinkHooks.InsertText("[Foo (12)]")
+    assert(took == true, "plain text should land")
+    assert(input:GetText() == "[Foo (12)]", "caller text must not be rewritten, got: " .. input:GetText())
+  end
+
+  -- test_takes_text_that_fills_the_byte_cap_exactly
+  do
+    reset(true)
+    input.maxBytes = 256
+    input.text = string.rep("a", 245)
+    local took = env.LinkHooks.InsertText(string.rep("b", 10))
+    assert(took == true, "255 bytes fit a 256-byte cap (one byte is the terminator)")
+  end
+
+  -- test_refuses_text_one_byte_past_the_byte_cap
+  do
+    reset(true)
+    input.maxBytes = 256
+    input.text = string.rep("a", 246)
+    local took = env.LinkHooks.InsertText(string.rep("b", 10))
+    assert(took == false, "256 bytes do not fit a 256-byte cap")
+    assert(#env.inserts == 0, "nothing may be inserted past the cap, got " .. #env.inserts)
+  end
+
   env.Restore()
 end
