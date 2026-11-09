@@ -53,7 +53,7 @@ function SoundSelector.Create(factory, parent, opts)
       end
       -- Preview the chosen sound on selection so the user can audition it
       -- without saving and reloading.
-      SoundPlayer.Preview(value)
+      SoundPlayer.PlayKey(value)
     end,
     rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
     labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
