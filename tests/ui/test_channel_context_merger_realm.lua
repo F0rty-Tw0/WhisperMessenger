@@ -52,6 +52,12 @@ return function()
     assert(#result == 1 and result[1].text == "WTS ore", "a same-realm contact should find a realm-less line")
   end)
 
+  -- test_cross_realm_contact_keeps_its_own_realm_line
+  withRealm("Area52", function()
+    local result = mergeFor({ displayName = "Thrall-Draenor", channel = "WOW" }, "Thrall-Draenor")
+    assert(#result == 1 and result[1].text == "WTS ore", "a contact that has a realm must keep it, not get yours")
+  end)
+
   -- test_without_own_realm_the_lookup_stays_bare
   withRealm(nil, function()
     local result = mergeFor(SAME_REALM_CONTACT, "Thrall-Draenor")
