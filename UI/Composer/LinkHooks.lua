@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local ChatLinkSources = ns.ComposerChatLinkSources or require("WhisperMessenger.UI.Composer.ChatLinkSources")
 local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
 local UrlFormatter = ns.UIHyperlinksUrlFormatter or require("WhisperMessenger.UI.Hyperlinks.UrlFormatter")
 
@@ -83,137 +84,63 @@ local function safeHookGlobal(functionName, handler)
   return ok
 end
 
--- Snapshot originals at module load so we can restore them when no composer
--- input has focus. We intentionally do NOT install the overrides here —
--- leaving our function baked into Blizzard's call graph taints every
--- internal `ChatEdit_GetActiveWindow` query, including the one on the
--- `OPENCHAT` binding (Enter) path. That crashed `UpdateHeader` arithmetic
--- with WhisperMessenger attribution on every Enter press and on `/r` after
--- a post-M+ BN_WHISPER sticky.
+local function safeHookMethod(target, methodName, handler)
+  if type(target) ~= "table" then
+    return false
+  end
+  local ok = pcall(_G.hooksecurefunc, target, methodName, handler)
+  return ok
+end
+
+-- Never assign to a Blizzard global or a ChatFrameUtil field, not even to put
+-- Blizzard's own function back: any write from addon code taints that slot for
+-- the whole session. Blizzard's later reads of it (opening chat, inserting a
+-- link, pressing Enter) then run tainted, and in an encounter the game blocks
+-- the player's own chat message and blames this addon. Post-hooks through
+-- hooksecurefunc keep Blizzard's function in place and its callers untainted.
 --
--- Instead, the overrides install on composer focus-gained and restore on
--- focus-lost. While the composer is focused (user actively composing), any
--- Blizzard query routes through us and links insert correctly. While it is
--- unfocused — which is exactly when OPENCHAT and /r fire — Blizzard sees
--- its own function and runs untainted.
-local originals = {
-  chatEditGetActiveWindow = nil,
-  chatEditInsertLink = nil,
-  chatFrameUtilGetActiveWindow = nil,
-  chatFrameUtilInsertLink = nil,
-  captured = false,
-}
+-- Shift-click inserts end in InsertLink. The post-hook adds the link to our
+-- composer only while it has focus and no Blizzard chat box is open (an open
+-- one already got the link from Blizzard). A click can reach more than one
+-- hook; the one-insert-per-frame dedupe in tryInsertLink keeps a single copy.
+local function blizzardChatBoxActive()
+  local util = _G.ChatFrameUtil
+  local getActiveWindow = type(util) == "table" and util.GetActiveWindow or _G.ChatEdit_GetActiveWindow
+  return type(getActiveWindow) == "function" and getActiveWindow() ~= nil
+end
 
-local function captureOriginals()
-  if originals.captured then
+local function insertFromBlizzard(link)
+  if _G._wmSuspended or type(link) ~= "string" or link == "" or blizzardChatBoxActive() then
     return
   end
-  originals.chatEditGetActiveWindow = _G.ChatEdit_GetActiveWindow
-  originals.chatEditInsertLink = _G.ChatEdit_InsertLink
-  local cfu = _G.ChatFrameUtil
-  if type(cfu) == "table" then
-    originals.chatFrameUtilGetActiveWindow = cfu.GetActiveWindow
-    originals.chatFrameUtilInsertLink = cfu.InsertLink
-  end
-  originals.captured = true
+  tryInsertLink(link, { allowVisibleWithoutFocus = false })
 end
 
-local overrideInstalled = false
-
-local function wmGetActiveWindow()
-  local original = originals.chatEditGetActiveWindow or originals.chatFrameUtilGetActiveWindow
-  if original then
-    local result = original()
-    if result ~= nil then
-      return result
-    end
+local function playerNameFromLink(link)
+  if type(link) ~= "string" then
+    return nil
   end
-  local input = findInputForInsertion(false)
-  if input ~= nil and isInputShown(input) and isInputFocused(input) then
-    return input
-  end
-  return nil
+  return string.match(link, "^player%a*:([^:]+)")
 end
 
-local function wmInsertLink(link)
-  -- Rewrite Classic plain-text quest links before trying either path.
-  local insertable = link
-  if type(insertable) == "string" then
-    insertable = QuestLinkClassic.Rewrite(insertable)
-  end
-
-  -- Try our focused composer FIRST (through tryInsertLink, so the one-insert-
-  -- per-frame dedupe applies). Blizzard routes the same click through several
-  -- insert paths in one frame (player-link handler, SetItemRef modified-click
-  -- fallback, our SetItemRef post-hook); only the first should land. Overrides
-  -- are only installed while our composer is focused, so inserting ourselves
-  -- first never steals links from other editboxes.
-  if not _G._wmSuspended and type(insertable) == "string" and insertable ~= "" then
-    if tryInsertLink(insertable, { allowVisibleWithoutFocus = false }) then
-      return true
-    end
-  end
-
-  local original = originals.chatEditInsertLink or originals.chatFrameUtilInsertLink
-  if original then
-    return original(insertable) == true
-  end
-  return false
+local function isBattleNetPlayerLink(link)
+  return type(link) == "string" and string.find(link, "BNplayer", 1, true) == 1
 end
 
-local function installOverrides()
-  if overrideInstalled then
-    return
-  end
-  captureOriginals()
-  _G.ChatEdit_GetActiveWindow = wmGetActiveWindow
-  _G.ChatEdit_InsertLink = wmInsertLink
-  local cfu = _G.ChatFrameUtil
-  if type(cfu) == "table" then
-    cfu.GetActiveWindow = wmGetActiveWindow
-    cfu.InsertLink = wmInsertLink
-  end
-  overrideInstalled = true
+local function isPlayerLink(link)
+  return type(link) == "string" and string.find(link, "player", 1, true) == 1
 end
 
-local function anyLinkedInputFocused()
-  for _, input in ipairs(linkedInputs) do
-    if input ~= nil and type(input.HasFocus) == "function" and input:HasFocus() then
-      return true
-    end
+-- A player name shift-clicked in our own window: inserts the plain name into
+-- the focused composer and returns true, so the caller can keep the click
+-- away from Blizzard's SetItemRef (with no Blizzard chat box open it sends a
+-- /who for the name). Returns false when the composer did not take it.
+function LinkHooks.InsertClickedPlayerName(link)
+  local playerName = playerNameFromLink(link)
+  if playerName == nil or _G._wmSuspended or not ChatLinkSources.IsChatLinkClick() then
+    return false
   end
-  return false
-end
-
-local function uninstallOverrides()
-  if not overrideInstalled then
-    return
-  end
-  _G.ChatEdit_GetActiveWindow = originals.chatEditGetActiveWindow
-  _G.ChatEdit_InsertLink = originals.chatEditInsertLink
-  local cfu = _G.ChatFrameUtil
-  if type(cfu) == "table" then
-    cfu.GetActiveWindow = originals.chatFrameUtilGetActiveWindow
-    cfu.InsertLink = originals.chatFrameUtilInsertLink
-  end
-  overrideInstalled = false
-end
-
-local function attachFocusGuards(input)
-  if type(input.HookScript) ~= "function" then
-    return
-  end
-  input:HookScript("OnEditFocusGained", function()
-    -- An input whose own script refused the focus (ClearFocus) has none by now.
-    if isInputFocused(input) then
-      installOverrides()
-    end
-  end)
-  input:HookScript("OnEditFocusLost", function()
-    if not anyLinkedInputFocused() then
-      uninstallOverrides()
-    end
-  end)
+  return tryInsertLink(playerName, { allowVisibleWithoutFocus = false })
 end
 
 local function registerLinkHooks()
@@ -228,6 +155,22 @@ local function registerLinkHooks()
     end
     -- Our URL links only copy their address; they are never inserted.
     if link == nil or UrlFormatter.ExtractExternalUrlFromLink(link) ~= nil then
+      return
+    end
+    -- A shift-clicked player name inserts the plain name, as Blizzard does
+    -- for its own open chat box (Blizzard also sends a /who when none is
+    -- open). This hook only sees clicks outside our window, or in it while
+    -- the composer had no focus: with focus, our window's click script puts
+    -- the name in through InsertClickedPlayerName and never calls SetItemRef.
+    -- Blizzard ignores shift-clicked Battle.net names so the encoded account
+    -- name never reaches chat; so do we. Any other click on a player name
+    -- (right-click menu, plain click) inserts nothing: the server refuses a
+    -- sent |Hplayer link ("Invalid escape code in chat message").
+    local playerName = playerNameFromLink(link)
+    if isBattleNetPlayerLink(link) or isPlayerLink(link) then
+      if playerName ~= nil and ChatLinkSources.IsChatLinkClick() then
+        insertFromBlizzard(playerName)
+      end
       return
     end
 
@@ -245,23 +188,15 @@ local function registerLinkHooks()
     tryInsertLink(linkToInsert, { allowVisibleWithoutFocus = false })
   end)
 
+  safeHookMethod(_G.ChatFrameUtil, "InsertLink", insertFromBlizzard)
+  safeHookGlobal("ChatEdit_InsertLink", insertFromBlizzard)
+  ChatLinkSources.Register(insertFromBlizzard)
+
   registeredLinkHooks = true
 end
 
 function LinkHooks.RegisterInput(input)
-  -- Blizzard code (GetActiveChatType, etc.) expects the editbox returned
-  -- by GetActiveWindow to behave like a chat frame editbox. Add fields
-  -- and method stubs so our plain EditBox doesn't error.
-  if input.chatType == nil then
-    input.chatType = "SAY"
-  end
-  if type(input.GetChatType) ~= "function" then
-    input.GetChatType = function(self)
-      return self.chatType or "SAY"
-    end
-  end
   table.insert(linkedInputs, 1, input)
-  attachFocusGuards(input)
   registerLinkHooks()
 end
 

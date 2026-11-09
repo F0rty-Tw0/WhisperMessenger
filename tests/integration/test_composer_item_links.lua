@@ -75,9 +75,8 @@ return function()
   local parent = factory.CreateFrame("Frame", "ComposerParent", nil)
   parent:SetSize(600, 200)
 
-  -- Overrides must NOT be installed at module load — Blizzard's OPENCHAT /
-  -- UpdateHeader arithmetic crashes with WhisperMessenger taint attribution
-  -- otherwise. They install on composer focus-gained, restore on focus-lost.
+  -- Blizzard's chat globals must never be assigned from addon code (that
+  -- taints them for the session); links arrive through post-hooks instead.
   local preLoadGetActiveWindow = _G.ChatEdit_GetActiveWindow
   local preLoadInsertLink = _G.ChatEdit_InsertLink
 
@@ -87,70 +86,51 @@ return function()
     channel = "WOW",
   }, function() end)
 
-  assert(_G.ChatEdit_GetActiveWindow == preLoadGetActiveWindow, "ChatEdit_GetActiveWindow must not be overridden before focus")
-  assert(_G.ChatEdit_InsertLink == preLoadInsertLink, "ChatEdit_InsertLink must not be overridden before focus")
-
-  -- ChatEdit_GetActiveWindow returns our input when focused (installs override)
   parent:Show()
   composer.frame:Show()
   composer.input:Show()
   composer.input:SetFocus()
 
-  assert(_G.ChatEdit_GetActiveWindow ~= preLoadGetActiveWindow, "ChatEdit_GetActiveWindow should install on focus-gained")
+  assert(_G.ChatEdit_GetActiveWindow == preLoadGetActiveWindow, "ChatEdit_GetActiveWindow must stay Blizzard's while focused")
+  assert(_G.ChatEdit_InsertLink == preLoadInsertLink, "ChatEdit_InsertLink must stay Blizzard's while focused")
 
-  local activeWindow = _G.ChatEdit_GetActiveWindow()
-  assert(activeWindow == composer.input, "expected ChatEdit_GetActiveWindow to return our composer input when visible")
-
-  -- ChatEdit_GetActiveWindow returns nil when composer is hidden
-  composer.input:Hide()
-  assert(_G.ChatEdit_GetActiveWindow() == nil, "expected ChatEdit_GetActiveWindow to return nil when composer hidden")
-
-  -- Restore visible state
-  composer.input:Show()
-
-  -- ChatEdit_InsertLink routes item links to our composer and returns true
+  -- The InsertLink post-hook routes item links into the focused composer
+  local insertLinkHook = registeredHooks.ChatEdit_InsertLink
+  assert(insertLinkHook ~= nil, "expected ChatEdit_InsertLink post-hook registered")
   composer.input:SetText("")
   local itemLink = "|cff0070dd|Hitem:19019::::::::|h[Thunderfury, Blessed Blade of the Windseeker]|h|r"
-  local insertResult = _G.ChatEdit_InsertLink(itemLink)
-  assert(insertResult == true, "expected ChatEdit_InsertLink to return true")
+  insertLinkHook(itemLink)
   assert(composer.input:GetText() == itemLink, "expected item link inserted into our composer")
 
-  -- ChatEdit_InsertLink routes quest links to our composer and returns true
+  -- ... and quest links
   local questLink = "|cffffff00|Hquest:78307:80|h[To Khaz Algar!]|h|r"
   composer.input:SetText("")
-  local questResult = _G.ChatEdit_InsertLink(questLink)
-  assert(questResult == true, "expected ChatEdit_InsertLink to return true for quest link")
+  insertLinkHook(questLink)
   assert(composer.input:GetText() == questLink, "expected quest link inserted into our composer")
 
   -- Classic vanilla shift-click inserts plain `[Name (id)]` text. Our composer
   -- must rewrite that on the way in to a real quest hyperlink, so the
   -- recipient gets a clickable link and the user's bubble shows it correctly.
   composer.input:SetText("")
-  local classicShiftClick = "[Apprentice's Duties (471)]"
-  local classicResult = _G.ChatEdit_InsertLink(classicShiftClick)
-  assert(classicResult == true, "expected ChatEdit_InsertLink to return true for classic plain-text quest")
+  insertLinkHook("[Apprentice's Duties (471)]")
   local expectedClassic = "|cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r"
   assert(
     composer.input:GetText() == expectedClassic,
     "expected classic quest text to be rewritten to hyperlink, got: " .. tostring(composer.input:GetText())
   )
 
-  -- ChatEdit_InsertLink returns false when composer is hidden (no target)
+  -- Nothing lands when the composer is hidden
+  composer.input:SetText("")
   composer.input:Hide()
-  assert(_G.ChatEdit_InsertLink(itemLink) == false, "expected false when no visible input")
+  insertLinkHook(itemLink)
+  assert(composer.input:GetText() == "", "expected no link inserted when composer hidden")
   composer.input:Show()
 
-  -- ChatEdit_InsertLink returns false when parent window is hidden
+  -- Nothing lands when the parent window is hidden
   -- (input itself is still "shown" but not visible because ancestor is hidden)
-  composer.input:SetText("")
   parent:Hide()
-  assert(_G.ChatEdit_InsertLink(itemLink) == false, "expected false when parent window is hidden")
+  insertLinkHook(itemLink)
   assert(composer.input:GetText() == "", "expected no link inserted when parent hidden")
-  parent:Show()
-
-  -- ChatEdit_GetActiveWindow returns nil when parent window is hidden
-  parent:Hide()
-  assert(_G.ChatEdit_GetActiveWindow() == nil, "expected nil active window when parent hidden")
   parent:Show()
 
   -- SetItemRef hook for clicking hyperlinks in transcript

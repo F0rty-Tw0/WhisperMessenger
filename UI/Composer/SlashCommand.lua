@@ -8,9 +8,6 @@ end
 -- had typed it there: Blizzard parses it, runs the slash command or emote,
 -- updates the sticky chat type and clears the box. The edit box is passed to
 -- the handler explicitly, so the text is read from and cleared on that box.
--- Blizzard code inside the handler that asks for the active chat window can
--- still get the composer input: LinkHooks overrides that query while the
--- composer has focus, and falls back to the composer when no chat box is open.
 local SlashCommand = {}
 
 -- The command with leading spaces dropped, or nil when text is not a command.

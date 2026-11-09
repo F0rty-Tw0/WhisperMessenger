@@ -1,36 +1,41 @@
 local Composer = require("WhisperMessenger.UI.Composer")
 local FakeUI = require("tests.helpers.fake_ui")
 
--- Regression: in WoW Classic, Blizzard's `ChatEdit_InsertLink` exists at module
--- load and routes inserts through `ChatEdit_GetActiveWindow()`. When our
--- composer is focused, our `wmGetActiveWindow` returns our editbox, and the
--- original `ChatEdit_InsertLink` directly inserts the plain `[Name (id)]`
--- text via `editbox:Insert(text)` — bypassing our rewrite. The rewrite must
--- happen before delegating to the original so the editbox sees a real link.
+-- Regression: in WoW Classic, a quest shift-click calls Blizzard's
+-- `ChatEdit_InsertLink` with plain `[Name (id)]` text. Our post-hook on it
+-- must rewrite that to a real quest hyperlink before it reaches the composer,
+-- and Blizzard's own `ChatEdit_InsertLink` must stay in place (never assigned).
 return function()
   local savedHooksecurefunc = _G.hooksecurefunc
   local savedChatEditGetActiveWindow = _G.ChatEdit_GetActiveWindow
   local savedChatEditInsertLink = _G.ChatEdit_InsertLink
 
-  rawset(_G, "hooksecurefunc", function() end)
-
-  -- Simulate Blizzard's real ChatEdit_InsertLink: looks up the global
-  -- ChatEdit_GetActiveWindow at call time, and inserts directly when an
-  -- active window is found.
-  _G.ChatEdit_InsertLink = function(text)
-    if text == nil then
-      return false
+  -- Post-hooks like the real hooksecurefunc: Blizzard's function runs first,
+  -- then ours.
+  rawset(_G, "hooksecurefunc", function(name, hook)
+    local original = type(name) == "string" and rawget(_G, name) or nil
+    if type(original) ~= "function" then
+      return
     end
-    local getActive = _G.ChatEdit_GetActiveWindow
-    local activeWindow = getActive and getActive()
-    if activeWindow ~= nil then
+    rawset(_G, name, function(...)
+      local result = original(...)
+      hook(...)
+      return result
+    end)
+  end)
+
+  -- Simulate Blizzard's real ChatEdit_InsertLink: no Blizzard chat box is
+  -- open, so it finds no active window and inserts nothing itself.
+  _G.ChatEdit_GetActiveWindow = function()
+    return nil
+  end
+  _G.ChatEdit_InsertLink = function(text)
+    local activeWindow = _G.ChatEdit_GetActiveWindow()
+    if text ~= nil and activeWindow ~= nil then
       activeWindow:Insert(text)
       return true
     end
     return false
-  end
-  _G.ChatEdit_GetActiveWindow = function()
-    return nil
   end
 
   local baseFactory = FakeUI.NewFactory()
@@ -85,9 +90,7 @@ return function()
   composer.input:SetFocus()
 
   composer.input:SetText("")
-  local plainText = "[Apprentice's Duties (471)]"
-  local handled = _G.ChatEdit_InsertLink(plainText)
-  assert(handled == true, "expected ChatEdit_InsertLink to return true")
+  _G.ChatEdit_InsertLink("[Apprentice's Duties (471)]")
   local expected = "|cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r"
   assert(
     composer.input:GetText() == expected,
