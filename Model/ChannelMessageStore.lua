@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
+local ChannelMessageKey = ns.ChannelMessageKey or require("WhisperMessenger.Model.ChannelMessageKey")
 
 local ChannelMessageStore = {}
 
@@ -25,19 +26,6 @@ function ChannelMessageStore.New(config)
   }
 end
 
--- A secret sender reads as empty, so it is never stored. Checked before any
--- comparison: comparing a secret logs a blocked action in taint.log.
-local function normalizeKey(name)
-  if SecretValue.Is(name) or type(name) ~= "string" then
-    return ""
-  end
-  return string.lower(name)
-end
-
-local function baseName(key)
-  return string.match(key, "^([^-]+)") or key
-end
-
 local function countEntries(state)
   return tonumber(state.entryCount) or 0
 end
@@ -57,7 +45,7 @@ local function isOlder(entry, other)
 end
 
 local function trackBase(index, state, key, entry, isNewKey)
-  local base = baseName(key)
+  local base = ChannelMessageKey.Base(key)
   if isNewKey then
     index.baseCount[base] = (index.baseCount[base] or 0) + 1
   end
@@ -135,7 +123,7 @@ local function removeEntry(state, index, key)
   state.entries[key] = nil
   state.entryCount = math.max(0, countEntries(state) - 1)
 
-  local base = baseName(key)
+  local base = ChannelMessageKey.Base(key)
   local remaining = (index.baseCount[base] or 1) - 1
   if remaining <= 0 then
     index.baseCount[base] = nil
@@ -149,7 +137,7 @@ local function removeEntry(state, index, key)
     -- of them expires first; eviction always takes the older ones before it.
     index.baseLatest[base] = nil
     for candidateKey, candidate in pairs(state.entries) do
-      if baseName(candidateKey) == base then
+      if ChannelMessageKey.Base(candidateKey) == base then
         trackBase(index, state, candidateKey, candidate, false)
       end
     end
@@ -210,7 +198,7 @@ function ChannelMessageStore.Restore(savedState, config, now)
   end
 
   for key, entry in pairs(savedEntries) do
-    local normalizedKey = normalizeKey(key)
+    local normalizedKey = ChannelMessageKey.Normalize(key)
     local normalizedEntry = normalizeEntry(entry)
     if normalizedKey ~= "" and normalizedEntry ~= nil then
       if restored.entries[normalizedKey] == nil then
@@ -231,7 +219,7 @@ end
 
 -- zoneChannelID: the game's channel ID (0 = custom), so built-in needs no label.
 function ChannelMessageStore.Record(state, senderName, text, channelLabel, sentAt, zoneChannelID)
-  local key = normalizeKey(senderName)
+  local key = ChannelMessageKey.Normalize(senderName)
   -- Stored text is compared later, so a secret one would log in taint.log too.
   if key == "" or SecretValue.Is(text) then
     return
@@ -269,7 +257,7 @@ function ChannelMessageStore.Record(state, senderName, text, channelLabel, sentA
 end
 
 function ChannelMessageStore.GetLatest(state, canonicalName, now)
-  local key = normalizeKey(canonicalName)
+  local key = ChannelMessageKey.Normalize(canonicalName)
   if key == "" then
     return nil
   end
@@ -278,7 +266,7 @@ function ChannelMessageStore.GetLatest(state, canonicalName, now)
   local entry = state.entries[key]
   if not entry then
     -- Fallback: try base name match
-    entryKey = indexFor(state).baseLatest[baseName(key)]
+    entryKey = indexFor(state).baseLatest[ChannelMessageKey.Base(key)]
     if entryKey then
       entry = state.entries[entryKey]
     end

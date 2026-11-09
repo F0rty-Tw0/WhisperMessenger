@@ -41,6 +41,7 @@ Util/PerfCounters.lua
 Util/DisplayName.lua
 Util/Initials.lua
 Util/SecretValue.lua
+Model/ChannelMessageKey.lua
 Util/PlainText.lua
 Util/BindingKeys.lua
 Locale/ruRU.lua
