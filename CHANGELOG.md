@@ -18,6 +18,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Other addons can now drop their chat links straight into your Whisper Messenger message while you're typing it. Total RP 3 needs an update on its side before its links show up there.
 - New option under Notifications: play a sound when a whisper lands in Requests, with its own sound so you can tell it apart from a friend's whisper. Off by default.
 - New Behavior option "Esc closes the window". Turn it off to keep Whisper Messenger open when you press Esc; close it with its button or your Toggle Window key. Dying or opening a big game panel no longer closes it either while the option is off.
+- With "Show player levels" on, opening a chat by clicking a contact, the message preview, or the Whisper Messenger button or minimap icon now refreshes that player's level, zone and guild when the info is more than 10 minutes old. Before, a player was looked up only once.
 
 ## [2.1.5] - 2026-11-08
 
