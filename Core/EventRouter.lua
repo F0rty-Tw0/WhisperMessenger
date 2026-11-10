@@ -111,6 +111,15 @@ local function buildConversationContact(state, payload)
   local conversationKey = Identity.BuildConversationKey(state.localProfileId, contact.contactKey)
   return contact, conversationKey
 end
+
+-- A whisper that went through (either way) outranks the whisper check's
+-- "Offline" for this long.
+local WHISPER_PROOF_SECONDS = 5 * 60
+
+local function isWhisperProofFresh(confirmed, now)
+  return confirmed.confirmedAt ~= nil and now - confirmed.confirmedAt < WHISPER_PROOF_SECONDS
+end
+
 local function confirmWhisperAvailability(state, payload, contact)
   local guid = payload.guid or (contact and contact.guid or nil)
   if guid == nil then
@@ -118,6 +127,7 @@ local function confirmWhisperAvailability(state, payload, contact)
   end
   local availability = Availability.FromStatus("CanWhisper")
   availability.confirmedByWhisper = true
+  availability.confirmedAt = state.now and state.now() or 0
   state.availabilityByGUID = state.availabilityByGUID or {}
   state.availabilityByGUID[guid] = availability
 end
@@ -359,15 +369,16 @@ local function handleUnlockedEvent(state, eventName, payload)
     local avail = Availability.FromStatus(payload.status)
     avail.rawStatus = payload.rawStatus
     -- A whisper exchange proves reachability, so keep it over the ambiguous
-    -- WrongFaction (also sent for reachable cross-realm players). A definite
-    -- Offline, or a guild/community roster showing them offline, wins.
+    -- WrongFaction, and over Offline for WHISPER_PROOF_SECONDS after the
+    -- whisper. A guild/community roster showing them offline always wins.
     local existing = state.availabilityByGUID[payload.guid]
+    local now = state.now and state.now() or 0
     if
       existing
       and existing.canWhisper
       and existing.confirmedByWhisper
-      and avail.status == "WrongFaction"
       and PresenceCache.GetPresence(payload.guid) ~= "offline"
+      and (avail.status == "WrongFaction" or (avail.status == "Offline" and isWhisperProofFresh(existing, now)))
     then
       return existing
     end
