@@ -115,7 +115,11 @@ return function()
     PresenceCache._setCache({})
     local clock = { value = 6000 }
     local state = makeClockState(clock)
-    Router.HandleEvent(state, "CHAT_MSG_WHISPER", { text = "hi", playerName = "Friend-OtherRealm", lineID = 4, guid = GUID, replayedAt = 6000 - 1800 })
+    Router.HandleEvent(
+      state,
+      "CHAT_MSG_WHISPER",
+      { text = "hi", playerName = "Friend-OtherRealm", lineID = 4, guid = GUID, replayedAt = 6000 - 1800 }
+    )
 
     clock.value = 6010
     Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
