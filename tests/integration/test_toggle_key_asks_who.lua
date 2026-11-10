@@ -68,7 +68,7 @@ local function recordAsks(ns, runtime, action)
     record.windowHiddenAtAsk = windowHidden(runtime)
     return false
   end
-  local ok, err = pcall(action)
+  local ok, err = pcall(action, record)
   ns.WhoLookup.TryFor = original
   assert(ok, err)
 
@@ -102,17 +102,22 @@ return function()
         queued[#queued + 1] = fn
       end,
     })
-    local record = recordAsks(ns, runtime, _G.WhisperMessenger_Toggle)
-    local askedInsidePress = record.asked
-    local drained = 0
-    while #queued > 0 and drained < 10 do
-      table.remove(queued, 1)()
-      drained = drained + 1
-    end
+    local askedInsidePress, drained = nil, 0
+    -- The timers drain inside the recorder, so an extra ask in the deferred
+    -- callback is counted too.
+    local record = recordAsks(ns, runtime, function(live)
+      _G.WhisperMessenger_Toggle()
+      askedInsidePress = live.asked
+      while #queued > 0 and drained < 10 do
+        table.remove(queued, 1)()
+        drained = drained + 1
+      end
+    end)
     rawset(_G, "C_Timer", savedCTimer)
     ns.DisplayName.Configure({ showPlayerLevels = false })
 
     assert(askedInsidePress == 1, "the toggle key asks /who once inside the press, asked " .. askedInsidePress)
+    assert(record.asked == 1, "no second ask after the key press, asked " .. record.asked)
     assert(record.askedKey == KEY)
     assert(record.windowHiddenAtAsk == true, "ask must run before the window shows")
     assert(drained > 0, "the toggle was deferred through C_Timer")
