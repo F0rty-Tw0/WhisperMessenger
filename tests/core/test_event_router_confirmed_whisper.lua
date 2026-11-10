@@ -164,4 +164,34 @@ return function()
     local status = state.availabilityByGUID[GUID].status
     assert(status == "Offline", "a whisper from 30 minutes ago must not mark them online, got " .. tostring(status))
   end
+
+  -- A recent replay inside the window still keeps the newer live proof
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local clock = { value = 6000 }
+    local state = makeClockState(clock)
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", { text = "live", playerName = "Friend-OtherRealm", lineID = 8, guid = GUID })
+    clock.value = 6001
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", { text = "old", playerName = "Friend-OtherRealm", lineID = 9, guid = GUID, replayedAt = 5900 })
+
+    clock.value = 6250
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
+    local status = state.availabilityByGUID[GUID].status
+    assert(status == "CanWhisper", "the live whisper's proof must survive a recent replay, got " .. tostring(status))
+  end
+
+  -- A recent replay's proof runs from when it arrived, not from the replay
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local clock = { value = 6000 }
+    local state = makeClockState(clock)
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", { text = "old", playerName = "Friend-OtherRealm", lineID = 10, guid = GUID, replayedAt = 5800 })
+
+    clock.value = 6150
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
+    local status = state.availabilityByGUID[GUID].status
+    assert(status == "Offline", "a replayed whisper's proof must end 5 minutes after it arrived, got " .. tostring(status))
+  end
 end
