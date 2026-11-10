@@ -34,15 +34,6 @@ local FORCE_RENDER = TranscriptView.FORCE_RENDER
 
 ConversationPane.RenderTranscript = TranscriptView.RenderTranscript
 
-local function buildMessagesWithChannelContext(messages, selectedContact, conversation)
-  return ChannelContextMerger.Merge(messages, selectedContact, {
-    channelMessageStore = ns.ChannelMessageStore,
-    channelMessageState = ns._channelMessageState,
-    conversation = conversation,
-    now = type(_G["time"]) == "function" and _G["time"]() or nil,
-  })
-end
-
 local transcriptIsAtEnd = TranscriptView.IsAtEnd
 
 ConversationPane.Refresh = function(view, selectedContact, conversation, status, noticeText)
@@ -67,7 +58,8 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   -- The pause notice shows exactly while chat is locked: queued bubbles
   -- offer Send now only without it.
   view.transcript.chatLocked = (noticeText or "") ~= ""
-  local messages = buildMessagesWithChannelContext(conversation and conversation.messages or {}, selectedContact, conversation)
+  local isContextShown = view.isChannelContextShown == nil or view.isChannelContextShown() == true
+  local messages = ChannelContextMerger.ForPane(conversation and conversation.messages or {}, selectedContact, conversation, isContextShown)
   ConversationPane.RenderTranscript(view.transcript, messages)
   ConversationPane.SetStatus(view, status)
   ConversationPane.SetNotice(view, noticeText)

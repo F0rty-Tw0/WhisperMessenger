@@ -79,11 +79,36 @@ local function persistIntoConversation(conversation, entry, playerName)
   insertChronological(messages, buildChannelMessage(entry, playerName))
 end
 
+-- Hide saved channel-context lines without touching the stored conversation.
+-- Hands back the same table when there is nothing to hide.
+local function withoutChannelContext(messages)
+  local hasContext = false
+  for _, message in ipairs(messages) do
+    if message.kind == "channel_context" then
+      hasContext = true
+      break
+    end
+  end
+  if not hasContext then
+    return messages
+  end
+  local result = {}
+  for _, message in ipairs(messages) do
+    if message.kind ~= "channel_context" then
+      result[#result + 1] = message
+    end
+  end
+  return result
+end
+
 -- Merge a recent channel-context message into the chronological message list
 -- for the selected contact. Returns the original messages table unchanged when
 -- there is nothing to merge (no store, no state, no contact, no recent entry).
 function ChannelContextMerger.Merge(messages, selectedContact, deps)
   deps = deps or {}
+  if deps.enabled == false then
+    return withoutChannelContext(messages)
+  end
   local store = deps.channelMessageStore
   local state = deps.channelMessageState
   if not store or not state then
@@ -124,6 +149,18 @@ function ChannelContextMerger.Merge(messages, selectedContact, deps)
   end
   insertChronological(result, channelMsg)
   return result
+end
+
+-- The pane's one entry point: wires the live channel store and clock into Merge.
+-- enabled == false is the "Show their last channel message" option turned off.
+function ChannelContextMerger.ForPane(messages, selectedContact, conversation, enabled)
+  return ChannelContextMerger.Merge(messages, selectedContact, {
+    channelMessageStore = ns.ChannelMessageStore,
+    channelMessageState = ns._channelMessageState,
+    conversation = conversation,
+    now = type(_G["time"]) == "function" and _G["time"]() or nil,
+    enabled = enabled,
+  })
 end
 
 ns.ConversationPaneChannelContextMerger = ChannelContextMerger
