@@ -352,7 +352,7 @@ return function()
     Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", {
       guid = "Player-1084-0ABC0001",
       status = "Offline",
-      rawStatus = 1,
+      rawStatus = 2,
     })
     assert(#hookCalls == 2, "hook should fire on first response and on status flip, got " .. #hookCalls)
     assert(hookCalls[1] == "Player-1084-0ABC0001", "hook should receive the guid")
@@ -375,7 +375,7 @@ return function()
     Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", {
       guid = "Player-1084-0ABC0002",
       status = "WrongFaction",
-      rawStatus = 2,
+      rawStatus = 3,
     })
     assert(#hookCalls == 0, "hook must not fire when confirmedByWhisper guard preserves state")
   end

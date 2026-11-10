@@ -7,7 +7,7 @@ local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.Presen
 
 local Disambiguation = {}
 
--- Resolve ambiguous WrongFaction/Offline status for a contact using multiple
+-- Resolve a WrongFaction/Offline status for a contact using multiple
 -- corroborating sources. The resolution differs by faction relationship:
 --
 -- Opposite-faction path (isOpposite = true):
@@ -18,15 +18,16 @@ local Disambiguation = {}
 --     unknown → WrongFaction
 --
 -- Same-faction path (isOpposite = false / nil):
---   WrongFaction for same-faction means "cross-realm unreachable", NOT a hard
---   whisper block. Four-step resolution: presence → BNet friend → group member
---   → optimistic CanWhisper fallback.
+--   Four-step resolution: presence → BNet friend → group member → fallback.
 --     presence online   → CanWhisper
 --     presence offline  → Offline
 --     BNet friend online→ Away/Busy/CanWhisper
 --     group member      → CanWhisper
---     no corroboration  → CanWhisper (optimistic)
-function Disambiguation.ResolveWrongFaction(item, runtime, isOpposite)
+--     no corroboration  → fallbackStatus
+--   fallbackStatus is "CanWhisper" (optimistic) by default, for a same-faction
+--   WrongFaction the whisper check cannot reach. Pass "Offline" when the
+--   whisper check said Offline: with no proof of life it stays Offline.
+function Disambiguation.ResolveWrongFaction(item, runtime, isOpposite, fallbackStatus)
   local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
 
   local presence = PresenceCache.GetPresence(item.guid)
@@ -42,9 +43,7 @@ function Disambiguation.ResolveWrongFaction(item, runtime, isOpposite)
     end
   end
 
-  -- Same faction or unknown faction: WrongFaction (code 2) is ambiguous —
-  -- it fires for both offline players AND online cross-realm unreachable players.
-  -- Check multiple sources to determine actual status.
+  -- Same faction or unknown faction: check multiple sources for proof of life.
 
   -- 1. Guild/community presence cache
   if presence == "online" then
@@ -109,10 +108,10 @@ function Disambiguation.ResolveWrongFaction(item, runtime, isOpposite)
     return Availability.FromStatus("CanWhisper")
   end
 
-  -- 4. Fallback: CanWhisper (optimistic). API's WrongFaction for same-faction
+  -- 4. Fallback. Default CanWhisper (optimistic): WrongFaction for same-faction
   -- means "cross-realm unreachable via whisper-check", not a hard whisper block.
   -- Whispers can still land even without corroborating online proof.
-  return Availability.FromStatus("CanWhisper")
+  return Availability.FromStatus(fallbackStatus or "CanWhisper")
 end
 
 ns.ContactEnricherDisambiguation = Disambiguation
