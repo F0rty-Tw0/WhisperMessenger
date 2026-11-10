@@ -90,15 +90,32 @@ return function()
   local savedTime = rawget(_G, "time")
   rawset(_G, "time", os.time)
 
-  -- test_toggle_key_asks_who_before_the_window_shows
+  -- test_toggle_key_asks_who_inside_the_key_press
+  -- The key defers its toggle through C_Timer. Timers are queued, not run, so
+  -- an ask that moved into the deferred callback is not counted.
   do
     local ns, runtime = boot()
+    local savedCTimer = rawget(_G, "C_Timer")
+    local queued = {}
+    rawset(_G, "C_Timer", {
+      After = function(_seconds, fn)
+        queued[#queued + 1] = fn
+      end,
+    })
     local record = recordAsks(ns, runtime, _G.WhisperMessenger_Toggle)
+    local askedInsidePress = record.asked
+    local drained = 0
+    while #queued > 0 and drained < 10 do
+      table.remove(queued, 1)()
+      drained = drained + 1
+    end
+    rawset(_G, "C_Timer", savedCTimer)
     ns.DisplayName.Configure({ showPlayerLevels = false })
 
-    assert(record.asked == 1, "the toggle key asks /who once, asked " .. record.asked)
+    assert(askedInsidePress == 1, "the toggle key asks /who once inside the press, asked " .. askedInsidePress)
     assert(record.askedKey == KEY)
     assert(record.windowHiddenAtAsk == true, "ask must run before the window shows")
+    assert(drained > 0, "the toggle was deferred through C_Timer")
     assert(runtime.window.frame.shown == true and runtime.activeConversationKey == KEY)
   end
 
