@@ -210,4 +210,15 @@ return function()
       assert(options.getWidgetShape() == "circle", "junk widgetShape " .. tostring(junk) .. " reads circle")
     end
   end
+
+  -- test_widget_strata_reads_the_current_settings_table
+  do
+    local accountState = { settings = {} }
+    local options = capturePositionOptions(accountState, { icon = {} })
+    assert(options.getWidgetStrata() == nil, "unset widgetStrata reads nil")
+    accountState.settings.widgetStrata = "LOW"
+    assert(options.getWidgetStrata() == "LOW", "saved widgetStrata is read")
+    accountState.settings = { widgetStrata = "BACKGROUND" }
+    assert(options.getWidgetStrata() == "BACKGROUND", "a swapped settings table is read, not the one captured at create")
+  end
 end

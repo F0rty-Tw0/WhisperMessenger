@@ -87,6 +87,7 @@ return function()
     widgetPreviewAutoDismissSeconds = 15,
     iconMode = "both",
     widgetShape = "square",
+    widgetStrata = "LOW",
     iconBorder = false,
     iconBorderThemed = false,
     widgetPreviewPosition = "top",
@@ -234,5 +235,6 @@ return function()
     iconsCapture.config.widgetPreviewPosition == "top",
     "expected icons config.widgetPreviewPosition=top, got: " .. tostring(iconsCapture.config.widgetPreviewPosition)
   )
+  assert(iconsCapture.config.widgetStrata == "LOW", "Icons config should forward widgetStrata, got: " .. tostring(iconsCapture.config.widgetStrata))
   assert(iconsCapture.config.widgetPreviewReply == nil, "reply key moved off the Icons page")
 end

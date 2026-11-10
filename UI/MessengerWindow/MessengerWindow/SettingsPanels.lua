@@ -133,6 +133,7 @@ function SettingsPanels.Create(factory, options)
         iconBorder = settingsConfig.iconBorder,
         iconBorderThemed = settingsConfig.iconBorderThemed,
         widgetShape = settingsConfig.widgetShape,
+        widgetStrata = settingsConfig.widgetStrata,
         lockToggleIcon = settingsConfig.lockToggleIcon,
         shareWidgetPosition = settingsConfig.shareWidgetPosition,
         widgetTransparency = settingsConfig.widgetTransparency,

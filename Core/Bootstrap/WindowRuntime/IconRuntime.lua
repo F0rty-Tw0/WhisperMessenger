@@ -104,6 +104,9 @@ function IconRuntime.Create(options)
     getWidgetShape = function()
       return settings.widgetShape == "square" and "square" or "circle"
     end,
+    getWidgetStrata = function()
+      return (accountState.settings or {}).widgetStrata
+    end,
     getWidgetTransparency = function()
       return settings.widgetTransparency or 0
     end,
