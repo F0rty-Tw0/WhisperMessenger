@@ -59,8 +59,10 @@ return function()
     seen.hooks.onCoverChanged(false)
     assert(#seen.pending == 1, "the pending state applies when settings close")
     assert(seen.pending[1] == state, "the stored state is the one applied")
+    -- Settings open and close again: the state already applied must not come back.
+    seen.hooks.onCoverChanged(true)
     seen.hooks.onCoverChanged(false)
-    assert(#seen.pending == 1, "a pending state applies once")
+    assert(#seen.pending == 1, "a pending state applies once; applies: " .. tostring(#seen.pending))
   end
 
   -- test_pending_state_applies_after_the_narrow_size_is_back
