@@ -158,7 +158,7 @@ return function()
     runClock(panel)
     fire(frame, "OnHide")
     assert(not panel:IsShown() and not hasClock(panel), "Alt+Z hid the parent, not the window: no shrink")
-    frame:Show()
+    CompactWindow.ParentShows(frame)
     assert(frame:GetAlpha() == 1 and not panel:IsShown() and not hasClock(panel), "and no replay")
   end
 
