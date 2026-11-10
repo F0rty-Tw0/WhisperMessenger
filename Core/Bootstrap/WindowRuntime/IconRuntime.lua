@@ -6,6 +6,7 @@ end
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local ToggleIcon = ns.ToggleIcon or require("WhisperMessenger.UI.ToggleIcon")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
+local PositionSlots = ns.BootstrapWindowRuntimePositionSlots or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PositionSlots")
 
 local IconRuntime = {}
 
@@ -66,20 +67,8 @@ function IconRuntime.Create(options)
   local refreshWindow = options.refreshWindow or function() end
   local onToggle = options.onToggle or function() end
 
-  local function isSharingWidgetPosition()
-    return accountState.settings and accountState.settings.shareWidgetPosition == true
-  end
-
-  local function getActiveIconState()
-    if not isSharingWidgetPosition() then
-      return characterState.icon
-    end
-
-    if accountState.sharedWidgetPosition == nil then
-      accountState.sharedWidgetPosition = tableUtils.copyState(characterState.icon)
-    end
-    return accountState.sharedWidgetPosition
-  end
+  local positionSlots = options.positionSlots
+    or PositionSlots.Create({ accountState = accountState, characterState = characterState, tableUtils = tableUtils })
 
   local function dismissWidgetPreview()
     acknowledgeLatestWidgetPreview(buildContacts())
@@ -87,17 +76,12 @@ function IconRuntime.Create(options)
   end
 
   local icon = toggleIcon.Create(uiFactory, {
-    state = getActiveIconState(),
+    state = positionSlots.read("icon"),
     iconSize = settings.iconSize,
     onToggle = onToggle,
     onMarkAllRead = options.onMarkAllRead,
     onPositionChanged = function(nextState)
-      local persistedState = tableUtils.copyState(nextState)
-      if isSharingWidgetPosition() then
-        accountState.sharedWidgetPosition = persistedState
-      else
-        characterState.icon = persistedState
-      end
+      positionSlots.write("icon", nextState)
     end,
     getShowUnreadBadge = function()
       return settings.showUnreadBadge ~= false
@@ -119,6 +103,9 @@ function IconRuntime.Create(options)
     end,
     getWidgetShape = function()
       return settings.widgetShape == "square" and "square" or "circle"
+    end,
+    getWidgetStrata = function()
+      return (accountState.settings or {}).widgetStrata
     end,
     getWidgetTransparency = function()
       return settings.widgetTransparency or 0

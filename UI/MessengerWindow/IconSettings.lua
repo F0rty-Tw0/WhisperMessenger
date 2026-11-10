@@ -22,6 +22,15 @@ local function text(key)
   return Localization.Text(key)
 end
 
+-- The four Widget layer buttons; each explains the setting on hover.
+local function strataOptions()
+  local options = Options.BuildStrataOptions()
+  for _, option in ipairs(options) do
+    option.tooltip = text("Sets which game windows the widget sits above. Pick a lower layer to keep bags and other windows on top of it.")
+  end
+  return options
+end
+
 function IconSettings.Create(factory, parent, config, options)
   local onChange = options.onChange or function(...)
     local _ = ...
@@ -121,11 +130,32 @@ function IconSettings.Create(factory, parent, config, options)
   )
   lockToggleIconToggle.row:SetPoint("TOPLEFT", widgetTransparencyRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  local widgetStrataSelector = panel:bind(
+    ButtonSelector.Create(factory, frame, {
+      labelText = text("Widget layer"),
+      optionsList = strataOptions(),
+      fallbackKey = DEFAULTS.widgetStrata,
+      initial = config.widgetStrata or DEFAULTS.widgetStrata,
+      colors = selectorColors,
+      onChange = function(value)
+        onChange("widgetStrata", value)
+      end,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+      buttonWidth = Options.SELECTOR_BUTTON_WIDTH,
+      buttonHeight = Options.SELECTOR_BUTTON_HEIGHT,
+      buttonSpacing = Options.SELECTOR_BUTTON_SPACING,
+      maxPerRow = 4,
+    }),
+    { type = "selector", key = "widgetStrata", default = DEFAULTS.widgetStrata }
+  )
+  widgetStrataSelector.row:SetPoint("TOPLEFT", lockToggleIconToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
   local shareWidgetPositionToggle = panel:bind(
     UIHelpers.createToggleRow(
       factory,
       frame,
-      text("Share widget position across characters"),
+      text("Same position on every character"),
       config.shareWidgetPosition == true,
       toggleColors,
       toggleLayout,
@@ -133,13 +163,13 @@ function IconSettings.Create(factory, parent, config, options)
         onChange("shareWidgetPosition", value)
       end,
       {
-        text("Share widget position across characters"),
-        text("Uses one widget position for all characters on this WoW account."),
+        text("Same position on every character"),
+        text("Keeps the widget, minimap button, message preview and window in the same place on all characters of this WoW account."),
       }
     ),
     { type = "toggle", key = "shareWidgetPosition", default = DEFAULTS.shareWidgetPosition }
   )
-  shareWidgetPositionToggle.row:SetPoint("TOPLEFT", lockToggleIconToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+  shareWidgetPositionToggle.row:SetPoint("TOPLEFT", widgetStrataSelector.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local iconModeSelector = panel:bind(
     ButtonSelector.Create(factory, frame, {
@@ -207,7 +237,9 @@ function IconSettings.Create(factory, parent, config, options)
     lookRows.setLanguage()
     widgetTransparencyRow.label:SetText(text("Widget transparency"))
     lockToggleIconToggle.label:SetText(text("Lock icon position"))
-    shareWidgetPositionToggle.label:SetText(text("Share widget position across characters"))
+    widgetStrataSelector.label:SetText(text("Widget layer"))
+    widgetStrataSelector.setOptionsList(strataOptions())
+    shareWidgetPositionToggle.label:SetText(text("Same position on every character"))
     iconModeSelector.label:SetText(text("Icon Mode"))
     iconModeSelector.setOptionsList(Options.BuildIconModeOptions())
     unreadRows.setLanguage()

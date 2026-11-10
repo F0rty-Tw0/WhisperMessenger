@@ -12,6 +12,7 @@ local UnreadCount = ns.PublicApiUnreadCount or require("WhisperMessenger.Core.Pu
 local Look = ns.PublicApiLook or require("WhisperMessenger.Core.PublicApi.Look")
 local Animation = ns.PublicApiAnimation or require("WhisperMessenger.Core.PublicApi.Animation")
 local CompactWindow = ns.PublicApiCompactWindow or require("WhisperMessenger.Core.PublicApi.CompactWindow")
+local InsertLink = ns.PublicApiInsertLink or require("WhisperMessenger.Core.PublicApi.InsertLink")
 local Connect = ns.PublicApiConnect or require("WhisperMessenger.Core.PublicApi.Connect")
 local IntegrationAccess = ns.BootstrapWindowRuntimeIntegrationAccess or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationAccess")
 local AddonIntegrations = ns.AddonIntegrations or require("WhisperMessenger.Model.AddonIntegrations")
@@ -110,6 +111,7 @@ function PublicApi.Build(runtime)
   Look.Install(api, runtime)
   Animation.Install(api, runtime)
   CompactWindow.Install(api, runtime)
+  InsertLink.Install(api, runtime)
   Connect.Install(api, runtime)
   if not runtime.integrationAllowedAtLoad then
     -- Same keys, so callers never nil-error; every call is refused. Connect

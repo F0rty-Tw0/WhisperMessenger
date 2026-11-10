@@ -369,6 +369,10 @@ local function makeCreateFrame(options)
       self.maxBytes = math.max(0, tonumber(value) or 0)
     end
 
+    function frame:GetMaxBytes()
+      return self.maxBytes or 0
+    end
+
     function frame:SetMaxLetters(value)
       self.maxLetters = math.max(0, tonumber(value) or 0)
     end

@@ -16,6 +16,7 @@ local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.Igno
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local IconPosition = ns.BootstrapWindowRuntimeIconPosition or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconPosition")
+local PositionSlots = ns.BootstrapWindowRuntimePositionSlots or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PositionSlots")
 local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
 local AddonAlerts = ns.BootstrapWindowRuntimeAddonAlerts or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.AddonAlerts")
 local GameWhisperTab = ns.BootstrapWindowRuntimeGameWhisperTab or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GameWhisperTab")
@@ -37,6 +38,8 @@ function WindowCallbacks.Create(options)
     return nil
   end
   local tableUtils = options.tableUtils or TableUtils
+  local positionSlots = options.positionSlots
+    or PositionSlots.Create({ accountState = accountState, characterState = characterState, tableUtils = tableUtils })
   local groupSendPolicy = options.groupSendPolicy
   local sendHandler = options.sendHandler
   local reactionHandler = options.reactionHandler or ReactionHandler
@@ -167,11 +170,7 @@ function WindowCallbacks.Create(options)
     -- The compact window keeps its own size and position, so the classic
     -- window is as it was if the player switches back.
     onPositionChanged = function(nextState)
-      if runtime.compactLayoutActive then
-        characterState.compactWindow = tableUtils.copyState(nextState)
-        return
-      end
-      characterState.window = tableUtils.copyState(nextState)
+      positionSlots.write(runtime.compactLayoutActive and "compactWindow" or "window", nextState)
     end,
 
     onClose = function()
@@ -180,12 +179,9 @@ function WindowCallbacks.Create(options)
 
     onResetWindowPosition = function()
       if runtime.compactLayoutActive then
-        characterState.compactWindow = nil
-        return nil
+        return positionSlots.reset("compactWindow")
       end
-      local nextState = tableUtils.copyState(defaultCharacterState.window)
-      characterState.window = nextState
-      return nextState
+      return positionSlots.reset("window", defaultCharacterState.window)
     end,
 
     onClearAllChats = function()
@@ -289,12 +285,7 @@ function WindowCallbacks.Create(options)
     end,
 
     onResetIconPosition = function()
-      local nextState = tableUtils.copyState(defaultCharacterState.icon)
-      if accountState.settings and accountState.settings.shareWidgetPosition == true then
-        accountState.sharedWidgetPosition = nextState
-      else
-        characterState.icon = nextState
-      end
+      local nextState = positionSlots.reset("icon", defaultCharacterState.icon)
 
       return WindowCallbacks.ApplyIconPosition(getIcon(), nextState, uiParent)
     end,

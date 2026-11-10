@@ -17,6 +17,7 @@ Options.DEFAULTS = {
   iconBorder = true,
   iconBorderThemed = true,
   widgetShape = "circle",
+  widgetStrata = "HIGH",
   lockToggleIcon = false,
   shareWidgetPosition = false,
   widgetTransparency = 0,
@@ -66,6 +67,15 @@ function Options.BuildWidgetShapeOptions()
   }
 
   return options
+end
+
+function Options.BuildStrataOptions()
+  return {
+    { key = "BACKGROUND", label = text("Background") },
+    { key = "LOW", label = text("Low") },
+    { key = "MEDIUM", label = text("Medium") },
+    { key = "HIGH", label = text("High") },
+  }
 end
 
 function Options.PxFormat(v)

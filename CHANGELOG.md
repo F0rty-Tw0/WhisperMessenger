@@ -11,8 +11,16 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: after you had typed in Whisper Messenger once, linking an item in normal chat during a boss fight could make the game block your message and blame Whisper Messenger.
 - Fixed: clicking an item link in the message preview or the Whisper Messenger window during combat no longer shows an "Interface action failed because of an AddOn" message. The item tooltip still opens.
 - Fixed: shift-clicking a player's name in Whisper Messenger while you're typing a message now puts the name in your message without also running a /who.
+- Fixed: the Link button at the top of the Professions window puts your profession link into the Whisper Messenger message box again.
 - Fixed: right-clicking a player's name in chat while typing in Whisper Messenger no longer puts a broken link in your message that the game refuses to send.
 - Fixed: the "Start a new conversation" box opened from an empty chat no longer sticks out past the edges of its window.
+- Fixed: the Whisper Messenger button can no longer be dragged off the screen, and a button that was already off screen comes back to the edge.
+- Fixed: opening Whisper Messenger with a key binding on a letter key (like Shift-G) no longer types that letter into the message box.
+- Other addons can now drop their chat links straight into your Whisper Messenger message while you're typing it. Total RP 3 needs an update on its side before its links show up there.
+- Fixed: a trade or general chat line from a different player with the same name on another realm no longer shows up inside your whisper with someone.
+- "Same position on every character" (Icons settings) now also keeps the messenger window, its size and the minimap button in the same place on all your characters, not just the widget. A new character opens everything where you left it. If you already had it on, the first character you log in with after updating sets the shared window spot and minimap button angle.
+- New option under Icons: Widget layer. Pick Low or Background to keep your bags and the character sheet on top of the widget; High (the default) keeps the widget above them.
+- With the Native WoW look, the arrows at the ends of the chat tab row now light up when you point at them.
 
 ## [2.1.5] - 2026-11-08
 

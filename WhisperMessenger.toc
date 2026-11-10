@@ -24,6 +24,7 @@
 
 Core/FlavorCompat.lua
 Core/Loader.lua
+Core/KeySettle.lua
 Core/Bindings.lua
 Core/Constants.lua
 Core/PatchNotes.lua
@@ -40,6 +41,7 @@ Util/PerfCounters.lua
 Util/DisplayName.lua
 Util/Initials.lua
 Util/SecretValue.lua
+Model/ChannelMessageKey.lua
 Util/PlainText.lua
 Util/BindingKeys.lua
 Locale/ruRU.lua
@@ -467,6 +469,7 @@ UI/MessengerWindow/MessengerWindow/CompactWiring.lua
 UI/MessengerWindow/MessengerWindow/DockWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowShell.lua
 UI/MessengerWindow/MessengerWindow/ComposerRuntime.lua
+UI/MessengerWindow/MessengerWindow/SavedStateApply.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/Bootstrap/RuntimeFactory.lua
@@ -519,12 +522,14 @@ Core/Bootstrap/WindowRuntime/IntegrationSetting.lua
 Core/Bootstrap/WindowRuntime/LanguageSetting.lua
 Core/Bootstrap/WindowRuntime/DisplayNameSetting.lua
 Core/Bootstrap/WindowRuntime/TabVisibilitySetting.lua
+Core/Bootstrap/WindowRuntime/IconSettingReactions.lua
 Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
 Core/Bootstrap/WindowRuntime/WidgetPreview.lua
 Core/Bootstrap/WindowRuntime/StartConversation.lua
 Core/Bootstrap/WindowRuntime/GroupSendPolicy.lua
 Core/Bootstrap/WindowRuntime/IconPosition.lua
+Core/Bootstrap/WindowRuntime/PositionSlots.lua
 Core/Bootstrap/WindowRuntime/WhoTriggers.lua
 Core/Bootstrap/WindowRuntime/AddonAlerts.lua
 Core/Bootstrap/WindowRuntime/GameWhisperTab.lua
@@ -545,6 +550,7 @@ Core/Bootstrap/WindowRuntime/PreviewReplyRuntime.lua
 Core/Bootstrap/WindowRuntime/DetachedPreviewRuntime.lua
 Core/Bootstrap/WindowRuntime/LiveThemeSync.lua
 Core/Bootstrap/WindowRuntime/GrowSource.lua
+Core/Bootstrap/WindowRuntime/IconMode.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/WhisperIngestFailsafe.lua
 Core/Bootstrap/AddonEventFrame.lua
@@ -556,6 +562,7 @@ Core/PublicApi/UnreadCount.lua
 Core/PublicApi/Look.lua
 Core/PublicApi/Animation.lua
 Core/PublicApi/CompactWindow.lua
+Core/PublicApi/InsertLink.lua
 Core/PublicApi/Connect.lua
 Core/Bootstrap/WindowRuntime/IntegrationAccess.lua
 Core/PublicApi.lua

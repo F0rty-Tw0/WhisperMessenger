@@ -98,7 +98,7 @@ local function makeRuntimeOptions()
     Create = function(_uiFactory, options)
       trackers.windowCreates = trackers.windowCreates + 1
       trackers.capturedWindowOptions = options
-      local window = { shown = false }
+      local window = { shown = false, applySavedState = function() end }
       window.registerPanel = function()
         return true
       end
@@ -208,6 +208,7 @@ local function makeRuntimeOptions()
           trackers.minimapPreviewInputs[#trackers.minimapPreviewInputs + 1] = { senderName, messageText, classTag }
         end,
         setUnreadCount = function() end,
+        applyRadialPosition = function() end,
         refreshTheme = function()
           trackers.minimapThemeRefreshes = (trackers.minimapThemeRefreshes or 0) + 1
         end,

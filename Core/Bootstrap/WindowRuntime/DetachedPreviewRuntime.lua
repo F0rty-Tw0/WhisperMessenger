@@ -6,6 +6,7 @@ end
 local IconRuntime = ns.BootstrapWindowRuntimeIconRuntime or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconRuntime")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
+local PositionSlots = ns.BootstrapWindowRuntimePositionSlots or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PositionSlots")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 
 local DEFAULT_SPOT_X = 0
@@ -40,27 +41,8 @@ function DetachedPreviewRuntime.Create(options)
     return accountState.settings or {}
   end
 
-  local function isShared()
-    return settings().shareWidgetPosition == true
-  end
-
-  local function readSpot()
-    if not isShared() then
-      return characterState.detachedPreview
-    end
-    if accountState.sharedDetachedPreview == nil then
-      accountState.sharedDetachedPreview = TableUtils.copyState(characterState.detachedPreview)
-    end
-    return accountState.sharedDetachedPreview
-  end
-
-  local function saveSpot(spot)
-    if isShared() then
-      accountState.sharedDetachedPreview = spot
-    else
-      characterState.detachedPreview = spot
-    end
-  end
+  local positionSlots = options.positionSlots
+    or PositionSlots.Create({ accountState = accountState, characterState = characterState, tableUtils = TableUtils })
 
   local holder = uiFactory.CreateFrame("Frame", nil, uiParent)
   holder:SetSize(1, 1)
@@ -74,7 +56,7 @@ function DetachedPreviewRuntime.Create(options)
   end
 
   local function applySavedSpot()
-    local spot = readSpot()
+    local spot = positionSlots.read("detachedPreview")
     local x = tonumber(spot and spot.x) or DEFAULT_SPOT_X
     local y = tonumber(spot and spot.y) or DEFAULT_SPOT_Y
     anchorTop(x, y)
@@ -159,7 +141,7 @@ function DetachedPreviewRuntime.Create(options)
     local x = holderX - parentX
     local y = holder:GetTop() - uiParent:GetTop()
     anchorTop(x, y)
-    saveSpot({ x = x, y = y })
+    positionSlots.write("detachedPreview", { x = x, y = y })
     if not releaseConsumed then
       draggedAt = now()
     end
@@ -204,17 +186,6 @@ local function onPositionChanged(ctx, value)
   ctx.updateIconSurfaces()
 end
 
-local function onShareChanged(ctx, value)
-  if value == true then
-    local own = ctx.characterState.detachedPreview
-    ctx.accountState.sharedDetachedPreview = own and TableUtils.copyState(own) or nil
-  end
-  local surface = ctx.getSurface()
-  if surface then
-    surface.applySavedSpot()
-  end
-end
-
 local function onIconModeChanged(ctx)
   if DetachedPreviewRuntime.IsDetached(ctx.accountState.settings) then
     ctx.updateIconSurfaces()
@@ -223,11 +194,10 @@ end
 
 local SETTING_REACTIONS = {
   widgetPreviewPosition = onPositionChanged,
-  shareWidgetPosition = onShareChanged,
   iconMode = onIconModeChanged,
 }
 
--- ctx = { accountState, characterState, getSurface, ensureSurface, updateIconSurfaces }
+-- ctx = { accountState, ensureSurface, updateIconSurfaces }
 function DetachedPreviewRuntime.OnSettingChanged(ctx, key, value)
   local react = SETTING_REACTIONS[key]
   if react then

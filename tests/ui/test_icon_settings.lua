@@ -3,7 +3,7 @@ local loaded, IconSettings = pcall(require, "WhisperMessenger.UI.MessengerWindow
 local Localization = require("WhisperMessenger.Locale.Localization")
 local FindUI = require("tests.helpers.find_ui")
 
-local SHARE_POSITION = "Share widget position across characters"
+local SHARE_POSITION = "Same position on every character"
 local TRANSPARENCY = "Widget transparency"
 
 local function modeButtons(result)
@@ -105,12 +105,9 @@ return function()
     sharePositionOnEnter(sharePositionRow)
     assert(tooltipState.owner == sharePositionRow, "test_share_widget_position_tooltip: tooltip should use the toggle row as owner")
     assert(tooltipState.anchor == "ANCHOR_TOP", "test_share_widget_position_tooltip: tooltip should anchor above the toggle row")
+    assert(tooltipState.title == "Same position on every character", "test_share_widget_position_tooltip: tooltip should use the localized title")
     assert(
-      tooltipState.title == "Share widget position across characters",
-      "test_share_widget_position_tooltip: tooltip should use the localized title"
-    )
-    assert(
-      tooltipState.lines[1] == "Uses one widget position for all characters on this WoW account.",
+      tooltipState.lines[1] == "Keeps the widget, minimap button, message preview and window in the same place on all characters of this WoW account.",
       "test_share_widget_position_tooltip: tooltip should explain account-wide sharing"
     )
     assert(tooltipState.shown == true, "test_share_widget_position_tooltip: tooltip should show on enter")
@@ -230,6 +227,7 @@ return function()
       iconBorder = true,
       iconBorderThemed = true,
       widgetShape = "circle",
+      widgetStrata = "HIGH",
       lockToggleIcon = false,
       shareWidgetPosition = false,
       showUnreadBadge = true,
@@ -246,7 +244,7 @@ return function()
     for key, value in pairs(expected) do
       assert(changes[key] == value, "test_icons_reset_emits_only_icon_and_widget_defaults: wrong default for " .. key)
     end
-    assert(resetCount == 14, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit fourteen icon/widget keys")
+    assert(resetCount == 15, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit fifteen icon/widget keys")
   end
 
   -- test_icons_refresh_layout_and_language
