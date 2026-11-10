@@ -149,7 +149,8 @@ function MinimapIcon.Create(factory, options)
   incomingPreview.frame:SetParent(_G.UIParent)
   local setIncomingPreview = incomingPreview.setIncomingPreview
 
-  local function applyRadialPosition()
+  local function applyRadialPosition(nextState)
+    degrees = type(nextState) == "table" and (nextState.degrees or DEFAULT_DEGREES) or degrees
     updatePosition(frame, parent, degrees, ICON_RADIUS_OFFSET)
   end
   if parent then

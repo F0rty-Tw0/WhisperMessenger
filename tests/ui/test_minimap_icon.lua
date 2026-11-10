@@ -40,6 +40,44 @@ return function()
     assert(math.abs(y) < 0.01, "180 degrees keeps the icon vertically centered; got: " .. tostring(y))
   end
 
+  -- test_apply_radial_position_with_degrees_moves_the_button
+  do
+    local factory = FakeUI.NewFactory()
+    local parent = makeParent(factory)
+    local icon = MinimapIcon.Create(factory, { parent = parent })
+
+    icon.applyRadialPosition({ degrees = 90 })
+
+    local _, relativeTo, _, x, y = icon.frame:GetPoint()
+    assert(relativeTo == parent, "the button stays on the minimap parent")
+    assert(math.abs(x) < 0.01, "90 degrees is straight up, x ~ 0; got: " .. tostring(x))
+    assert(math.abs(y - 75) < 0.01, "ring radius 70 + 5 above center; got: " .. tostring(y))
+  end
+
+  -- test_apply_radial_position_with_empty_state_uses_the_default_angle
+  do
+    local factory = FakeUI.NewFactory()
+    local fresh = MinimapIcon.Create(factory, { parent = makeParent(factory) })
+    local _, _, _, freshX, freshY = fresh.frame:GetPoint()
+    local moved = MinimapIcon.Create(factory, { parent = makeParent(factory), state = { degrees = 180 } })
+
+    moved.applyRadialPosition({})
+
+    local _, _, _, x, y = moved.frame:GetPoint()
+    assert(math.abs(x - freshX) < 0.01 and math.abs(y - freshY) < 0.01, "an empty state lands on the default angle; got: " .. tostring(x))
+  end
+
+  -- test_apply_radial_position_without_a_state_keeps_the_current_angle
+  do
+    local factory = FakeUI.NewFactory()
+    local icon = MinimapIcon.Create(factory, { parent = makeParent(factory), state = { degrees = 180 } })
+
+    icon.applyRadialPosition()
+
+    local _, _, _, x = icon.frame:GetPoint()
+    assert(math.abs(x - -75) < 0.01, "no argument keeps the saved angle; got: " .. tostring(x))
+  end
+
   -- test_desaturation_clears_when_unread_arrives
   do
     local factory = FakeUI.NewFactory()

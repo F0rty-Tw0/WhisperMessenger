@@ -548,6 +548,7 @@ Core/Bootstrap/WindowRuntime/PreviewReplyRuntime.lua
 Core/Bootstrap/WindowRuntime/DetachedPreviewRuntime.lua
 Core/Bootstrap/WindowRuntime/LiveThemeSync.lua
 Core/Bootstrap/WindowRuntime/GrowSource.lua
+Core/Bootstrap/WindowRuntime/IconMode.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/WhisperIngestFailsafe.lua
 Core/Bootstrap/AddonEventFrame.lua

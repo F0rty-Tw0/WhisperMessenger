@@ -9,6 +9,7 @@ local DataBroker = ns.MinimapIconDataBroker or require("WhisperMessenger.UI.Mini
 local AddonCompartment = ns.MinimapIconAddonCompartment or require("WhisperMessenger.UI.MinimapIcon.AddonCompartment")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local IconRuntime = ns.BootstrapWindowRuntimeIconRuntime or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconRuntime")
+local PositionSlots = ns.BootstrapWindowRuntimePositionSlots or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PositionSlots")
 
 local MinimapIconRuntime = {}
 
@@ -32,6 +33,8 @@ function MinimapIconRuntime.Create(options)
   local acknowledgeLatestWidgetPreview = options.acknowledgeLatestWidgetPreview or function() end
   local refreshWindow = options.refreshWindow or function() end
   local onToggle = options.onToggle or function() end
+  local positionSlots = options.positionSlots
+    or PositionSlots.Create({ accountState = accountState, characterState = characterState, tableUtils = tableUtils })
 
   -- Re-read on every call so a profile reset that swaps the settings table
   -- is picked up immediately.
@@ -42,11 +45,11 @@ function MinimapIconRuntime.Create(options)
   local total, unread = IconSurfaces.Counts(buildContacts(), runtime.panelRegistry)
 
   local minimapIcon = minimapIconModule.Create(uiFactory, {
-    state = characterState.minimapIcon,
+    state = positionSlots.read("minimapIcon"),
     onToggle = onToggle,
     onMarkAllRead = options.onMarkAllRead,
     onPositionChanged = function(nextState)
-      characterState.minimapIcon = tableUtils.copyState(nextState)
+      positionSlots.write("minimapIcon", nextState)
     end,
     getShowUnreadBadge = function()
       return settings().showUnreadBadge ~= false
