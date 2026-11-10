@@ -127,7 +127,8 @@ local function confirmWhisperAvailability(state, payload, contact)
   end
   local availability = Availability.FromStatus("CanWhisper")
   availability.confirmedByWhisper = true
-  availability.confirmedAt = state.now and state.now() or 0
+  -- A replayed whisper (held by the chat lock) proves the time it went through.
+  availability.confirmedAt = payload.replayedAt or (state.now and state.now() or 0)
   state.availabilityByGUID = state.availabilityByGUID or {}
   state.availabilityByGUID[guid] = availability
 end

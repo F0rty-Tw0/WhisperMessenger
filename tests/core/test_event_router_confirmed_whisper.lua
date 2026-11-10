@@ -107,4 +107,19 @@ return function()
     assert(status == "Offline", "roster-offline must beat the recent whisper, got " .. tostring(status))
     PresenceCache._setCache({})
   end
+
+  -- A whisper held by the chat lock and replayed later proves only the time it
+  -- went through, not the replay time
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local clock = { value = 6000 }
+    local state = makeClockState(clock)
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", { text = "hi", playerName = "Friend-OtherRealm", lineID = 4, guid = GUID, replayedAt = 6000 - 1800 })
+
+    clock.value = 6010
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
+    local status = state.availabilityByGUID[GUID].status
+    assert(status == "Offline", "a whisper replayed 30 minutes late must not hide Offline, got " .. tostring(status))
+  end
 end
