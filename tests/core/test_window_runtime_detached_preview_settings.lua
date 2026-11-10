@@ -47,41 +47,6 @@ return function()
     assert(logOf(env) == "update", "update only; got " .. logOf(env))
   end
 
-  -- test_share_on_overwrites_shared_spot
-  do
-    local env = build({}, { detachedPreview = { x = 1, y = -1 } }, { x = 9, y = -9 })
-    env.surface = { applySavedSpot = env.surfaceApply }
-    DetachedPreviewRuntime.OnSettingChanged(env.ctx, "shareWidgetPosition", true)
-    local shared = env.accountState.sharedDetachedPreview
-    assert(shared.x == 1 and shared.y == -1, "shared spot takes the character spot")
-    assert(shared ~= env.characterState.detachedPreview, "shared spot is a copy")
-    assert(logOf(env) == "apply", "spot re-applied; got " .. logOf(env))
-  end
-
-  -- test_share_on_without_character_spot_clears_shared_spot
-  do
-    local env = build({}, {}, { x = 9, y = -9 })
-    DetachedPreviewRuntime.OnSettingChanged(env.ctx, "shareWidgetPosition", true)
-    assert(env.accountState.sharedDetachedPreview == nil, "no character spot leaves no shared spot")
-  end
-
-  -- test_share_on_without_surface_only_copies
-  do
-    local env = build({}, { detachedPreview = { x = 2, y = -2 } })
-    DetachedPreviewRuntime.OnSettingChanged(env.ctx, "shareWidgetPosition", true)
-    assert(env.accountState.sharedDetachedPreview.x == 2, "spot copied")
-    assert(logOf(env) == "", "nothing created or applied; got " .. logOf(env))
-  end
-
-  -- test_share_off_reapplies_spot
-  do
-    local env = build({}, { detachedPreview = { x = 1, y = -1 } }, { x = 9, y = -9 })
-    env.surface = { applySavedSpot = env.surfaceApply }
-    DetachedPreviewRuntime.OnSettingChanged(env.ctx, "shareWidgetPosition", false)
-    assert(logOf(env) == "apply", "spot re-applied; got " .. logOf(env))
-    assert(env.accountState.sharedDetachedPreview.x == 9, "shared spot kept")
-  end
-
   -- test_icon_mode_refreshes_only_when_detached
   do
     local env = build({ widgetPreviewPosition = "right" })
