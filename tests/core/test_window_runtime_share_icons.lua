@@ -1,5 +1,5 @@
--- Composition test: toggling "share widget position" moves the widget and the
--- minimap button live, with no /reload. Oracle: the State x event table of the
+-- Composition test: toggling "share widget position" moves the widget, the
+-- minimap button and the detached preview live, with no /reload. Oracle: the State x event table of the
 -- "Same position on every character" spec (toggle off: back to this
 -- character's spot; toggle on: A = copy(P), so nothing jumps).
 
@@ -186,6 +186,25 @@ return function()
     end
   end
 
+  local function test_toggle_off_moves_the_detached_preview_back_to_this_characters_spot_live()
+    local characterState = makeCharacterState()
+    characterState.detachedPreview = { x = 10, y = -20 }
+    local options, accountState, trackers = build({ sharedDetachedPreview = { x = 300, y = -400 } }, characterState)
+    accountState.settings.widgetPreviewPosition = "detached"
+    local controller = WindowRuntime.Create(options)
+    controller.ensureWindow()
+    local holder = trackers.coordOptions.getDetachedPreview().previewFrame:GetParent()
+    local _, _, _, sharedX, sharedY = holder:GetPoint()
+    assert(sharedX == 300 and sharedY == -400, "the preview starts at the account spot")
+
+    toggleSharing(accountState, trackers, false)
+
+    local point, _, relativePoint, x, y = holder:GetPoint()
+    assert(point == "TOP" and relativePoint == "TOP", "the preview stays anchored to the top")
+    assert(x == 10 and y == -20, "the preview returns to this character's spot; got " .. tostring(x) .. ", " .. tostring(y))
+  end
+
   test_toggle_off_moves_the_minimap_button_back_to_this_characters_angle_live()
   test_reset_to_defaults_with_sharing_off_moves_nothing()
+  test_toggle_off_moves_the_detached_preview_back_to_this_characters_spot_live()
 end
