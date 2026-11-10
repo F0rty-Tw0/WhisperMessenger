@@ -61,7 +61,9 @@ function StartConversation.Create(options)
   local selectConversation = options.selectConversation or function() end
   local timer = options.timer
 
-  local function startConversation(playerName)
+  -- askWho (optional) runs for the resolved key before the tab or selection
+  -- changes: the dialog's Start button passes it, other callers do not.
+  local function startConversation(playerName, askWho)
     local normalizedName = TextLimits.Trim(playerName)
     if normalizedName == nil then
       return false
@@ -80,6 +82,10 @@ function StartConversation.Create(options)
       end
 
       ensureWhisperConversation(runtime, conversationKey, normalizedName)
+    end
+
+    if type(askWho) == "function" then
+      askWho(conversationKey)
     end
 
     -- StartConversation always targets a whisper contact; make sure the

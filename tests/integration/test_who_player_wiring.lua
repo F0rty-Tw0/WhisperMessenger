@@ -16,11 +16,15 @@ return function()
     },
   }
   local whoNames = {}
+  local headerClicks = {}
   local window = MessengerWindow.Create(FakeUI.NewFactory(), {
     contacts = ContactsList.BuildItems(conversations),
     whoPlayer = function(name)
       whoNames[#whoNames + 1] = name
       return true
+    end,
+    onHeaderClicked = function(conversationKey)
+      headerClicks[#headerClicks + 1] = conversationKey
     end,
   })
 
@@ -48,6 +52,16 @@ return function()
   _G.IsShiftKeyDown = originalShift
 
   assert(#whoNames == 1 and whoNames[1] == "Arthas-Area52", "header name shift-click reaches whoPlayer")
+
+  -- test_plain_click_on_header_reaches_onHeaderClicked
+  assert(#headerClicks == 0, "the shift-click on the name asked nothing")
+  rawset(_G, "IsShiftKeyDown", function()
+    return false
+  end)
+  window.conversation.headerFrame:GetScript("OnMouseUp")(window.conversation.headerFrame, "LeftButton")
+  rawset(_G, "IsShiftKeyDown", originalShift)
+
+  assert(#headerClicks == 1 and headerClicks[1] == "me::WOW::arthas-area52", "header plain click reaches onHeaderClicked")
 
   -- test_shift_click_on_channel_sender_sends_who
   whoNames = {}

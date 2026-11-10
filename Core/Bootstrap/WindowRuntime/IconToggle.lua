@@ -7,8 +7,9 @@ local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.Tog
 local Panels = ns.PublicApiPanels or require("WhisperMessenger.Core.PublicApi.Panels")
 local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
 
--- The click handler for the widget, minimap and LDB icons. Keybinds and slash
--- commands keep the plain toggle.
+-- The click handler for the widget, minimap and LDB icons. The Toggle Window
+-- key asks /who through runtime.toggleTargetKey (Core/Bindings.lua); /wmsg
+-- keeps the plain toggle.
 local IconToggle = {}
 
 -- Where the previews show: the detached card while the runtime reports one,
@@ -61,14 +62,16 @@ end
 -- Otherwise a visible window hides, other whispers run the plain toggle, and an addon page with
 -- something waiting opens; with no such page, or when opening it is refused,
 -- the plain toggle runs. A toggle that opens onto a chat gets a /who for that
--- chat, inside this click; the key it returns is the one shown, never
--- runtime.activeConversationKey (it can sit on another tab).
-function IconToggle.Wrap(runtime, toggle, buildContacts)
+-- chat first, inside this click and before the window opens: openTargetKey
+-- names the chat the toggle will select (nil: none, or no resolver, no ask).
+function IconToggle.Wrap(runtime, toggle, buildContacts, openTargetKey)
   local function open()
-    local openedKey = toggle()
-    if openedKey ~= nil then
-      WhoTriggers.AskFor(runtime, openedKey)
+    local targetKey = openTargetKey and openTargetKey()
+    if targetKey ~= nil then
+      WhoTriggers.AskFor(runtime, targetKey)
     end
+
+    return toggle()
   end
 
   return function()

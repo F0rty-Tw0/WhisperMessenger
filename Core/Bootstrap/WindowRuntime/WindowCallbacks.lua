@@ -50,7 +50,7 @@ function WindowCallbacks.Create(options)
     return {}
   end
   local selectConversation = options.selectConversation or function(_conversationKey) end
-  local startConversation = options.startConversation or function() end
+  local startConversation = options.startConversation or function(_playerName, _askWho) end
   local setWindowVisible = options.setWindowVisible or function() end
   local dismissWidgetPreview = options.dismissWidgetPreview or function() end
   local whoTriggers = WhoTriggers.Create(runtime)
@@ -117,13 +117,16 @@ function WindowCallbacks.Create(options)
 
     onContactClicked = whoTriggers.onContactClicked,
     whoPlayer = whoTriggers.whoPlayer,
+    onHeaderClicked = whoTriggers.onHeaderClicked,
 
     onSelectConversation = function(conversationKey)
       return selectConversation(conversationKey)
     end,
 
     onStartConversation = function(playerName)
-      return startConversation(playerName)
+      return startConversation(playerName, function(conversationKey)
+        WhoTriggers.AskFor(runtime, conversationKey)
+      end)
     end,
 
     onSend = whoTriggers.wrapSend(function(payload)

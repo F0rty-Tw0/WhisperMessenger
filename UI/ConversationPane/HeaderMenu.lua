@@ -61,6 +61,15 @@ local function shouldWho(view, contact, button, options)
   return UIHelpers.isShiftDown() and isMouseOver(view.headerName)
 end
 
+-- A plain left-click on the header (not a drag end) reports the shown chat.
+local function shouldReportHeaderClick(view, button, options)
+  if button ~= "LeftButton" or type(options.onHeaderClicked) ~= "function" then
+    return false
+  end
+
+  return view ~= nil and not view._wmHeaderDragged and view._selectedConversationKey ~= nil
+end
+
 -- Forward the window scripts the header swallows; a drag start/stop is also
 -- recorded on the view so a drag cancels the shift-click.
 local function bindForwarders(headerFrame, view)
@@ -77,7 +86,8 @@ local function bindForwarders(headerFrame, view)
   end
 end
 
--- options: { onMarkUnread, onUpdatePrefs, whoPlayer } (the pane's callbacks).
+-- options: { onMarkUnread, onUpdatePrefs, whoPlayer, onHeaderClicked } (the
+-- pane's callbacks). onHeaderClicked(conversationKey) runs on a plain left-click.
 -- contextMenu (optional): stands in for the contacts list menu in tests.
 function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
   if type(headerFrame) ~= "table" or type(headerFrame.SetScript) ~= "function" then
@@ -96,6 +106,11 @@ function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
     local contact = view and view._selectedContact
     if view and shouldWho(view, contact, button, options) then
       options.whoPlayer(contact.displayName)
+
+      return
+    end
+    if shouldReportHeaderClick(view, button, options) then
+      options.onHeaderClicked(view._selectedConversationKey)
 
       return
     end
