@@ -117,6 +117,7 @@ function WindowCallbacks.Create(options)
 
     onContactClicked = whoTriggers.onContactClicked,
     whoPlayer = whoTriggers.whoPlayer,
+    onHeaderClicked = whoTriggers.onHeaderClicked,
 
     onSelectConversation = function(conversationKey)
       return selectConversation(conversationKey)

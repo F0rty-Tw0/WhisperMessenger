@@ -38,6 +38,15 @@ return function()
       assert(#calls == 1 and calls[1].key == KEY and calls[1].runtime == runtime, "click asks who")
     end
 
+    -- test_callbacks_expose_header_click_that_asks_who
+    do
+      calls = {}
+      local callbacks, runtime = build()
+      assert(type(callbacks.onHeaderClicked) == "function", "onHeaderClicked exposed")
+      callbacks.onHeaderClicked(KEY)
+      assert(#calls == 1 and calls[1].key == KEY and calls[1].runtime == runtime, "header click asks who")
+    end
+
     -- test_whisper_send_asks_who_then_reaches_send_handler
     do
       calls = {}

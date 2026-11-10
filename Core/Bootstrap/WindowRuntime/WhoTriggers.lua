@@ -24,6 +24,11 @@ function WhoTriggers.Create(runtime)
         WhoTriggers.AskFor(runtime, item.conversationKey)
       end
     end,
+    onHeaderClicked = function(conversationKey)
+      if conversationKey then
+        WhoTriggers.AskFor(runtime, conversationKey)
+      end
+    end,
     whoPlayer = function(name)
       pcall(WhoLookup.SendVisible, name)
     end,
