@@ -40,7 +40,13 @@ return function()
     strataKeys[#strataKeys + 1] = option.key
     strataLabels[#strataLabels + 1] = option.label
   end
-  assert(table.concat(strataKeys, ",") == "BACKGROUND,LOW,MEDIUM,HIGH", "test_strata_options_list_background_to_high: keys got " .. table.concat(strataKeys, ","))
-  assert(table.concat(strataLabels, ",") == "Background,Low,Medium,High", "test_strata_options_list_background_to_high: labels got " .. table.concat(strataLabels, ","))
+  assert(
+    table.concat(strataKeys, ",") == "BACKGROUND,LOW,MEDIUM,HIGH",
+    "test_strata_options_list_background_to_high: keys got " .. table.concat(strataKeys, ",")
+  )
+  assert(
+    table.concat(strataLabels, ",") == "Background,Low,Medium,High",
+    "test_strata_options_list_background_to_high: labels got " .. table.concat(strataLabels, ",")
+  )
   assert(Options.DEFAULTS.widgetStrata == "HIGH", "test_strata_options_list_background_to_high: High is the default")
 end
