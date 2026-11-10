@@ -10,6 +10,9 @@ local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
 
 -- ShowPreview / HidePreview / IsPreviewShown: another addon's preview on the
 -- widget. One slot; a newer caller replaces the older one silently.
+-- ShowPreview's true means "accepted", not "on screen": while the button sits
+-- on the open compact window the card is held, and IsPreviewShown answers
+-- false until the button is home.
 -- preview.pulse (optional boolean): the widget glows while the preview shows,
 -- until the player opens the owner's panel (the panel registered under the
 -- same key as sourceKey). Every ShowPreview arms it again, unless that panel
@@ -43,12 +46,6 @@ local function previewsTurnedOff(runtime)
   return settings ~= nil and settings.showWidgetMessagePreview == false
 end
 
--- On the compact window the button hides every card, so a true here would tell
--- the caller "shown" while the player sees nothing; false keeps its own toast.
-local function buttonRidesWindow(icon)
-  return icon.isRiding ~= nil and icon.isRiding() == true
-end
-
 -- Where the previews show: the detached card when the runtime reports one,
 -- else the widget icon (nil in minimap mode).
 local function activeSurface(runtime)
@@ -73,8 +70,9 @@ local function previewRefused(runtime)
   if showsDetached(runtime) then
     return false
   end
-  local icon = runtime.getWidgetIcon()
-  return icon == nil or buttonRidesWindow(icon)
+  -- A button riding the open window holds the card until it is home; the
+  -- window already shows the lead, so the caller skips its own toast.
+  return runtime.getWidgetIcon() == nil
 end
 
 function Preview.Install(api, runtime)
