@@ -10,6 +10,9 @@ local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
 
 -- ShowPreview / HidePreview / IsPreviewShown: another addon's preview on the
 -- widget. One slot; a newer caller replaces the older one silently.
+-- ShowPreview's true means "accepted", not "on screen": while the button sits
+-- on the open compact window the card is held, and IsPreviewShown answers
+-- false until the button is home.
 -- preview.pulse (optional boolean): the widget glows while the preview shows,
 -- until the player opens the owner's panel (the panel registered under the
 -- same key as sourceKey). Every ShowPreview arms it again, unless that panel
