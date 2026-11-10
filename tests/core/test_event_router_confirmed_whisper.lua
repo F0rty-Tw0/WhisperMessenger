@@ -28,7 +28,7 @@ return function()
     PresenceCache._setCache({})
     local state = makeConfirmedState()
 
-    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 1 })
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
 
     local status = state.availabilityByGUID[GUID].status
     assert(status == "Offline", "definite Offline must replace a whisper confirmation, got " .. tostring(status))
@@ -40,7 +40,7 @@ return function()
     PresenceCache._setCache({ [GUID] = "offline" })
     local state = makeConfirmedState()
 
-    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "WrongFaction", rawStatus = 2 })
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "WrongFaction", rawStatus = 3 })
 
     local status = state.availabilityByGUID[GUID].status
     assert(status == "WrongFaction", "roster-offline contact must drop the whisper confirmation, got " .. tostring(status))
