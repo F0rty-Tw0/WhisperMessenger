@@ -22,14 +22,14 @@ end
 return function()
   Localization.Configure({ language = "enUS" })
 
-  -- test_preview_rows_follow_invite_link
+  -- test_preview_rows_follow_channel_context
   do
     local result = create({})
-    local inviteRow = FindUI.byLabel(result.frame, "Show invite link")
+    local contextRow = FindUI.byLabel(result.frame, "Show their last channel message")
     local previewRow = FindUI.byLabel(result.frame, PREVIEW)
     local replyRow = FindUI.byLabel(result.frame, REPLY)
-    assert(previewRow.points[1][2] == inviteRow, "test_preview_rows_follow_invite_link: preview row hangs under Show invite link")
-    assert(replyRow.points[1][2] == previewRow, "test_preview_rows_follow_invite_link: reply row hangs under the preview row")
+    assert(previewRow.points[1][2] == contextRow, "test_preview_rows_follow_channel_context: preview row hangs under Show their last channel message")
+    assert(replyRow.points[1][2] == previewRow, "test_preview_rows_follow_channel_context: reply row hangs under the preview row")
   end
 
   -- test_addon_greetings_sits_under_reply_row
