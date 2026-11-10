@@ -108,7 +108,7 @@ local function build(accountExtras, characterState)
     messengerWindow = {
       Create = function(_factory, windowOptions)
         trackers.windowOptions = windowOptions
-        return { frame = factory.CreateFrame("Frame", nil, nil) }
+        return { frame = factory.CreateFrame("Frame", nil, nil), applySavedState = function() end }
       end,
     },
     toggleIcon = fakeToggleIcon(trackers),
