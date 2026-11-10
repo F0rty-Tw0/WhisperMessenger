@@ -146,8 +146,13 @@ local function makeCreateFrame(options)
       return effectiveLines * lineHeight
     end
 
+    -- Like WoW: Show on an already-shown frame fires no OnShow.
     function frame:Show()
+      local wasShown = self.shown == true
       self.shown = true
+      if wasShown then
+        return
+      end
       if self.scripts and self.scripts.OnShow then
         self.scripts.OnShow(self)
       end
