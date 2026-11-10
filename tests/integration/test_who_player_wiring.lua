@@ -55,11 +55,11 @@ return function()
 
   -- test_plain_click_on_header_reaches_onHeaderClicked
   assert(#headerClicks == 0, "the shift-click on the name asked nothing")
-  _G.IsShiftKeyDown = function()
+  rawset(_G, "IsShiftKeyDown", function()
     return false
-  end
+  end)
   window.conversation.headerFrame:GetScript("OnMouseUp")(window.conversation.headerFrame, "LeftButton")
-  _G.IsShiftKeyDown = originalShift
+  rawset(_G, "IsShiftKeyDown", originalShift)
 
   assert(#headerClicks == 1 and headerClicks[1] == "me::WOW::arthas-area52", "header plain click reaches onHeaderClicked")
 

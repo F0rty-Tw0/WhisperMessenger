@@ -50,7 +50,7 @@ function WindowCallbacks.Create(options)
     return {}
   end
   local selectConversation = options.selectConversation or function(_conversationKey) end
-  local startConversation = options.startConversation or function() end
+  local startConversation = options.startConversation or function(_playerName, _askWho) end
   local setWindowVisible = options.setWindowVisible or function() end
   local dismissWidgetPreview = options.dismissWidgetPreview or function() end
   local whoTriggers = WhoTriggers.Create(runtime)
