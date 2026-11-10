@@ -20,6 +20,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - New Behavior option "Esc closes the window". Turn it off to keep Whisper Messenger open when you press Esc; close it with its button or your Toggle Window key. Dying or opening a big game panel no longer closes it either while the option is off.
 - With "Show player levels" on, opening a chat by clicking a contact, the message preview, or the Whisper Messenger button or minimap icon now refreshes that player's level, zone and guild when the info is more than 10 minutes old. Before, a player was looked up only once.
 - Fixed: a trade or general chat line from a different player with the same name on another realm no longer shows up inside your whisper with someone.
+- "Same position on every character" (Icons settings) now also keeps the messenger window, its size and the minimap button in the same place on all your characters, not just the widget. A new character opens everything where you left it. If you already had it on, the first character you log in with after updating sets the shared window spot and minimap button angle.
 
 ## [2.1.5] - 2026-11-08
 
