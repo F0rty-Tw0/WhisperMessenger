@@ -2,6 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local TabArrows = require("WhisperMessenger.UI.ContactsList.TabArrows")
+local NativeArt = require("WhisperMessenger.UI.Helpers.NativeArt")
 
 local function build(create)
   local factory = FakeUI.NewFactory()
@@ -92,6 +93,25 @@ do
     assert(btn.width == 24 and btn.height == 24, "native arrow is 24x24")
   end
   assert(TabArrows.NATIVE_SIZE == 24, "NATIVE_SIZE is 24")
+end
+
+-- test_native_arrows_light_up_on_hover
+do
+  local arrows = build(TabArrows.CreateNative)
+  for _, btn in ipairs({ arrows.prev, arrows.next }) do
+    local highlight = btn.highlightTexture
+    assert(highlight ~= nil, "native arrow has a highlight texture")
+    assert(highlight.texturePath == NativeArt.ICON_GLOW, "native arrow glows with the icon glow, got " .. tostring(highlight.texturePath))
+    assert(highlight.blendMode == "ADD", "native arrow glow is additive, got " .. tostring(highlight.blendMode))
+  end
+end
+
+-- test_modern_arrows_have_no_highlight_texture
+do
+  local arrows = build(TabArrows.CreateModern)
+  for _, btn in ipairs({ arrows.prev, arrows.next }) do
+    assert(btn.highlightTexture == nil, "modern arrow has no highlight texture")
+  end
 end
 
 -- test_arrows_are_children_of_the_given_parent
