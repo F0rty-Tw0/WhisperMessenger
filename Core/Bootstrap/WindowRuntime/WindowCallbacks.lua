@@ -170,11 +170,7 @@ function WindowCallbacks.Create(options)
     -- The compact window keeps its own size and position, so the classic
     -- window is as it was if the player switches back.
     onPositionChanged = function(nextState)
-      if runtime.compactLayoutActive then
-        characterState.compactWindow = tableUtils.copyState(nextState)
-        return
-      end
-      characterState.window = tableUtils.copyState(nextState)
+      positionSlots.write(runtime.compactLayoutActive and "compactWindow" or "window", nextState)
     end,
 
     onClose = function()
@@ -183,12 +179,9 @@ function WindowCallbacks.Create(options)
 
     onResetWindowPosition = function()
       if runtime.compactLayoutActive then
-        characterState.compactWindow = nil
-        return nil
+        return positionSlots.reset("compactWindow")
       end
-      local nextState = tableUtils.copyState(defaultCharacterState.window)
-      characterState.window = nextState
-      return nextState
+      return positionSlots.reset("window", defaultCharacterState.window)
     end,
 
     onClearAllChats = function()

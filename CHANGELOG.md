@@ -17,6 +17,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: opening Whisper Messenger with a key binding on a letter key (like Shift-G) no longer types that letter into the message box.
 - Other addons can now drop their chat links straight into your Whisper Messenger message while you're typing it. Total RP 3 needs an update on its side before its links show up there.
 - Fixed: a trade or general chat line from a different player with the same name on another realm no longer shows up inside your whisper with someone.
+- "Same position on every character" (Icons settings) now also keeps the messenger window, its size and the minimap button in the same place on all your characters, not just the widget. A new character opens everything where you left it. If you already had it on, the first character you log in with after updating sets the shared window spot and minimap button angle.
 
 ## [2.1.5] - 2026-11-08
 

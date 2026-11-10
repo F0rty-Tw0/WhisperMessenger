@@ -125,7 +125,7 @@ function IconSettings.Create(factory, parent, config, options)
     UIHelpers.createToggleRow(
       factory,
       frame,
-      text("Share widget position across characters"),
+      text("Same position on every character"),
       config.shareWidgetPosition == true,
       toggleColors,
       toggleLayout,
@@ -133,8 +133,8 @@ function IconSettings.Create(factory, parent, config, options)
         onChange("shareWidgetPosition", value)
       end,
       {
-        text("Share widget position across characters"),
-        text("Uses one widget position for all characters on this WoW account."),
+        text("Same position on every character"),
+        text("Keeps the widget, minimap button, message preview and window in the same place on all characters of this WoW account."),
       }
     ),
     { type = "toggle", key = "shareWidgetPosition", default = DEFAULTS.shareWidgetPosition }
@@ -207,7 +207,7 @@ function IconSettings.Create(factory, parent, config, options)
     lookRows.setLanguage()
     widgetTransparencyRow.label:SetText(text("Widget transparency"))
     lockToggleIconToggle.label:SetText(text("Lock icon position"))
-    shareWidgetPositionToggle.label:SetText(text("Share widget position across characters"))
+    shareWidgetPositionToggle.label:SetText(text("Same position on every character"))
     iconModeSelector.label:SetText(text("Icon Mode"))
     iconModeSelector.setOptionsList(Options.BuildIconModeOptions())
     unreadRows.setLanguage()

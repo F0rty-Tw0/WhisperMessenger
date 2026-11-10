@@ -98,7 +98,7 @@ local function makeRuntimeOptions()
     Create = function(_uiFactory, options)
       trackers.windowCreates = trackers.windowCreates + 1
       trackers.capturedWindowOptions = options
-      local window = { shown = false }
+      local window = { shown = false, applySavedState = function() end }
       window.registerPanel = function()
         return true
       end

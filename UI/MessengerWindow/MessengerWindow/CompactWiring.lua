@@ -26,6 +26,7 @@ function CompactWiring.Hooks()
       return false
     end,
     resetWindow = function() end,
+    applyWhenNarrow = function(_state) end,
     showList = function() end,
     isWide = function()
       return false
@@ -61,7 +62,8 @@ end
 
 -- options: frame, layout, chrome, tabToggle, composerInput, windowVisibility,
 -- windowOptions (MessengerWindow.Create options), settingsConfig,
--- getSelectedKey(), refreshSelection(state), applyWindowSize(w, h).
+-- getSelectedKey(), refreshSelection(state), applyWindowSize(w, h),
+-- applyPending(state) (a saved state held while the window was wide).
 -- The floating button's dock is DockWiring's, in both layouts.
 function CompactWiring.Attach(hooks, options)
   local frame = options.frame
@@ -70,6 +72,7 @@ function CompactWiring.Attach(hooks, options)
   local tabToggle = options.tabToggle
   local windowOptions = options.windowOptions
   local restoreWidth, restoreHeight = nil, nil
+  local pendingState = nil
 
   local function isCovered()
     return not options.windowVisibility.isConversationPaneShown()
@@ -134,10 +137,21 @@ function CompactWiring.Attach(hooks, options)
       return
     end
     options.applyWindowSize(restoreWidth, restoreHeight)
+    local state = pendingState
+    pendingState = nil
+    if state and options.applyPending then
+      options.applyPending(state)
+    end
+  end
+
+  -- Only called while wide: the state waits for the narrow window, newest wins.
+  hooks.applyWhenNarrow = function(state)
+    pendingState = state
   end
 
   hooks.resetWindow = function()
     local L = Theme.LAYOUT
+    pendingState = nil
     if layout.compactWide then
       restoreWidth, restoreHeight = L.COMPACT_WINDOW_WIDTH, L.COMPACT_WINDOW_HEIGHT
     else

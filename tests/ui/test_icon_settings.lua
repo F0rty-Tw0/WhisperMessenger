@@ -3,7 +3,7 @@ local loaded, IconSettings = pcall(require, "WhisperMessenger.UI.MessengerWindow
 local Localization = require("WhisperMessenger.Locale.Localization")
 local FindUI = require("tests.helpers.find_ui")
 
-local SHARE_POSITION = "Share widget position across characters"
+local SHARE_POSITION = "Same position on every character"
 local TRANSPARENCY = "Widget transparency"
 
 local function modeButtons(result)
@@ -105,12 +105,9 @@ return function()
     sharePositionOnEnter(sharePositionRow)
     assert(tooltipState.owner == sharePositionRow, "test_share_widget_position_tooltip: tooltip should use the toggle row as owner")
     assert(tooltipState.anchor == "ANCHOR_TOP", "test_share_widget_position_tooltip: tooltip should anchor above the toggle row")
+    assert(tooltipState.title == "Same position on every character", "test_share_widget_position_tooltip: tooltip should use the localized title")
     assert(
-      tooltipState.title == "Share widget position across characters",
-      "test_share_widget_position_tooltip: tooltip should use the localized title"
-    )
-    assert(
-      tooltipState.lines[1] == "Uses one widget position for all characters on this WoW account.",
+      tooltipState.lines[1] == "Keeps the widget, minimap button, message preview and window in the same place on all characters of this WoW account.",
       "test_share_widget_position_tooltip: tooltip should explain account-wide sharing"
     )
     assert(tooltipState.shown == true, "test_share_widget_position_tooltip: tooltip should show on enter")

@@ -52,7 +52,8 @@ end
 -- parts: chrome, layout, settingsRuntime, settingsResult, contactsRuntime,
 -- conversation, composer, refreshSelection, handleContactSelected, setScale,
 -- relayoutCurrentSize, refreshLanguage, showWithoutComposerFocus, and
--- optionally panelHost + windowVisibility (addon panels).
+-- optionally panelHost + windowVisibility (addon panels),
+-- applySavedState(state) (moves the open window to a shared saved state).
 function WindowSurface.Build(parts)
   local chrome = parts.chrome
   local layout = parts.layout
@@ -154,6 +155,7 @@ function WindowSurface.Build(parts)
   if parts.dock then
     window.dockCompactIcon = parts.dock
   end
+  window.applySavedState = parts.applySavedState
   if parts.compactMode then
     window.isCompactLayout = true
     window.compactViewport = layout.compactViewport
