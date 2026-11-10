@@ -107,4 +107,91 @@ return function()
     assert(status == "Offline", "roster-offline must beat the recent whisper, got " .. tostring(status))
     PresenceCache._setCache({})
   end
+
+  -- A whisper held by the chat lock and replayed later proves only the time it
+  -- went through, not the replay time
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local clock = { value = 6000 }
+    local state = makeClockState(clock)
+    Router.HandleEvent(
+      state,
+      "CHAT_MSG_WHISPER",
+      { text = "hi", playerName = "Friend-OtherRealm", lineID = 4, guid = GUID, replayedAt = 6000 - 1800 }
+    )
+
+    clock.value = 6010
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
+    local status = state.availabilityByGUID[GUID].status
+    assert(status == "Offline", "a whisper replayed 30 minutes late must not hide Offline, got " .. tostring(status))
+  end
+
+  -- An old whisper replayed after a live one keeps the live whisper's proof
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local clock = { value = 6000 }
+    local state = makeClockState(clock)
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", { text = "live", playerName = "Friend-OtherRealm", lineID = 5, guid = GUID })
+    clock.value = 6001
+    Router.HandleEvent(
+      state,
+      "CHAT_MSG_WHISPER",
+      { text = "old", playerName = "Friend-OtherRealm", lineID = 6, guid = GUID, replayedAt = 6001 - 1800 }
+    )
+
+    clock.value = 6010
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
+    local status = state.availabilityByGUID[GUID].status
+    assert(status == "CanWhisper", "a live whisper 10 s ago must still hide Offline, got " .. tostring(status))
+  end
+
+  -- A stale replayed whisper does not replace a fresh Offline answer
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local clock = { value = 6000 }
+    local state = makeClockState(clock)
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
+    clock.value = 6001
+    Router.HandleEvent(
+      state,
+      "CHAT_MSG_WHISPER",
+      { text = "old", playerName = "Friend-OtherRealm", lineID = 7, guid = GUID, replayedAt = 6001 - 1800 }
+    )
+
+    local status = state.availabilityByGUID[GUID].status
+    assert(status == "Offline", "a whisper from 30 minutes ago must not mark them online, got " .. tostring(status))
+  end
+
+  -- A recent replay inside the window still keeps the newer live proof
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local clock = { value = 6000 }
+    local state = makeClockState(clock)
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", { text = "live", playerName = "Friend-OtherRealm", lineID = 8, guid = GUID })
+    clock.value = 6001
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", { text = "old", playerName = "Friend-OtherRealm", lineID = 9, guid = GUID, replayedAt = 5900 })
+
+    clock.value = 6250
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
+    local status = state.availabilityByGUID[GUID].status
+    assert(status == "CanWhisper", "the live whisper's proof must survive a recent replay, got " .. tostring(status))
+  end
+
+  -- A recent replay's proof runs from when it arrived, not from the replay
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local clock = { value = 6000 }
+    local state = makeClockState(clock)
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", { text = "old", playerName = "Friend-OtherRealm", lineID = 10, guid = GUID, replayedAt = 5800 })
+
+    clock.value = 6150
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
+    local status = state.availabilityByGUID[GUID].status
+    assert(status == "Offline", "a replayed whisper's proof must end 5 minutes after it arrived, got " .. tostring(status))
+  end
 end
