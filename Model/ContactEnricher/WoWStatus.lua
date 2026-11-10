@@ -21,6 +21,20 @@ local function isOppositeFaction(itemFaction, localFaction)
   return itemFaction ~= localFaction
 end
 
+-- Show the whisper check's "CanWhisperGuild" (cross-faction guild/community
+-- member) as XFaction, unless the contact is known to be our own faction.
+-- It says nothing about faction, so unknown faction counts as cross-faction.
+-- Any other availability passes through untouched.
+function WoWStatus.ResolveGuild(availability, itemFaction, localFaction)
+  if availability.status ~= "CanWhisperGuild" then
+    return availability
+  end
+  local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
+  local isSameFaction = itemFaction ~= nil and itemFaction ~= "" and itemFaction == localFaction
+
+  return Availability.FromStatus(isSameFaction and "CanWhisper" or "XFaction")
+end
+
 -- Apply cached availability (from CAN_LOCAL_WHISPER_TARGET_RESPONSE) to a WoW contact.
 -- Handles faction inference write-back, opposite-faction status correction, and
 -- WrongFaction/Offline disambiguation via the Disambiguation helper.
@@ -30,12 +44,12 @@ function WoWStatus.ApplyCached(item, runtime)
   local Disambiguation = ns.ContactEnricherDisambiguation or require("WhisperMessenger.Model.ContactEnricher.Disambiguation")
   local localFaction = runtime.localFaction
 
-  item.availability = runtime.availabilityByGUID[item.guid]
+  item.availability = WoWStatus.ResolveGuild(runtime.availabilityByGUID[item.guid], item.factionName, localFaction)
 
   -- Infer and persist faction from CanWhisper status when faction is unknown.
   -- CanWhisper for a WoW contact strongly implies same faction as local player.
-  -- NOTE: WrongFaction is NOT reliable for faction inference — it also fires
-  -- for same-faction cross-realm players the check cannot reach.
+  -- Only the game's plain CanWhisper counts: CanWhisperGuild (resolved above)
+  -- and WrongFaction say nothing reliable about faction.
   -- Faction doesn't change per character, so we persist it once inferred.
   if item.factionName == nil and localFaction and item.channel ~= "BN" and item.availability.status == "CanWhisper" then
     item.factionName = localFaction

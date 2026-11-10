@@ -112,6 +112,18 @@ return function()
   assert(enrich(CODE_CAN_WHISPER_GUILD, "Alliance") == "XFaction", "cross-faction guild code should be XFaction")
   assert(enrich(CODE_CAN_WHISPER_GUILD, "Horde") == "CanWhisper", "same-faction guild code should be CanWhisper")
   assert(headerStatus(CODE_CAN_WHISPER_GUILD, "Alliance") == "XFaction", "header: cross-faction guild code should be XFaction")
+  assert(enrich(CODE_CAN_WHISPER_GUILD, nil) == "XFaction", "unknown-faction guild code should be XFaction")
+  assert(headerStatus(CODE_CAN_WHISPER_GUILD, nil) == "XFaction", "header: unknown-faction guild code should be XFaction")
+  assert(headerStatus(CODE_CAN_WHISPER_GUILD, "Horde") == "CanWhisper", "header: same-faction guild code should be CanWhisper")
+
+  -- Code 1 proves nothing about faction: nothing is inferred or saved
+  local conversation = { guid = GUID, displayName = "Someone-Realm", channel = "WOW" }
+  local guildRuntime = makeRuntime(CODE_CAN_WHISPER_GUILD)
+  guildRuntime.store = { conversations = { key = conversation } }
+  local guildItem = { guid = GUID, channel = "WOW", displayName = "Someone-Realm", conversationKey = "key" }
+  ContactEnricher.EnrichContactsAvailability({ guildItem }, guildRuntime)
+  assert(guildItem.factionName == nil, "guild code must not infer the item's faction")
+  assert(conversation.factionName == nil, "guild code must not persist a faction")
 
   -- Game code 3 (WrongFaction) keeps the optimistic fallback for same faction
   assert(enrich(CODE_WRONG_FACTION, "Horde") == "CanWhisper", "same-faction WrongFaction keeps optimistic CanWhisper")
