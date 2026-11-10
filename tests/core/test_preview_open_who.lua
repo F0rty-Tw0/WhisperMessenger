@@ -12,6 +12,7 @@ local function build(competitive)
       return false
     end,
     ensureWindow = function()
+      log[#log + 1] = "ensureWindow"
       runtime.window = {}
     end,
     setWindowVisible = function() end,
@@ -47,10 +48,12 @@ local function test_preview_open_asks_who_for_opened_chat()
   withAskFor(log, function()
     assert(open("wow::jaina") == true)
   end)
-  assert(#log == 2, "expected select then ask, got " .. #log .. " entries")
-  assert(log[1] == "select:wow::jaina", "select runs first")
-  local call = log[2]
-  assert(call[1] == "ask" and call[2] == runtime and call[3] == "wow::jaina", "ask for the opened chat")
+  assert(#log == 3, "expected ask, open, select, got " .. #log .. " entries")
+  -- In game the /who is blocked when the window opens first in the same click.
+  local call = log[1]
+  assert(type(call) == "table" and call[1] == "ask", "the /who is asked before the window opens")
+  assert(call[2] == runtime and call[3] == "wow::jaina", "ask for the chat being opened")
+  assert(log[2] == "ensureWindow" and log[3] == "select:wow::jaina", "then the window opens on the chat")
 end
 
 local function test_refused_preview_open_asks_nothing()

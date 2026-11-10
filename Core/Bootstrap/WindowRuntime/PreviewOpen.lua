@@ -33,6 +33,9 @@ function PreviewOpen.Create(options)
       return false
     end
 
+    -- A click on a preview card is a hardware event: ask /who inside it, before
+    -- the window opens. Asked after the open, the game blocked SendWho.
+    WhoTriggers.AskFor(runtime, conversationKey)
     runtime.ensureWindow()
     runtime.setWindowVisible(true)
     local window = runtime.window
@@ -48,8 +51,6 @@ function PreviewOpen.Create(options)
       window.setTabMode("whispers")
     end
     selectConversation(conversationKey)
-    -- A click on a preview card is a hardware event: ask /who inside it.
-    WhoTriggers.AskFor(runtime, conversationKey)
     return true
   end
 end
