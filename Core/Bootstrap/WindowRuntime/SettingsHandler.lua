@@ -17,6 +17,8 @@ local TabVisibilitySetting = ns.BootstrapWindowRuntimeTabVisibilitySetting
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.TabVisibilitySetting")
 local RefreshingSettings = ns.BootstrapWindowRuntimeRefreshingSettings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RefreshingSettings")
 local EscapeSetting = ns.BootstrapWindowRuntimeEscapeSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.EscapeSetting")
+local IconSettingReactions = ns.BootstrapWindowRuntimeIconSettingReactions
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconSettingReactions")
 local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
 local WindowScale = ns.MessengerWindowWindowScale
   or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
@@ -260,34 +262,7 @@ function SettingsHandler.Create(options)
       dockCompactIcon()
     end
 
-    if key == "iconDesaturated" then
-      if icon and icon.refreshDesaturation then
-        icon.refreshDesaturation()
-      end
-      if minimap and minimap.refreshDesaturation then
-        minimap.refreshDesaturation()
-      end
-    end
-    -- Widget-only looks: the minimap always wears the gold ring.
-    local repaintsIcon = key == "iconBorder" or key == "iconBorderThemed" or key == "iconBackground" or key == "widgetShape"
-    if repaintsIcon and icon and icon.refreshTheme then
-      icon.refreshTheme()
-    end
-    if key == "widgetTransparency" and icon and icon.refreshTransparency then
-      icon.refreshTransparency()
-    end
-    if key == "lockToggleIcon" and icon and icon.refreshLockGlyph then
-      icon.refreshLockGlyph()
-    end
-
-    if key == "widgetPreviewPosition" then
-      if icon and icon.applyPreviewPosition then
-        icon.applyPreviewPosition(persistedValue)
-      end
-      if minimap and minimap.applyPreviewPosition then
-        minimap.applyPreviewPosition(persistedValue)
-      end
-    end
+    IconSettingReactions.Apply(key, persistedValue, icon, minimap)
 
     if options.onDetachedSetting then
       options.onDetachedSetting(key, persistedValue)
