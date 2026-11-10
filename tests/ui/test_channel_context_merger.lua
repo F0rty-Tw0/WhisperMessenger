@@ -225,4 +225,12 @@ return function()
     local result = ChannelContextMerger.Merge(conversation.messages, contact, deps)
     assert(countContext(result) == 1, "re-enabled: the saved channel line shows again")
   end
+
+  -- test_for_pane_passes_enabled_to_merge
+  do
+    local saved = { id = "channel-ctx-9500", kind = "channel_context", text = "old", sentAt = 9500 }
+    local messages = { { id = "1", sentAt = 9000, kind = "user" }, saved }
+    local result = ChannelContextMerger.ForPane(messages, { displayName = "Pane-Realm" }, { messages = messages }, false)
+    assert(countContext(result) == 0, "ForPane with the option off must hide the saved channel line")
+  end
 end
