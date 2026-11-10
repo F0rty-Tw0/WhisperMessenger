@@ -81,5 +81,19 @@ return function()
     assert(belowLayer == layerRow, "the share row hangs below the layer row")
   end
 
+  -- test_set_language_translates_the_widget_layer_label_and_buttons
+  do
+    local result = IconSettings.Create(factory, parent, {}, { onChange = function() end })
+    Localization.Configure({ language = "ruRU" })
+    result.setLanguage()
+    local buttons = FindUI.selectorButtons(result.frame, "Слой виджета")
+    local labels = {}
+    for _, button in ipairs(buttons) do
+      labels[#labels + 1] = button.label.text
+    end
+    Localization.Configure({ language = "enUS" })
+    assert(table.concat(labels, ",") == "Фон,Низкий,Средний,Высокий", "got " .. table.concat(labels, ","))
+  end
+
   print("  All widget layer settings tests passed")
 end
