@@ -96,8 +96,8 @@ local function build(accountExtras, characterState, compactLayout)
   return options, accountState, trackers
 end
 
-local function toggleSharing(accountState, trackers, enabled)
-  accountState.settings.shareWidgetPosition = enabled
+-- The settings handler saves the value itself, as the Icons page does.
+local function toggleSharing(trackers, enabled)
   trackers.windowOptions.onSettingChanged("shareWidgetPosition", enabled)
 end
 
@@ -109,12 +109,12 @@ return function()
   local function test_toggle_off_moves_an_open_classic_window_back_to_this_characters_spot()
     local characterState = { window = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 100, y = -10, width = 800, height = 500 } }
     local sharedWindow = { anchorPoint = "TOPLEFT", relativePoint = "TOPLEFT", x = 400, y = -40, width = 900, height = 600 }
-    local options, accountState, trackers = build({ sharedWindow = sharedWindow }, characterState, false)
+    local options, _, trackers = build({ sharedWindow = sharedWindow }, characterState, false)
     local controller = WindowRuntime.Create(options)
     controller.ensureWindow()
     assert(trackers.windowOptions.state.x == 400, "the window opens at the account spot first")
 
-    toggleSharing(accountState, trackers, false)
+    toggleSharing(trackers, false)
 
     local applied = lastApplied(trackers)
     assert(applied ~= nil, "the open window is moved on the toggle")
@@ -124,11 +124,11 @@ return function()
 
   local function test_toggle_off_moves_an_open_compact_window_back_to_this_characters_spot()
     local characterState = { window = {}, compactWindow = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 100, y = 0, width = 360 } }
-    local options, accountState, trackers = build({ sharedCompactWindow = { x = 400, width = 420 } }, characterState, true)
+    local options, _, trackers = build({ sharedCompactWindow = { x = 400, width = 420 } }, characterState, true)
     local controller = WindowRuntime.Create(options)
     controller.ensureWindow()
 
-    toggleSharing(accountState, trackers, false)
+    toggleSharing(trackers, false)
 
     local applied = lastApplied(trackers)
     assert(applied ~= nil and applied.x == 100 and applied.width == 360, "the compact window gets its own compact spot, not the classic one")
@@ -141,11 +141,24 @@ return function()
     local controller = WindowRuntime.Create(options)
     controller.ensureWindow()
 
-    toggleSharing(accountState, trackers, true)
+    toggleSharing(trackers, true)
 
     local applied = lastApplied(trackers)
     assert(applied ~= nil and applied.x == 100 and applied.width == 800, "the account spot is this character's spot: no jump")
     assert(accountState.sharedWindow.x == 100, "the account spot now holds this character's spot")
+  end
+
+  -- The Icons page's Reset to Defaults sends every toggle's default, changed or not.
+  local function test_reset_to_defaults_while_sharing_is_off_leaves_the_window_alone()
+    local characterState = { window = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 100, y = -10, width = 800, height = 500 } }
+    local options, accountState, trackers = build({}, characterState, false)
+    accountState.settings.shareWidgetPosition = false
+    WindowRuntime.Create(options).ensureWindow()
+
+    toggleSharing(trackers, false)
+    toggleSharing(trackers, false)
+
+    assert(#trackers.applied == 0, "an unchanged setting moves nothing; applies: " .. tostring(#trackers.applied))
   end
 
   local function test_new_character_with_sharing_opens_the_window_at_the_account_spot()
@@ -196,6 +209,7 @@ return function()
   test_toggle_off_moves_an_open_classic_window_back_to_this_characters_spot()
   test_toggle_off_moves_an_open_compact_window_back_to_this_characters_spot()
   test_toggle_on_keeps_an_open_window_where_it_is()
+  test_reset_to_defaults_while_sharing_is_off_leaves_the_window_alone()
   test_new_character_with_sharing_opens_the_window_at_the_account_spot()
   test_new_character_with_sharing_opens_the_compact_window_at_the_account_spot()
   test_narrow_shared_width_is_widened_for_a_character_with_an_open_rail()

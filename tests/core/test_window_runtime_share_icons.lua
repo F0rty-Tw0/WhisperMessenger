@@ -146,18 +146,18 @@ local function makeCharacterState()
   }
 end
 
-local function toggleSharing(accountState, trackers, enabled)
-  accountState.settings.shareWidgetPosition = enabled
+-- The settings handler saves the value itself, as the Icons page does.
+local function toggleSharing(trackers, enabled)
   trackers.windowOptions.onSettingChanged("shareWidgetPosition", enabled)
 end
 
 return function()
   local function test_toggle_off_moves_the_minimap_button_back_to_this_characters_angle_live()
-    local options, accountState, trackers = build({ sharedMinimapIcon = { degrees = 200 } }, makeCharacterState())
+    local options, _, trackers = build({ sharedMinimapIcon = { degrees = 200 } }, makeCharacterState())
     local controller = WindowRuntime.Create(options)
     controller.ensureWindow()
 
-    toggleSharing(accountState, trackers, false)
+    toggleSharing(trackers, false)
 
     local applied = trackers.minimapApplied[#trackers.minimapApplied]
     assert(applied ~= nil, "the minimap button is re-applied on the toggle")
@@ -171,19 +171,14 @@ return function()
     local controller = WindowRuntime.Create(options)
     controller.ensureWindow()
 
-    toggleSharing(accountState, trackers, false)
-    toggleSharing(accountState, trackers, false)
+    local minimapBefore, widgetBefore = #trackers.minimapApplied, #trackers.widgetPoints
 
-    assert(#trackers.minimapApplied > 0, "the minimap button is re-applied")
-    for _, applied in ipairs(trackers.minimapApplied) do
-      assert(applied.degrees == 45, "every minimap apply keeps this character's angle; got " .. tostring(applied.degrees))
-    end
-    assert(#trackers.widgetPoints > 0, "the widget is re-applied")
-    for _, point in ipairs(trackers.widgetPoints) do
-      local icon = characterState.icon
-      assert(point[1] == icon.anchorPoint and point[3] == icon.relativePoint, "every widget apply keeps this character's anchor")
-      assert(point[4] == icon.x and point[5] == icon.y, "every widget apply keeps this character's offset")
-    end
+    toggleSharing(trackers, false)
+    toggleSharing(trackers, false)
+
+    assert(#trackers.minimapApplied == minimapBefore, "an unchanged setting never re-applies the minimap button")
+    assert(#trackers.widgetPoints == widgetBefore, "an unchanged setting never re-applies the widget")
+    assert(accountState.sharedMinimapIcon == nil and accountState.sharedWidgetPosition == nil, "no account spot is written")
   end
 
   local function test_toggle_off_moves_the_detached_preview_back_to_this_characters_spot_live()
@@ -197,7 +192,7 @@ return function()
     local _, _, _, sharedX, sharedY = holder:GetPoint()
     assert(sharedX == 300 and sharedY == -400, "the preview starts at the account spot")
 
-    toggleSharing(accountState, trackers, false)
+    toggleSharing(trackers, false)
 
     local point, _, relativePoint, x, y = holder:GetPoint()
     assert(point == "TOP" and relativePoint == "TOP", "the preview stays anchored to the top")
