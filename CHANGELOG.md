@@ -25,6 +25,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - New option under Icons: Widget layer. Pick Low or Background to keep your bags and the character sheet on top of the widget; High (the default) keeps the widget above them.
 - With the Native WoW look, the arrows at the ends of the chat tab row now light up when you point at them.
 - Fixed: players who are offline no longer show as online in your contact list and chat header, and cross-faction guild or community members who are online no longer show as offline.
+- Fixed: with the compact window open, Craft Alert no longer pops its own alert at the top of the screen for a new lead. The Craft Alert tab shows the new lead, and the preview waits on the button until you close the window.
 
 ## [2.1.5] - 2026-11-08
 
