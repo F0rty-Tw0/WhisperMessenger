@@ -32,4 +32,21 @@ return function()
 
   assert(Options.DEFAULTS.iconBorder == true, "test_border_defaults_are_on: border is on")
   assert(Options.DEFAULTS.iconBorderThemed == true, "test_border_defaults_are_on: themed border is on")
+
+  -- test_strata_options_list_background_to_high
+
+  local strataKeys, strataLabels = {}, {}
+  for _, option in ipairs(Options.BuildStrataOptions()) do
+    strataKeys[#strataKeys + 1] = option.key
+    strataLabels[#strataLabels + 1] = option.label
+  end
+  assert(
+    table.concat(strataKeys, ",") == "BACKGROUND,LOW,MEDIUM,HIGH",
+    "test_strata_options_list_background_to_high: keys got " .. table.concat(strataKeys, ",")
+  )
+  assert(
+    table.concat(strataLabels, ",") == "Background,Low,Medium,High",
+    "test_strata_options_list_background_to_high: labels got " .. table.concat(strataLabels, ",")
+  )
+  assert(Options.DEFAULTS.widgetStrata == "HIGH", "test_strata_options_list_background_to_high: High is the default")
 end

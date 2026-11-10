@@ -51,6 +51,14 @@ local SAME_POSITION_KEYS = {
   "Same position on every character",
   "Keeps the widget, minimap button, message preview and window in the same place on all characters of this WoW account.",
 }
+local WIDGET_LAYER_KEYS = {
+  "Widget layer",
+  "Sets which game windows the widget sits above. Pick a lower layer to keep bags and other windows on top of it.",
+  "Background",
+  "Low",
+  "Medium",
+  "High",
+}
 local COMPACT_WINDOW_KEYS = { "Compact window", TOOLTIP_KEY }
 local WINDOW_ANIMATION_KEYS = {
   "Window animation",
@@ -159,6 +167,11 @@ return function()
 
     -- test_same_position_strings_are_translated
     for _, key in ipairs(SAME_POSITION_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_widget_layer_strings_are_translated
+    for _, key in ipairs(WIDGET_LAYER_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 

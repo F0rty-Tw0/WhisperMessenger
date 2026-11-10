@@ -11,6 +11,16 @@ local GlideClock = ns.GlideClock or require("WhisperMessenger.UI.Shared.GlideClo
 
 local IconRide = {}
 
+local STRATA_TOKENS = { BACKGROUND = true, LOW = true, MEDIUM = true, HIGH = true }
+
+-- One of the four strata the Widget layer setting offers; anything else is HIGH.
+function IconRide.ResolveStrata(value)
+  if STRATA_TOKENS[value] then
+    return value
+  end
+  return "HIGH"
+end
+
 -- Screen-pixel centre of a region; nil when the client has none yet.
 local function screenCenter(region)
   if not region.GetCenter then
@@ -192,8 +202,21 @@ function IconRide.Create(frame, options)
     end
   end
 
+  -- The Widget layer changed. Away from home (riding, or gliding back) the
+  -- button keeps the window's strata and lands on the new one.
+  local function setHomeStrata(value)
+    local strata = IconRide.ResolveStrata(value)
+    if home ~= nil then
+      home.strata = strata
+    else
+      setStrataKeepingLevel(strata)
+    end
+    return strata
+  end
+
   return {
     rideTo = rideTo,
+    setHomeStrata = setHomeStrata,
     rideHome = rideHome,
     setStrata = setStrata,
     adoptHere = adoptHere,
