@@ -17,6 +17,7 @@ local WindowSizing = ns.MessengerWindowWindowSizing or require("WhisperMessenger
 local WindowSurface = ns.MessengerWindowWindowSurface or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSurface")
 local CompactWiring = ns.MessengerWindowCompactWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.CompactWiring")
 local DockWiring = ns.MessengerWindowDockWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.DockWiring")
+local SavedStateApply = ns.MessengerWindowSavedStateApply or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SavedStateApply")
 
 local MessengerWindow = {}
 
@@ -216,6 +217,13 @@ function MessengerWindow.Create(factory, options)
     relayoutWindow = relayoutWindow,
   })
 
+  local applySavedState, applyPending = SavedStateApply.Create({
+    compactLayout = compactLayout,
+    compactMode = compactMode,
+    dock = dock,
+    scriptResult = scriptResult,
+  })
+
   -- Compact first: its hide finishes a slide before the dock's hide closes.
   if compactLayout then
     CompactWiring.Attach(compactMode, {
@@ -230,6 +238,7 @@ function MessengerWindow.Create(factory, options)
       getSelectedKey = getSelectedConversationKey,
       refreshSelection = refreshSelection,
       applyWindowSize = scriptResult.applyWindowSize,
+      applyPending = applyPending,
     })
   end
   DockWiring.Attach(frame, {
@@ -279,6 +288,7 @@ function MessengerWindow.Create(factory, options)
     refreshEscapeSetting = scriptResult.refreshEscape,
     compactMode = compactLayout and compactMode or nil,
     dock = dock.dock,
+    applySavedState = applySavedState,
   })
 end
 

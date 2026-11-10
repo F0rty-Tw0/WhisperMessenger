@@ -151,6 +151,7 @@ function CompactWiring.Attach(hooks, options)
 
   hooks.resetWindow = function()
     local L = Theme.LAYOUT
+    pendingState = nil
     if layout.compactWide then
       restoreWidth, restoreHeight = L.COMPACT_WINDOW_WIDTH, L.COMPACT_WINDOW_HEIGHT
     else
