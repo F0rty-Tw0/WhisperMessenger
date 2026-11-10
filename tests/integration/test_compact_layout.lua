@@ -93,7 +93,7 @@ return function()
     local frame = case.window.frame
     frame:Show()
     case.step(1, 1)
-    frame:Show()
+    CompactWindow.ParentShows(frame)
     assert(frame:GetAlpha() == 1, "already open, so it stays visible")
   end
 

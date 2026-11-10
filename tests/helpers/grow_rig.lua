@@ -67,4 +67,15 @@ function GrowRig.parentHides(window)
   end
 end
 
+-- Alt+Z again: the client shows the parent, so the window gets OnShow while it never stopped being shown.
+function GrowRig.parentShows(window)
+  window.shown = true
+  if window.scripts.OnShow then
+    window.scripts.OnShow(window)
+  end
+  for _, hook in ipairs(window._hookScripts.OnShow or {}) do
+    hook(window)
+  end
+end
+
 return GrowRig
