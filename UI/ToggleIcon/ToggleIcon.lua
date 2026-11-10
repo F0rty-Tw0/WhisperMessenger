@@ -46,9 +46,9 @@ function ToggleIcon.Create(factory, options)
   end
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
-  -- Float above action bars and bags, same as the minimap icon.
+  -- The Widget layer setting; HIGH floats above action bars and bags, like the minimap icon.
   if frame.SetFrameStrata then
-    frame:SetFrameStrata("HIGH")
+    frame:SetFrameStrata(IconRide.ResolveStrata(options.getWidgetStrata and options.getWidgetStrata()))
   end
 
   local art = IconArt.Create(frame, ICON_SIZE)
@@ -288,6 +288,7 @@ function ToggleIcon.Create(factory, options)
     adoptRidePosition = ride.adoptRidePosition,
     setRideHome = ride.setHome,
     setRideStrata = ride.setStrata,
+    applyStrata = ride.setHomeStrata,
     setRideHandlers = drag.setRideHandlers,
   }
 end
