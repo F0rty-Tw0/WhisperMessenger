@@ -124,7 +124,9 @@ function WindowCallbacks.Create(options)
     end,
 
     onStartConversation = function(playerName)
-      return startConversation(playerName)
+      return startConversation(playerName, function(conversationKey)
+        WhoTriggers.AskFor(runtime, conversationKey)
+      end)
     end,
 
     onSend = whoTriggers.wrapSend(function(payload)
