@@ -427,7 +427,7 @@ function WindowRuntime.Create(options)
     refreshWindow = refreshWindow,
   })
   local toggle = toggleFlow.toggle
-  local onIconToggle = IconToggle.Wrap(runtime, toggle, buildContacts)
+  local onIconToggle = IconToggle.Wrap(runtime, toggle, buildContacts, toggleFlow.openTargetKey)
   local onOpenPreview = PreviewOpen.Create({
     runtime = runtime,
     buildContacts = buildContacts,
@@ -552,6 +552,7 @@ function WindowRuntime.Create(options)
     selectConversation = selectConversation,
     setWindowVisible = setWindowVisible,
     toggle = toggle,
+    toggleTargetKey = toggleFlow.openTargetKey,
     startConversation = startConversation,
     externalPreview = externalPreview,
     getWidgetIcon = getWidgetIcon,

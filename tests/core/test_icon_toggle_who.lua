@@ -6,9 +6,10 @@ local WhoTriggers = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTr
 
 local function noop() end
 
--- opts: visible, whisperUnread, toggleKey (what the toggle stub returns),
--- realFlow (use ToggleFlow.Create for the toggle). Returns the wrapped click,
--- the list of AskFor calls and the runtime.
+-- opts: visible, whisperUnread, toggleKey (the chat the toggle stub opens onto
+-- and the open-target stub reports), realFlow (use ToggleFlow.Create for the
+-- toggle and its open target), order (a list the toggle stub appends "toggle"
+-- to). Returns the wrapped click, the list of AskFor calls and the runtime.
 local function setup(opts)
   opts = opts or {}
   local asks = {}
@@ -61,10 +62,17 @@ local function setup(opts)
   end
 
   local toggle = function()
+    if opts.order then
+      opts.order[#opts.order + 1] = "toggle"
+    end
+
+    return opts.toggleKey
+  end
+  local openTargetKey = function()
     return opts.toggleKey
   end
   if opts.realFlow then
-    toggle = ToggleFlow.Create({
+    local flow = ToggleFlow.Create({
       runtime = runtime,
       ensureWindow = runtime.ensureWindow,
       isWindowVisible = runtime.isWindowVisible,
@@ -72,19 +80,25 @@ local function setup(opts)
       getWindow = function()
         return window
       end,
-    }).toggle
+    })
+    toggle = flow.toggle
+    openTargetKey = flow.openTargetKey
   end
   local function buildContacts()
     return { { channel = "WOW", unreadCount = opts.whisperUnread or 0 } }
   end
-  return IconToggle.Wrap(runtime, toggle, buildContacts), asks, runtime
+  return IconToggle.Wrap(runtime, toggle, buildContacts, openTargetKey), asks, runtime
 end
 
--- Runs the click with WhoTriggers.AskFor stubbed on the module table.
-local function click(onToggle, asks)
+-- Runs the click with WhoTriggers.AskFor stubbed on the module table. A given
+-- order list gets "ask" appended per call.
+local function click(onToggle, asks, order)
   local original = WhoTriggers.AskFor
   WhoTriggers.AskFor = function(runtime, key)
     asks[#asks + 1] = { runtime = runtime, key = key }
+    if order then
+      order[#order + 1] = "ask"
+    end
   end
   local ok, err = pcall(onToggle)
   WhoTriggers.AskFor = original
@@ -96,6 +110,13 @@ local function test_widget_click_opening_chat_asks_who()
   click(onToggle, asks)
   assert(#asks == 1, "expected one ask, got " .. #asks)
   assert(asks[1].runtime == runtime and asks[1].key == "wow::jaina")
+end
+
+local function test_widget_click_asks_before_toggle()
+  local order = {}
+  local onToggle, asks = setup({ whisperUnread = 1, toggleKey = "wow::jaina", order = order })
+  click(onToggle, asks, order)
+  assert(order[1] == "ask" and order[2] == "toggle", "ask must run before the window opens, got " .. table.concat(order, ","))
 end
 
 local function test_widget_fallback_open_asks_who()
@@ -141,6 +162,7 @@ end
 
 return function()
   test_widget_click_opening_chat_asks_who()
+  test_widget_click_asks_before_toggle()
   test_widget_fallback_open_asks_who()
   test_widget_click_closing_window_asks_nothing()
   test_compact_list_open_asks_nothing()
