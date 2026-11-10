@@ -92,6 +92,23 @@ local function hookObjectiveTracker(insert)
   end
 end
 
+-- The Link button at the top of the Professions window (Retail and Forever).
+-- Blizzard inserts the profession link only while a Blizzard chat box is
+-- active, and the button needs no modifier, so this hook skips the modifier
+-- check. `insert` skips the link when a Blizzard box is open (it got the link
+-- from Blizzard) or the composer lacks focus.
+local function hookProfessionLinkButton(insert)
+  local frame = _G.ProfessionsFrame
+  local page = type(frame) == "table" and frame.CraftingPage or nil
+  local button = type(page) == "table" and page.LinkButton or nil
+  if type(button) ~= "table" or type(button.HookScript) ~= "function" then
+    return
+  end
+  button:HookScript("OnClick", function()
+    insert(callApi("C_TradeSkillUI", "GetTradeSkillListLink"))
+  end)
+end
+
 function ChatLinkSourcesAddOns.Register(insert)
   Util.OnAddOnLoaded("Blizzard_AchievementUI", function()
     hookAchievements(insert)
@@ -104,6 +121,9 @@ function ChatLinkSourcesAddOns.Register(insert)
   end)
   Util.OnAddOnLoaded("Blizzard_ObjectiveTracker", function()
     hookObjectiveTracker(insert)
+  end)
+  Util.OnAddOnLoaded("Blizzard_Professions", function()
+    hookProfessionLinkButton(insert)
   end)
 end
 
