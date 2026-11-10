@@ -126,4 +126,42 @@ return function()
     local status = state.availabilityByGUID[GUID].status
     assert(status == "Offline", "a whisper replayed 30 minutes late must not hide Offline, got " .. tostring(status))
   end
+
+  -- An old whisper replayed after a live one keeps the live whisper's proof
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local clock = { value = 6000 }
+    local state = makeClockState(clock)
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", { text = "live", playerName = "Friend-OtherRealm", lineID = 5, guid = GUID })
+    clock.value = 6001
+    Router.HandleEvent(
+      state,
+      "CHAT_MSG_WHISPER",
+      { text = "old", playerName = "Friend-OtherRealm", lineID = 6, guid = GUID, replayedAt = 6001 - 1800 }
+    )
+
+    clock.value = 6010
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
+    local status = state.availabilityByGUID[GUID].status
+    assert(status == "CanWhisper", "a live whisper 10 s ago must still hide Offline, got " .. tostring(status))
+  end
+
+  -- A stale replayed whisper does not replace a fresh Offline answer
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local clock = { value = 6000 }
+    local state = makeClockState(clock)
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", { guid = GUID, status = "Offline", rawStatus = 2 })
+    clock.value = 6001
+    Router.HandleEvent(
+      state,
+      "CHAT_MSG_WHISPER",
+      { text = "old", playerName = "Friend-OtherRealm", lineID = 7, guid = GUID, replayedAt = 6001 - 1800 }
+    )
+
+    local status = state.availabilityByGUID[GUID].status
+    assert(status == "Offline", "a whisper from 30 minutes ago must not mark them online, got " .. tostring(status))
+  end
 end

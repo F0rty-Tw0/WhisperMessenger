@@ -125,11 +125,21 @@ local function confirmWhisperAvailability(state, payload, contact)
   if guid == nil then
     return
   end
+  -- A replayed whisper (held by the chat lock) proves the time it went through:
+  -- too old proves nothing now, and it never moves a newer proof back in time.
+  local now = state.now and state.now() or 0
+  local at = payload.replayedAt or now
+  if now - at >= WHISPER_PROOF_SECONDS then
+    return
+  end
+  state.availabilityByGUID = state.availabilityByGUID or {}
+  local existing = state.availabilityByGUID[guid]
+  if existing and existing.confirmedByWhisper and existing.confirmedAt and existing.confirmedAt >= at then
+    return
+  end
   local availability = Availability.FromStatus("CanWhisper")
   availability.confirmedByWhisper = true
-  -- A replayed whisper (held by the chat lock) proves the time it went through.
-  availability.confirmedAt = payload.replayedAt or (state.now and state.now() or 0)
-  state.availabilityByGUID = state.availabilityByGUID or {}
+  availability.confirmedAt = at
   state.availabilityByGUID[guid] = availability
 end
 
