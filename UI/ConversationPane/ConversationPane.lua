@@ -249,6 +249,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
   view.canInviteContact = options.canInviteContact
 
   view.hideEmptyHeader = options.hideEmptyHeader == true
+  view.isChannelContextShown = options.isChannelContextShown
   ConversationPane.Refresh(view, selectedContact, conversation)
   return view
 end

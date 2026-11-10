@@ -73,6 +73,7 @@ function MessengerWindow.Create(factory, options)
     windowOptions = options,
     nativeChrome = shell.nativeChrome,
     tabMode = contactsRuntime.getTabMode(),
+    settingsConfig = settingsConfig,
   })
   conversation = conversationWiring.conversation
   local messageActions = conversationWiring.messageActions
