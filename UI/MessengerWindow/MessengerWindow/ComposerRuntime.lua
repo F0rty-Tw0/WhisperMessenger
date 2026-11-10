@@ -21,6 +21,9 @@ function ComposerRuntime.Create(factory, options)
   local settingsConfig = options.settingsConfig
   local windowOptions = options.windowOptions
   local conversation = options.conversation
+  conversation.isChannelContextShown = function()
+    return settingsConfig.showChannelContext ~= false
+  end
   local messageActions = options.messageActions
   local composerSelectedContact = {}
 

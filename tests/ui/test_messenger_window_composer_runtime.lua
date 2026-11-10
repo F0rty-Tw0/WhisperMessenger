@@ -9,10 +9,11 @@ local function build()
   composerPane:SetSize(400, 80)
   local calls = {}
   local conversation = { tag = "conversation" }
+  local settingsConfig = {}
   local runtime = ComposerRuntime.Create(factory, {
     frame = frame,
     layout = { composerPane = composerPane },
-    settingsConfig = {},
+    settingsConfig = settingsConfig,
     windowOptions = {},
     conversation = conversation,
     messageActions = {
@@ -28,7 +29,7 @@ local function build()
     closeWindow = function() end,
     refreshContacts = function() end,
   })
-  return runtime, frame, calls, conversation
+  return runtime, frame, calls, conversation, settingsConfig
 end
 
 return function()
@@ -68,5 +69,15 @@ return function()
     assert(runtime.composer ~= nil, "composer built")
     assert(calls.themed[1] == conversation and calls.themed[2] == runtime.composer, "theme targets the composer")
     assert(calls.bound[1] == conversation and calls.bound[2] == runtime.composer, "message actions bound to the composer")
+  end
+
+  -- test_pane_view_reads_show_channel_context_live
+  do
+    local _, _, _, conversation, settingsConfig = build()
+    assert(conversation.isChannelContextShown() == true, "shown by default")
+    settingsConfig.showChannelContext = false
+    assert(conversation.isChannelContextShown() == false, "reads the setting at call time, not at build time")
+    settingsConfig.showChannelContext = true
+    assert(conversation.isChannelContextShown() == true, "shown again once switched back on")
   end
 end
