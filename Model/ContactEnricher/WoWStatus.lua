@@ -23,7 +23,7 @@ end
 
 -- Apply cached availability (from CAN_LOCAL_WHISPER_TARGET_RESPONSE) to a WoW contact.
 -- Handles faction inference write-back, opposite-faction status correction, and
--- WrongFaction disambiguation via the Disambiguation helper.
+-- WrongFaction/Offline disambiguation via the Disambiguation helper.
 -- Called when: item.guid and runtime.availabilityByGUID[item.guid] is set.
 function WoWStatus.ApplyCached(item, runtime)
   local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
@@ -34,8 +34,8 @@ function WoWStatus.ApplyCached(item, runtime)
 
   -- Infer and persist faction from CanWhisper status when faction is unknown.
   -- CanWhisper for a WoW contact strongly implies same faction as local player.
-  -- NOTE: WrongFaction is NOT reliable for faction inference — it's a generic
-  -- "unreachable" status that fires for same-faction cross-realm players too.
+  -- NOTE: WrongFaction is NOT reliable for faction inference — it also fires
+  -- for same-faction cross-realm players the check cannot reach.
   -- Faction doesn't change per character, so we persist it once inferred.
   if item.factionName == nil and localFaction and item.channel ~= "BN" and item.availability.status == "CanWhisper" then
     item.factionName = localFaction
@@ -53,16 +53,18 @@ function WoWStatus.ApplyCached(item, runtime)
       -- CanWhisper + opposite faction = cross-faction guild/community member
       item.availability = Availability.FromStatus("XFaction")
     elseif item.availability.status == "WrongFaction" or item.availability.status == "Offline" then
-      -- API's WrongFaction/Offline for opposite-faction is ambiguous.
-      -- Guild/community presence disambiguates; otherwise faction is the real blocker.
+      -- Opposite-faction WrongFaction/Offline: guild/community presence
+      -- disambiguates; otherwise faction is the real blocker.
       item.availability = Disambiguation.ResolveWrongFaction(item, runtime, true)
     end
   else
-    -- Same faction or unknown faction: WrongFaction (code 2) is ambiguous —
-    -- it fires for both offline players AND online cross-realm unreachable players.
-    -- Check multiple sources to determine actual status.
+    -- Same faction or unknown faction. WrongFaction is "cross-realm unreachable",
+    -- not proof of being offline, so it falls back to CanWhisper. Offline is
+    -- trusted unless presence, a BNet friend or the group proves them online.
     if item.availability.status == "WrongFaction" then
       item.availability = Disambiguation.ResolveWrongFaction(item, runtime, false)
+    elseif item.availability.status == "Offline" then
+      item.availability = Disambiguation.ResolveWrongFaction(item, runtime, false, "Offline")
     end
   end
 end

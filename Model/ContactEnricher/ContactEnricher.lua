@@ -71,9 +71,12 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
       return cached
     end
 
-    if cached.status == "WrongFaction" then
-      -- Build a minimal item for Disambiguation (guid + displayName for group-member check)
-      return Disambiguation.ResolveWrongFaction({ guid = conversation.guid, displayName = conversation.displayName }, runtime, false)
+    if cached.status == "WrongFaction" or cached.status == "Offline" then
+      -- Build a minimal item for Disambiguation (guid + displayName for group-member check).
+      -- Offline stays Offline without proof of life; WrongFaction falls back to CanWhisper.
+      local fallbackStatus = cached.status == "Offline" and "Offline" or nil
+
+      return Disambiguation.ResolveWrongFaction({ guid = conversation.guid, displayName = conversation.displayName }, runtime, false, fallbackStatus)
     end
     return cached
   end
