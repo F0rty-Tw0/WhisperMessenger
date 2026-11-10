@@ -11,6 +11,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: after you had typed in Whisper Messenger once, linking an item in normal chat during a boss fight could make the game block your message and blame Whisper Messenger.
 - Fixed: clicking an item link in the message preview or the Whisper Messenger window during combat no longer shows an "Interface action failed because of an AddOn" message. The item tooltip still opens.
 - Fixed: shift-clicking a player's name in Whisper Messenger while you're typing a message now puts the name in your message without also running a /who.
+- Fixed: the Link button at the top of the Professions window puts your profession link into the Whisper Messenger message box again.
 - Fixed: right-clicking a player's name in chat while typing in Whisper Messenger no longer puts a broken link in your message that the game refuses to send.
 - Fixed: the "Start a new conversation" box opened from an empty chat no longer sticks out past the edges of its window.
 - Fixed: the Whisper Messenger button can no longer be dragged off the screen, and a button that was already off screen comes back to the edge.

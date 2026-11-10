@@ -18,6 +18,7 @@ local GLOBALS = {
   "C_TradeSkillUI",
   "C_PerksActivities",
   "C_NeighborhoodInitiative",
+  "ProfessionsFrame",
 }
 
 local function withEnv(setup, body)
@@ -187,6 +188,46 @@ return function()
     assert(#env.inserts == 0, "a header without a numeric id must not insert, got " .. #env.inserts)
   end)
 
+  -- test_profession_link_button_click_inserts_trade_link_once_professions_loads
+  -- (Blizzard inserts only into an open Blizzard chat box and the button needs
+  -- no modifier, so a plain click must insert)
+  withEnv(function(env)
+    env.DeferAddOns()
+    rawset(_G, "C_TradeSkillUI", {
+      GetTradeSkillListLink = function()
+        return "|Htrade:Player-1-0001:164:164|h[Blacksmithing]|h"
+      end,
+    })
+  end, function(env)
+    local callback = env.pendingAddOns.Blizzard_Professions
+    assert(callback ~= nil, "the Link button hook should wait for Blizzard_Professions")
+    local onClick
+    rawset(_G, "ProfessionsFrame", {
+      CraftingPage = {
+        LinkButton = {
+          HookScript = function(_button, script, handler)
+            assert(script == "OnClick", "expected an OnClick hook, got " .. tostring(script))
+            onClick = handler
+          end,
+        },
+      },
+    })
+    callback()
+    assert(onClick ~= nil, "the Link button should be hooked once Professions loads")
+    env.chatLink = false
+    onClick()
+    assert(env.inserts[1] == "|Htrade:Player-1-0001:164:164|h[Blacksmithing]|h", "expected the trade link, got: " .. tostring(env.inserts[1]))
+  end)
+
+  -- test_profession_link_button_missing_parts_hook_nothing
+  withEnv(function(env)
+    env.DeferAddOns()
+    rawset(_G, "ProfessionsFrame", { CraftingPage = {} })
+  end, function(env)
+    env.pendingAddOns.Blizzard_Professions()
+    assert(#env.inserts == 0, "no Link button means nothing to hook or insert")
+  end)
+
   -- test_missing_addon_handlers_register_nothing
   withEnv(function() end, function(env)
     for _, name in ipairs({ "EncounterJournal_OnClick", "InitiativeTasksObjectiveTracker" }) do
@@ -217,7 +258,7 @@ return function()
       callback()
       loaded = loaded + 1
     end
-    assert(loaded == 4, "expected four addon load callbacks, got " .. loaded)
+    assert(loaded == 5, "expected five addon load callbacks, got " .. loaded)
     assert(#env.writes == 0, "addon hooks assigned " .. table.concat(env.writes, ", "))
   end)
 end
