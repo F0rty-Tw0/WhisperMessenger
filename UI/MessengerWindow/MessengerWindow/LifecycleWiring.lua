@@ -42,6 +42,16 @@ function LifecycleWiring.Setup(options)
 
   options.setOptionsVisible(false)
 
+  -- Moves and sizes the window to a saved state. Never reports the move back
+  -- through onPositionChanged.
+  local function applyState(nextState)
+    local appliedState = options.windowGeometry.applyState(options.frame, nextState)
+    relayoutWindow(appliedState.width, appliedState.height, appliedState.contactsWidth, true)
+    if options.onStateApplied then
+      options.onStateApplied(appliedState)
+    end
+  end
+
   local scriptResult = Buttons.WireButtons({
     closeButton = chrome.closeButton,
     optionsButton = chrome.optionsButton,
@@ -64,15 +74,10 @@ function LifecycleWiring.Setup(options)
     setOptionsVisible = options.setOptionsVisible,
     onBack = options.onBack,
     isShown = options.isShown,
-    applyState = function(nextState)
-      local appliedState = options.windowGeometry.applyState(options.frame, nextState)
-      relayoutWindow(appliedState.width, appliedState.height, appliedState.contactsWidth, true)
-      if options.onStateApplied then
-        options.onStateApplied(appliedState)
-      end
-    end,
+    applyState = applyState,
     refreshSelection = options.refreshSelection,
   }) or {}
+  scriptResult.applyState = applyState
   local frameResult = Frame.WireFrame({
     frame = options.frame,
     resizeGrip = chrome.resizeGrip,

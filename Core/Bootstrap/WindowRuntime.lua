@@ -222,12 +222,13 @@ function WindowRuntime.Create(options)
 
   local controller = {}
 
-  -- Every surface that exists moves to the spot its slot now reads; the
-  -- window follows in a later slice (window = nil).
+  -- Every surface that exists moves to the spot its slot now reads.
   local function onShareWidgetPositionChanged(enabled)
     positionSlots.onToggle(enabled)
     PositionSlots.Reapply(positionSlots, {
       icon = icon,
+      window = window,
+      compactLayoutActive = runtime.compactLayoutActive,
       minimap = minimapIcon,
       detached = detachedPreview,
       uiParent = uiParent,
@@ -363,7 +364,7 @@ function WindowRuntime.Create(options)
       selectedContact = selectedState.selectedContact,
       conversation = selectedState.conversation,
       status = selectedState.status,
-      state = compactLayout and (characterState.compactWindow or {}) or characterState.window,
+      state = positionSlots.read(compactLayout and "compactWindow" or "window"),
       compactLayout = compactLayout,
       getDockIcon = getWidgetIcon,
       getGrowSource = growSource.getGrowSource,

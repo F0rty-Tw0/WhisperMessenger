@@ -120,6 +120,7 @@ function SettingsHandler.Create(options)
       end
     end
 
+    local previousValue = accountSettings[key]
     accountSettings[key] = persistedValue
 
     if key ~= "windowScale" and runtime.store.config[key] ~= nil then
@@ -151,7 +152,9 @@ function SettingsHandler.Create(options)
       end
     end
 
-    if key == "shareWidgetPosition" and onShareWidgetPositionChanged then
+    -- Reset to Defaults sends the default even when it is already set; moving
+    -- the window then would drop it on an old saved spot.
+    if key == "shareWidgetPosition" and onShareWidgetPositionChanged and (persistedValue == true) ~= (previousValue == true) then
       onShareWidgetPositionChanged(persistedValue)
     end
 
