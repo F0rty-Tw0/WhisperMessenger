@@ -36,11 +36,16 @@ function GroupLabel.LabelForChannel(channel)
   return Localization.Text(CHANNEL_LABELS[channel]) or ""
 end
 
--- LabelForSession adds state only to Party, Raid, and Instance Chat rows.
-function GroupLabel.LabelForSession(channel, leftGroup, ownerProfileId, lastActivityAt)
+-- LabelForSession adds the instance name and the session state only to
+-- Party, Raid, and Instance Chat rows.
+function GroupLabel.LabelForSession(channel, leftGroup, ownerProfileId, lastActivityAt, instanceName)
   local label = GroupLabel.LabelForChannel(channel)
   if not SESSION_CHANNELS[channel] then
     return label
+  end
+
+  if type(instanceName) == "string" and instanceName ~= "" then
+    label = label .. " - " .. instanceName
   end
 
   local suffix
@@ -129,7 +134,7 @@ end
 function GroupLabel.ForItem(item)
   local groupName
   if item.channel == ChannelType.PARTY or item.channel == ChannelType.RAID or item.channel == ChannelType.INSTANCE_CHAT then
-    groupName = GroupLabel.LabelForSession(item.channel, item.leftGroup, item.ownerProfileId, item.lastActivityAt)
+    groupName = GroupLabel.LabelForSession(item.channel, item.leftGroup, item.ownerProfileId, item.lastActivityAt, item.instanceName)
   else
     groupName = GroupLabel.LabelForChannelAndTitle(item.channel, item.title, item.displayName)
   end

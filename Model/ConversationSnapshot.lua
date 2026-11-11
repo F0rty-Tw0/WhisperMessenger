@@ -57,6 +57,7 @@ function ConversationSnapshot.Build(conversationKey, conversation, settings)
     pinned = conversation.pinned or false,
     sortOrder = conversation.sortOrder or 0,
     guildName = conversation.guildName,
+    instanceName = conversation.instanceName,
     draft = conversation.draft,
     muted = conversation.muted,
     nickname = conversation.nickname,

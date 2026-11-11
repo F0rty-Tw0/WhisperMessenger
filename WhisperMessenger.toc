@@ -151,6 +151,7 @@ Core/Bootstrap/WindowRuntime/GroupSendPending.lua
 Core/Ingest/GroupChatIngest/PendingEcho.lua
 Core/Ingest/GroupChatIngest/Message.lua
 Core/Ingest/GroupChatIngest/ConversationKey.lua
+Core/Ingest/GroupChatIngest/InstanceName.lua
 Core/Ingest/GroupChatIngest.lua
 Core/Ingest/IncomingFilter.lua
 Core/Ingest/ChannelChatIngest.lua

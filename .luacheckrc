@@ -189,6 +189,7 @@ read_globals = {
   "GetNumGroupMembers",
   "InCombatLockdown",
   "IsInGroup",
+  "IsInInstance",
   "IsInRaid",
   "IsInGuild",
   "CanGuildInvite",
