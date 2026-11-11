@@ -1,7 +1,7 @@
 local Poller = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.Poller")
 
 -- Which whisper intents may send the quiet /who: only those still inside the
--- player's click or key press. Timers, focus and code-set text may not.
+-- player's click. Timers, focus, typing and code-set text may not.
 local GLOBALS = { "hooksecurefunc", "ChatFrameUtil", "ChatFrame_SendTell", "ChatFrame_SendBNetTell", "C_Timer" }
 
 local function makeEditBox(log)
@@ -154,20 +154,22 @@ return function()
     assert(#log.asks == 0, "asked " .. #log.asks)
   end)
 
-  case("typed slash whisper routes as a key press", nil, function(log, editBox)
+  -- The game does not count OnTextChanged as a hardware event for SendWho:
+  -- asking there raised ADDON_ACTION_BLOCKED in game (2026-11-11).
+  case("typed slash whisper routes without a hardware event", nil, function(log, editBox)
     editBox.text = "/w Thrall "
     editBox.scripts.OnTextChanged(editBox, true)
-    assert(log.tells[1] and log.tells[1].hardware == true, "a typed /w is a key press")
+    assert(log.tells[1] and log.tells[1].hardware == false, "typing is not a hardware event for /who")
   end)
 
   -- The game's own handler runs first: on the space after "/w Name" it turns
   -- the box into a whisper to Name and clears the text.
-  case("typed whisper the game already converted routes as a key press", nil, function(log, editBox)
+  case("typed whisper the game already converted routes without a hardware event", nil, function(log, editBox)
     editBox.attributes.chatType = "WHISPER"
     editBox.attributes.tellTarget = "Thrall"
     editBox.text = ""
     editBox.scripts.OnTextChanged(editBox, true)
-    assert(log.tells[1] and log.tells[1].hardware == true, "a typed /w is a key press")
+    assert(log.tells[1] and log.tells[1].hardware == false, "typing is not a hardware event for /who")
   end)
 
   case("code-set slash whisper text routes nothing", nil, function(log, editBox)

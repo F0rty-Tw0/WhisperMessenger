@@ -150,8 +150,7 @@ function EditBoxInterop.findBattleNetAccountInfo(target, bnetApi, getNumFriends)
   return nil
 end
 
--- inKeyPress: the player's own typing, so the quiet /who may go out.
-function EditBoxInterop.interceptEditBox(runtime, hooks, deps, editBox, inKeyPress)
+function EditBoxInterop.interceptEditBox(runtime, hooks, deps, editBox)
   if EditBoxInterop.shouldPreserveCombatDraft(editBox) then
     return false
   end
@@ -178,7 +177,7 @@ function EditBoxInterop.interceptEditBox(runtime, hooks, deps, editBox, inKeyPre
   end
 
   if chatType == "WHISPER" and target and target ~= "" then
-    if hooks.onSendTell(target, inKeyPress == true) then
+    if hooks.onSendTell(target) then
       EditBoxInterop.closeEditBox(runtime, editBox, deps.deactivateChat)
     end
     return true

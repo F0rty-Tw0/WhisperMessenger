@@ -1,8 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 
--- Right-click Whisper (ChatFrameUtil.SendTellWithMessage) and a typed
--- "/w Name " ask the quiet /who inside the click or key press. The right-click
--- chat opens a frame later through C_Timer, so its /who goes out by name
+-- Right-click Whisper (ChatFrameUtil.SendTellWithMessage) asks the quiet /who
+-- inside the click; a typed "/w Name " never asks. The right-click chat opens a frame later through C_Timer, so its /who goes out by name
 -- before the chat exists, and the answer must still land on that chat.
 -- The real runtime is booted; only WoW APIs are faked.
 local GLOBALS = { "C_Timer", "C_FriendList", "ChatFrameUtil", "hooksecurefunc", "GetTime", "time", "ChatFrame1EditBox", "NUM_CHAT_WINDOWS" }
@@ -181,9 +180,11 @@ return function()
     assert(env.ns.SeenZone.Get("Firstmoon") == "Dornogal", "zone " .. tostring(env.ns.SeenZone.Get("Firstmoon")))
   end)
 
-  case("typed slash whisper asks inside the key press", nil, function(env)
+  -- The game does not count OnTextChanged as a hardware event for SendWho:
+  -- asking there raised ADDON_ACTION_BLOCKED in game (2026-11-11).
+  case("typed slash whisper opens the chat without asking", nil, function(env)
     typeSlashWhisper(env)
-    assert(#env.sent == 1 and env.sent[1].filter == 'n-"Firstmoon"', "asked " .. #env.sent)
+    assert(#env.sent == 0, "asked " .. #env.sent)
     assert(env.runtime.activeConversationKey == env.key, "WM opens the chat")
   end)
 
