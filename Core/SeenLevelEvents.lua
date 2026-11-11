@@ -12,6 +12,7 @@ local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup"
 local WhoRow = ns.WhoRow or require("WhisperMessenger.Core.WhoRow")
 local WhoLevels = ns.SeenLevelEventsWhoLevels or require("WhisperMessenger.Core.SeenLevelEvents.WhoLevels")
 local Guild = ns.SeenLevelEventsGuild or require("WhisperMessenger.Core.SeenLevelEvents.Guild")
+local WhoIdentity = ns.SeenLevelEventsWhoIdentity or require("WhisperMessenger.Core.SeenLevelEvents.WhoIdentity")
 
 -- Records the levels the game shows the player (target, mouseover,
 -- nameplates, group, friends) and pushes them to saved whisper chats.
@@ -139,6 +140,13 @@ local function recordZone(info, systemText)
   end
 end
 
+local function recordIdentity(info, systemText)
+  local key = WhoIdentity.RecordWhoRow(info, systemText, findWhisperChat)
+  if key ~= nil then
+    scheduleRefresh(key)
+  end
+end
+
 -- One walk per reply, not per row: a broad /who can list many players.
 local function backfill(levels)
   local rt = runtime
@@ -163,6 +171,7 @@ local function recordWho(api, systemText)
       -- Per row: one secret or bad zone must not drop the rows after it.
       pcall(recordZone, info, systemText)
       pcall(Guild.RecordWhoRow, info, systemText)
+      pcall(recordIdentity, info, systemText)
     end
   end
   backfill(levels)
