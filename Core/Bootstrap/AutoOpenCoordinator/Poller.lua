@@ -90,7 +90,8 @@ local function parseSlashReplyText(text)
   return body
 end
 
-local function processEditBox(runtime, hooks, deps, interceptDeps, editBox)
+-- inKeyPress: the player's own typing, so the quiet /who may go out.
+local function processEditBox(runtime, hooks, deps, interceptDeps, editBox, inKeyPress)
   -- HARD BAIL before any Blizzard state read. During M+/encounters/PvP,
   -- any read of a chat edit box attribute can propagate secret-string
   -- taint into the current callback and cross-pollute Blizzard calls.
@@ -140,7 +141,7 @@ local function processEditBox(runtime, hooks, deps, interceptDeps, editBox)
     return
   end
   if slashWhisperTarget ~= nil and slashWhisperTarget ~= "" then
-    if hooks.onSendTell(slashWhisperTarget) then
+    if hooks.onSendTell(slashWhisperTarget, inKeyPress == true) then
       EditBoxInterop.closeEditBox(runtime, editBox, deps.deactivateChat, slashWhisperBody or "")
     end
     return
@@ -172,7 +173,7 @@ function Poller.Install(runtime, hooks, deps)
       return
     end
 
-    handleEditBox(editBox)
+    processEditBox(runtime, hooks, deps, interceptDeps, editBox, true)
   end
 
   for index = 1, deps.getNumChatWindows() do
@@ -206,9 +207,22 @@ function Poller.Install(runtime, hooks, deps)
     end)
   end
 
+  -- Right-click Whisper: the chat opens a frame later, outside the click, so
+  -- the quiet /who goes out here, inside it. Bail checks come before the name.
+  local function handleSendTell(name)
+    if DirectHooks.shouldInterceptHook(runtime, deps) and type(hooks.askWhoForTell) == "function" then
+      pcall(function()
+        if type(name) == "string" and name ~= "" then
+          hooks.askWhoForTell(name)
+        end
+      end)
+    end
+    handleTellLauncher()
+  end
+
   local chatFrameUtil = _G.ChatFrameUtil
   if type(_G.hooksecurefunc) == "function" and type(chatFrameUtil) == "table" and type(chatFrameUtil.SendTellWithMessage) == "function" then
-    pcall(_G.hooksecurefunc, chatFrameUtil, "SendTellWithMessage", handleTellLauncher)
+    pcall(_G.hooksecurefunc, chatFrameUtil, "SendTellWithMessage", handleSendTell)
   end
 
   if type(_G.hooksecurefunc) == "function" and type(chatFrameUtil) == "table" and type(chatFrameUtil.SendBNetTell) == "function" then
