@@ -553,6 +553,7 @@ local SimplifiedChinese = {
   -- Contact menu: Guild invite
   ["Guild invite"] = "邀请加入公会",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "按 Ctrl+C 复制命令，然后粘贴到聊天框中。",
+  ["Read-only here. Reply in the game's Communities window."] = "此处仅可阅读。请在游戏的社区窗口中回复。",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

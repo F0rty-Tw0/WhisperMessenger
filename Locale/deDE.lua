@@ -553,6 +553,7 @@ local German = {
   -- Contact menu: Guild invite
   ["Guild invite"] = "In Gilde einladen",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Strg+C drücken, um den Befehl zu kopieren, und ihn dann in den Chat einfügen.",
+  ["Read-only here. Reply in the game's Communities window."] = "Nur lesbar. Antworte im Gemeinschaftsfenster des Spiels.",
 }
 
 ns.Locale_deDE = German
