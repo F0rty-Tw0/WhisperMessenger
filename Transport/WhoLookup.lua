@@ -143,7 +143,8 @@ end
 
 -- Runs after every SendWho, ours included: the server throttles them all.
 -- Mythic+ runs no addon code, so a suspended hook does nothing.
--- A foreign one ends ours at once so the player's query behaves normally.
+-- A foreign one ends ours at once so the player's query behaves normally;
+-- ours then never gets its answer, so the name counts as not asked.
 local function onSendWho()
   if _G._wmSuspended then
     return
@@ -151,6 +152,9 @@ local function onSendWho()
   lastSentAt = now(runtime)
   if inFlight and not sendingOurs then
     inFlight = false
+    if inFlightNameKey ~= nil then
+      lastAskedAt[inFlightNameKey] = nil
+    end
     cleanup()
   end
   if not DisplayName.ShowPlayerLevels() then

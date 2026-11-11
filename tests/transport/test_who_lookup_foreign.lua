@@ -72,6 +72,19 @@ local function test_foreign_who_while_ours_in_flight_cleans_up_at_once()
   end)
 end
 
+-- The foreign /who's answer is not ours: the name was never answered, so the
+-- next click after the gap may ask again.
+local function test_foreign_who_ending_ours_forgets_the_ask()
+  Env.Case("foreign forgets ask", { whoToUi = false }, function(env)
+    Env.AddStranger(env, KEY, "Firstmoon")
+    assert(WhoLookup.TryFor(env.runtime, KEY) == true)
+    typedWho(env)
+    env.clock = env.clock + WhoLookup.MIN_GAP_SECONDS + WhoLookup.WINDOW_SECONDS
+    Env.FireDueTimers(env)
+    assert(WhoLookup.TryFor(env.runtime, KEY) == true, "foreign /who left the name marked asked")
+  end)
+end
+
 -- The gap is zeroed so only the open window can hold the query back.
 local function test_try_for_skips_while_window_open()
   local gap = WhoLookup.MIN_GAP_SECONDS
@@ -96,5 +109,6 @@ return function()
   test_typed_who_while_suspended_keeps_ours_in_flight()
   test_own_send_who_stays_in_flight()
   test_foreign_who_while_ours_in_flight_cleans_up_at_once()
+  test_foreign_who_ending_ours_forgets_the_ask()
   test_try_for_skips_while_window_open()
 end
