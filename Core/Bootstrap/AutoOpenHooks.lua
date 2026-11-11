@@ -94,6 +94,11 @@ function AutoOpenHooks.Create(deps)
 
   function hooks.onSendTell(playerName)
     if not shouldRouteOutgoingToMessenger() then
+      -- The game's chat keeps this whisper: the player is replying there, so
+      -- an existing unread thread counts as read. Nothing is created.
+      if playerName and deps.markRead then
+        deps.markRead(deps.findConversationKeyByName(playerName))
+      end
       return false
     end
     if not playerName then
@@ -116,6 +121,9 @@ function AutoOpenHooks.Create(deps)
 
   function hooks.onOutgoingWhisper(conversationKey)
     if not shouldRouteOutgoingToMessenger() then
+      if deps.markRead then
+        deps.markRead(conversationKey)
+      end
       return false
     end
     if not conversationKey then
