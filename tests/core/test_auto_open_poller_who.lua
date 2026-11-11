@@ -54,7 +54,7 @@ local function installGame(log, editBox)
     log.focused = true
   end
   rawset(_G, "ChatFrameUtil", {
-    SendTellWithMessage = function(name)
+    SendTellWithMessage = function(name, _text, _chatFrame)
       aim("WHISPER", name)
     end,
     SendBNetTell = function(name)

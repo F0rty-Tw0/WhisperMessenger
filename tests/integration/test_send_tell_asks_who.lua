@@ -71,7 +71,7 @@ local function installChatBox(env, factory)
   end
   rawset(_G, "ChatFrame1EditBox", box)
   rawset(_G, "ChatFrameUtil", {
-    SendTellWithMessage = function(name)
+    SendTellWithMessage = function(name, _text, _chatFrame)
       box:SetFocus()
       attributes.chatType = "WHISPER"
       attributes.tellTarget = name
