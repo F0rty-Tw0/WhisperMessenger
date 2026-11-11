@@ -8,7 +8,9 @@ local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup"
 -- Hardware events that send a /who. A contact row click, a preview open, an
 -- icon click that opens a chat, the Toggle Window and Reply keys, a plain
 -- header click, Start New Whisper and a composer send trigger the quiet lookup
--- (AskFor); whoPlayer sends the visible shift-click /who.
+-- (AskFor); whoPlayer sends the visible shift-click /who. A right-click
+-- Whisper or a typed "/w Name " in the game's chat asks from
+-- AutoOpenCoordinator instead (askWho / askWhoForName).
 -- SendWho is protected, so these must run inside the click or key press
 -- itself and before the window opens or the selection changes, never from a
 -- selection that code triggered.
