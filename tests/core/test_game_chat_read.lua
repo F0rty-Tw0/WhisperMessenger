@@ -111,6 +111,14 @@ return function()
     assert(refreshCount() == 0, "no refresh")
   end)
 
+  check("test_tab_click_with_whispers_shown_marks_read", function()
+    local runtime = newRuntime(2)
+    runtime.accountState = { settings = { hideFromDefaultChat = false } }
+    local captured = install(runtime)
+    captured.fn(tab(3), "LeftButton")
+    assert(runtime.store.conversations["wow::WOW::thrall"].unreadCount == 0, "whispers shown in game chat are read on a tab click")
+  end)
+
   check("test_no_hook_when_function_missing", function()
     rawset(_G, "FCF_Tab_OnClick", nil)
     local runtime = newRuntime(2)
