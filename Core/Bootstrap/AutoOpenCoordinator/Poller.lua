@@ -90,8 +90,9 @@ local function parseSlashReplyText(text)
   return body
 end
 
--- inKeyPress: the player's own typing, so the quiet /who may go out.
-local function processEditBox(runtime, hooks, deps, interceptDeps, editBox, inKeyPress)
+-- Typing is not a hardware event for SendWho (ADDON_ACTION_BLOCKED in game),
+-- so nothing here asks the quiet /who.
+local function processEditBox(runtime, hooks, deps, interceptDeps, editBox)
   -- HARD BAIL before any Blizzard state read. During M+/encounters/PvP,
   -- any read of a chat edit box attribute can propagate secret-string
   -- taint into the current callback and cross-pollute Blizzard calls.
@@ -141,7 +142,7 @@ local function processEditBox(runtime, hooks, deps, interceptDeps, editBox, inKe
     return
   end
   if slashWhisperTarget ~= nil and slashWhisperTarget ~= "" then
-    if hooks.onSendTell(slashWhisperTarget, inKeyPress == true) then
+    if hooks.onSendTell(slashWhisperTarget) then
       EditBoxInterop.closeEditBox(runtime, editBox, deps.deactivateChat, slashWhisperBody or "")
     end
     return
@@ -150,7 +151,7 @@ local function processEditBox(runtime, hooks, deps, interceptDeps, editBox, inKe
     return
   end
 
-  EditBoxInterop.interceptEditBox(runtime, hooks, interceptDeps, editBox, inKeyPress)
+  EditBoxInterop.interceptEditBox(runtime, hooks, interceptDeps, editBox)
 end
 
 function Poller.Install(runtime, hooks, deps)
@@ -173,7 +174,7 @@ function Poller.Install(runtime, hooks, deps)
       return
     end
 
-    processEditBox(runtime, hooks, deps, interceptDeps, editBox, true)
+    handleEditBox(editBox)
   end
 
   for index = 1, deps.getNumChatWindows() do
