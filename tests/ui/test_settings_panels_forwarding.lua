@@ -82,6 +82,9 @@ return function()
     flashTaskbarOnWhisper = false,
     playSoundOnRequest = true,
     requestSound = "bell",
+    mentionSound = "orb",
+    playSoundOnSend = true,
+    sentSound = "ding",
     iconSize = 56,
     iconDesaturated = false,
     iconBackground = false,
@@ -200,6 +203,9 @@ return function()
   assert(notificationCapture.config.flashTaskbarOnWhisper == false, "Notifications config should forward flashTaskbarOnWhisper")
   assert(notificationCapture.config.playSoundOnRequest == true, "Notifications config should forward playSoundOnRequest")
   assert(notificationCapture.config.requestSound == "bell", "Notifications config should forward requestSound")
+  assert(notificationCapture.config.mentionSound == "orb", "Notifications config should forward mentionSound")
+  assert(notificationCapture.config.playSoundOnSend == true, "Notifications config should forward playSoundOnSend")
+  assert(notificationCapture.config.sentSound == "ding", "Notifications config should forward sentSound")
   assert(notificationCapture.config.iconMode == nil, "Notifications config should not include iconMode")
   assert(notificationCapture.config.iconSize == nil, "Notifications config should not include iconSize")
 
