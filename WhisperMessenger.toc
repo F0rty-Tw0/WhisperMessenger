@@ -513,6 +513,7 @@ Core/Bootstrap/LifecycleHandlers/GroupMembership.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua
 Core/Bootstrap/WindowRuntime/GameWhisperTab.lua
+Core/Bootstrap/GameChatRead.lua
 Core/Bootstrap/AutoOpenCoordinator/ConversationOps.lua
 Core/Bootstrap/AutoOpenCoordinator/EditBoxInterop.lua
 Core/Bootstrap/AutoOpenCoordinator/DirectHooks.lua
