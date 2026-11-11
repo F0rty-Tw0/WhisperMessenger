@@ -41,6 +41,7 @@ end
 return function()
   local savedClub = _G.C_Club
   local getInfoShouldRaise = false
+  local clubNameFromApi = "Raid Group"
   rawset(_G, "C_Club", {
     GetInfoFromLastCommunityChatLine = function()
       return { clubId = 11, streamId = 22, clubType = 1 }
@@ -52,7 +53,7 @@ return function()
       if clubId ~= 11 then
         return nil
       end
-      return { name = "Raid Group" }
+      return { name = clubNameFromApi }
     end,
   })
 
@@ -99,6 +100,29 @@ return function()
     assert(ok, "secret club name must not raise: " .. tostring(err))
     local conversation = assert(firstConversation(runtime), "line still ingested with a secret club name")
     assert(conversation.clubName == nil, "secret club name not stored, got " .. tostring(conversation.clubName))
+  end
+
+  -- test_club_name_secret_check_runs_before_empty_check
+  -- A secret raises on comparison in 12.0, so an empty name must still be
+  -- asked about before it is compared. Other code may ask about other empty
+  -- fields, so compare against a line whose club name is not empty.
+  do
+    local savedIsSecret = _G.issecretvalue
+    local emptyAsks = 0
+    rawset(_G, "issecretvalue", function(value)
+      if value == "" then
+        emptyAsks = emptyAsks + 1
+      end
+      return false
+    end)
+    communityLine(newRuntime())
+    local asksWithName = emptyAsks
+    emptyAsks = 0
+    clubNameFromApi = ""
+    communityLine(newRuntime())
+    clubNameFromApi = "Raid Group"
+    rawset(_G, "issecretvalue", savedIsSecret)
+    assert(emptyAsks == asksWithName + 1, "an empty club name is checked for secrecy first, asks " .. emptyAsks .. " vs " .. asksWithName)
   end
 
   rawset(_G, "C_Club", savedClub)
