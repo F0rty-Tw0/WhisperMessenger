@@ -48,6 +48,21 @@ return function()
     assert(name == nil, "a secret instance name is ignored, got: " .. tostring(name))
   end
 
+  -- test_secret_check_runs_before_any_comparison
+  -- A real 12.0 secret raises on == ""; the harness cannot raise there, so
+  -- this checks the secret test sees the name before the empty-name test.
+  do
+    stubInstance(true, "")
+    local checked = false
+    rawset(_G, "issecretvalue", function()
+      checked = true
+      return false
+    end)
+    InstanceName.Current()
+    rawset(_G, "issecretvalue", savedIsSecret)
+    assert(checked, "the secret check must run before the name is compared")
+  end
+
   -- test_missing_instance_api_returns_nil
   do
     rawset(_G, "IsInInstance", nil)

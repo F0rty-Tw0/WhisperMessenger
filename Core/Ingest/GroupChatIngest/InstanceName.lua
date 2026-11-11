@@ -17,7 +17,8 @@ function InstanceName.Current()
   end
 
   local infoOk, name = pcall(_G.GetInstanceInfo)
-  if not infoOk or type(name) ~= "string" or name == "" or SecretValue.Is(name) then
+  -- Secret first: a secret raises on the == "" below.
+  if not infoOk or SecretValue.Is(name) or type(name) ~= "string" or name == "" then
     return nil
   end
 
