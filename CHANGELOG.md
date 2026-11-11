@@ -12,6 +12,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Party, raid and instance chats now show the dungeon, raid or battleground they started in, e.g. "Party - Halls of Atonement - Current".
 - New sound options under Notifications: pick a different sound for mentions, and turn on a sound for whispers you send (off by default).
 - Community chats now show the community's name, and say that replies go through the game's Communities window instead of looking like you could type there.
+- Reading a whisper in the game's own chat now clears it in Whisper Messenger too: click the game's whisper tab for that player, or start a whisper to them there.
 - Fixed: after you had typed in Whisper Messenger once, linking an item in normal chat during a boss fight could make the game block your message and blame Whisper Messenger.
 - Fixed: clicking an item link in the message preview or the Whisper Messenger window during combat no longer shows an "Interface action failed because of an AddOn" message. The item tooltip still opens.
 - Fixed: shift-clicking a player's name in Whisper Messenger while you're typing a message now puts the name in your message without also running a /who.
