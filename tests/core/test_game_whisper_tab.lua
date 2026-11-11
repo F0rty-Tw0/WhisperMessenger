@@ -178,25 +178,25 @@ return function()
 
   check("test_conversation_key_for_skips_secret_chat_type", function()
     local savedIsSecret = _G.issecretvalue
-    _G.issecretvalue = function(value)
+    rawset(_G, "issecretvalue", function(value)
       return value == "WHISPER"
-    end
+    end)
     local frame = { isTemporary = true, chatType = "WHISPER", chatTarget = "Thrall" }
     local key = GameWhisperTab.ConversationKeyFor(frame, { ["wow::WOW::thrall"] = { channel = "WOW" } })
-    _G.issecretvalue = savedIsSecret
+    rawset(_G, "issecretvalue", savedIsSecret)
     assert(key == nil, "a secret chat type is never compared")
   end)
 
   check("test_conversation_key_for_asks_secret_before_comparing_target", function()
     local savedIsSecret = _G.issecretvalue
     local asked = {}
-    _G.issecretvalue = function(value)
+    rawset(_G, "issecretvalue", function(value)
       asked[#asked + 1] = value
       return false
-    end
+    end)
     local frame = { isTemporary = true, chatType = "WHISPER", chatTarget = "" }
     GameWhisperTab.ConversationKeyFor(frame, { ["wow::WOW::thrall"] = { channel = "WOW" } })
-    _G.issecretvalue = savedIsSecret
+    rawset(_G, "issecretvalue", savedIsSecret)
     local askedAboutTarget = false
     for _, value in ipairs(asked) do
       askedAboutTarget = askedAboutTarget or value == ""
