@@ -8,6 +8,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 - The message preview can now be detached: pick "Detached" under Preview Position and drag the card anywhere on screen. It keeps its spot after a reload, and with both the widget and the minimap button on you get just one preview.
 - Behavior settings now list every addon that uses Whisper Messenger under "Allow addon integration", each with its own checkbox. Untick one and it stops adding pages, previews and notes right away, with no reload. Addons that aren't loaded this session are greyed out and can be removed from the list with Forget.
+- New option under Whispers: hide the player's last channel message that shows above a new whisper.
 - Fixed: after you had typed in Whisper Messenger once, linking an item in normal chat during a boss fight could make the game block your message and blame Whisper Messenger.
 - Fixed: clicking an item link in the message preview or the Whisper Messenger window during combat no longer shows an "Interface action failed because of an AddOn" message. The item tooltip still opens.
 - Fixed: shift-clicking a player's name in Whisper Messenger while you're typing a message now puts the name in your message without also running a /who.

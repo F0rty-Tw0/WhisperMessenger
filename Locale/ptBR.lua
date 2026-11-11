@@ -406,6 +406,8 @@ local Portuguese = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Permite que contatos que também usam Whisper Messenger vejam quando você leu as mensagens deles.",
   ["Show invite link"] = "Mostrar link de convite",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "Mostra um link (Convidar para o WM) no topo do chat. Clicar nele sussurra para esse jogador uma mensagem curta sobre este addon.",
+  ["Show their last channel message"] = "Mostrar a última mensagem de canal",
+  ["When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it."] = "Quando alguém sussurra para você, a última linha dele em um canal como Comércio aparece acima do sussurro. Desative para ocultá-la.",
   ["Close the game's whisper tab too"] = "Fechar também a aba de sussurro do jogo",
   ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "Ao remover uma conversa aqui, a aba de sussurro do próprio jogo para esse jogador também fecha. Só faz diferença quando o jogo abre sussurros em abas próprias.",
   -- Drafts, new-messages divider, quick replies

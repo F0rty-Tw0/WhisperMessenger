@@ -18,6 +18,7 @@ ToggleSpecs.DEFAULTS = {
   shareTypingStatus = true,
   shareReadReceipts = true,
   showInviteLink = true,
+  showChannelContext = true,
   showWidgetMessagePreview = true,
   widgetPreviewReply = false,
 }
@@ -131,6 +132,18 @@ function ToggleSpecs.Build(config, onChange)
       tooltipLines = {
         text("Show invite link"),
         text("Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."),
+      },
+    },
+    {
+      key = "showChannelContext",
+      labelKey = "Show their last channel message",
+      initial = config.showChannelContext ~= false,
+      onChange = function(value)
+        onChange("showChannelContext", value)
+      end,
+      tooltipLines = {
+        text("Show their last channel message"),
+        text("When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it."),
       },
     },
     {

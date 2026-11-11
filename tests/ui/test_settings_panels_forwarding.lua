@@ -66,6 +66,7 @@ return function()
     shareTypingStatus = false,
     shareReadReceipts = false,
     showInviteLink = false,
+    showChannelContext = false,
     addonGreetings = "hide",
     -- chats
     enabledChannels = { trade = true },
@@ -151,6 +152,7 @@ return function()
   assert(whispersCapture.config.shareTypingStatus == false, "whispers config should carry shareTypingStatus")
   assert(whispersCapture.config.shareReadReceipts == false, "whispers config should carry shareReadReceipts")
   assert(whispersCapture.config.showInviteLink == false, "whispers config should carry showInviteLink")
+  assert(whispersCapture.config.showChannelContext == false, "whispers config should carry showChannelContext")
   assert(whispersCapture.config.closeGameWhisperTab == true, "whispers config should carry closeGameWhisperTab")
   assert(whispersCapture.config.addonGreetings == "hide", "whispers config should carry addonGreetings")
   assert(whispersCapture.config.showWidgetMessagePreview == false, "whispers config should carry showWidgetMessagePreview")

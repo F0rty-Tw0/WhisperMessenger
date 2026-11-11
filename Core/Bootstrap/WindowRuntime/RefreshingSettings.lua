@@ -22,6 +22,7 @@ local KEYS = {
   interfaceLanguage = true,
   enabledChannels = true,
   showInviteLink = true,
+  showChannelContext = true,
 }
 
 function RefreshingSettings.Has(key)

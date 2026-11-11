@@ -21,6 +21,10 @@ local WIDGET_SHAPE_KEYS = {
   "Circle",
   "Square",
 }
+local CHANNEL_CONTEXT_KEYS = {
+  "Show their last channel message",
+  "When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it.",
+}
 local BORDER_REASON_KEY = "Only with Show border on."
 local BORDER_KEYS = {
   "Show border",
@@ -149,6 +153,11 @@ return function()
       catalog["With the EllesmereUI theme, shows the square behind the widget icon. Turn it off to show only the two chat bubbles."] == nil,
       code .. " still has the old EllesmereUI tooltip"
     )
+
+    -- test_channel_context_strings_are_translated
+    for _, key in ipairs(CHANNEL_CONTEXT_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
 
     -- test_border_strings_are_translated
     for _, key in ipairs(BORDER_KEYS) do

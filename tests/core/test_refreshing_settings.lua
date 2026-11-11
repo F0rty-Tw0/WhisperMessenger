@@ -16,6 +16,7 @@ local REFRESHING_KEYS = {
   "interfaceLanguage",
   "enabledChannels",
   "showInviteLink",
+  "showChannelContext",
 }
 
 return function()

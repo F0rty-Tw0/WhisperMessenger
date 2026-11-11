@@ -87,6 +87,7 @@ function SettingsPanels.Create(factory, options)
         shareTypingStatus = settingsConfig.shareTypingStatus,
         shareReadReceipts = settingsConfig.shareReadReceipts,
         showInviteLink = settingsConfig.showInviteLink,
+        showChannelContext = settingsConfig.showChannelContext,
         showWidgetMessagePreview = settingsConfig.showWidgetMessagePreview,
         widgetPreviewReply = settingsConfig.widgetPreviewReply,
         addonGreetings = settingsConfig.addonGreetings,
