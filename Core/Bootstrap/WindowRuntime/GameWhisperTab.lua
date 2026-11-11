@@ -23,7 +23,7 @@ local WOW_KEY_PREFIX = "^wow::WOW::(.+)$"
 -- Lowercased, same-realm realm dropped (the game's names may carry it,
 -- WhisperMessenger's keys don't). nil for anything not comparable.
 local function comparable(value)
-  if type(value) ~= "string" or value == "" or SecretValue.Is(value) then
+  if SecretValue.Is(value) or type(value) ~= "string" or value == "" then
     return nil
   end
   local ok, lowered = pcall(string.lower, Identity.ShortName(value))
@@ -60,7 +60,10 @@ local function targetsFor(conversationKey, conversation)
 end
 
 local function isOpenWhisperTab(frame, chatType)
-  return type(frame) == "table" and frame.isTemporary == true and frame.inUse ~= false and frame.chatType == chatType
+  if type(frame) ~= "table" or SecretValue.Is(frame.chatType) then
+    return false
+  end
+  return frame.isTemporary == true and frame.inUse ~= false and frame.chatType == chatType
 end
 
 function GameWhisperTab.CloseFor(conversationKey, conversation)
@@ -88,6 +91,26 @@ function GameWhisperTab.CloseFor(conversationKey, conversation)
       end
     end
   end
+end
+
+-- The key of the conversation a game whisper tab belongs to, or nil. The tab's
+-- chat type must match the conversation's channel, so a character tab "X"
+-- never matches a Battle.net conversation whose account is called X.
+function GameWhisperTab.ConversationKeyFor(frame, conversations)
+  if type(frame) ~= "table" or type(conversations) ~= "table" then
+    return nil
+  end
+  local target = comparable(frame.chatTarget)
+  if target == nil then
+    return nil
+  end
+  for conversationKey, conversation in pairs(conversations) do
+    local chatType = type(conversation) == "table" and CHAT_TYPE_BY_CHANNEL[conversation.channel] or nil
+    if chatType ~= nil and isOpenWhisperTab(frame, chatType) and targetsFor(conversationKey, conversation)[target] then
+      return conversationKey
+    end
+  end
+  return nil
 end
 
 ns.BootstrapWindowRuntimeGameWhisperTab = GameWhisperTab

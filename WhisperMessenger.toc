@@ -512,6 +512,8 @@ Core/Bootstrap/LifecycleHandlers/Presence.lua
 Core/Bootstrap/LifecycleHandlers/GroupMembership.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua
+Core/Bootstrap/WindowRuntime/GameWhisperTab.lua
+Core/Bootstrap/GameChatRead.lua
 Core/Bootstrap/AutoOpenCoordinator/ConversationOps.lua
 Core/Bootstrap/AutoOpenCoordinator/EditBoxInterop.lua
 Core/Bootstrap/AutoOpenCoordinator/DirectHooks.lua
@@ -536,7 +538,6 @@ Core/Bootstrap/WindowRuntime/IconPosition.lua
 Core/Bootstrap/WindowRuntime/PositionSlots.lua
 Core/Bootstrap/WindowRuntime/WhoTriggers.lua
 Core/Bootstrap/WindowRuntime/AddonAlerts.lua
-Core/Bootstrap/WindowRuntime/GameWhisperTab.lua
 Core/Bootstrap/WindowRuntime/ContactPrefsUpdate.lua
 Core/Bootstrap/WindowRuntime/WindowCallbacks.lua
 Core/Bootstrap/WindowRuntime/IconRuntime.lua
