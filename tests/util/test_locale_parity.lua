@@ -81,6 +81,12 @@ local REQUEST_SOUND_KEYS = {
   "Plays a sound when a whisper from a stranger lands in Requests. Pick the sound below.",
   "Request sound",
 }
+local EVENT_SOUND_KEYS = {
+  "Mention sound",
+  "Play sound when you send a whisper",
+  "Plays a sound each time a whisper you write here is sent. Pick the sound below.",
+  "Sent whisper sound",
+}
 local SAVED_SPOT_KEYS = {
   "Open at saved spot",
   "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on.",
@@ -201,6 +207,11 @@ return function()
 
     -- test_request_sound_strings_are_translated
     for _, key in ipairs(REQUEST_SOUND_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_event_sound_strings_are_translated
+    for _, key in ipairs(EVENT_SOUND_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 
