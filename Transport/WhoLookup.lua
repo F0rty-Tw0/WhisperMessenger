@@ -219,14 +219,7 @@ local function sendQuery(shortName)
   _G.C_FriendList.SendWho('n-"' .. shortName .. '"')
 end
 
-function WhoLookup.TryFor(rt, conversationKey)
-  if rt == nil or not DisplayName.ShowPlayerLevels() then
-    return false
-  end
-  local name, conversation = lookupName(rt, conversationKey)
-  if name == nil then
-    return false
-  end
+local function ask(rt, name, conversation)
   local nameKey = SeenLevel.NameKey(name)
   if nameKey == nil or WhoFreshness.IsFresh(conversation, name, lastAskedAt[nameKey], now(rt)) then
     return false
@@ -244,6 +237,32 @@ function WhoLookup.TryFor(rt, conversationKey)
     pcall(cleanup)
   end
   return ok
+end
+
+function WhoLookup.TryFor(rt, conversationKey)
+  if rt == nil or not DisplayName.ShowPlayerLevels() then
+    return false
+  end
+  local name, conversation = lookupName(rt, conversationKey)
+  if name == nil then
+    return false
+  end
+  return ask(rt, name, conversation)
+end
+
+-- For a chat the game hands over a frame after the click: its conversation
+-- may not exist yet, and a missing one counts as never asked.
+function WhoLookup.TryForName(rt, name, conversationKey)
+  if rt ~= nil and Store.Find(rt.store, conversationKey) ~= nil then
+    return WhoLookup.TryFor(rt, conversationKey)
+  end
+  if rt == nil or not DisplayName.ShowPlayerLevels() or type(name) ~= "string" then
+    return false
+  end
+  if string.find(name, "|K", 1, true) then
+    return false
+  end
+  return ask(rt, name, {})
 end
 
 -- A plain, visible /who for a shift-clicked name: the result shows like a
