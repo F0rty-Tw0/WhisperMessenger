@@ -47,6 +47,14 @@ local function isCompetitive(runtime)
   return type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent() == true
 end
 
+-- With whispers hidden from game chat, a game whisper tab left open (from
+-- content where WM lets whispers through) does not show newer whispers, so
+-- clicking it is not reading them.
+local function hidesWhispersFromGameChat(runtime)
+  local settings = runtime.accountState and runtime.accountState.settings
+  return type(settings) == "table" and settings.hideFromDefaultChat == true
+end
+
 -- Post-hooks the game's chat tab click: a left-click on a whisper tab means
 -- the player is reading that partner's whispers there.
 function GameChatRead.InstallTabHook(runtime, isSuspended)
@@ -54,7 +62,7 @@ function GameChatRead.InstallTabHook(runtime, isSuspended)
     return false
   end
   local function onTabClick(tab, button)
-    if isSuspended() or isCompetitive(runtime) then
+    if isSuspended() or isCompetitive(runtime) or hidesWhispersFromGameChat(runtime) then
       return
     end
     if button ~= nil and button ~= LEFT_BUTTON then

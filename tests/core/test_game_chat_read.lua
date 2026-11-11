@@ -95,6 +95,22 @@ return function()
     assert(refreshCount() == 0, "no refresh")
   end)
 
+  check("test_tab_click_without_button_marks_read", function()
+    local runtime = newRuntime(2)
+    local captured = install(runtime)
+    captured.fn(tab(3), nil)
+    assert(runtime.store.conversations["wow::WOW::thrall"].unreadCount == 0, "a click with no button counts as a left click")
+  end)
+
+  check("test_tab_click_while_hiding_whispers_does_nothing", function()
+    local runtime, refreshCount = newRuntime(2)
+    runtime.accountState = { settings = { hideFromDefaultChat = true } }
+    local captured = install(runtime)
+    captured.fn(tab(3), "LeftButton")
+    assert(runtime.store.conversations["wow::WOW::thrall"].unreadCount == 2, "whispers hidden from game chat stay unread")
+    assert(refreshCount() == 0, "no refresh")
+  end)
+
   check("test_no_hook_when_function_missing", function()
     rawset(_G, "FCF_Tab_OnClick", nil)
     local runtime = newRuntime(2)
