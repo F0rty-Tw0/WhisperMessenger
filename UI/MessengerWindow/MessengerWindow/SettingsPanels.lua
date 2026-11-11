@@ -122,6 +122,9 @@ function SettingsPanels.Create(factory, options)
         flashTaskbarOnWhisper = settingsConfig.flashTaskbarOnWhisper,
         playSoundOnRequest = settingsConfig.playSoundOnRequest,
         requestSound = settingsConfig.requestSound,
+        mentionSound = settingsConfig.mentionSound,
+        playSoundOnSend = settingsConfig.playSoundOnSend,
+        sentSound = settingsConfig.sentSound,
       },
     },
     {

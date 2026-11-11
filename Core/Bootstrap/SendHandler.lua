@@ -17,6 +17,7 @@ local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.
 local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 local SendParts = ns.BootstrapSendParts or require("WhisperMessenger.Core.Bootstrap.SendParts")
+local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 
 local QUEST_LINK_ADDON_PREFIX = AddonComm.PREFIX_QUEST_LINK
 local REACTION_ADDON_PREFIX = AddonComm.PREFIX_REACTION
@@ -192,6 +193,7 @@ local function finishSent(runtime, payload, wireId, refreshWindow)
   if LivePresence.HasPeer(runtime, payload.conversationKey) then
     dispatchReactionMetadata(runtime, payload, MessageReplies.EncodeLink(wireId, payload.replyTo))
   end
+  IncomingAlerts.PlaySentSound(runtime.accountState and runtime.accountState.settings)
   refreshWindow()
   return true
 end

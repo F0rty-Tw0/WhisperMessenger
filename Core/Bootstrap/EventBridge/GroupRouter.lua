@@ -191,7 +191,7 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
   -- Only a line naming the player alerts in group chats (sound + flash, no
   -- popup or auto-open), even when the chat is muted.
   if meta and meta.mention then
-    IncomingAlerts.Notify(runtime.accountState and runtime.accountState.settings)
+    IncomingAlerts.Notify(runtime.accountState and runtime.accountState.settings, "mention")
   end
   -- Coalesced: a busy chat must not rebuild the window per line. The
   -- scheduler ignores lines while the window is hidden.
