@@ -32,6 +32,7 @@ local windowOpen = false
 local closesAt = 0
 local windowTimer = nil
 local inFlight = false
+local inFlightNameKey = nil
 local lastSentAt = nil
 local previousWhoToUi = false
 local lastAskedAt = {}
@@ -99,8 +100,13 @@ local function onWindowExpired()
   end
   windowOpen = false
   whoWindowCall("CloseWhoWindow")
+  -- No answer: the server drops a /who sent too soon after another, so the
+  -- name was never really asked and the next click may try again.
   if inFlight then
     inFlight = false
+    if inFlightNameKey ~= nil then
+      lastAskedAt[inFlightNameKey] = nil
+    end
     cleanup()
   end
 end
@@ -230,6 +236,7 @@ local function ask(rt, name, conversation)
   lastAskedAt[nameKey] = now(rt)
   lastSentAt = now(rt)
   inFlight = true
+  inFlightNameKey = nameKey
   local ok = pcall(sendQuery, string.match(name, "^[^-]+") or name)
   sendingOurs = false
   if not ok then
@@ -291,6 +298,7 @@ function WhoLookup._reset()
   closesAt = 0
   windowTimer = nil
   inFlight = false
+  inFlightNameKey = nil
   lastSentAt = nil
   previousWhoToUi = false
   lastAskedAt = {}
