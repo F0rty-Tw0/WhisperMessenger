@@ -553,6 +553,7 @@ local Italian = {
   -- Contact menu: Guild invite
   ["Guild invite"] = "Invita nella gilda",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Premi Ctrl+C per copiare il comando, poi incollalo nella chat.",
+  ["Read-only here. Reply in the game's Communities window."] = "Sola lettura. Rispondi nella finestra delle Comunità del gioco.",
 }
 
 ns.Locale_itIT = Italian

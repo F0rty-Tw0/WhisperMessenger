@@ -181,4 +181,24 @@ return function()
     local label = GroupLabel.LabelForChannelAndTitle(ChannelType.CHANNEL, nil, nil)
     assert(label == "Channel", "a channel chat without a name shows 'Channel', got: " .. tostring(label))
   end
+
+  -- test_community_label_has_club_and_stream
+  do
+    local label = GroupLabel.LabelForChannelAndTitle(ChannelType.COMMUNITY, "General", nil, "Raid Group")
+    assert(label == "Raid Group - General", "a community row names club and stream, got: " .. tostring(label))
+    local item = { channel = ChannelType.COMMUNITY, title = "General", clubName = "Raid Group" }
+    assert(GroupLabel.ForItem(item) == "Raid Group - General", "ForItem passes the club name through")
+  end
+
+  -- test_community_label_without_club_is_stream
+  do
+    assert(GroupLabel.LabelForChannelAndTitle(ChannelType.COMMUNITY, "General", nil, nil) == "General", "no club name shows the stream alone")
+    assert(GroupLabel.LabelForChannelAndTitle(ChannelType.COMMUNITY, "General", nil, "") == "General", "empty club name shows the stream alone")
+  end
+
+  -- test_community_label_same_names_shown_once
+  do
+    local label = GroupLabel.LabelForChannelAndTitle(ChannelType.COMMUNITY, "General", nil, "General")
+    assert(label == "General", "equal club and stream names show once, got: " .. tostring(label))
+  end
 end

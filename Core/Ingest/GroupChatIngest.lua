@@ -243,6 +243,9 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
       if type(payload.streamName) == "string" and payload.streamName ~= "" then
         conv.title = payload.streamName
       end
+      if type(payload.clubName) == "string" and payload.clubName ~= "" then
+        conv.clubName = payload.clubName
+      end
     end
     return true, conv, meta
   end

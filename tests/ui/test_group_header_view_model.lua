@@ -176,4 +176,11 @@ return function()
     assert(vm.title == "Trade", "channel chat header shows the channel's name, got: " .. tostring(vm.title))
     assert(vm.channelChip == "Channel", "the Channel chip stays beside the name, got: " .. tostring(vm.channelChip))
   end
+
+  -- test_community_header_names_club_and_stream
+  do
+    local contact = { displayName = "General", channel = ChannelType.COMMUNITY }
+    local vm = GroupHeaderViewModel.Build(contact, { title = "General", clubName = "Raid Group" })
+    assert(vm.title == "Raid Group - General", "community header names club and stream, got: " .. tostring(vm.title))
+  end
 end

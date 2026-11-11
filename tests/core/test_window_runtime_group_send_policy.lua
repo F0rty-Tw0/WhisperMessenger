@@ -16,7 +16,6 @@ return function()
     assert(policy.getNotice(nil) == nil, "nil conversation should have no notice")
     assert(policy.getNotice({ channel = "WOW" }) == nil, "WOW whisper should have no group notice")
     assert(policy.getNotice({ channel = "BN" }) == nil, "BN whisper should have no group notice")
-    assert(policy.getNotice({ channel = ChannelType.COMMUNITY }) == nil, "community is receive-only, not membership notice")
   end
 
   -- Foreign-character group histories are read-only.

@@ -553,6 +553,7 @@ local Russian = {
   -- Contact menu: Guild invite
   ["Guild invite"] = "Пригласить в гильдию",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Нажмите Ctrl+C, чтобы скопировать команду, затем вставьте её в чат.",
+  ["Read-only here. Reply in the game's Communities window."] = "Только для чтения. Отвечайте в окне сообществ игры.",
 }
 
 ns.Locale_ruRU = Russian

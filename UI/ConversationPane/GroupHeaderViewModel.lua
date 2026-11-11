@@ -49,7 +49,7 @@ function GroupHeaderViewModel.Build(contact, conversation)
 
   -- Group channel: derive label, hide presence/faction/status
   local convTitle = conversation and conversation.title or nil
-  local label = GroupLabel.LabelForChannelAndTitle(channel, convTitle, contact.displayName)
+  local label = GroupLabel.LabelForChannelAndTitle(channel, convTitle, contact.displayName, conversation and conversation.clubName)
   local fromAnotherCharacter = contact.ownerProfileId ~= nil and contact.ownerProfileId ~= ""
   -- GUILD: the conversation header shows the guild's name. Prefer the
   -- name stored on the conversation (always correct for account-wide

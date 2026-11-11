@@ -21,6 +21,9 @@ local WIDGET_SHAPE_KEYS = {
   "Circle",
   "Square",
 }
+local COMMUNITY_NOTICE_KEYS = {
+  "Read-only here. Reply in the game's Communities window.",
+}
 local CHANNEL_CONTEXT_KEYS = {
   "Show their last channel message",
   "When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it.",
@@ -162,6 +165,11 @@ return function()
 
     -- test_channel_context_strings_are_translated
     for _, key in ipairs(CHANNEL_CONTEXT_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_community_notice_is_translated
+    for _, key in ipairs(COMMUNITY_NOTICE_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 
