@@ -10,6 +10,7 @@ end
 
 return function()
   local flashes, sounds, autoOpens = 0, 0, 0
+  local lastSoundId
   local savedUnitName = _G.UnitName
   rawset(_G, "UnitName", function()
     return "Arthas"
@@ -17,8 +18,9 @@ return function()
   rawset(_G, "FlashClientIcon", function()
     flashes = flashes + 1
   end)
-  rawset(_G, "PlaySound", function()
+  rawset(_G, "PlaySound", function(soundId)
     sounds = sounds + 1
+    lastSoundId = soundId
   end)
 
   local runtime = {
@@ -50,6 +52,12 @@ return function()
   runtime.accountState.settings.flashTaskbarOnWhisper = false
   guildLine(runtime, "arthas!!")
   assert(flashes == 2 and sounds == 3, "flash setting off: sound only")
+
+  -- test_group_mention_uses_mention_sound
+  runtime.accountState.settings.notificationSound = "bell"
+  runtime.accountState.settings.mentionSound = "orb"
+  guildLine(runtime, "Arthas, ready?")
+  assert(sounds == 4 and lastSoundId == 32585, "a group mention plays the mention pick, got " .. tostring(lastSoundId))
 
   rawset(_G, "UnitName", savedUnitName)
   rawset(_G, "FlashClientIcon", nil)
