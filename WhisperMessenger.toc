@@ -57,6 +57,7 @@ Locale/zhTW.lua
 Locale/Localization.lua
 
 Model/Identity/Factions.lua
+Model/Identity/RaceTags.lua
 Model/Identity/ChannelType.lua
 Model/Identity/Identity.lua
 Model/ProfileCharacter.lua
