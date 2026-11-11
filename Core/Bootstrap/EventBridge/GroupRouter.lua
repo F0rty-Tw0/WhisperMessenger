@@ -10,6 +10,7 @@ local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ing
 local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
 local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
 local GroupRouter = {}
 
@@ -114,10 +115,15 @@ local function resolveClubName(clubId)
     return nil
   end
   local ok, info = pcall(clubApi.GetClubInfo, clubId)
-  if ok and type(info) == "table" and type(info.name) == "string" and info.name ~= "" then
-    return info.name
+  if not ok or type(info) ~= "table" then
+    return nil
   end
-  return nil
+  local name = info.name
+  -- A secret name raises on the comparison below, so check it first.
+  if type(name) ~= "string" or SecretValue.Is(name) or name == "" then
+    return nil
+  end
+  return name
 end
 
 function GroupRouter.RouteGroupEvent(runtime, eventName, ...)

@@ -45,9 +45,12 @@ return function()
     GetInfoFromLastCommunityChatLine = function()
       return { clubId = 11, streamId = 22, clubType = 1 }
     end,
-    GetClubInfo = function(_clubId)
+    GetClubInfo = function(clubId)
       if getInfoShouldRaise then
         error("club info unavailable")
+      end
+      if clubId ~= 11 then
+        return nil
       end
       return { name = "Raid Group" }
     end,
@@ -70,6 +73,32 @@ return function()
     communityLine(runtime)
     local conversation = assert(firstConversation(runtime), "line still ingested when club info raises")
     assert(conversation.clubName == nil, "no club name when lookup raises")
+    getInfoShouldRaise = false
+  end
+
+  -- test_failed_lookup_keeps_saved_club_name
+  do
+    local runtime = newRuntime()
+    communityLine(runtime)
+    getInfoShouldRaise = true
+    communityLine(runtime)
+    getInfoShouldRaise = false
+    local conversation = assert(firstConversation(runtime), "community line stored")
+    assert(conversation.clubName == "Raid Group", "saved club name kept, got " .. tostring(conversation.clubName))
+  end
+
+  -- test_secret_club_name_is_dropped
+  do
+    local savedIsSecret = _G.issecretvalue
+    rawset(_G, "issecretvalue", function(value)
+      return value == "Raid Group"
+    end)
+    local runtime = newRuntime()
+    local ok, err = pcall(communityLine, runtime)
+    rawset(_G, "issecretvalue", savedIsSecret)
+    assert(ok, "secret club name must not raise: " .. tostring(err))
+    local conversation = assert(firstConversation(runtime), "line still ingested with a secret club name")
+    assert(conversation.clubName == nil, "secret club name not stored, got " .. tostring(conversation.clubName))
   end
 
   rawset(_G, "C_Club", savedClub)
