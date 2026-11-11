@@ -106,6 +106,20 @@ local function resolveCommunityChatSource()
   return info.clubId, info.streamId, info.clubType
 end
 
+-- The community's own name, for "Community - Stream" labels. nil when the API
+-- is absent, throws, or returns no usable name.
+local function resolveClubName(clubId)
+  local clubApi = _G.C_Club
+  if type(clubApi) ~= "table" or type(clubApi.GetClubInfo) ~= "function" then
+    return nil
+  end
+  local ok, info = pcall(clubApi.GetClubInfo, clubId)
+  if ok and type(info) == "table" and type(info.name) == "string" and info.name ~= "" then
+    return info.name
+  end
+  return nil
+end
+
 function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
   if runtime == nil or not GROUP_EVENTS[eventName] then
     return false
@@ -131,7 +145,7 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
   -- Community chat resolution. Skip guild-type clubs because they also fire
   -- CHAT_MSG_GUILD / CHAT_MSG_OFFICER which are already handled, and we do
   -- not want duplicate threads or messages.
-  local clubId, streamId, streamName = nil, nil, nil
+  local clubId, streamId, streamName, clubName = nil, nil, nil, nil
   if eventName == "CHAT_MSG_COMMUNITIES_CHANNEL" then
     local cId, sId, clubType = resolveCommunityChatSource()
     if cId == nil or sId == nil then
@@ -143,6 +157,7 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     end
     clubId = tostring(cId)
     streamId = tostring(sId)
+    clubName = resolveClubName(cId)
     -- Prefer the bare stream base name over the full "Club: Stream" channelName.
     if type(channelBaseName) == "string" and channelBaseName ~= "" then
       streamName = channelBaseName
@@ -176,6 +191,7 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     clubId = clubId,
     streamId = streamId,
     streamName = streamName,
+    clubName = clubName,
     playerInfo = playerInfo,
   }
 
