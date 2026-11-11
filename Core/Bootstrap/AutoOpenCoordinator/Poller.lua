@@ -150,7 +150,7 @@ local function processEditBox(runtime, hooks, deps, interceptDeps, editBox, inKe
     return
   end
 
-  EditBoxInterop.interceptEditBox(runtime, hooks, interceptDeps, editBox)
+  EditBoxInterop.interceptEditBox(runtime, hooks, interceptDeps, editBox, inKeyPress)
 end
 
 function Poller.Install(runtime, hooks, deps)

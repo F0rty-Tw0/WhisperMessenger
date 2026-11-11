@@ -160,6 +160,16 @@ return function()
     assert(log.tells[1] and log.tells[1].hardware == true, "a typed /w is a key press")
   end)
 
+  -- The game's own handler runs first: on the space after "/w Name" it turns
+  -- the box into a whisper to Name and clears the text.
+  case("typed whisper the game already converted routes as a key press", nil, function(log, editBox)
+    editBox.attributes.chatType = "WHISPER"
+    editBox.attributes.tellTarget = "Thrall"
+    editBox.text = ""
+    editBox.scripts.OnTextChanged(editBox, true)
+    assert(log.tells[1] and log.tells[1].hardware == true, "a typed /w is a key press")
+  end)
+
   case("code-set slash whisper text routes nothing", nil, function(log, editBox)
     editBox.text = "/w Thrall "
     editBox.scripts.OnTextChanged(editBox, false)
