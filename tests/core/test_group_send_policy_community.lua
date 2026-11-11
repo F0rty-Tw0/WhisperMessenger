@@ -13,9 +13,6 @@ return function()
       chatGateway = ChatGateway,
     })
     local notice = policy.getNotice({ channel = ChannelType.COMMUNITY })
-    assert(
-      notice == "Read-only here. Reply in the game's Communities window.",
-      "community chat explains where to reply, got: " .. tostring(notice)
-    )
+    assert(notice == "Read-only here. Reply in the game's Communities window.", "community chat explains where to reply, got: " .. tostring(notice))
   end
 end
