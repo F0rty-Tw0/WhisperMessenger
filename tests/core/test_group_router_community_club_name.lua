@@ -6,7 +6,22 @@ local ConversationSnapshot = require("WhisperMessenger.Model.ConversationSnapsho
 -- "Raid Group - General". A failing club lookup never drops the line.
 
 local function communityLine(runtime)
-  return EventBridge.RouteGroupEvent(runtime, "CHAT_MSG_COMMUNITIES_CHANNEL", "hello", "Jaina-Area52", "", "Raid Group: General", "", "", 0, 0, "General", 0, 7, "Player-1-JAINA")
+  return EventBridge.RouteGroupEvent(
+    runtime,
+    "CHAT_MSG_COMMUNITIES_CHANNEL",
+    "hello",
+    "Jaina-Area52",
+    "",
+    "Raid Group: General",
+    "",
+    "",
+    0,
+    0,
+    "General",
+    0,
+    7,
+    "Player-1-JAINA"
+  )
 end
 
 local function newRuntime()
@@ -19,10 +34,8 @@ local function newRuntime()
 end
 
 local function firstConversation(runtime)
-  for _, conversation in pairs(runtime.store.conversations) do
-    return conversation
-  end
-  return nil
+  local _, conversation = next(runtime.store.conversations)
+  return conversation
 end
 
 return function()
