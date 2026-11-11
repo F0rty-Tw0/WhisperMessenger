@@ -138,6 +138,7 @@ Transport/BNetResolver/GameAccountProbe.lua
 Transport/BNetResolver/GuidFallback.lua
 Transport/BNetResolver.lua
 Transport/WhoFreshness.lua
+Transport/WhoBlock.lua
 Transport/WhoLookup.lua
 Core/WhoRow.lua
 Core/SeenLevelEvents/WhoLevels.lua
