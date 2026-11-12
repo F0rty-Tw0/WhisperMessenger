@@ -48,6 +48,7 @@ return function()
   do
     assert(GlyphCoverage.NeedsExtendedLatin("tűzőgép"), "ő and ű need it")
     assert(GlyphCoverage.NeedsExtendedLatin("Łódź"), "Polish letters need it")
+    assert(GlyphCoverage.NeedsExtendedLatin("ș"), "Latin Extended-B (Romanian) needs it")
     assert(not GlyphCoverage.NeedsExtendedLatin("árvíztükör"), "Latin-1 accents are in the default font")
     assert(not GlyphCoverage.NeedsExtendedLatin("plain"), "ASCII is fine")
     assert(not GlyphCoverage.NeedsExtendedLatin(nil), "nil is fine")
@@ -164,6 +165,26 @@ return function()
       "back on the base font, got " .. tostring(label:GetFontObject() and label:GetFontObject().name)
     )
     Fonts.Initialize("default")
+  end
+
+  -- test_other_language_display_keeps_its_font_chain_even_on_friz
+  do
+    local savedGetLocale = rawget(_G, "GetLocale")
+    rawset(_G, "GetLocale", function()
+      return "enUS"
+    end)
+    local tooltip = rawget(_G, "GameTooltipText")
+    local savedPath, savedSize, savedFlags = tooltip:GetFont()
+    -- On an enUS client the tooltip font is Friz Quadrata itself.
+    tooltip:SetFont("Fonts\\FRIZQT__.TTF", savedSize, savedFlags)
+    Fonts.Initialize("default")
+    Fonts.SetLanguage("ruRU")
+    local label = newLabel(factory, "WM_Highlight")
+    GlyphCoverage.Apply(label, "ő")
+    tooltip:SetFont(savedPath, savedSize, savedFlags)
+    rawset(_G, "GetLocale", savedGetLocale)
+    Fonts.Initialize("default")
+    assert(label:GetFontObject() == rawget(_G, "WM_Highlight"), "the multi-script font chain is kept whole")
   end
 
   -- test_apply_ignores_widgets_without_font_objects
