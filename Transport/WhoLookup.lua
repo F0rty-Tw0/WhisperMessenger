@@ -3,7 +3,6 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
 local WhoFreshness = ns.WhoFreshness or require("WhisperMessenger.Transport.WhoFreshness")
@@ -38,6 +37,8 @@ local lastSentAt = nil
 local previousWhoToUi = false
 local lastAskedAt = {}
 local sendingOurs = false
+-- The "Look up players with /who" option; a missing saved key counts as on.
+local lookupsEnabled = true
 
 -- The client clock: runtime.now is whole-second time(), which can read a
 -- 4 s gap as 5 s.
@@ -134,6 +135,14 @@ function WhoLookup.IsWindowOpen()
   return windowOpen
 end
 
+function WhoLookup.SetEnabled(on)
+  lookupsEnabled = on ~= false
+end
+
+function WhoLookup.IsEnabled()
+  return lookupsEnabled
+end
+
 function WhoLookup.OnWhoListUpdate()
   if not inFlight then
     return
@@ -159,7 +168,7 @@ local function onSendWho()
   if inFlight and not sendingOurs then
     forgetInFlight()
   end
-  if not DisplayName.ShowPlayerLevels() then
+  if not lookupsEnabled then
     return
   end
   WhoLookup.OpenWindow()
@@ -236,7 +245,7 @@ local function ask(rt, name, conversation)
 end
 
 function WhoLookup.TryFor(rt, conversationKey)
-  if rt == nil or not DisplayName.ShowPlayerLevels() then
+  if rt == nil or not lookupsEnabled then
     return false
   end
   local name, conversation = lookupName(rt, conversationKey)
@@ -252,7 +261,7 @@ function WhoLookup.TryForName(rt, name, conversationKey)
   if rt ~= nil and Store.Find(rt.store, conversationKey) ~= nil then
     return WhoLookup.TryFor(rt, conversationKey)
   end
-  if rt == nil or not DisplayName.ShowPlayerLevels() or type(name) ~= "string" then
+  if rt == nil or not lookupsEnabled or type(name) ~= "string" then
     return false
   end
   if string.find(name, "|K", 1, true) then
@@ -292,6 +301,7 @@ function WhoLookup._reset()
   previousWhoToUi = false
   lastAskedAt = {}
   sendingOurs = false
+  lookupsEnabled = true
 end
 
 ns.WhoLookup = WhoLookup

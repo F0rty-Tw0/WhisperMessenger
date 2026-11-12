@@ -87,7 +87,11 @@ local function boot(opts)
   installGame(env)
   local factory = FakeUI.NewFactory()
   installChatBox(env, factory)
-  local settings = { showPlayerLevels = opts.showPlayerLevels ~= false, autoOpenOutgoing = opts.autoOpenOutgoing ~= false }
+  local settings = {
+    showPlayerLevels = opts.showPlayerLevels ~= false,
+    whoLookups = opts.whoLookups,
+    autoOpenOutgoing = opts.autoOpenOutgoing ~= false,
+  }
   local accountState = { conversations = {}, contacts = {}, pendingHydration = {}, schemaVersion = 1, settings = settings }
   local characterState = {
     window = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0, width = 920, height = 580, minimized = false },
@@ -205,13 +209,18 @@ return function()
     assert(#env.sent == 0, "asked " .. #env.sent)
   end)
 
-  case("right-click with player levels off asks nothing", { showPlayerLevels = false }, function(env)
+  case("right-click with player levels off still asks", { showPlayerLevels = false }, function(env)
+    rightClickWhisper()
+    assert(#env.sent == 1 and env.sent[1].filter == 'n-"Firstmoon"', "asked " .. #env.sent)
+  end)
+
+  case("right-click with /who lookups off asks nothing", { whoLookups = false }, function(env)
     rightClickWhisper()
     drainTimers(env)
     assert(#env.sent == 0, "asked " .. #env.sent)
   end)
 
-  case("typed slash whisper with player levels off asks nothing", { showPlayerLevels = false }, function(env)
+  case("typed slash whisper with /who lookups off asks nothing", { whoLookups = false }, function(env)
     typeSlashWhisper(env)
     assert(#env.sent == 0, "asked " .. #env.sent)
   end)

@@ -1,5 +1,4 @@
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
-local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local Env = require("tests.helpers.who_lookup_env")
 
 local KEY = "me::WOW::firstmoon"
@@ -113,7 +112,7 @@ end
 local function test_skips()
   expectSkip("option off", function(env)
     Env.AddStranger(env, KEY, "Firstmoon")
-    DisplayName.Configure({ showPlayerLevels = false })
+    WhoLookup.SetEnabled(false)
   end)
   expectSkip("battle.net chat", function(env)
     Env.AddStranger(env, KEY, "Firstmoon", { channel = "BN" })

@@ -24,6 +24,7 @@ local DEFAULTS = {
   hideMessagePreview = false,
   hideBattleTagNumbers = true,
   showPlayerLevels = false,
+  whoLookups = true,
   timeFormat = "12h",
   timeSource = "local",
   interfaceLanguage = "auto",
@@ -91,6 +92,14 @@ function GeneralSettings.Create(factory, parent, config, options)
     -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
   )
 
+  local whoLookupsToggle = toggleRow(
+    "whoLookups",
+    "Look up players with /who",
+    "Fills in a player's zone, guild, class and online status with a quiet /who when you open a chat.",
+    config.whoLookups ~= false,
+    playerLevelsToggle.row
+  )
+
   local messagesRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
       label = text("Max Messages Per Chat"),
@@ -104,7 +113,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     }),
     { type = "slider", key = "maxMessagesPerConversation", default = DEFAULTS.maxMessagesPerConversation }
   )
-  messagesRow.row:SetPoint("TOPLEFT", playerLevelsToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+  messagesRow.row:SetPoint("TOPLEFT", whoLookupsToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local conversationsRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
@@ -244,6 +253,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     header.title:SetText(text("General Settings"))
     header.hint:SetText(text("Configure message storage, retention, and interface language."))
     playerLevelsToggle.label:SetText(text("Show player levels"))
+    whoLookupsToggle.label:SetText(text("Look up players with /who"))
     messagesRow.label:SetText(text("Max Messages Per Chat"))
     conversationsRow.label:SetText(text("Max Contacts"))
     retentionRow.setLanguage(interfaceLanguage)

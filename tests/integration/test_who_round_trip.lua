@@ -3,6 +3,7 @@ local Identity = require("WhisperMessenger.Model.Identity")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
+local SeenZone = require("WhisperMessenger.Model.SeenZone")
 local Env = require("tests.helpers.who_lookup_env")
 
 -- Real WhoLookup + SeenLevelEvents + SeenLevel wired the way Bootstrap does;
@@ -26,7 +27,7 @@ local function fire(event, ...)
   frame:GetScript("OnEvent")(frame, event, ...)
 end
 
-local function wire(env, results)
+local function wire(env, results, levelsOff)
   local runtime = env.runtime
   runtime.localProfileId = "me"
   runtime.refreshed = {}
@@ -43,7 +44,7 @@ local function wire(env, results)
   runtime.seenLevelEvents = SeenLevelEvents
   SeenLevelEvents._reset()
   SeenLevelEvents.Init(runtime)
-  SeenLevelEvents.SetEnabled(true)
+  SeenLevelEvents.SetEnabled(not levelsOff)
   WhoLookup.Init(runtime)
   local key = Identity.BuildConversationKey("me", "WOW::firstmoon")
   return key, Env.AddStranger(env, key, "Firstmoon")
@@ -84,8 +85,23 @@ local function test_option_off_mid_query_still_cleans_up()
   end)
 end
 
+local function test_levels_off_still_reads_the_who_answer()
+  Env.Case("levels off round trip", { whoToUi = false }, function(env)
+    DisplayName.Configure({ showPlayerLevels = false })
+    local key = wire(env, { { fullName = "Firstmoon", level = 75, area = "Dornogal" } }, true)
+    assert(WhoLookup.TryFor(env.runtime, key) == true, "quiet /who sent with levels off")
+    assertWhoEvents(true, "should be registered while the query is out")
+    assert(not isRegistered("PLAYER_TARGET_CHANGED"), "level sightings stay off")
+    fire("WHO_LIST_UPDATE")
+    assert(SeenZone.Get("Firstmoon") == "Dornogal", "the /who zone is recorded, got " .. tostring(SeenZone.Get("Firstmoon")))
+    Env.RunAfters(env)
+    assert(env.friendsRegistered == true, "FriendsFrame gets WHO_LIST_UPDATE back")
+  end)
+end
+
 return function()
   test_who_result_reaches_saved_chat_and_frees_friends_frame()
   test_option_off_mid_query_still_cleans_up()
+  test_levels_off_still_reads_the_who_answer()
   SeenLevelEvents._reset()
 end

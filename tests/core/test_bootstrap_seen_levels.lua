@@ -76,6 +76,22 @@ return function()
     assert(found, "Initialize should hook C_FriendList.SendWho")
   end
 
+  -- test_missing_who_lookups_key_turns_lookups_on
+
+  do
+    WhoLookup.SetEnabled(false)
+    initialize({})
+    assert(WhoLookup.IsEnabled() == true, "existing players without the key get lookups")
+  end
+
+  -- test_saved_who_lookups_off_keeps_lookups_off
+
+  do
+    initialize({ showPlayerLevels = true, whoLookups = false })
+    assert(WhoLookup.IsEnabled() == false, "a saved off choice keeps lookups off")
+    WhoLookup._reset()
+  end
+
   SeenLevelEvents._reset()
   DisplayName.Configure({ showPlayerLevels = false })
 end

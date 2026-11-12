@@ -1,5 +1,4 @@
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
-local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local Env = require("tests.helpers.who_lookup_env")
 
 local KEY = "me::WOW::firstmoon"
@@ -173,7 +172,7 @@ local function test_typed_who_ignored_when_suspended_or_off()
     assert(WhoLookup.IsWindowOpen() == false)
   end)
   Env.Case("option off", nil, function(env)
-    DisplayName.Configure({ showPlayerLevels = false })
+    WhoLookup.SetEnabled(false)
     findHook(env)("n-Someone")
     assert(WhoLookup.IsWindowOpen() == false)
   end)

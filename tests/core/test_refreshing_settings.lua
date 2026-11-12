@@ -4,6 +4,7 @@ local REFRESHING_KEYS = {
   "hideMessagePreview",
   "hideBattleTagNumbers",
   "showPlayerLevels",
+  "whoLookups",
   "showWidgetMessagePreview",
   "widgetPreviewReply",
   "fontFamily",

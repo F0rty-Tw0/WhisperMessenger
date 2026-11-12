@@ -90,12 +90,13 @@ return function()
     assert(isRegistered("PLAYER_TARGET_CHANGED"), "closing the who window keeps unit events")
   end
 
-  -- test_open_who_window_while_disabled_registers_nothing
+  -- test_open_who_window_with_levels_off_registers_who_events
   do
     reset()
     SeenLevelEvents.Init(makeRuntime({}))
     SeenLevelEvents.OpenWhoWindow()
-    assertWhoEvents(false, "should stay unregistered while recording is off")
+    assertWhoEvents(true, "a /who answer is read even with level recording off")
+    assert(not isRegistered("PLAYER_TARGET_CHANGED"), "unit events stay off with level recording off")
   end
 
   -- test_open_who_window_while_suspended_registers_nothing
@@ -120,7 +121,7 @@ return function()
     end
     assertWhoEvents(false, "should be unregistered when recording turns off")
     SeenLevelEvents.OpenWhoWindow()
-    assertWhoEvents(false, "a later who window should not register while off")
+    assertWhoEvents(true, "a later who window registers with level recording off")
   end
 
   -- test_re_enable_inside_who_window_registers_who_events
