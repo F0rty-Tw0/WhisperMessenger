@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
@@ -78,7 +79,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   )
 
   if selectedContact then
-    headerName:SetText(DisplayName.Format(selectedContact.displayName) or "")
+    headerName:SetText(GlyphCoverage.Apply(headerName, DisplayName.Format(selectedContact.displayName) or ""))
     UIHelpers.applyClassColor(headerName, selectedContact.classTag, Theme.COLORS.text_primary)
     headerName:Show()
   else
@@ -175,7 +176,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     if view.headerName then
       if hasContact then
         local title = (vm and vm.title) or (DisplayName.Format(selectedContact.displayName) or "")
-        view.headerName:SetText(HeaderContactExtras.Title(selectedContact, title, vm and vm.isGroup))
+        view.headerName:SetText(GlyphCoverage.Apply(view.headerName, HeaderContactExtras.Title(selectedContact, title, vm and vm.isGroup)))
         if vm and vm.isGroup then
           local groupClassTag = selectedContact.ownerClassTag
           if groupClassTag == nil and not selectedContact.ownerProfileId then
