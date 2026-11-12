@@ -8,12 +8,16 @@ local Availability = require("WhisperMessenger.Transport.Availability")
 -- A /who answer proves a WoW chat's player was online when it landed.
 local NOW = 100000
 
-local function enrich(item, availabilityByGUID)
-  AvailabilityEnricher.EnrichContactsAvailability({ item }, { availabilityByGUID = availabilityByGUID or {}, store = { conversations = {} } })
+local function enrich(item, availabilityByGUID, localFaction)
+  AvailabilityEnricher.EnrichContactsAvailability({ item }, {
+    availabilityByGUID = availabilityByGUID or {},
+    localFaction = localFaction,
+    store = { conversations = {} },
+  })
   return item
 end
 
-local function answeredAgo(seconds, fields, availabilityByGUID)
+local function answeredAgo(seconds, fields, availabilityByGUID, localFaction)
   PresenceCache._reset()
   SeenZone._reset()
   SeenZone.Record("Someone", "Stormwind", NOW - seconds)
@@ -21,7 +25,7 @@ local function answeredAgo(seconds, fields, availabilityByGUID)
   for field, value in pairs(fields or {}) do
     item[field] = value
   end
-  return enrich(item, availabilityByGUID)
+  return enrich(item, availabilityByGUID, localFaction)
 end
 
 local function status(item)
@@ -80,10 +84,23 @@ return function()
     assert(status(item) == "Offline", "a stale /who leaves the game's Offline, got " .. tostring(status(item)))
   end
 
-  -- test_guid_chat_cached_busy_kept_over_who
+  -- test_guid_chat_other_cached_statuses_kept_over_who
+  for _, kept in ipairs({ "Busy", "Away", "XFaction" }) do
+    local item = answeredAgo(0, { guid = "Player-1-AAA" }, { ["Player-1-AAA"] = Availability.FromStatus(kept) })
+    assert(status(item) == kept, "/who only replaces Offline: " .. kept .. " became " .. tostring(status(item)))
+  end
+
+  -- test_opposite_faction_wrong_faction_kept_over_who
   do
-    local item = answeredAgo(0, { guid = "Player-1-AAA" }, { ["Player-1-AAA"] = Availability.FromStatus("Busy") })
-    assert(status(item) == "Busy", "/who only replaces Offline, got " .. tostring(status(item)))
+    local cached = { ["Player-1-AAA"] = Availability.FromStatus("WrongFaction") }
+    local item = answeredAgo(0, { guid = "Player-1-AAA", factionName = "Alliance" }, cached, "Horde")
+    assert(status(item) == "WrongFaction", "/who must not say a blocked player is reachable, got " .. tostring(status(item)))
+  end
+
+  -- test_opposite_faction_who_answer_shows_xfaction
+  do
+    local item = answeredAgo(0, { factionName = "Alliance" }, nil, "Horde")
+    assert(status(item) == "XFaction", "an opposite-faction /who answer shows X-Faction, got " .. tostring(status(item)))
   end
 
   -- test_levels_option_off_no_online

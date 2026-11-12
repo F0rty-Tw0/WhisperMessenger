@@ -81,11 +81,12 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
       WoWStatus.ApplySeenZone(item)
     end
     -- A recent /who answer for the name proves the player is online. It
-    -- beats Offline too: on WoW: Forever a grouped player a /who had just
-    -- listed still showed Offline from the whisper check.
+    -- beats Offline too: on WoW: Forever a player a /who had just listed
+    -- still showed Offline from the whisper check.
     local status = item.availability and item.availability.status
     if item.channel == "WOW" and (status == nil or status == "Offline") and isFreshWhoAnswer(item) then
-      item.availability = Availability.FromStatus("CanWhisper")
+      local opposite = isOppositeFaction(item.factionName, runtime.localFaction)
+      item.availability = Availability.FromStatus(opposite and "XFaction" or "CanWhisper")
     end
     -- WoW contacts with no availability after all checks: default to Offline
     if item.availability == nil and item.channel ~= "BN" then
