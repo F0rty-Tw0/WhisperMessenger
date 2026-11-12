@@ -28,8 +28,9 @@ StatusLine.AVAILABILITY_DISPLAY = {
 }
 
 -- "Last online 2h" for Battle.net friends (Blizzard's time, nil while
--- online), else "Last seen 2h" from the newest of our own last-seen stamp and
--- the last whisper they sent. nil when no time is known.
+-- online), else "Last seen 2h" from the newest of our own last-seen stamp,
+-- the last whisper they sent and the last /who answer for them. nil when no
+-- time is known.
 local function lastSeenLabel(selectedContact)
   -- The relative text needs the game clock.
   if type(_G.time) ~= "function" then
@@ -39,7 +40,8 @@ local function lastSeenLabel(selectedContact)
     return string.format(Localization.Text("Last online %s"), TimeFormat.ContactPreview(selectedContact.lastOnlineTime))
   end
   local conversation = selectedContact.conversation or {}
-  local seenAt = math.max(tonumber(conversation.lastSeenAt) or 0, tonumber(conversation.lastIncomingAt) or 0)
+  local seenAt =
+    math.max(tonumber(conversation.lastSeenAt) or 0, tonumber(conversation.lastIncomingAt) or 0, tonumber(selectedContact.whoAreaAt) or 0)
   if seenAt <= 0 then
     return nil
   end
