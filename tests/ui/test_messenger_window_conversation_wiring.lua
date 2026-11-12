@@ -2,8 +2,9 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local ConversationWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ConversationWiring")
+local ChannelContextMerger = require("WhisperMessenger.UI.ConversationPane.ChannelContextMerger")
 
-local function makeWiring(windowOptions, nativeChrome)
+local function makeWiring(windowOptions, nativeChrome, settingsConfig)
   local factory = FakeUI.NewFactory()
   local threadPane = factory.CreateFrame("Frame", nil, nil)
   threadPane:SetSize(600, 400)
@@ -14,6 +15,7 @@ local function makeWiring(windowOptions, nativeChrome)
     windowOptions = windowOptions,
     nativeChrome = nativeChrome,
     tabMode = "whispers",
+    settingsConfig = settingsConfig,
   })
 end
 
@@ -85,5 +87,29 @@ return function()
       end,
     })
     assert(wiring.conversation.headerAddonBadge:IsShown() == false, "invite link is hidden from the first paint when invites are disabled")
+  end
+
+  -- test_first_render_honors_show_channel_context_off
+  do
+    local realForPane = ChannelContextMerger.ForPane
+    local seen = {}
+    ChannelContextMerger.ForPane = function(messages, selectedContact, conversation, enabled)
+      seen[#seen + 1] = enabled
+      return realForPane(messages, selectedContact, conversation, enabled)
+    end
+    makeWiring({}, nil, { showChannelContext = false })
+    ChannelContextMerger.ForPane = realForPane
+    assert(#seen >= 1 and seen[1] == false, "the pane's first render must see the option off, got " .. tostring(seen[1]))
+  end
+
+  -- test_pane_reads_show_channel_context_live
+  do
+    local settingsConfig = {}
+    local wiring = makeWiring({}, nil, settingsConfig)
+    assert(wiring.conversation.isChannelContextShown() == true, "shown by default")
+    settingsConfig.showChannelContext = false
+    assert(wiring.conversation.isChannelContextShown() == false, "reads the setting at call time, not at build time")
+    settingsConfig.showChannelContext = true
+    assert(wiring.conversation.isChannelContextShown() == true, "shown again once switched back on")
   end
 end

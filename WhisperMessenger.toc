@@ -57,6 +57,7 @@ Locale/zhTW.lua
 Locale/Localization.lua
 
 Model/Identity/Factions.lua
+Model/Identity/RaceTags.lua
 Model/Identity/ChannelType.lua
 Model/Identity/Identity.lua
 Model/ProfileCharacter.lua
@@ -136,10 +137,13 @@ Transport/BNetResolver/AccountName.lua
 Transport/BNetResolver/GameAccountProbe.lua
 Transport/BNetResolver/GuidFallback.lua
 Transport/BNetResolver.lua
+Transport/WhoFreshness.lua
+Transport/WhoBlock.lua
 Transport/WhoLookup.lua
 Core/WhoRow.lua
 Core/SeenLevelEvents/WhoLevels.lua
 Core/SeenLevelEvents/Guild.lua
+Core/SeenLevelEvents/WhoIdentity.lua
 Core/SeenLevelEvents.lua
 
 Core/LocalPlayer.lua
@@ -150,6 +154,7 @@ Core/Bootstrap/WindowRuntime/GroupSendPending.lua
 Core/Ingest/GroupChatIngest/PendingEcho.lua
 Core/Ingest/GroupChatIngest/Message.lua
 Core/Ingest/GroupChatIngest/ConversationKey.lua
+Core/Ingest/GroupChatIngest/InstanceName.lua
 Core/Ingest/GroupChatIngest.lua
 Core/Ingest/IncomingFilter.lua
 Core/Ingest/ChannelChatIngest.lua
@@ -510,6 +515,8 @@ Core/Bootstrap/LifecycleHandlers/Presence.lua
 Core/Bootstrap/LifecycleHandlers/GroupMembership.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua
+Core/Bootstrap/WindowRuntime/GameWhisperTab.lua
+Core/Bootstrap/GameChatRead.lua
 Core/Bootstrap/AutoOpenCoordinator/ConversationOps.lua
 Core/Bootstrap/AutoOpenCoordinator/EditBoxInterop.lua
 Core/Bootstrap/AutoOpenCoordinator/DirectHooks.lua
@@ -522,6 +529,8 @@ Core/Bootstrap/WindowRuntime/IntegrationSetting.lua
 Core/Bootstrap/WindowRuntime/LanguageSetting.lua
 Core/Bootstrap/WindowRuntime/DisplayNameSetting.lua
 Core/Bootstrap/WindowRuntime/TabVisibilitySetting.lua
+Core/Bootstrap/WindowRuntime/RefreshingSettings.lua
+Core/Bootstrap/WindowRuntime/EscapeSetting.lua
 Core/Bootstrap/WindowRuntime/IconSettingReactions.lua
 Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
@@ -532,7 +541,6 @@ Core/Bootstrap/WindowRuntime/IconPosition.lua
 Core/Bootstrap/WindowRuntime/PositionSlots.lua
 Core/Bootstrap/WindowRuntime/WhoTriggers.lua
 Core/Bootstrap/WindowRuntime/AddonAlerts.lua
-Core/Bootstrap/WindowRuntime/GameWhisperTab.lua
 Core/Bootstrap/WindowRuntime/ContactPrefsUpdate.lua
 Core/Bootstrap/WindowRuntime/WindowCallbacks.lua
 Core/Bootstrap/WindowRuntime/IconRuntime.lua

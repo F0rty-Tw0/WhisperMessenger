@@ -94,6 +94,7 @@ function LifecycleWiring.Setup(options)
     Theme = options.theme,
     composerInput = options.composerInput,
     getAutoFocusChatInput = options.getAutoFocusChatInput,
+    getEscapeClosesWindow = options.getEscapeClosesWindow,
     onStrataChanged = options.onStrataChanged,
     isWindowPart = options.isWindowPart,
     isContactsCollapsed = options.isContactsCollapsed,
@@ -104,6 +105,9 @@ function LifecycleWiring.Setup(options)
   end
   if frameResult and frameResult.applyWindowSize then
     scriptResult.applyWindowSize = frameResult.applyWindowSize
+  end
+  if frameResult and frameResult.refreshEscape then
+    scriptResult.refreshEscape = frameResult.refreshEscape
   end
 
   return relayoutWindow, scriptResult

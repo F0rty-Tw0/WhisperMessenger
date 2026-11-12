@@ -38,7 +38,7 @@ function ComposerRuntime.Create(factory, options)
   local composer = Composer.Create(factory, layout.composerPane, composerSelectedContact, windowOptions.onSend or function(...)
     local _ = ...
   end, options.closeWindow, function()
-    return settingsConfig.doubleEscapeToClose == true
+    return settingsConfig.doubleEscapeToClose == true or settingsConfig.escapeClosesWindow == false
   end, windowOptions.onTyping, composerOptions)
   options.settingsRuntime.setThemeTargets(conversation, composer)
   messageActions.bind(conversation, composer)

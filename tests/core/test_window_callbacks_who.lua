@@ -4,11 +4,12 @@ local WindowCallbacks = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.W
 
 local KEY = "wow::WOW::jaina"
 
-local function build()
+local function build(startConversation)
   local runtime = { store = Store.New({ maxMessagesPerConversation = 10 }) }
   Store.EnsureConversation(runtime.store, KEY)
   local callbacks = WindowCallbacks.Create({
     runtime = runtime,
+    startConversation = startConversation,
     characterState = {},
     refreshWindow = function() end,
     sendHandler = {
@@ -36,6 +37,31 @@ return function()
       assert(type(callbacks.onContactClicked) == "function", "onContactClicked exposed")
       callbacks.onContactClicked({ conversationKey = KEY })
       assert(#calls == 1 and calls[1].key == KEY and calls[1].runtime == runtime, "click asks who")
+    end
+
+    -- test_callbacks_expose_header_click_that_asks_who
+    do
+      calls = {}
+      local callbacks, runtime = build()
+      assert(type(callbacks.onHeaderClicked) == "function", "onHeaderClicked exposed")
+      callbacks.onHeaderClicked(KEY)
+      assert(#calls == 1 and calls[1].key == KEY and calls[1].runtime == runtime, "header click asks who")
+    end
+
+    -- test_start_conversation_passes_an_ask_that_reaches_who
+    do
+      calls = {}
+      local seenName, askWho
+      local callbacks, runtime = build(function(name, ask)
+        seenName = name
+        askWho = ask
+        return true
+      end)
+      assert(callbacks.onStartConversation("Jaina") == true, "start result is returned")
+      assert(seenName == "Jaina" and type(askWho) == "function", "a function is passed as the second argument")
+      assert(#calls == 0, "nothing asked until the start flow calls it")
+      askWho(KEY)
+      assert(#calls == 1 and calls[1].key == KEY and calls[1].runtime == runtime, "the callback asks who")
     end
 
     -- test_whisper_send_asks_who_then_reaches_send_handler

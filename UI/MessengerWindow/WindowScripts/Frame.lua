@@ -249,7 +249,7 @@ function Frame.WireFrame(refs, options)
     onPositionChanged = options.onPositionChanged,
   })
 
-  ScriptBindings.Bind({
+  local bindResult = ScriptBindings.Bind({
     frame = frame,
     resizeGrip = resizeGrip,
     contactsResizeHandle = contactsResizeHandle,
@@ -263,6 +263,7 @@ function Frame.WireFrame(refs, options)
     refreshWindowAlpha = options.refreshWindowAlpha,
     composerInput = options.composerInput,
     getAutoFocusChatInput = options.getAutoFocusChatInput,
+    getEscapeClosesWindow = options.getEscapeClosesWindow,
     onStrataChanged = options.onStrataChanged,
     isWindowPart = options.isWindowPart,
     buildState = options.buildState,
@@ -271,6 +272,7 @@ function Frame.WireFrame(refs, options)
   return {
     withSizeChangedRelayoutSuppressed = withSizeChangedRelayoutSuppressed,
     applyWindowSize = applyCommittedWindowSize,
+    refreshEscape = bindResult.refreshEscape,
   }
 end
 

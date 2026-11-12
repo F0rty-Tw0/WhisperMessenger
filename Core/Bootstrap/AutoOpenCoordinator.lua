@@ -8,6 +8,8 @@ local AutoOpenHooks = ns.BootstrapAutoOpenHooks or require("WhisperMessenger.Cor
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local ConversationOps = ns.BootstrapAutoOpenConversationOps or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 local Poller = ns.BootstrapAutoOpenPoller or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.Poller")
+local GameChatRead = ns.BootstrapGameChatRead or require("WhisperMessenger.Core.Bootstrap.GameChatRead")
+local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
 -- stylua: ignore end
 
 local AutoOpenCoordinator = {}
@@ -70,6 +72,16 @@ function AutoOpenCoordinator.Attach(options)
     ensureConversation = function(conversationKey, displayName)
       return ConversationOps.ensureConversation(runtime, conversationKey, displayName)
     end,
+    markRead = function(conversationKey)
+      return GameChatRead.Mark(runtime, conversationKey)
+    end,
+    -- Quiet /who for a whisper the player started with a click or key press.
+    askWho = function(conversationKey)
+      pcall(WhoLookup.TryFor, runtime, conversationKey)
+    end,
+    askWhoForName = function(playerName, conversationKey)
+      pcall(WhoLookup.TryForName, runtime, playerName, conversationKey)
+    end,
     getLastReplyKey = function()
       return runtime.lastIncomingWhisperKey
     end,
@@ -103,11 +115,13 @@ function AutoOpenCoordinator.Attach(options)
   runtime.autoOpenHooks = autoOpenHooks
 
   function controller.installPoller()
+    local isSuspended = options.isSuspended or function()
+      return _G._wmSuspended == true
+    end
+    GameChatRead.InstallTabHook(runtime, isSuspended)
     return Poller.Install(runtime, autoOpenHooks, {
       identity = identity,
-      isSuspended = options.isSuspended or function()
-        return _G._wmSuspended == true
-      end,
+      isSuspended = isSuspended,
       isInCombat = options.isInCombat or function()
         return type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown()
       end,

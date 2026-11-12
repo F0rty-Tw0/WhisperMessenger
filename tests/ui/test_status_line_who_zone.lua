@@ -58,6 +58,32 @@ return function()
     assert(dotColor == nil, "got " .. tostring(dotColor))
   end
 
+  -- test_offline_with_guid_last_seen_counts_who_answer
+  do
+    local contact = {
+      channel = "WOW",
+      guid = "Player-1-AAA",
+      whoArea = "Stormwind",
+      whoAreaAt = now - 720,
+      conversation = { lastSeenAt = now - 3300 },
+    }
+    local _, line2 = StatusLine.Build(contact, OFFLINE)
+    assert(line2:find("Last seen 12m", 1, true), "a newer /who answer is the last sighting, got " .. tostring(line2))
+  end
+
+  -- test_offline_with_guid_older_who_answer_keeps_last_seen
+  do
+    local contact = {
+      channel = "WOW",
+      guid = "Player-1-AAA",
+      whoArea = "Stormwind",
+      whoAreaAt = now - 7200,
+      conversation = { lastSeenAt = now - 720 },
+    }
+    local _, line2 = StatusLine.Build(contact, OFFLINE)
+    assert(line2:find("Last seen 12m", 1, true), "an older /who answer leaves Last seen, got " .. tostring(line2))
+  end
+
   -- test_offline_without_guid_without_who_zone_keeps_offline
   do
     local contact = { channel = "WOW", conversation = { lastSeenAt = now - 7200 } }

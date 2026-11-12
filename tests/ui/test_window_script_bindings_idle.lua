@@ -91,7 +91,7 @@ return function()
     timer.tickers[1].callback()
     assert(refreshCalls[2] == false, "expected alpha ticker to refresh window alpha")
 
-    frame:Show()
+    frame:GetScript("OnShow")(frame)
     assert(timer.newTickerCalls == 1, "expected repeated OnShow not to duplicate alpha ticker")
 
     frame:Hide()

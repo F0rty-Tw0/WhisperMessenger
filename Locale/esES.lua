@@ -159,6 +159,8 @@ local Spanish = {
   ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "Abre el mensajero al enviar un susurro o susurrar desde la lista de amigos. Desactivado en combate.",
   ["Hide on entering combat"] = "Ocultar al entrar en combate",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "Oculta el mensajero al comenzar el combate y lo vuelve a abrir al terminar. Si lo cierras tú durante el combate, se queda cerrado.",
+  ["Esc closes the window"] = "Esc cierra la ventana",
+  ["Turn off to keep the messenger open when you press Esc. Close it with its button or your Toggle Window key."] = "Desactívalo para que el mensajero siga abierto al pulsar Esc. Ciérralo con su botón o con tu tecla «Toggle Window».",
   ["Double ESC to close"] = "Doble ESC para cerrar",
   ["First Esc clears the chat input; second Esc closes the window."] = "El primer Esc borra la entrada; el segundo cierra la ventana.",
   ["Allow addon integration"] = "Permitir integración con addons",
@@ -196,6 +198,13 @@ local Spanish = {
   ["Play sound on new whisper"] = "Sonido al recibir un susurro",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "Reproduce un sonido cuando recibes un susurro. Elige el sonido a continuación.",
   ["Notification sound"] = "Sonido de notificación",
+  ["Play sound on message request"] = "Sonido al recibir una solicitud de mensaje",
+  ["Plays a sound when a whisper from a stranger lands in Requests. Pick the sound below."] = "Reproduce un sonido cuando un susurro de un desconocido llega a Solicitudes. Elige el sonido a continuación.",
+  ["Request sound"] = "Sonido de solicitud",
+  ["Mention sound"] = "Sonido de mención",
+  ["Play sound when you send a whisper"] = "Sonido al enviar un susurro",
+  ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "Reproduce un sonido cada vez que se envía un susurro que escribes aquí. Elige el sonido a continuación.",
+  ["Sent whisper sound"] = "Sonido de susurro enviado",
   ["Icon Size"] = "Tamaño del icono",
   ["Desaturate icon when idle"] = "Desaturar icono inactivo",
   ["Grays the back chat bubble when there are no unread messages."] = "Pone en gris la burbuja de chat de atrás cuando no hay mensajes sin leer.",
@@ -401,6 +410,8 @@ local Spanish = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Permite que los contactos que también usan Whisper Messenger vean cuándo has leído sus mensajes.",
   ["Show invite link"] = "Mostrar enlace de invitación",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "Muestra un enlace (Invitar a WM) en la cabecera del chat. Al pulsarlo, le susurras a ese jugador un breve mensaje sobre este addon.",
+  ["Show their last channel message"] = "Mostrar su último mensaje de canal",
+  ["When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it."] = "Cuando alguien te susurra, su última línea de un canal como Comercio aparece sobre el susurro. Desactívalo para ocultarla.",
   ["Close the game's whisper tab too"] = "Cerrar también la pestaña de susurros del juego",
   ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "Al eliminar un chat aquí, también se cierra la pestaña de susurros del propio juego para ese jugador. Solo influye si el juego abre los susurros en pestañas propias.",
   -- Drafts, new-messages divider, quick replies
@@ -542,6 +553,7 @@ local Spanish = {
   -- Contact menu: Guild invite
   ["Guild invite"] = "Invitar a la hermandad",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Pulsa Ctrl+C para copiar el comando y pégalo en el chat.",
+  ["Read-only here. Reply in the game's Communities window."] = "Solo lectura. Responde en la ventana de Comunidades del juego.",
 }
 
 ns.Locale_esES = Spanish

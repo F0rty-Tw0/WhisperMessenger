@@ -90,6 +90,8 @@ local function parseSlashReplyText(text)
   return body
 end
 
+-- Typing is not a hardware event for SendWho (ADDON_ACTION_BLOCKED in game),
+-- so nothing here asks the quiet /who.
 local function processEditBox(runtime, hooks, deps, interceptDeps, editBox)
   -- HARD BAIL before any Blizzard state read. During M+/encounters/PvP,
   -- any read of a chat edit box attribute can propagate secret-string
@@ -206,9 +208,22 @@ function Poller.Install(runtime, hooks, deps)
     end)
   end
 
+  -- Right-click Whisper: the chat opens a frame later, outside the click, so
+  -- the quiet /who goes out here, inside it. Bail checks come before the name.
+  local function handleSendTell(name)
+    if DirectHooks.shouldInterceptHook(runtime, deps) and type(hooks.askWhoForTell) == "function" then
+      pcall(function()
+        if type(name) == "string" and name ~= "" then
+          hooks.askWhoForTell(name)
+        end
+      end)
+    end
+    handleTellLauncher()
+  end
+
   local chatFrameUtil = _G.ChatFrameUtil
   if type(_G.hooksecurefunc) == "function" and type(chatFrameUtil) == "table" and type(chatFrameUtil.SendTellWithMessage) == "function" then
-    pcall(_G.hooksecurefunc, chatFrameUtil, "SendTellWithMessage", handleTellLauncher)
+    pcall(_G.hooksecurefunc, chatFrameUtil, "SendTellWithMessage", handleSendTell)
   end
 
   if type(_G.hooksecurefunc) == "function" and type(chatFrameUtil) == "table" and type(chatFrameUtil.SendBNetTell) == "function" then

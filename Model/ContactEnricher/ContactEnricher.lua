@@ -6,6 +6,7 @@ end
 -- stylua: ignore start
 local AvailabilityEnricher = ns.AvailabilityEnricher or require("WhisperMessenger.Model.ContactEnricher.AvailabilityEnricher")
 local Disambiguation = ns.ContactEnricherDisambiguation or require("WhisperMessenger.Model.ContactEnricher.Disambiguation")
+local WoWStatus = ns.ContactEnricherWoWStatus or require("WhisperMessenger.Model.ContactEnricher.WoWStatus")
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
@@ -57,7 +58,7 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
 
   -- WoW contacts: use cached availability from CAN_LOCAL_WHISPER_TARGET_RESPONSE
   if conversation and conversation.guid and runtime.availabilityByGUID[conversation.guid] then
-    local cached = runtime.availabilityByGUID[conversation.guid]
+    local cached = WoWStatus.ResolveGuild(runtime.availabilityByGUID[conversation.guid], conversation.factionName, runtime.localFaction)
     local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
     local isOpposite = AvailabilityEnricher.isOppositeFaction(conversation.factionName, runtime.localFaction)
 
@@ -71,9 +72,12 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
       return cached
     end
 
-    if cached.status == "WrongFaction" then
-      -- Build a minimal item for Disambiguation (guid + displayName for group-member check)
-      return Disambiguation.ResolveWrongFaction({ guid = conversation.guid, displayName = conversation.displayName }, runtime, false)
+    if cached.status == "WrongFaction" or cached.status == "Offline" then
+      -- Build a minimal item for Disambiguation (guid + displayName for group-member check).
+      -- Offline stays Offline without proof of life; WrongFaction falls back to CanWhisper.
+      local fallbackStatus = cached.status == "Offline" and "Offline" or nil
+
+      return Disambiguation.ResolveWrongFaction({ guid = conversation.guid, displayName = conversation.displayName }, runtime, false, fallbackStatus)
     end
     return cached
   end

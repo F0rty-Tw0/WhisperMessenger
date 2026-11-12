@@ -10,6 +10,7 @@ local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ing
 local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
 local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
 local GroupRouter = {}
 
@@ -106,6 +107,25 @@ local function resolveCommunityChatSource()
   return info.clubId, info.streamId, info.clubType
 end
 
+-- The community's own name, for "Community - Stream" labels. nil when the API
+-- is absent, throws, or returns no usable name.
+local function resolveClubName(clubId)
+  local clubApi = _G.C_Club
+  if type(clubApi) ~= "table" or type(clubApi.GetClubInfo) ~= "function" then
+    return nil
+  end
+  local ok, info = pcall(clubApi.GetClubInfo, clubId)
+  if not ok or type(info) ~= "table" then
+    return nil
+  end
+  local name = info.name
+  -- A secret name raises on the comparison below, so check it first.
+  if type(name) ~= "string" or SecretValue.Is(name) or name == "" then
+    return nil
+  end
+  return name
+end
+
 function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
   if runtime == nil or not GROUP_EVENTS[eventName] then
     return false
@@ -131,7 +151,7 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
   -- Community chat resolution. Skip guild-type clubs because they also fire
   -- CHAT_MSG_GUILD / CHAT_MSG_OFFICER which are already handled, and we do
   -- not want duplicate threads or messages.
-  local clubId, streamId, streamName = nil, nil, nil
+  local clubId, streamId, streamName, clubName = nil, nil, nil, nil
   if eventName == "CHAT_MSG_COMMUNITIES_CHANNEL" then
     local cId, sId, clubType = resolveCommunityChatSource()
     if cId == nil or sId == nil then
@@ -143,6 +163,7 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     end
     clubId = tostring(cId)
     streamId = tostring(sId)
+    clubName = resolveClubName(cId)
     -- Prefer the bare stream base name over the full "Club: Stream" channelName.
     if type(channelBaseName) == "string" and channelBaseName ~= "" then
       streamName = channelBaseName
@@ -176,6 +197,7 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     clubId = clubId,
     streamId = streamId,
     streamName = streamName,
+    clubName = clubName,
     playerInfo = playerInfo,
   }
 
@@ -191,7 +213,7 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
   -- Only a line naming the player alerts in group chats (sound + flash, no
   -- popup or auto-open), even when the chat is muted.
   if meta and meta.mention then
-    IncomingAlerts.Notify(runtime.accountState and runtime.accountState.settings)
+    IncomingAlerts.Notify(runtime.accountState and runtime.accountState.settings, "mention")
   end
   -- Coalesced: a busy chat must not rebuild the window per line. The
   -- scheduler ignores lines while the window is hidden.

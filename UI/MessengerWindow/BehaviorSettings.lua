@@ -22,6 +22,14 @@ end
 
 local DEFAULTS = ToggleSpecs.DEFAULTS
 
+local function rowOfKey(toggleSpecs, toggles, key)
+  for index, spec in ipairs(toggleSpecs) do
+    if spec.key == key then
+      return toggles[index].row
+    end
+  end
+end
+
 function BehaviorSettings.Create(factory, parent, config, options)
   local onChange = options.onChange or function(...)
     local _ = ...
@@ -36,12 +44,31 @@ function BehaviorSettings.Create(factory, parent, config, options)
   })
   local hint = header.hint
 
-  local toggleSpecs = ToggleSpecs.Build(config, onChange)
+  -- Double ESC only matters while Esc closes the window; it keeps its value while greyed.
+  local escOn = config.escapeClosesWindow ~= false
+  local refreshAvailability
+
+  -- Toggle clicks and Reset to Defaults both land here, so Double ESC follows Esc at once.
+  local function changed(key, value)
+    if key == "escapeClosesWindow" then
+      escOn = value
+      refreshAvailability()
+    end
+    onChange(key, value)
+  end
+
+  local toggleSpecs = ToggleSpecs.Build(config, changed)
 
   local toggles = SettingsControls.BuildToggleList(factory, frame, hint, toggleSpecs)
 
   local panel = SettingsControls.NewPanelRegistry()
   SettingsControls.BindToggleSpecs(panel, toggles, toggleSpecs, DEFAULTS)
+
+  local doubleEsc = UIHelpers.attachDisabledState(factory, rowOfKey(toggleSpecs, toggles, "doubleEscapeToClose"))
+  refreshAvailability = function()
+    doubleEsc.set(escOn, nil)
+  end
+  refreshAvailability()
 
   -- Not bound to Reset to Defaults: the ticks are per addon, not a page default.
   local list = options.integrations
@@ -72,7 +99,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
   )
   resetButton:SetPoint("TOPLEFT", quickReplies.bottom, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
-    panel:reset(onChange)
+    panel:reset(changed)
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)

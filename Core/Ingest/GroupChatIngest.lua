@@ -12,6 +12,7 @@ local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.
 local PendingEcho = ns.GroupChatIngestPendingEcho or require("WhisperMessenger.Core.Ingest.GroupChatIngest.PendingEcho")
 local Message = ns.GroupChatIngestMessage or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Message")
 local ConversationKey = ns.GroupChatIngestConversationKey or require("WhisperMessenger.Core.Ingest.GroupChatIngest.ConversationKey")
+local InstanceName = ns.GroupChatIngestInstanceName or require("WhisperMessenger.Core.Ingest.GroupChatIngest.InstanceName")
 local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 -- stylua: ignore end
@@ -242,6 +243,9 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
       if type(payload.streamName) == "string" and payload.streamName ~= "" then
         conv.title = payload.streamName
       end
+      if type(payload.clubName) == "string" and payload.clubName ~= "" then
+        conv.clubName = payload.clubName
+      end
     end
     return true, conv, meta
   end
@@ -264,6 +268,9 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
     conv.ownerProfileId = state.localProfileId
     conv.groupCategory = groupCategory
     conv.partyGUID = partyGUID
+    if conv.instanceName == nil then
+      conv.instanceName = InstanceName.Current()
+    end
   end
 
   -- Stamp the conversation record with the guild's display name

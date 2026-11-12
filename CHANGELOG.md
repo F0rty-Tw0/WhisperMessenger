@@ -6,6 +6,18 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+- New option under Whispers: hide the player's last channel message that shows above a new whisper.
+- Party, raid and instance chats now show the dungeon, raid or battleground they started in, e.g. "Party - Halls of Atonement - Current".
+- New sound options under Notifications: pick a different sound for mentions, and turn on a sound for whispers you send (off by default).
+- Community chats now show the community's name, and say that replies go through the game's Communities window instead of looking like you could type there.
+- Reading a whisper in the game's own chat now clears it in Whisper Messenger too: click the game's whisper tab for that player, or start a whisper to them there.
+- New option under Notifications: play a sound when a whisper lands in Requests, with its own sound so you can tell it apart from a friend's whisper. Off by default.
+- New Behavior option "Esc closes the window". Turn it off to keep Whisper Messenger open when you press Esc; close it with its button or your Toggle Window key. Dying or opening a big game panel no longer closes it either while the option is off.
+- With "Show player levels" on, opening a chat by clicking a contact, the message preview, or the Whisper Messenger button or minimap icon, by pressing your Reply or Toggle Window key, starting a new whisper, clicking the chat header, or right-clicking a player and choosing Whisper now refreshes that player's level, zone and guild when the info is more than 10 minutes old. Before, a player was looked up only once. The game ignores lookups sent too close together; when that happens, your next click on the chat tries again instead of waiting 10 minutes.
+- That lookup now also fills in the player's class, race and faction in the chat header. A player the lookup finds now shows as Online, with the zone they're in, for 10 minutes, even when the game's own check said they were offline. After that, "Last seen" counts the lookup too.
+- Fixed: players who are offline no longer show as online in your contact list and chat header, and cross-faction guild or community members who are online no longer show as offline.
+- Fixed: with the compact window open, Craft Alert no longer pops its own alert at the top of the screen for a new lead. The Craft Alert tab shows the new lead, and if you close the window soon after, the preview shows on the button.
+
 ## [2.1.6] - 2026-11-10
 
 - The message preview can now be detached: pick "Detached" under Preview Position and drag the card anywhere on screen. It keeps its spot after a reload, and with both the widget and the minimap button on you get just one preview.

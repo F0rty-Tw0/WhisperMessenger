@@ -159,6 +159,8 @@ local German = {
   ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "Öffnet den Messenger beim Senden eines Flüsterns oder beim Flüstern aus der Freundesliste. Im Kampf deaktiviert.",
   ["Hide on entering combat"] = "Beim Kampfbeginn ausblenden",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "Blendet den Messenger beim Kampfbeginn aus und öffnet ihn nach dem Kampf wieder. Schließt du ihn während des Kampfes selbst, bleibt er geschlossen.",
+  ["Esc closes the window"] = "Esc schließt das Fenster",
+  ["Turn off to keep the messenger open when you press Esc. Close it with its button or your Toggle Window key."] = "Ausschalten, damit der Messenger bei Esc geöffnet bleibt. Schließe ihn mit seiner Schaltfläche oder deiner Taste „Toggle Window“.",
   ["Double ESC to close"] = "Doppel-ESC zum Schließen",
   ["First Esc clears the chat input; second Esc closes the window."] = "Erstes Esc leert das Eingabefeld, zweites Esc schließt das Fenster.",
   ["Allow addon integration"] = "Addon-Integration erlauben",
@@ -196,6 +198,13 @@ local German = {
   ["Play sound on new whisper"] = "Ton bei neuem Flüstern",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "Spielt einen Ton bei eingehendem Flüstern. Wähle unten den gewünschten Ton.",
   ["Notification sound"] = "Benachrichtigungston",
+  ["Play sound on message request"] = "Ton bei Nachrichtenanfrage",
+  ["Plays a sound when a whisper from a stranger lands in Requests. Pick the sound below."] = "Spielt einen Ton, wenn ein Flüstern von einem Fremden unter Anfragen landet. Wähle unten den Ton.",
+  ["Request sound"] = "Anfragenton",
+  ["Mention sound"] = "Erwähnungston",
+  ["Play sound when you send a whisper"] = "Ton beim Senden eines Flüsterns",
+  ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "Spielt jedes Mal einen Ton, wenn ein hier geschriebenes Flüstern gesendet wird. Wähle unten den Ton.",
+  ["Sent whisper sound"] = "Ton für gesendetes Flüstern",
   ["Icon Size"] = "Symbolgröße",
   ["Desaturate icon when idle"] = "Symbol entsättigen, wenn ungelesen",
   ["Grays the back chat bubble when there are no unread messages."] = "Färbt die hintere Sprechblase grau, wenn keine ungelesenen Nachrichten vorliegen.",
@@ -401,6 +410,8 @@ local German = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Kontakte, die ebenfalls Whisper Messenger nutzen, sehen, wenn du ihre Nachrichten gelesen hast.",
   ["Show invite link"] = "Einladungslink anzeigen",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "Zeigt im Chat-Kopf einen Link (Zu WM einladen). Ein Klick darauf flüstert dem Spieler eine kurze Nachricht über dieses Addon.",
+  ["Show their last channel message"] = "Letzte Kanalnachricht anzeigen",
+  ["When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it."] = "Wenn dir jemand flüstert, erscheint seine letzte Zeile aus einem Kanal wie Handel über dem Flüstern. Deaktiviere dies, um sie auszublenden.",
   ["Close the game's whisper tab too"] = "Auch den Flüstertab des Spiels schließen",
   ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "Wenn du hier einen Chat entfernst, schließt sich auch der Flüstertab des Spiels für diesen Spieler. Wirkt nur, wenn das Spiel Flüstern in eigenen Tabs öffnet.",
   -- Drafts, new-messages divider, quick replies
@@ -542,6 +553,7 @@ local German = {
   -- Contact menu: Guild invite
   ["Guild invite"] = "In Gilde einladen",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Strg+C drücken, um den Befehl zu kopieren, und ihn dann in den Chat einfügen.",
+  ["Read-only here. Reply in the game's Communities window."] = "Nur lesbar. Antworte im Community-Fenster des Spiels.",
 }
 
 ns.Locale_deDE = German

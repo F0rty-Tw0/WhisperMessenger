@@ -80,6 +80,7 @@ function RuntimeBindings.Apply(options)
 
   runtime.icon = icon
   runtime.toggle = controller.toggle
+  runtime.toggleTargetKey = options.toggleTargetKey
   runtime.refreshWindow = controller.refreshWindow
   runtime.ensureWindow = controller.ensureWindow
   runtime.isWindowVisible = controller.isWindowVisible

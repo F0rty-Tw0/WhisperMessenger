@@ -90,15 +90,20 @@ local function createHoverGlow(frame)
   return glow
 end
 
+-- Returns true when the mask was added; a texture without AddMaskTexture
+-- (or no texture) stays unmasked and returns false.
 local function addMask(texture, mask)
-  if texture and texture.AddMaskTexture then
-    texture:AddMaskTexture(mask)
+  if not (texture and texture.AddMaskTexture) then
+    return false
   end
+  texture:AddMaskTexture(mask)
+  return true
 end
 
 -- Rounds the square's corners: one mask over the frame, added once to the
 -- square's textures (kept on the circle, where they are hidden or a circle
--- that fits inside it), and the gold frame swapped for its rounded art.
+-- that fits inside it), and the gold frame swapped for its rounded art once
+-- the frame itself took the mask.
 -- Returns the mask, or nil on a client without mask textures (sharp square).
 local function roundCorners(frame, textures, squareFrame)
   if not frame.CreateMaskTexture then
@@ -110,8 +115,7 @@ local function roundCorners(frame, textures, squareFrame)
   for _, texture in ipairs(textures) do
     addMask(texture, mask)
   end
-  if squareFrame then
-    addMask(squareFrame, mask)
+  if squareFrame and addMask(squareFrame, mask) then
     squareFrame:SetTexture(IconBorder.SQUARE_FRAME_ROUNDED_TEXTURE)
   end
   return mask

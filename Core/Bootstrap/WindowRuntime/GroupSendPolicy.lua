@@ -103,9 +103,10 @@ function GroupSendPolicy.Create(options)
       return nil
     end
 
-    -- COMMUNITY is receive-only but not a group membership issue.
+    -- COMMUNITY is receive-only: replies go through the Communities window.
     if channel == ChannelType.COMMUNITY then
-      return nil
+      return Localization and Localization.Text("Read-only here. Reply in the game's Communities window.")
+        or "Read-only here. Reply in the game's Communities window."
     end
 
     -- Foreign-character group history is read-only from this character.

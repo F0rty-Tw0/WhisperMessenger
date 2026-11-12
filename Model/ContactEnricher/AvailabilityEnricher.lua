@@ -55,6 +55,13 @@ local function stampLastSeen(item, runtime)
   OnlineWatch.StampSeen(runtime, Store.Find(runtime.store, item.conversationKey))
 end
 
+-- whoAreaAt is time() seconds; WhoFreshness loads after this file.
+local function isFreshWhoAnswer(item)
+  local WhoFreshness = ns.WhoFreshness or require("WhisperMessenger.Transport.WhoFreshness")
+  local answeredAt = item.whoAreaAt
+  return type(answeredAt) == "number" and _G.time() - answeredAt < WhoFreshness.STALE_SECONDS
+end
+
 function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
   local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
   for _, item in ipairs(contacts) do
@@ -72,6 +79,14 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
     if item.channel == "WOW" then
       WoWStatus.ApplySeenLevel(item, runtime)
       WoWStatus.ApplySeenZone(item)
+    end
+    -- A recent /who answer for the name proves the player is online. It
+    -- beats Offline too: on WoW: Forever a player a /who had just listed
+    -- still showed Offline from the whisper check.
+    local status = item.availability and item.availability.status
+    if item.channel == "WOW" and (status == nil or status == "Offline") and isFreshWhoAnswer(item) then
+      local opposite = isOppositeFaction(item.factionName, runtime.localFaction)
+      item.availability = Availability.FromStatus(opposite and "XFaction" or "CanWhisper")
     end
     -- WoW contacts with no availability after all checks: default to Offline
     if item.availability == nil and item.channel ~= "BN" then

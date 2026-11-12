@@ -23,14 +23,21 @@ local function spyMenu()
   }, calls
 end
 
--- Binds a header whose name is under (or not under) the mouse.
+-- Binds a header whose name is under (or not under) the mouse. Returns the
+-- window, the header, the whoPlayer names, the menu calls, the keys passed to
+-- onHeaderClicked and the view.
 local function setup(factory, contact, overName, withWho)
   local window, header = buildChain(factory)
   local nameText = factory.CreateFrame("Frame", nil, header)
   nameText.mouseOver = overName
-  local view = { headerName = nameText, _selectedContact = contact }
+  local view = { headerName = nameText, _selectedContact = contact, _selectedConversationKey = "wow::jaina" }
   local whoNames = {}
-  local options = {}
+  local headerClicks = {}
+  local options = {
+    onHeaderClicked = function(conversationKey)
+      headerClicks[#headerClicks + 1] = conversationKey
+    end,
+  }
   if withWho ~= false then
     options.whoPlayer = function(name)
       whoNames[#whoNames + 1] = name
@@ -39,7 +46,7 @@ local function setup(factory, contact, overName, withWho)
   end
   local menu, menuCalls = spyMenu()
   HeaderMenu.Bind(header, view, options, menu)
-  return window, header, whoNames, menuCalls
+  return window, header, whoNames, menuCalls, headerClicks, view
 end
 
 return function()
@@ -115,6 +122,62 @@ return function()
     local _, header, whoNames, menuCalls = setup(factory, wowContact, true)
     fire(header, "OnMouseUp", "RightButton")
     assert(#menuCalls == 1 and #whoNames == 0, "right-click should open the menu, not /who")
+  end)
+
+  -- test_plain_left_click_asks_quiet_who
+  withShift(false, function()
+    local _, header, _, _, headerClicks = setup(factory, wowContact, true)
+    fire(header, "OnMouseUp", "LeftButton")
+    assert(#headerClicks == 1 and headerClicks[1] == "wow::jaina", "plain left-click should ask for the shown chat")
+  end)
+
+  -- test_plain_left_click_off_the_name_asks_quiet_who
+  withShift(false, function()
+    local _, header, _, _, headerClicks = setup(factory, wowContact, false)
+    fire(header, "OnMouseUp", "LeftButton")
+    assert(#headerClicks == 1, "the whole header takes the click, not only the name")
+  end)
+
+  -- test_shift_click_on_name_sends_only_visible_who
+  withShift(true, function()
+    local _, header, whoNames, _, headerClicks = setup(factory, wowContact, true)
+    fire(header, "OnMouseUp", "LeftButton")
+    assert(#whoNames == 1 and #headerClicks == 0, "shift-click on the name is the visible /who only")
+  end)
+
+  -- test_drag_then_mouse_up_asks_nothing
+  withShift(false, function()
+    local _, header, _, _, headerClicks = setup(factory, wowContact, true)
+    fire(header, "OnMouseDown", "LeftButton")
+    fire(header, "OnDragStart")
+    fire(header, "OnMouseUp", "LeftButton")
+    assert(#headerClicks == 0, "releasing after a window drag should not ask")
+    fire(header, "OnMouseDown", "LeftButton")
+    fire(header, "OnMouseUp", "LeftButton")
+    assert(#headerClicks == 1, "a fresh click after a drag should ask")
+  end)
+
+  -- test_right_click_opens_menu_without_asking
+  withShift(false, function()
+    local _, header, _, menuCalls, headerClicks = setup(factory, wowContact, true)
+    fire(header, "OnMouseUp", "RightButton")
+    assert(#menuCalls == 1 and #headerClicks == 0, "right-click opens the menu and asks nothing")
+  end)
+
+  -- test_no_selected_chat_asks_nothing
+  withShift(false, function()
+    local _, header, _, _, headerClicks, view = setup(factory, wowContact, true)
+    view._selectedConversationKey = nil
+    fire(header, "OnMouseUp", "LeftButton")
+    assert(#headerClicks == 0, "no shown chat, nothing to ask for")
+  end)
+
+  -- test_missing_header_click_callback_is_a_no_op
+  withShift(false, function()
+    local _, header, _, _, _, view = setup(factory, wowContact, true)
+    view._selectedConversationKey = "wow::jaina"
+    HeaderMenu.Bind(header, view, {}, nil)
+    fire(header, "OnMouseUp", "LeftButton")
   end)
 
   -- test_missing_who_callback_is_a_no_op

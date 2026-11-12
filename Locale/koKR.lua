@@ -159,6 +159,8 @@ local Korean = {
   ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "귓속말을 보내거나 친구 목록에서 귓속말을 보낼 때 메신저를 엽니다. 전투 중에는 비활성화됩니다.",
   ["Hide on entering combat"] = "전투 시작 시 숨기기",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "전투가 시작되면 메신저를 숨기고 전투가 끝나면 다시 엽니다. 전투 중에 직접 닫으면 닫힌 상태로 유지됩니다.",
+  ["Esc closes the window"] = "Esc로 창 닫기",
+  ["Turn off to keep the messenger open when you press Esc. Close it with its button or your Toggle Window key."] = "끄면 Esc를 눌러도 메신저가 열린 채로 유지됩니다. 메신저의 버튼이나 'Toggle Window' 키로 닫을 수 있습니다.",
   ["Double ESC to close"] = "더블 ESC로 닫기",
   ["First Esc clears the chat input; second Esc closes the window."] = "첫 번째 Esc는 입력을 지우고, 두 번째는 창을 닫습니다.",
   ["Allow addon integration"] = "애드온 연동 허용",
@@ -196,6 +198,13 @@ local Korean = {
   ["Play sound on new whisper"] = "새 귓속말 시 소리 재생",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "새 귓속말을 받으면 알림 소리를 재생합니다. 아래에서 소리를 선택하세요.",
   ["Notification sound"] = "알림 소리",
+  ["Play sound on message request"] = "메시지 요청 시 소리 재생",
+  ["Plays a sound when a whisper from a stranger lands in Requests. Pick the sound below."] = "낯선 사람의 귓속말이 요청에 들어오면 소리를 재생합니다. 아래에서 소리를 선택하세요.",
+  ["Request sound"] = "요청 소리",
+  ["Mention sound"] = "언급 소리",
+  ["Play sound when you send a whisper"] = "귓속말 전송 시 소리 재생",
+  ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "여기에서 작성한 귓속말이 전송될 때마다 소리를 재생합니다. 아래에서 소리를 선택하세요.",
+  ["Sent whisper sound"] = "보낸 귓속말 소리",
   ["Icon Size"] = "아이콘 크기",
   ["Desaturate icon when idle"] = "비활성 시 아이콘 흑백",
   ["Grays the back chat bubble when there are no unread messages."] = "읽지 않은 메시지가 없을 때 뒤쪽 채팅 말풍선을 회색으로 표시합니다.",
@@ -401,6 +410,8 @@ local Korean = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Whisper Messenger를 사용하는 상대에게 내가 귓속말을 읽었음을 보여줍니다.",
   ["Show invite link"] = "초대 링크 표시",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "채팅 상단에 (WM 초대) 링크를 표시합니다. 클릭하면 해당 플레이어에게 이 애드온을 소개하는 짧은 귓속말을 보냅니다.",
+  ["Show their last channel message"] = "상대의 마지막 채널 메시지 표시",
+  ["When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it."] = "누군가 귓속말을 보내면 거래 같은 채널에서 그 사람이 남긴 마지막 메시지가 귓속말 위에 표시됩니다. 끄면 숨겨집니다.",
   ["Close the game's whisper tab too"] = "게임의 귓속말 탭도 닫기",
   ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "여기서 대화를 삭제하면 해당 플레이어의 게임 귓속말 탭도 함께 닫힙니다. 게임이 귓속말을 별도 탭으로 열 때만 적용됩니다.",
   -- Drafts, new-messages divider, quick replies
@@ -542,6 +553,7 @@ local Korean = {
   -- Contact menu: Guild invite
   ["Guild invite"] = "길드 초대",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Ctrl+C를 눌러 명령어를 복사한 다음 대화창에 붙여넣으세요.",
+  ["Read-only here. Reply in the game's Communities window."] = "여기서는 읽기 전용입니다. 게임의 커뮤니티 창에서 답장하세요.",
 }
 
 ns.Locale_koKR = Korean

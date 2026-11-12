@@ -4,23 +4,53 @@ if type(ns) ~= "table" then
 end
 
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
+local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
 
 -- Sound + taskbar flash for an alerting message: a whisper that passed
 -- AlertPolicy.ShouldAlert, or a group line mentioning the player.
 local IncomingAlerts = {}
 
--- The notification sound alone, when the player turned it on.
-function IncomingAlerts.PlaySound(settings)
-  if type(settings) == "table" and settings.playSoundOnWhisper == true then
+IncomingAlerts.REQUEST_SOUND_DEFAULT = "ping"
+IncomingAlerts.SENT_SOUND_DEFAULT = "chime"
+
+-- A request the player asked to hear: inbox on, sound on, not muted.
+function IncomingAlerts.IsAudibleRequest(conversation, settings)
+  return type(conversation) == "table"
+    and type(settings) == "table"
+    and MessageRequests.IsRequest(conversation, settings)
+    and conversation.muted ~= true
+    and settings.playSoundOnRequest == true
+end
+
+function IncomingAlerts.PlayRequestSound(settings)
+  SoundPlayer.PlayKey(settings.requestSound or IncomingAlerts.REQUEST_SOUND_DEFAULT)
+end
+
+-- The notification sound alone, when the player turned it on. A mention
+-- plays its own pick; unset, it plays the whisper pick.
+function IncomingAlerts.PlaySound(settings, kind)
+  if type(settings) ~= "table" or settings.playSoundOnWhisper ~= true then
+    return
+  end
+  if kind == "mention" then
+    SoundPlayer.PlayKey(settings.mentionSound or settings.notificationSound or SoundPlayer.DEFAULT_SOUND_KEY)
+  else
     SoundPlayer.Play(settings)
   end
 end
 
-function IncomingAlerts.Notify(settings)
+-- A whisper sent from the window, when the player turned its sound on.
+function IncomingAlerts.PlaySentSound(settings)
+  if type(settings) == "table" and settings.playSoundOnSend == true then
+    SoundPlayer.PlayKey(settings.sentSound or IncomingAlerts.SENT_SOUND_DEFAULT)
+  end
+end
+
+function IncomingAlerts.Notify(settings, kind)
   if type(settings) ~= "table" then
     return
   end
-  IncomingAlerts.PlaySound(settings)
+  IncomingAlerts.PlaySound(settings, kind)
   -- Blizzard's chat frame flashes the taskbar icon itself, but never sees
   -- whispers hidden from the default chat. Default on; a second flash from
   -- Blizzard is harmless.

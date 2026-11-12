@@ -129,6 +129,46 @@ return function()
     assert(GroupLabel.LabelForSession(ChannelType.BN_CONVERSATION, false, nil, 123) == "Battle.net Group", "BN_CONVERSATION must stay unchanged")
   end
 
+  -- test_session_label_includes_instance_name_current
+  do
+    local label = GroupLabel.LabelForSession(ChannelType.PARTY, false, nil, 0, "Halls of Atonement")
+    assert(label == "Party - Halls of Atonement - Current", "a current party row names its instance, got: " .. tostring(label))
+  end
+
+  -- test_session_label_includes_instance_name_with_stamp
+  do
+    local timestamp = os.time({ year = 2026, month = 12, day = 9, hour = 23, min = 33, sec = 0 })
+    TimeFormat.Configure({ timeFormat = "24h", timeSource = "local" })
+    local label = GroupLabel.LabelForSession(ChannelType.INSTANCE_CHAT, true, nil, timestamp, "Warsong Gulch")
+    TimeFormat.Configure({ timeFormat = "12h", timeSource = "local" })
+    assert(label == "Instance (BG) - Warsong Gulch - 23:33 09/12", "a closed row puts the instance before the stamp, got: " .. tostring(label))
+  end
+
+  -- test_left_group_without_stamp_shows_instance_name_only
+  do
+    local label = GroupLabel.LabelForSession(ChannelType.INSTANCE_CHAT, true, nil, 0, "Warsong Gulch")
+    assert(label == "Instance (BG) - Warsong Gulch", "a left group without a stamp shows channel and instance, got: " .. tostring(label))
+  end
+
+  -- test_empty_instance_name_keeps_todays_label
+  do
+    local label = GroupLabel.LabelForSession(ChannelType.PARTY, false, nil, 0, "")
+    assert(label == "Party - Current", "an empty instance name changes nothing, got: " .. tostring(label))
+  end
+
+  -- test_guild_label_ignores_instance_name
+  do
+    local label = GroupLabel.LabelForSession(ChannelType.GUILD, false, nil, 123, "Halls of Atonement")
+    assert(label == "Guild", "GUILD never shows an instance name, got: " .. tostring(label))
+  end
+
+  -- test_for_item_passes_instance_name
+  do
+    local item = { channel = ChannelType.RAID, leftGroup = false, instanceName = "Castle Nathria", lastActivityAt = 0 }
+    local label = GroupLabel.ForItem(item)
+    assert(label == "Raid - Castle Nathria - Current", "a raid row names its instance, got: " .. tostring(label))
+  end
+
   -- test_channel_row_shows_the_channel_name
   do
     local item = { channel = ChannelType.CHANNEL, displayName = "Trade", title = nil }
@@ -140,5 +180,25 @@ return function()
   do
     local label = GroupLabel.LabelForChannelAndTitle(ChannelType.CHANNEL, nil, nil)
     assert(label == "Channel", "a channel chat without a name shows 'Channel', got: " .. tostring(label))
+  end
+
+  -- test_community_label_has_club_and_stream
+  do
+    local label = GroupLabel.LabelForChannelAndTitle(ChannelType.COMMUNITY, "General", nil, "Raid Group")
+    assert(label == "Raid Group - General", "a community row names club and stream, got: " .. tostring(label))
+    local item = { channel = ChannelType.COMMUNITY, title = "General", clubName = "Raid Group" }
+    assert(GroupLabel.ForItem(item) == "Raid Group - General", "ForItem passes the club name through")
+  end
+
+  -- test_community_label_without_club_is_stream
+  do
+    assert(GroupLabel.LabelForChannelAndTitle(ChannelType.COMMUNITY, "General", nil, nil) == "General", "no club name shows the stream alone")
+    assert(GroupLabel.LabelForChannelAndTitle(ChannelType.COMMUNITY, "General", nil, "") == "General", "empty club name shows the stream alone")
+  end
+
+  -- test_community_label_same_names_shown_once
+  do
+    local label = GroupLabel.LabelForChannelAndTitle(ChannelType.COMMUNITY, "General", nil, "General")
+    assert(label == "General", "equal club and stream names show once, got: " .. tostring(label))
   end
 end

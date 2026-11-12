@@ -15,6 +15,25 @@ local function widget(state, factoryOptions)
   })
 end
 
+-- Frames keep CreateMaskTexture; every texture they create lacks AddMaskTexture.
+local function withoutAddMaskTexture(factory)
+  local createFrame = factory.CreateFrame
+  return {
+    CreateFrame = function(...)
+      local frame = createFrame(...)
+      local createTexture = frame.CreateTexture
+      if createTexture then
+        frame.CreateTexture = function(self, ...)
+          local texture = createTexture(self, ...)
+          texture.AddMaskTexture = nil
+          return texture
+        end
+      end
+      return frame
+    end,
+  }
+end
+
 local function maskedTextures(icon)
   local list = { icon.background, icon.squareBackdrop, icon.squareHover, icon.squarePushed, icon.squareFrame }
   for _, edges in ipairs({ icon.squareHoverEdges, icon.squarePushedEdges }) do
@@ -81,6 +100,17 @@ return function()
     for index, texture in ipairs(unmaskedTextures(icon)) do
       assert(texture.masks == nil, "unmasked texture " .. index .. " not masked")
     end
+  end
+
+  -- test_unmaskable_square_frame_keeps_sharp_art
+  do
+    local icon = ToggleIcon.Create(withoutAddMaskTexture(FakeUI.NewFactory({ masks = true })), {
+      getWidgetShape = function()
+        return "square"
+      end,
+    })
+    assert(icon.squareMask ~= nil, "frames still create the mask")
+    assert(icon.squareFrame.texturePath == IconBorder.SQUARE_FRAME_TEXTURE, "sharp frame, got " .. tostring(icon.squareFrame.texturePath))
   end
 
   -- test_circle_keeps_the_mask_and_hides_the_frame

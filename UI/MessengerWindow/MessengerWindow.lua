@@ -73,6 +73,7 @@ function MessengerWindow.Create(factory, options)
     windowOptions = options,
     nativeChrome = shell.nativeChrome,
     tabMode = contactsRuntime.getTabMode(),
+    settingsConfig = settingsConfig,
   })
   conversation = conversationWiring.conversation
   local messageActions = conversationWiring.messageActions
@@ -169,6 +170,9 @@ function MessengerWindow.Create(factory, options)
     composerInput = composerInput,
     getAutoFocusChatInput = function()
       return not isComposerFocusHeld() and settingsConfig.autoFocusComposer == true and not compactMode.isListView()
+    end,
+    getEscapeClosesWindow = function()
+      return settingsConfig.escapeClosesWindow ~= false
     end,
     onStrataChanged = function(strata)
       dock.onStrataChanged(strata)
@@ -282,6 +286,7 @@ function MessengerWindow.Create(factory, options)
     panelHost = panelHost,
     windowVisibility = windowVisibility,
     showWithoutComposerFocus = composerRuntime.showWithoutComposerFocus,
+    refreshEscapeSetting = scriptResult.refreshEscape,
     compactMode = compactLayout and compactMode or nil,
     dock = dock.dock,
     applySavedState = applySavedState,

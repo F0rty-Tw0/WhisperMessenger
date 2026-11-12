@@ -159,6 +159,8 @@ local Russian = {
   ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "Открывает мессенджер при отправке шепота или шепоте из списка друзей. Отключено в бою.",
   ["Hide on entering combat"] = "Скрывать при вступлении в бой",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "Скрывает мессенджер в начале боя и снова открывает его после боя. Если закрыть его самостоятельно во время боя, он останется закрытым.",
+  ["Esc closes the window"] = "Esc закрывает окно",
+  ["Turn off to keep the messenger open when you press Esc. Close it with its button or your Toggle Window key."] = "Отключите, чтобы мессенджер оставался открытым при нажатии Esc. Закройте его кнопкой окна или клавишей «Toggle Window».",
   ["Double ESC to close"] = "Двойной ESC для закрытия",
   ["First Esc clears the chat input; second Esc closes the window."] = "Первый Esc очищает ввод, второй закрывает окно.",
   ["Allow addon integration"] = "Разрешить интеграцию аддонов",
@@ -196,6 +198,13 @@ local Russian = {
   ["Play sound on new whisper"] = "Звук при новом шепоте",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "Проигрывает звук при новом шепоте. Выберите звук ниже.",
   ["Notification sound"] = "Звук уведомления",
+  ["Play sound on message request"] = "Звук при запросе сообщения",
+  ["Plays a sound when a whisper from a stranger lands in Requests. Pick the sound below."] = "Проигрывает звук, когда шепот от незнакомца попадает в «Запросы». Выберите звук ниже.",
+  ["Request sound"] = "Звук запроса",
+  ["Mention sound"] = "Звук упоминания",
+  ["Play sound when you send a whisper"] = "Звук при отправке шепота",
+  ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "Проигрывает звук каждый раз, когда отправляется шепот, написанный здесь. Выберите звук ниже.",
+  ["Sent whisper sound"] = "Звук отправленного шепота",
   ["Icon Size"] = "Размер значка",
   ["Desaturate icon when idle"] = "Обесцвечивать значок в покое",
   ["Grays the back chat bubble when there are no unread messages."] = "Делает серым заднее облачко чата, когда нет непрочитанных сообщений.",
@@ -401,6 +410,8 @@ local Russian = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Контакты, у которых тоже есть Whisper Messenger, видят, когда вы прочитали их сообщения.",
   ["Show invite link"] = "Показывать ссылку-приглашение",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "Показывает ссылку (Пригласить в WM) в заголовке чата. Нажатие отправляет этому игроку короткое личное сообщение об этом аддоне.",
+  ["Show their last channel message"] = "Показывать последнее сообщение из канала",
+  ["When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it."] = "Когда вам шепчет игрок, его последняя строка из канала, например Торговли, показывается над шепотом. Отключите, чтобы скрыть её.",
   ["Close the game's whisper tab too"] = "Закрывать и вкладку шепота в игре",
   ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "Когда вы удаляете здесь чат, вкладка шепота этого игрока в чате игры тоже закрывается. Действует, только если игра открывает шепот в отдельных вкладках.",
   -- Drafts, new-messages divider, quick replies
@@ -542,6 +553,7 @@ local Russian = {
   -- Contact menu: Guild invite
   ["Guild invite"] = "Пригласить в гильдию",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Нажмите Ctrl+C, чтобы скопировать команду, затем вставьте её в чат.",
+  ["Read-only here. Reply in the game's Communities window."] = "Только для чтения. Отвечайте в окне сообществ игры.",
 }
 
 ns.Locale_ruRU = Russian

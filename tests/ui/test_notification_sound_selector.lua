@@ -127,5 +127,14 @@ return function()
     assert(#FindUI.dropdownOptions(selector.row) == 20, "opening the menu picks up sounds shared since the panel was built")
   end
 
+  -- test_label_text_option_overrides_label
+  do
+    local factory = FakeUI.NewFactory()
+    local parent = factory.CreateFrame("Frame", "UIParent", nil)
+    SoundSelector.Create(factory, parent, { labelText = "Request sound" })
+    assert(FindUI.byLabel(parent, "Request sound") ~= nil, "labelText replaces the default label")
+    assert(FindUI.text(parent, "Notification sound") == nil, "the default label is not drawn as well")
+  end
+
   print("  All notification sound selector tests passed")
 end

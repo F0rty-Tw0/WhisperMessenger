@@ -110,8 +110,9 @@ function DirectHooks.Install(runtime, hooks, deps)
         end
       end)
     else
-      -- Default path: ChatFrame_SendTell and resolved whisper targets route by name.
-      opened = hooks.onSendTell(target) == true
+      -- Default path: ChatFrame_SendTell and resolved whisper targets route by
+      -- name, inside the player's click, so the quiet /who may go out.
+      opened = hooks.onSendTell(target, true) == true
     end
 
     if opened and editBox then

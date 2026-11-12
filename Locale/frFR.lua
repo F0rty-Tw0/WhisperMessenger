@@ -159,6 +159,8 @@ local French = {
   ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "Ouvre la fenêtre à l'envoi d'un chuchotement ou depuis la liste d'amis. Désactivé en combat.",
   ["Hide on entering combat"] = "Masquer en entrant en combat",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "Masque le messager au début du combat et le rouvre à la fin du combat. Si vous le fermez vous-même pendant le combat, il reste fermé.",
+  ["Esc closes the window"] = "Esc ferme la fenêtre",
+  ["Turn off to keep the messenger open when you press Esc. Close it with its button or your Toggle Window key."] = "Désactivez pour garder le messager ouvert quand vous appuyez sur Esc. Fermez-le avec son bouton ou votre touche « Toggle Window ».",
   ["Double ESC to close"] = "Double ESC pour fermer",
   ["First Esc clears the chat input; second Esc closes the window."] = "Premier Esc efface la saisie ; second Esc ferme la fenêtre.",
   ["Allow addon integration"] = "Autoriser l'intégration des addons",
@@ -196,6 +198,13 @@ local French = {
   ["Play sound on new whisper"] = "Son lors d'un nouveau chuchotement",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "Joue un son lors d'un nouveau chuchotement. Choisissez le son ci-dessous.",
   ["Notification sound"] = "Son de notification",
+  ["Play sound on message request"] = "Son lors d'une demande de message",
+  ["Plays a sound when a whisper from a stranger lands in Requests. Pick the sound below."] = "Joue un son lorsqu'un chuchotement d'un inconnu arrive dans Demandes. Choisissez le son ci-dessous.",
+  ["Request sound"] = "Son des demandes",
+  ["Mention sound"] = "Son des mentions",
+  ["Play sound when you send a whisper"] = "Son lors de l'envoi d'un chuchotement",
+  ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "Joue un son chaque fois qu'un chuchotement que vous écrivez ici est envoyé. Choisissez le son ci-dessous.",
+  ["Sent whisper sound"] = "Son du chuchotement envoyé",
   ["Icon Size"] = "Taille de l'icône",
   ["Desaturate icon when idle"] = "Désaturer l'icône au repos",
   ["Grays the back chat bubble when there are no unread messages."] = "Grise la bulle de discussion arrière quand il n'y a pas de messages non lus.",
@@ -401,6 +410,8 @@ local French = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Permet aux contacts qui utilisent aussi Whisper Messenger de voir quand vous avez lu leurs messages.",
   ["Show invite link"] = "Afficher le lien d'invitation",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "Affiche un lien (Inviter sur WM) dans l'en-tête du chat. Un clic chuchote à ce joueur un court message sur cet addon.",
+  ["Show their last channel message"] = "Afficher son dernier message de canal",
+  ["When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it."] = "Quand quelqu'un vous chuchote, sa dernière ligne d'un canal comme Commerce s'affiche au-dessus du chuchotement. Désactivez cette option pour la masquer.",
   ["Close the game's whisper tab too"] = "Fermer aussi l'onglet de chuchotement du jeu",
   ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "Quand vous supprimez une discussion ici, l'onglet de chuchotement du jeu pour ce joueur se ferme aussi. Utile seulement si le jeu ouvre les chuchotements dans leurs propres onglets.",
   -- Drafts, new-messages divider, quick replies
@@ -542,6 +553,7 @@ local French = {
   -- Contact menu: Guild invite
   ["Guild invite"] = "Inviter dans la guilde",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Appuyez sur Ctrl+C pour copier la commande, puis collez-la dans le chat.",
+  ["Read-only here. Reply in the game's Communities window."] = "Lecture seule ici. Répondez dans la fenêtre des communautés du jeu.",
 }
 
 ns.Locale_frFR = French

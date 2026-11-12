@@ -81,6 +81,8 @@ local function applyIncomingEffects(runtime, result)
     and not IncomingAlerts.Throttled(runtime, type(result) == "table" and result.conversationKey or nil, now)
   if shouldAlert then
     IncomingAlerts.Notify(settings)
+  elseif IncomingAlerts.IsAudibleRequest(result, settings) and not IncomingAlerts.Throttled(runtime, result.conversationKey, now) then
+    IncomingAlerts.PlayRequestSound(settings)
   end
   if result and result.conversationKey then
     runtime.lastIncomingWhisperKey = result.conversationKey

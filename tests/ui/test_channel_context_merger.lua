@@ -152,4 +152,85 @@ return function()
     local result = ChannelContextMerger.Merge(messages, { displayName = "Trade", channel = "CHANNEL" }, makeDeps(state))
     assert(result == messages, "a channel chat gets its messages back unchanged")
   end
+
+  ----------------------------------------------------------------------------
+  -- Show channel context off: nothing is merged, nothing is saved, saved lines
+  -- are hidden (not deleted), and turning it back on shows them again.
+  ----------------------------------------------------------------------------
+  local function countContext(messages)
+    local count = 0
+    for _, message in ipairs(messages) do
+      if message.kind == "channel_context" then
+        count = count + 1
+      end
+    end
+    return count
+  end
+
+  local function disabledDeps(state, conversation)
+    local deps = makeDeps(state)
+    deps.enabled = false
+    deps.conversation = conversation
+    return deps
+  end
+
+  -- test_disabled_merges_nothing
+  do
+    local state = ChannelMessageStore.New()
+    ChannelMessageStore.Record(state, "Off-Realm", "WTS ore", "Trade", 9500)
+    local whispers = { { id = "1", sentAt = 9000, kind = "user" } }
+    local result = ChannelContextMerger.Merge(whispers, { displayName = "Off-Realm" }, disabledDeps(state))
+    assert(countContext(result) == 0, "enabled = false must not merge a channel line")
+  end
+
+  -- test_disabled_persists_nothing
+  do
+    local state = ChannelMessageStore.New()
+    ChannelMessageStore.Record(state, "Keep-Realm", "WTS ore", "Trade", 9500)
+    local conversation = { channel = "WOW", messages = { { id = "1", sentAt = 9000, kind = "user" } } }
+    ChannelContextMerger.Merge(conversation.messages, { displayName = "Keep-Realm" }, disabledDeps(state, conversation))
+    assert(#conversation.messages == 1, "enabled = false must not save a channel line into the conversation")
+  end
+
+  -- test_disabled_hides_saved_context_line
+  do
+    local state = ChannelMessageStore.New()
+    local saved = { id = "channel-ctx-9500", kind = "channel_context", text = "old", sentAt = 9500 }
+    local conversation = { channel = "WOW", messages = { { id = "1", sentAt = 9000, kind = "user" }, saved } }
+    local result = ChannelContextMerger.Merge(conversation.messages, { displayName = "Hide-Realm" }, disabledDeps(state, conversation))
+    assert(countContext(result) == 0, "a saved channel line must be hidden while disabled")
+    assert(#result == 1 and result[1].id == "1", "the other messages must stay")
+    assert(#conversation.messages == 2 and conversation.messages[2] == saved, "the stored conversation must keep the saved line")
+  end
+
+  -- test_disabled_without_context_returns_same_table
+  do
+    local state = ChannelMessageStore.New()
+    local whispers = { { id = "1", sentAt = 9000, kind = "user" } }
+    local result = ChannelContextMerger.Merge(whispers, { displayName = "Plain-Realm" }, disabledDeps(state))
+    assert(result == whispers, "no channel line to hide: the same table comes back")
+  end
+
+  -- test_reenabled_shows_saved_line_again
+  do
+    local state = ChannelMessageStore.New()
+    local saved = { id = "channel-ctx-9500", kind = "channel_context", text = "old", sentAt = 9500 }
+    local conversation = { channel = "WOW", messages = { { id = "1", sentAt = 9000, kind = "user" }, saved } }
+    local contact = { displayName = "Back-Realm" }
+    ChannelContextMerger.Merge(conversation.messages, contact, disabledDeps(state, conversation))
+
+    local deps = makeDeps(state)
+    deps.enabled = true
+    deps.conversation = conversation
+    local result = ChannelContextMerger.Merge(conversation.messages, contact, deps)
+    assert(countContext(result) == 1, "re-enabled: the saved channel line shows again")
+  end
+
+  -- test_for_pane_passes_enabled_to_merge
+  do
+    local saved = { id = "channel-ctx-9500", kind = "channel_context", text = "old", sentAt = 9500 }
+    local messages = { { id = "1", sentAt = 9000, kind = "user" }, saved }
+    local result = ChannelContextMerger.ForPane(messages, { displayName = "Pane-Realm" }, { messages = messages }, false)
+    assert(countContext(result) == 0, "ForPane with the option off must hide the saved channel line")
+  end
 end

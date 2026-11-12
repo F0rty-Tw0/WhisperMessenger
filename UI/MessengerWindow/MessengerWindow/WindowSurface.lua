@@ -52,7 +52,7 @@ end
 -- parts: chrome, layout, settingsRuntime, settingsResult, contactsRuntime,
 -- conversation, composer, refreshSelection, handleContactSelected, setScale,
 -- relayoutCurrentSize, refreshLanguage, showWithoutComposerFocus, and
--- optionally panelHost + windowVisibility (addon panels),
+-- optionally refreshEscapeSetting, panelHost + windowVisibility (addon panels),
 -- applySavedState(state) (moves the open window to a shared saved state).
 function WindowSurface.Build(parts)
   local chrome = parts.chrome
@@ -135,6 +135,7 @@ function WindowSurface.Build(parts)
     setScale = parts.setScale,
     refreshLanguage = parts.refreshLanguage,
     showWithoutComposerFocus = parts.showWithoutComposerFocus,
+    refreshEscapeSetting = parts.refreshEscapeSetting,
     refreshTabToggleVisibility = contactsRuntime.refreshTabToggleVisibility,
     setTabMode = contactsRuntime.setTabMode,
     getTabMode = contactsRuntime.getTabMode,

@@ -16,11 +16,11 @@ local function test_open_with_switch_on_and_a_source()
     assert(w.frame:GetAlpha() == 0 and w.ghost:IsShown() and Rig.running(w.ghost), style .. ": grows from the icon")
     Rig.tick(w.ghost, STEP * 2)
     local width = w.ghost.width
-    w.frame:Show() -- Opening: ignored
+    Rig.parentShows(w.frame) -- Opening: ignored
     Rig.tick(w.ghost, STEP)
     assert(w.ghost.width > width, style .. ": same run, not restarted")
     Rig.tick(w.ghost, DONE)
-    w.frame:Show() -- Open: ignored
+    Rig.parentShows(w.frame) -- Open: ignored
     settled(w, style .. " open stays open")
     w.frame:Hide() -- Open -> Closing
     Rig.tick(w.ghost, STEP * 2)
@@ -38,7 +38,7 @@ local function test_open_with_switch_off_or_no_source()
     apply(w)
     w.frame:Show() -- Closed
     settled(w, label .. ", from closed")
-    w.frame:Show() -- Open: ignored
+    Rig.parentShows(w.frame) -- Open: ignored
     settled(w, label .. ", shown again")
   end)
   eachInstant(function(w, label, apply)
@@ -111,7 +111,7 @@ local function test_alt_z_hide_and_show()
     open(w)
     Rig.parentHides(w.frame)
     settled(w, style .. " parent hid an open window")
-    w.frame:Show()
+    Rig.parentShows(w.frame)
     settled(w, style .. " and it came back")
   end)
   eachStyle(function(w, style)
@@ -120,7 +120,7 @@ local function test_alt_z_hide_and_show()
     local width = w.ghost.width
     Rig.parentHides(w.frame)
     assert(w.ghost:IsShown() and Rig.running(w.ghost) and w.ghost.width == width, style .. ": the grow keeps its state")
-    w.frame:Show()
+    Rig.parentShows(w.frame)
     assert(w.ghost.width == width, style .. ": no replay from a point")
     Rig.tick(w.ghost, STEP)
     assert(w.ghost.width > width, style .. ": the same run carries on")

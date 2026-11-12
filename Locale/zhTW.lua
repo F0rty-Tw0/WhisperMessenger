@@ -159,6 +159,8 @@ local TraditionalChinese = {
   ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "傳送密語或從好友列表傳送密語時開啟信使。戰鬥中停用。",
   ["Hide on entering combat"] = "進入戰鬥時隱藏",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "戰鬥開始時隱藏信使，戰鬥結束後重新開啟。如果你在戰鬥中手動關閉它，它會保持關閉。",
+  ["Esc closes the window"] = "Esc 關閉視窗",
+  ["Turn off to keep the messenger open when you press Esc. Close it with its button or your Toggle Window key."] = "關閉後,按 Esc 不會關閉訊息視窗。可用視窗按鈕或「Toggle Window」按鍵關閉。",
   ["Double ESC to close"] = "雙擊 ESC 關閉",
   ["First Esc clears the chat input; second Esc closes the window."] = "第一次 Esc 清除輸入,第二次 Esc 關閉視窗。",
   ["Allow addon integration"] = "允許插件整合",
@@ -196,6 +198,13 @@ local TraditionalChinese = {
   ["Play sound on new whisper"] = "新密語時播放音效",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "收到新密語時播放提示音。在下方選擇音效。",
   ["Notification sound"] = "通知音效",
+  ["Play sound on message request"] = "收到訊息請求時播放音效",
+  ["Plays a sound when a whisper from a stranger lands in Requests. Pick the sound below."] = "陌生人的密語進入請求時播放音效。在下方選擇音效。",
+  ["Request sound"] = "請求音效",
+  ["Mention sound"] = "提及音效",
+  ["Play sound when you send a whisper"] = "傳送密語時播放音效",
+  ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "每次傳送在此處撰寫的密語時播放音效。在下方選擇音效。",
+  ["Sent whisper sound"] = "已傳送密語音效",
   ["Icon Size"] = "圖示大小",
   ["Desaturate icon when idle"] = "閒置時圖示灰階",
   ["Grays the back chat bubble when there are no unread messages."] = "無未讀訊息時，將後方的聊天氣泡變為灰色。",
@@ -401,6 +410,8 @@ local TraditionalChinese = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "讓同樣使用 Whisper Messenger 的聯絡人看到你已讀他們的密語。",
   ["Show invite link"] = "顯示邀請連結",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "在聊天標題列顯示 (邀請使用 WM) 連結。點擊後會向該玩家發送一則介紹此插件的簡短密語。",
+  ["Show their last channel message"] = "顯示對方最近的頻道訊息",
+  ["When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it."] = "有人向你發送密語時，對方在交易等頻道中的最新一則訊息會顯示在密語上方。關閉後將隱藏。",
   ["Close the game's whisper tab too"] = "同時關閉遊戲的密語分頁",
   ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "在這裡刪除聊天時，遊戲內建的該玩家密語分頁也會一併關閉。僅在遊戲將密語顯示在獨立分頁時有效。",
   -- Drafts, new-messages divider, quick replies
@@ -542,6 +553,7 @@ local TraditionalChinese = {
   -- Contact menu: Guild invite
   ["Guild invite"] = "邀請加入公會",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "按 Ctrl+C 複製指令，然後貼到聊天框中。",
+  ["Read-only here. Reply in the game's Communities window."] = "此處僅供閱讀。請在遊戲的社群視窗中回覆。",
 }
 
 ns.Locale_zhTW = TraditionalChinese

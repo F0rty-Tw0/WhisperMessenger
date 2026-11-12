@@ -153,4 +153,15 @@ function CompactWindow.Fire(frame, name)
   end
 end
 
+-- Alt+Z again: the client shows the parent, so the window gets OnShow while it never stopped being shown.
+function CompactWindow.ParentShows(frame)
+  frame.shown = true
+  if frame.scripts.OnShow then
+    frame.scripts.OnShow(frame)
+  end
+  for _, hook in ipairs(frame._hookScripts.OnShow or {}) do
+    hook(frame)
+  end
+end
+
 return CompactWindow

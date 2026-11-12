@@ -92,17 +92,29 @@ function AutoOpenHooks.Create(deps)
     return true
   end
 
-  function hooks.onSendTell(playerName)
+  local function sendTellKey(playerName)
+    local conversationKey = deps.findConversationKeyByName(playerName)
+    if not conversationKey and deps.buildConversationKeyFromName then
+      conversationKey = deps.buildConversationKeyFromName(playerName)
+    end
+    return conversationKey
+  end
+
+  -- inHardwareEvent: the caller runs inside the player's click or key press,
+  -- so the quiet /who may go out, and it goes before the selection changes.
+  function hooks.onSendTell(playerName, inHardwareEvent)
     if not shouldRouteOutgoingToMessenger() then
+      -- The game's chat keeps this whisper: the player is replying there, so
+      -- an existing unread thread counts as read. Nothing is created.
+      if playerName and deps.markRead then
+        deps.markRead(deps.findConversationKeyByName(playerName))
+      end
       return false
     end
     if not playerName then
       return false
     end
-    local conversationKey = deps.findConversationKeyByName(playerName)
-    if not conversationKey and deps.buildConversationKeyFromName then
-      conversationKey = deps.buildConversationKeyFromName(playerName)
-    end
+    local conversationKey = sendTellKey(playerName)
     if not conversationKey then
       return false
     end
@@ -110,12 +122,30 @@ function AutoOpenHooks.Create(deps)
     if deps.ensureConversation then
       deps.ensureConversation(conversationKey, playerName)
     end
+    if inHardwareEvent == true and deps.askWho then
+      deps.askWho(conversationKey)
+    end
     openAndSelect(conversationKey, true)
     return true
   end
 
+  -- The game opens this whisper's chat a frame after the click, outside the
+  -- click itself, so the quiet /who goes out now, before the chat exists.
+  function hooks.askWhoForTell(playerName)
+    if not playerName or not deps.askWhoForName or not shouldRouteOutgoingToMessenger() then
+      return
+    end
+    local conversationKey = sendTellKey(playerName)
+    if conversationKey then
+      deps.askWhoForName(playerName, conversationKey)
+    end
+  end
+
   function hooks.onOutgoingWhisper(conversationKey)
     if not shouldRouteOutgoingToMessenger() then
+      if deps.markRead then
+        deps.markRead(conversationKey)
+      end
       return false
     end
     if not conversationKey then

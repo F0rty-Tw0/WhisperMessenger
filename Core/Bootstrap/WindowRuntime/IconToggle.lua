@@ -5,9 +5,11 @@ end
 
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local Panels = ns.PublicApiPanels or require("WhisperMessenger.Core.PublicApi.Panels")
+local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
 
--- The click handler for the widget, minimap and LDB icons. Keybinds and slash
--- commands keep the plain toggle.
+-- The click handler for the widget, minimap and LDB icons. The Toggle Window
+-- key asks /who through runtime.toggleTargetKey (Core/Bindings.lua); /wmsg
+-- keeps the plain toggle.
 local IconToggle = {}
 
 -- Where the previews show: the detached card while the runtime reports one,
@@ -59,8 +61,19 @@ end
 -- open window hides its card, so a click there closes the window instead.
 -- Otherwise a visible window hides, other whispers run the plain toggle, and an addon page with
 -- something waiting opens; with no such page, or when opening it is refused,
--- the plain toggle runs.
-function IconToggle.Wrap(runtime, toggle, buildContacts)
+-- the plain toggle runs. A toggle that opens onto a chat gets a /who for that
+-- chat first, inside this click and before the window opens: openTargetKey
+-- names the chat the toggle will select (nil: none, or no resolver, no ask).
+function IconToggle.Wrap(runtime, toggle, buildContacts, openTargetKey)
+  local function open()
+    local targetKey = openTargetKey and openTargetKey()
+    if targetKey ~= nil then
+      WhoTriggers.AskFor(runtime, targetKey)
+    end
+
+    return toggle()
+  end
+
   return function()
     if openShownWhisperPreview(runtime) then
       return
@@ -69,7 +82,7 @@ function IconToggle.Wrap(runtime, toggle, buildContacts)
       return toggle()
     end
     if BadgeFilter.SumWhisperUnread(buildContacts()) > 0 then
-      return toggle()
+      return open()
     end
     local key = targetPanelKey(runtime)
     if key ~= nil and Panels.Open(runtime, key) then
@@ -78,7 +91,7 @@ function IconToggle.Wrap(runtime, toggle, buildContacts)
     -- No target or a refused open changed nothing; a failed showPanel left
     -- the window open, so it must not be toggled shut.
     if not runtime.isWindowVisible() then
-      return toggle()
+      return open()
     end
   end
 end

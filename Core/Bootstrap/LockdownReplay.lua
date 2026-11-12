@@ -73,6 +73,7 @@ local function resetBatch(state)
   state.lost = 0
   state.anyAlert = false
   state.alertKeys = {}
+  state.requestKeys = {}
   state.latestIncoming = nil
 end
 
@@ -137,11 +138,14 @@ end
 local function finishBatch(runtime, state)
   stopTicker(state)
   local filed, lost, latest = state.filed, state.lost, state.latestIncoming
-  local anyAlert, alertKeys = state.anyAlert, state.alertKeys
+  local anyAlert, alertKeys, requestKeys = state.anyAlert, state.alertKeys, state.requestKeys
   state.lastSummary = { filed = filed, lost = lost }
   resetBatch(state)
   if anyAlert and not alertThrottled(runtime, alertKeys) then
     IncomingAlerts.Notify(accountSettings(runtime))
+  end
+  if next(requestKeys) ~= nil and not alertThrottled(runtime, requestKeys) then
+    IncomingAlerts.PlayRequestSound(accountSettings(runtime))
   end
   local liveAt = runtime.lastIncomingWhisperAt
   if latest and (liveAt == nil or liveAt <= latest.receivedAt) then
@@ -167,6 +171,8 @@ local function trackIncoming(runtime, state, line, result)
     if result.conversationKey then
       state.alertKeys[result.conversationKey] = true
     end
+  elseif result.conversationKey and IncomingAlerts.IsAudibleRequest(result, accountSettings(runtime)) then
+    state.requestKeys[result.conversationKey] = true
   end
   local latest = state.latestIncoming
   if result.conversationKey and (latest == nil or line.receivedAt >= latest.receivedAt) then

@@ -74,6 +74,7 @@ return function()
   do
     local optionsMenuScrollView = layout.optionsMenuScrollView
     layout.optionsMenu:SetHeight(213)
+    layout.optionsPanel:Hide()
     layout.optionsPanel:Show()
 
     assert(optionsMenuScrollView.scrollFrame:GetHeight() == 213, "213px live options menu should set a 213px scroll viewport")
@@ -93,6 +94,7 @@ return function()
   do
     local optionsMenuScrollView = layout.optionsMenuScrollView
     layout.optionsMenu:SetHeight(540)
+    layout.optionsPanel:Hide()
     layout.optionsPanel:Show()
 
     assert(optionsMenuScrollView.hasOverflow == false, "grown live options menu should clear overflow")

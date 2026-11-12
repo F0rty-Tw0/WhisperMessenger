@@ -159,6 +159,8 @@ local Portuguese = {
   ["Opens the messenger when you send a whisper or whisper from the friends list. Disabled during combat."] = "Abre o mensageiro ao enviar sussurro ou sussurrar pela lista de amigos. Desativado em combate.",
   ["Hide on entering combat"] = "Ocultar ao entrar em combate",
   ["Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."] = "Oculta o mensageiro quando o combate começa e o reabre quando o combate termina. Se você o fechar durante o combate, ele continua fechado.",
+  ["Esc closes the window"] = "Esc fecha a janela",
+  ["Turn off to keep the messenger open when you press Esc. Close it with its button or your Toggle Window key."] = "Desative para manter o mensageiro aberto ao pressionar Esc. Feche-o pelo botão dele ou pela sua tecla “Toggle Window”.",
   ["Double ESC to close"] = "ESC duplo para fechar",
   ["First Esc clears the chat input; second Esc closes the window."] = "O primeiro Esc limpa a entrada; o segundo fecha a janela.",
   ["Allow addon integration"] = "Permitir integração com addons",
@@ -196,6 +198,13 @@ local Portuguese = {
   ["Play sound on new whisper"] = "Som ao receber sussurro",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "Toca um som ao receber um novo sussurro. Escolha o som abaixo.",
   ["Notification sound"] = "Som da notificação",
+  ["Play sound on message request"] = "Som ao receber solicitação de mensagem",
+  ["Plays a sound when a whisper from a stranger lands in Requests. Pick the sound below."] = "Toca um som quando um sussurro de um desconhecido chega em Solicitações. Escolha o som abaixo.",
+  ["Request sound"] = "Som de solicitação",
+  ["Mention sound"] = "Som de menção",
+  ["Play sound when you send a whisper"] = "Som ao enviar sussurro",
+  ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "Toca um som sempre que um sussurro escrito aqui é enviado. Escolha o som abaixo.",
+  ["Sent whisper sound"] = "Som de sussurro enviado",
   ["Icon Size"] = "Tamanho do ícone",
   ["Desaturate icon when idle"] = "Dessaturar ícone inativo",
   ["Grays the back chat bubble when there are no unread messages."] = "Deixa cinza o balão de chat de trás quando não há mensagens não lidas.",
@@ -401,6 +410,8 @@ local Portuguese = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Permite que contatos que também usam Whisper Messenger vejam quando você leu as mensagens deles.",
   ["Show invite link"] = "Mostrar link de convite",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "Mostra um link (Convidar para o WM) no topo do chat. Clicar nele sussurra para esse jogador uma mensagem curta sobre este addon.",
+  ["Show their last channel message"] = "Mostrar a última mensagem de canal",
+  ["When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it."] = "Quando alguém sussurra para você, a última linha dele em um canal como Comércio aparece acima do sussurro. Desative para ocultá-la.",
   ["Close the game's whisper tab too"] = "Fechar também a aba de sussurro do jogo",
   ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "Ao remover uma conversa aqui, a aba de sussurro do próprio jogo para esse jogador também fecha. Só faz diferença quando o jogo abre sussurros em abas próprias.",
   -- Drafts, new-messages divider, quick replies
@@ -542,6 +553,7 @@ local Portuguese = {
   -- Contact menu: Guild invite
   ["Guild invite"] = "Convidar para a guilda",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Pressione Ctrl+C para copiar o comando e cole-o no chat.",
+  ["Read-only here. Reply in the game's Communities window."] = "Somente leitura. Responda na janela de Comunidades do jogo.",
 }
 
 ns.Locale_ptBR = Portuguese

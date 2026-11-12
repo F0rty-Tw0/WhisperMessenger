@@ -36,11 +36,16 @@ function GroupLabel.LabelForChannel(channel)
   return Localization.Text(CHANNEL_LABELS[channel]) or ""
 end
 
--- LabelForSession adds state only to Party, Raid, and Instance Chat rows.
-function GroupLabel.LabelForSession(channel, leftGroup, ownerProfileId, lastActivityAt)
+-- LabelForSession adds the instance name and the session state only to
+-- Party, Raid, and Instance Chat rows.
+function GroupLabel.LabelForSession(channel, leftGroup, ownerProfileId, lastActivityAt, instanceName)
   local label = GroupLabel.LabelForChannel(channel)
   if not SESSION_CHANNELS[channel] then
     return label
+  end
+
+  if type(instanceName) == "string" and instanceName ~= "" then
+    label = label .. " - " .. instanceName
   end
 
   local suffix
@@ -91,12 +96,12 @@ end
 -- LabelForChannelAndTitle returns the display label for a channel, using
 -- conversation.title when available for channels whose identity is not a
 -- singleton (BN_CONVERSATION with its conversationID, COMMUNITY with its
--- stream name). CHANNEL chats are named by displayName, the channel's base
+-- stream name, prefixed by clubName when it differs). CHANNEL chats are named by displayName, the channel's base
 -- name ("Trade") that ingest stamps on every line. For other channels the
 -- title is ignored. Guild stays as the canonical "Guild" here so the
 -- contact row keeps a compact label; the conversation header resolves the
 -- live guild name separately.
-function GroupLabel.LabelForChannelAndTitle(channel, title, displayName)
+function GroupLabel.LabelForChannelAndTitle(channel, title, displayName, clubName)
   if channel == ChannelType.CHANNEL and type(displayName) == "string" and displayName ~= "" then
     return displayName
   end
@@ -108,6 +113,9 @@ function GroupLabel.LabelForChannelAndTitle(channel, title, displayName)
   end
   if channel == ChannelType.COMMUNITY then
     if type(title) == "string" and title ~= "" then
+      if type(clubName) == "string" and clubName ~= "" and clubName ~= title then
+        return clubName .. " - " .. title
+      end
       return title
     end
     return "Community"
@@ -129,9 +137,9 @@ end
 function GroupLabel.ForItem(item)
   local groupName
   if item.channel == ChannelType.PARTY or item.channel == ChannelType.RAID or item.channel == ChannelType.INSTANCE_CHAT then
-    groupName = GroupLabel.LabelForSession(item.channel, item.leftGroup, item.ownerProfileId, item.lastActivityAt)
+    groupName = GroupLabel.LabelForSession(item.channel, item.leftGroup, item.ownerProfileId, item.lastActivityAt, item.instanceName)
   else
-    groupName = GroupLabel.LabelForChannelAndTitle(item.channel, item.title, item.displayName)
+    groupName = GroupLabel.LabelForChannelAndTitle(item.channel, item.title, item.displayName, item.clubName)
   end
   if groupName == "" then
     groupName = item.displayName or ""

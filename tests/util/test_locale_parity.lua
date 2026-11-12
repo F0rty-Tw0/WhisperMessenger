@@ -21,6 +21,13 @@ local WIDGET_SHAPE_KEYS = {
   "Circle",
   "Square",
 }
+local COMMUNITY_NOTICE_KEYS = {
+  "Read-only here. Reply in the game's Communities window.",
+}
+local CHANNEL_CONTEXT_KEYS = {
+  "Show their last channel message",
+  "When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it.",
+}
 local BORDER_REASON_KEY = "Only with Show border on."
 local BORDER_KEYS = {
   "Show border",
@@ -67,6 +74,21 @@ local WINDOW_ANIMATION_KEYS = {
 local DOCK_KEYS = {
   "Dock button on the window",
   "While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is.",
+}
+local ESCAPE_SETTING_KEYS = {
+  "Esc closes the window",
+  "Turn off to keep the messenger open when you press Esc. Close it with its button or your Toggle Window key.",
+}
+local REQUEST_SOUND_KEYS = {
+  "Play sound on message request",
+  "Plays a sound when a whisper from a stranger lands in Requests. Pick the sound below.",
+  "Request sound",
+}
+local EVENT_SOUND_KEYS = {
+  "Mention sound",
+  "Play sound when you send a whisper",
+  "Plays a sound each time a whisper you write here is sent. Pick the sound below.",
+  "Sent whisper sound",
 }
 local SAVED_SPOT_KEYS = {
   "Open at saved spot",
@@ -141,6 +163,16 @@ return function()
       code .. " still has the old EllesmereUI tooltip"
     )
 
+    -- test_channel_context_strings_are_translated
+    for _, key in ipairs(CHANNEL_CONTEXT_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_community_notice_is_translated
+    for _, key in ipairs(COMMUNITY_NOTICE_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
     -- test_border_strings_are_translated
     for _, key in ipairs(BORDER_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
@@ -173,6 +205,21 @@ return function()
 
     -- test_dock_button_strings_are_translated
     for _, key in ipairs(DOCK_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_escape_setting_strings_are_translated
+    for _, key in ipairs(ESCAPE_SETTING_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_request_sound_strings_are_translated
+    for _, key in ipairs(REQUEST_SOUND_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_event_sound_strings_are_translated
+    for _, key in ipairs(EVENT_SOUND_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 

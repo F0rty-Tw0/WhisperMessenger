@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Guards")
+local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
 
 local PreviewOpen = {}
 
@@ -32,6 +33,9 @@ function PreviewOpen.Create(options)
       return false
     end
 
+    -- A click on a preview card is a hardware event: ask /who inside it, before
+    -- the window opens. Asked after the open, the game blocked SendWho.
+    WhoTriggers.AskFor(runtime, conversationKey)
     runtime.ensureWindow()
     runtime.setWindowVisible(true)
     local window = runtime.window

@@ -136,4 +136,71 @@ return function()
     _G.issecretvalue = savedIsSecret
     assert(#closed == 0, "a secret name is never compared")
   end)
+
+  check("test_conversation_key_for_character_tab", function()
+    local frame = { isTemporary = true, chatType = "WHISPER", chatTarget = "Thrall" }
+    local conversations = { ["wow::WOW::thrall"] = { channel = "WOW" }, ["wow::WOW::jaina"] = { channel = "WOW" } }
+    local key = GameWhisperTab.ConversationKeyFor(frame, conversations)
+    assert(key == "wow::WOW::thrall", "character tab resolves its conversation key, got " .. tostring(key))
+  end)
+
+  check("test_conversation_key_for_bnet_tab", function()
+    _G.C_BattleNet = {
+      GetAccountInfoByID = function(id)
+        return id == 42 and { accountName = "|Kq7|k" } or nil
+      end,
+    }
+    local frame = { isTemporary = true, chatType = "BN_WHISPER", chatTarget = "|Kq7|k" }
+    local conversations = { ["bnet::BN::friend#1234"] = { channel = "BN", bnetAccountID = 42 } }
+    local key = GameWhisperTab.ConversationKeyFor(frame, conversations)
+    assert(key == "bnet::BN::friend#1234", "BN tab resolves its conversation key, got " .. tostring(key))
+  end)
+
+  check("test_conversation_key_for_non_whisper_frame_is_nil", function()
+    local conversations = { ["wow::WOW::thrall"] = { channel = "WOW" } }
+    local notTemporary = { isTemporary = false, chatType = "WHISPER", chatTarget = "Thrall" }
+    local say = { isTemporary = true, chatType = "SAY", chatTarget = "Thrall" }
+    assert(GameWhisperTab.ConversationKeyFor(notTemporary, conversations) == nil, "a player-made window has no key")
+    assert(GameWhisperTab.ConversationKeyFor(say, conversations) == nil, "a non-whisper frame has no key")
+    assert(GameWhisperTab.ConversationKeyFor(nil, conversations) == nil, "a nil frame has no key")
+  end)
+
+  check("test_whisper_tab_ignores_bnet_conversation_with_same_name", function()
+    _G.C_BattleNet = {
+      GetAccountInfoByID = function()
+        return { accountName = "Thrall" }
+      end,
+    }
+    local frame = { isTemporary = true, chatType = "WHISPER", chatTarget = "Thrall" }
+    local conversations = { ["bnet::BN::thrall#1"] = { channel = "BN", bnetAccountID = 42 } }
+    assert(GameWhisperTab.ConversationKeyFor(frame, conversations) == nil, "chat type must match the channel")
+  end)
+
+  check("test_conversation_key_for_skips_secret_chat_type", function()
+    local savedIsSecret = _G.issecretvalue
+    rawset(_G, "issecretvalue", function(value)
+      return value == "WHISPER"
+    end)
+    local frame = { isTemporary = true, chatType = "WHISPER", chatTarget = "Thrall" }
+    local key = GameWhisperTab.ConversationKeyFor(frame, { ["wow::WOW::thrall"] = { channel = "WOW" } })
+    rawset(_G, "issecretvalue", savedIsSecret)
+    assert(key == nil, "a secret chat type is never compared")
+  end)
+
+  check("test_conversation_key_for_asks_secret_before_comparing_target", function()
+    local savedIsSecret = _G.issecretvalue
+    local asked = {}
+    rawset(_G, "issecretvalue", function(value)
+      asked[#asked + 1] = value
+      return false
+    end)
+    local frame = { isTemporary = true, chatType = "WHISPER", chatTarget = "" }
+    GameWhisperTab.ConversationKeyFor(frame, { ["wow::WOW::thrall"] = { channel = "WOW" } })
+    rawset(_G, "issecretvalue", savedIsSecret)
+    local askedAboutTarget = false
+    for _, value in ipairs(asked) do
+      askedAboutTarget = askedAboutTarget or value == ""
+    end
+    assert(askedAboutTarget, "the secret check runs before any comparison of the target")
+  end)
 end

@@ -25,6 +25,8 @@ local function conversationMatchesTab(runtime, conversationKey, tabMode)
   return ContactsTabFilter.ModeOf(ConversationSnapshot.Build(conversationKey, conversation, settings)) == tabMode
 end
 
+-- toggle() returns the key of the chat it opened onto, nil when it selected
+-- none (closed, compact list, or no chat on the open tab).
 function ToggleFlow.Create(options)
   options = options or {}
 
@@ -47,6 +49,40 @@ function ToggleFlow.Create(options)
     return conversationMatchesTab(runtime, conversationKey, tabMode)
   end
 
+  -- The chat an opening toggle selects: the latest unread chat on the open
+  -- tab, else the active chat when it is on that tab. Jumping to the latest
+  -- unread keeps the Groups tab from losing the selection to a fresh whisper,
+  -- and the Whispers tab from losing it to an unread party message.
+  local function tabTargetKey()
+    local window = getWindow()
+    local tabMode = window and type(window.getTabMode) == "function" and window.getTabMode() or nil
+    local unreadKey = findLatestUnreadKey(function(conversationKey)
+      return matchesTab(conversationKey, tabMode)
+    end)
+
+    local targetKey = unreadKey or runtime.activeConversationKey
+    if targetKey ~= nil and matchesTab(targetKey, tabMode) then
+      return targetKey
+    end
+
+    return nil
+  end
+
+  -- The chat toggle() would open onto, without touching the window. nil when
+  -- the toggle closes, or opens the compact list.
+  local function openTargetKey()
+    if isWindowVisible() then
+      return nil
+    end
+
+    local window = getWindow()
+    if window and window.isCompactLayout then
+      return nil
+    end
+
+    return tabTargetKey()
+  end
+
   local function toggle()
     ensureWindow()
     local nextVisible = not isWindowVisible()
@@ -66,19 +102,10 @@ function ToggleFlow.Create(options)
     setWindowVisible(nextVisible)
 
     if nextVisible then
-      local window = getWindow()
-      local tabMode = window and type(window.getTabMode) == "function" and window.getTabMode() or nil
-      -- Jump to the latest unread chat on the open tab: on the Groups tab a
-      -- fresh whisper must not steal the selection, and on the Whispers tab
-      -- an unread party message must not either.
-      local unreadKey = findLatestUnreadKey(function(conversationKey)
-        return matchesTab(conversationKey, tabMode)
-      end)
-
-      local targetKey = unreadKey or runtime.activeConversationKey
-      if targetKey ~= nil and matchesTab(targetKey, tabMode) then
+      local targetKey = tabTargetKey()
+      if targetKey ~= nil then
         selectConversation(targetKey)
-        return
+        return targetKey
       end
     end
 
@@ -87,6 +114,7 @@ function ToggleFlow.Create(options)
 
   return {
     toggle = toggle,
+    openTargetKey = openTargetKey,
     conversationMatchesTab = matchesTab,
   }
 end
