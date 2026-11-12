@@ -128,12 +128,16 @@ return function()
     local runtime = start({ row({ raceStr = "Morte-vivante" }) })
     local chat = saveChat(runtime, "Arthas", {
       guid = "Player-1-A",
+      characterLevel = 60,
+      className = "Mage",
+      classTag = "MAGE",
       raceName = "Mort-vivant",
       raceTag = "Scourge",
       factionName = "Horde",
     })
     fire("WHO_LIST_UPDATE")
     assert(chat.raceName == "Morte-vivante", "the /who race still shows")
+    assert(#runtime.refreshed == 1, "only the new race name refreshes the chat")
     assert(chat.raceTag == "Scourge", "a guid chat keeps its race tag")
     assert(chat.factionName == "Horde", "a guid chat keeps its faction")
   end
