@@ -11,6 +11,7 @@ local PreviewAutoDismiss = ns.ToggleIconPreviewAutoDismiss or require("WhisperMe
 local PreviewLinks = ns.ToggleIconPreviewLinks or require("WhisperMessenger.UI.ToggleIcon.PreviewLinks")
 local PreviewReplyHold = ns.ToggleIconPreviewReplyHold or require("WhisperMessenger.UI.ToggleIcon.PreviewReplyHold")
 local PreviewCard = ns.ToggleIconPreviewCard or require("WhisperMessenger.UI.ToggleIcon.PreviewCard")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 local applyClassColor = UIHelpers.applyClassColor
 local setTextColor = UIHelpers.setTextColor
 
@@ -149,9 +150,9 @@ function IncomingPreview.Create(factory, frame, options)
   end
 
   local function renderContent(senderName, messageText, classTag, detail)
-    previewSenderLabel:SetText(type(senderName) == "string" and senderName or "")
+    previewSenderLabel:SetText(GlyphCoverage.Apply(previewSenderLabel, type(senderName) == "string" and senderName or ""))
     paintSenderLabel(classTag)
-    previewMessageLabel:SetText(ReactionAssets.FormatTextForDisplay(messageText))
+    previewMessageLabel:SetText(GlyphCoverage.Apply(previewMessageLabel, ReactionAssets.FormatTextForDisplay(messageText)))
     detailRow.render(detail)
 
     local classIconPath = theme.ClassIcon(classTag)
