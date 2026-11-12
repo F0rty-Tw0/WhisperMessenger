@@ -18,9 +18,9 @@ return function()
 
   -- test_reply_to_a_double_acute_snippet_uses_the_wide_font
   banner.setReply({ author = "Kőszívű", snippet = "szia" })
-  assert(label:GetFontObject() == _G.WM_HighlightSmall_Wide, "the name needs the chat font")
+  assert(label:GetFontObject() == rawget(_G, "WM_HighlightSmall_Wide"), "the name needs the chat font")
 
   -- test_plain_reply_keeps_the_usual_font
   banner.setReply({ author = "Thrall", snippet = "hi" })
-  assert(label:GetFontObject() == _G.WM_HighlightSmall, "a plain reply keeps the theme font")
+  assert(label:GetFontObject() == rawget(_G, "WM_HighlightSmall"), "a plain reply keeps the theme font")
 end

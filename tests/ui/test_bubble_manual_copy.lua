@@ -450,9 +450,9 @@ return function()
 
     local origGetFontObject = s.editBox.GetFontObject
     local origSetFontObject = s.editBox.SetFontObject
-    s.editBox.GetFontObject = function()
+    rawset(s.editBox, "GetFontObject", function()
       return s.editBox
-    end
+    end)
     rawset(s.editBox, "SetFontObject", function()
       error("SetFontObject must not be called in this state")
     end)
@@ -463,7 +463,7 @@ return function()
     end)
     assert(ok, "open/close must not call SetFontObject when GetFontObject returns the editbox itself")
 
-    s.editBox.GetFontObject = origGetFontObject
+    rawset(s.editBox, "GetFontObject", origGetFontObject)
     rawset(s.editBox, "SetFontObject", origSetFontObject)
   end
 

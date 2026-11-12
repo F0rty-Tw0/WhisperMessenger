@@ -12,13 +12,13 @@ return function()
   -- test_hungarian_text_uses_the_wide_font
   do
     local bubble = BubbleFrame.CreateBubble(factory, parent, { text = "hosszú ő és ű", kind = "user", direction = "in" })
-    assert(bubble.text:GetFontObject() == _G.WM_Highlight_Wide, "ő and ű need the chat font")
+    assert(bubble.text:GetFontObject() == rawget(_G, "WM_Highlight_Wide"), "ő and ű need the chat font")
   end
 
   -- test_latin1_text_keeps_the_usual_font
   do
     local bubble = BubbleFrame.CreateBubble(factory, parent, { text = "árvíztükör", kind = "user", direction = "out" })
-    assert(bubble.text:GetFontObject() == _G.WM_Highlight, "Latin-1 accents keep the theme font")
+    assert(bubble.text:GetFontObject() == rawget(_G, "WM_Highlight"), "Latin-1 accents keep the theme font")
   end
 
   -- test_font_colour_preset_survives_the_swap

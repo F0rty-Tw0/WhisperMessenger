@@ -19,9 +19,9 @@ return function()
 
   -- test_typing_double_acute_letters_uses_the_wide_font
   typeText("köszönöm, főnök")
-  assert(input:GetFontObject() == _G.WM_ChatNormal_Wide, "the reply box shows ő")
+  assert(input:GetFontObject() == rawget(_G, "WM_ChatNormal_Wide"), "the reply box shows ő")
 
   -- test_plain_text_goes_back_to_the_usual_font
   typeText("thanks")
-  assert(input:GetFontObject() == _G.WM_ChatNormal, "back to the usual font")
+  assert(input:GetFontObject() == rawget(_G, "WM_ChatNormal"), "back to the usual font")
 end

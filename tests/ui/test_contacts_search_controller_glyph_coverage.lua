@@ -7,7 +7,7 @@ return function()
   local factory = FakeUI.NewFactory({ fontColors = true })
   Fonts.Initialize("default")
   local input = factory.CreateFrame("EditBox", nil, nil)
-  input:SetFontObject(_G.WM_ChatNormal)
+  input:SetFontObject(rawget(_G, "WM_ChatNormal"))
   local controller = ContactsSearchController.Create({
     contacts = {},
     contactsController = {
@@ -27,9 +27,9 @@ return function()
 
   -- test_searching_double_acute_letters_uses_the_wide_font
   typeText("kősz")
-  assert(input:GetFontObject() == _G.WM_ChatNormal_Wide, "the search box shows ő")
+  assert(input:GetFontObject() == rawget(_G, "WM_ChatNormal_Wide"), "the search box shows ő")
 
   -- test_plain_search_goes_back_to_the_usual_font
   typeText("jai")
-  assert(input:GetFontObject() == _G.WM_ChatNormal, "back to the usual font")
+  assert(input:GetFontObject() == rawget(_G, "WM_ChatNormal"), "back to the usual font")
 end
