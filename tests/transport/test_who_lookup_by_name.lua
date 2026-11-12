@@ -1,5 +1,4 @@
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
-local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local SeenZone = require("WhisperMessenger.Model.SeenZone")
 local Env = require("tests.helpers.who_lookup_env")
 
@@ -23,7 +22,7 @@ end
 
 local function test_name_with_option_off_sends_nothing()
   Env.Case("option off", nil, function(env)
-    DisplayName.Configure({ showPlayerLevels = false })
+    WhoLookup.SetEnabled(false)
     assert(WhoLookup.TryForName(env.runtime, "Firstmoon", KEY) == false)
     assert(#env.sent == 0)
   end)

@@ -139,6 +139,7 @@ Transport/BNetResolver/GuidFallback.lua
 Transport/BNetResolver.lua
 Transport/WhoFreshness.lua
 Transport/WhoBlock.lua
+Transport/WhoPanels.lua
 Transport/WhoLookup.lua
 Core/WhoRow.lua
 Core/SeenLevelEvents/WhoLevels.lua
@@ -412,6 +413,7 @@ UI/Shared/SettingsControls.lua
 UI/Shared/DialogChrome.lua
 UI/Shared/TwoFieldDialog.lua
 UI/MessengerWindow/GeneralSettings/RetentionRow.lua
+UI/MessengerWindow/GeneralSettings/TimeSection.lua
 UI/ContactsList/ExportPanel.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/Options.lua

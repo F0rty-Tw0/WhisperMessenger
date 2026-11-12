@@ -193,6 +193,7 @@ function Bootstrap.Initialize(factory, options)
   runtime.seenLevelEvents = SeenLevelEvents
   SeenLevelEvents.SetEnabled(accountState.settings.showPlayerLevels == true)
   local WhoLookup = loadModule("WhisperMessenger.Transport.WhoLookup", "WhoLookup")
+  WhoLookup.SetEnabled(accountState.settings.whoLookups ~= false)
   WhoLookup.Init(runtime)
 
   -- Channel chats pause wherever chat may carry secret values.

@@ -28,7 +28,8 @@ SeenLevelEvents.UNIT_EVENTS = {
   "FRIENDLIST_UPDATE",
 }
 
--- Registered only inside WhoLookup's who window.
+-- Registered only inside WhoLookup's who window, whether or not level
+-- recording is on.
 SeenLevelEvents.WHO_EVENTS = {
   "WHO_LIST_UPDATE",
   "CHAT_MSG_SYSTEM",
@@ -37,7 +38,6 @@ SeenLevelEvents.WHO_EVENTS = {
 ---@type table|nil
 local runtime = nil
 local enabled = false
-local capturing = false
 
 -- The saved WoW whisper chat for `name`, or nil (no runtime, key, or chat; BN chats excluded).
 local function findWhisperChat(name)
@@ -239,7 +239,6 @@ local function unregisterAll()
   if frame and frame.UnregisterAllEvents then
     frame:UnregisterAllEvents()
   end
-  capturing = false
 end
 
 function SeenLevelEvents.SetEnabled(on)
@@ -255,17 +254,18 @@ function SeenLevelEvents.SetEnabled(on)
   for _, event in ipairs(SeenLevelEvents.UNIT_EVENTS) do
     frame:RegisterEvent(event)
   end
-  capturing = true
   -- Turned back on while a query is in flight: its result must still be read.
   if WhoLookup.IsWindowOpen and WhoLookup.IsWindowOpen() then
     SeenLevelEvents.OpenWhoWindow()
   end
 end
 
--- No-op unless capture is live: enabled and not blocked by _wmSuspended.
+-- Reads the /who answer even with level recording off: the /who lookup
+-- option, not "Show player levels", decides whether a query went out.
+-- No-op while suspended (Mythic+ runs no addon code).
 function SeenLevelEvents.OpenWhoWindow()
   local frame = SeenLevelEvents._frame
-  if not capturing or frame == nil then
+  if frame == nil or _G._wmSuspended then
     return
   end
   for _, event in ipairs(SeenLevelEvents.WHO_EVENTS) do

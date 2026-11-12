@@ -113,10 +113,12 @@ function WoWStatus.ApplyZone(item)
 end
 
 -- Copy the zone the last /who showed, only while no live zone is known and
--- the "Show player levels" setting is on.
+-- the /who lookup option is on. Online and Last seen from /who follow it.
 -- Kept apart from areaName so contact rows and tooltips never show it.
+-- WhoLookup loads after this file.
 function WoWStatus.ApplySeenZone(item)
-  if not DisplayName.ShowPlayerLevels() or (item.areaName and item.areaName ~= "") then
+  local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
+  if not WhoLookup.IsEnabled() or (item.areaName and item.areaName ~= "") then
     item.whoArea, item.whoAreaAt = nil, nil
 
     return

@@ -32,6 +32,7 @@ function SettingsPanels.Create(factory, options)
         hideMessagePreview = settingsConfig.hideMessagePreview,
         hideBattleTagNumbers = settingsConfig.hideBattleTagNumbers,
         showPlayerLevels = settingsConfig.showPlayerLevels,
+        whoLookups = settingsConfig.whoLookups,
         timeFormat = settingsConfig.timeFormat,
         timeSource = settingsConfig.timeSource,
         interfaceLanguage = settingsConfig.interfaceLanguage,

@@ -11,6 +11,7 @@ local createOptionButton = UIHelpers.createOptionButton
 
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 local RetentionRow = ns.MessengerWindowGeneralSettingsRetentionRow or require("WhisperMessenger.UI.MessengerWindow.GeneralSettings.RetentionRow")
+local TimeSection = ns.MessengerWindowGeneralSettingsTimeSection or require("WhisperMessenger.UI.MessengerWindow.GeneralSettings.TimeSection")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local GeneralSettings = {}
@@ -24,24 +25,9 @@ local DEFAULTS = {
   hideMessagePreview = false,
   hideBattleTagNumbers = true,
   showPlayerLevels = false,
-  timeFormat = "12h",
-  timeSource = "local",
+  whoLookups = true,
   interfaceLanguage = "auto",
 }
-
-local function buildTimeFormatOptions(language)
-  return {
-    { key = "12h", label = Localization.Text("12-hour", language), tooltip = Localization.Text("Display times as 2:30 PM.", language) },
-    { key = "24h", label = Localization.Text("24-hour", language), tooltip = Localization.Text("Display times as 14:30.", language) },
-  }
-end
-
-local function buildTimeSourceOptions(language)
-  return {
-    { key = "local", label = Localization.Text("Local Time", language), tooltip = Localization.Text("Use your computer's clock.", language) },
-    { key = "server", label = Localization.Text("Server Time", language), tooltip = Localization.Text("Use the game server's clock.", language) },
-  }
-end
 
 function GeneralSettings.Create(factory, parent, config, options)
   local onChange = options.onChange or function(...)
@@ -53,8 +39,6 @@ function GeneralSettings.Create(factory, parent, config, options)
     return Localization.Text(key, interfaceLanguage)
   end
 
-  local timeFormatOptions = buildTimeFormatOptions(interfaceLanguage)
-  local timeSourceOptions = buildTimeSourceOptions(interfaceLanguage)
   local languageOptions = Localization.LanguageOptions(interfaceLanguage)
 
   local frame = factory.CreateFrame("Frame", nil, parent)
@@ -90,6 +74,13 @@ function GeneralSettings.Create(factory, parent, config, options)
     hint,
     -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
   )
+  local whoLookupsToggle = toggleRow(
+    "whoLookups",
+    "Look up players with /who",
+    "Fills in a player's zone, guild, class and online status with a quiet /who when you open a chat.",
+    config.whoLookups ~= false,
+    playerLevelsToggle.row
+  )
 
   local messagesRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
@@ -104,7 +95,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     }),
     { type = "slider", key = "maxMessagesPerConversation", default = DEFAULTS.maxMessagesPerConversation }
   )
-  messagesRow.row:SetPoint("TOPLEFT", playerLevelsToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+  messagesRow.row:SetPoint("TOPLEFT", whoLookupsToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local conversationsRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
@@ -164,42 +155,14 @@ function GeneralSettings.Create(factory, parent, config, options)
     hidePreviewToggle.row
   )
 
-  local timeSection = SettingsControls.CreateSectionLabel(frame, text("Time Display"))
-  timeSection.region:SetPoint("TOPLEFT", hideBattleTagToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
-
-  local timeFormatSelector = panel:bind(
-    ButtonSelector.Create(factory, frame, {
-      labelText = text("Time Format"),
-      optionsList = timeFormatOptions,
-      fallbackKey = DEFAULTS.timeFormat,
-      initial = config.timeFormat or DEFAULTS.timeFormat,
-      colors = selectorColors,
-      onChange = function(value)
-        onChange("timeFormat", value)
-      end,
-      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
-      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-    }),
-    { type = "selector", key = "timeFormat", default = DEFAULTS.timeFormat }
-  )
-  timeFormatSelector.row:SetPoint("TOPLEFT", timeSection.region, "BOTTOMLEFT", 0, -12)
-
-  local timeSourceSelector = panel:bind(
-    ButtonSelector.Create(factory, frame, {
-      labelText = text("Time Source"),
-      optionsList = timeSourceOptions,
-      fallbackKey = DEFAULTS.timeSource,
-      initial = config.timeSource or DEFAULTS.timeSource,
-      colors = selectorColors,
-      onChange = function(value)
-        onChange("timeSource", value)
-      end,
-      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
-      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-    }),
-    { type = "selector", key = "timeSource", default = DEFAULTS.timeSource }
-  )
-  timeSourceSelector.row:SetPoint("TOPLEFT", timeFormatSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+  local timeSection = TimeSection.Create(factory, frame, {
+    panel = panel,
+    language = interfaceLanguage,
+    config = config,
+    colors = selectorColors,
+    anchor = hideBattleTagToggle.row,
+    onChange = onChange,
+  })
 
   local languageSelector = panel:bind(
     ButtonSelector.Create(factory, frame, {
@@ -219,7 +182,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     }),
     { type = "selector", key = "interfaceLanguage", default = DEFAULTS.interfaceLanguage }
   )
-  languageSelector.row:SetPoint("TOPLEFT", timeSourceSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+  languageSelector.row:SetPoint("TOPLEFT", timeSection.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local resetButton = panel:bind(
     createOptionButton(
@@ -244,6 +207,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     header.title:SetText(text("General Settings"))
     header.hint:SetText(text("Configure message storage, retention, and interface language."))
     playerLevelsToggle.label:SetText(text("Show player levels"))
+    whoLookupsToggle.label:SetText(text("Look up players with /who"))
     messagesRow.label:SetText(text("Max Messages Per Chat"))
     conversationsRow.label:SetText(text("Max Contacts"))
     retentionRow.setLanguage(interfaceLanguage)
@@ -251,11 +215,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     clearOnLogoutToggle.label:SetText(text("Clear on logout"))
     hidePreviewToggle.label:SetText(text("Hide message preview"))
     hideBattleTagToggle.label:SetText(text("Hide BattleTag numbers"))
-    timeSection.label:SetText(text("Time Display"))
-    timeFormatSelector.label:SetText(text("Time Format"))
-    timeFormatSelector.setOptionsList(buildTimeFormatOptions(interfaceLanguage))
-    timeSourceSelector.label:SetText(text("Time Source"))
-    timeSourceSelector.setOptionsList(buildTimeSourceOptions(interfaceLanguage))
+    timeSection.setLanguage(interfaceLanguage)
     languageSelector.label:SetText(text("Interface Language"))
     languageSelector.setOptionsList(Localization.LanguageOptions(interfaceLanguage))
     languageSelector.setSelected(interfaceLanguage)

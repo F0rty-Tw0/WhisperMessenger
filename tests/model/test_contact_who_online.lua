@@ -2,6 +2,7 @@ local AvailabilityEnricher = require("WhisperMessenger.Model.ContactEnricher.Ava
 local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
 local SeenZone = require("WhisperMessenger.Model.SeenZone")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
+local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local WhoFreshness = require("WhisperMessenger.Transport.WhoFreshness")
 local Availability = require("WhisperMessenger.Transport.Availability")
 
@@ -37,7 +38,8 @@ return function()
   rawset(_G, "time", function()
     return NOW
   end)
-  DisplayName.Configure({ showPlayerLevels = true })
+  -- Levels off: the /who zone and Online follow the lookup option alone.
+  DisplayName.Configure({ showPlayerLevels = false })
 
   -- test_fresh_who_answer_shows_online
   do
@@ -103,12 +105,12 @@ return function()
     assert(status(item) == "XFaction", "an opposite-faction /who answer shows X-Faction, got " .. tostring(status(item)))
   end
 
-  -- test_levels_option_off_no_online
+  -- test_who_lookups_option_off_no_online
   do
-    DisplayName.Configure({ showPlayerLevels = false })
+    WhoLookup.SetEnabled(false)
     local item = answeredAgo(0)
-    assert(status(item) == "Offline", "with player levels off a /who answer shows nothing, got " .. tostring(status(item)))
-    DisplayName.Configure({ showPlayerLevels = true })
+    assert(status(item) == "Offline", "with /who lookups off a /who answer shows nothing, got " .. tostring(status(item)))
+    WhoLookup.SetEnabled(true)
   end
 
   -- test_group_chat_not_marked_online

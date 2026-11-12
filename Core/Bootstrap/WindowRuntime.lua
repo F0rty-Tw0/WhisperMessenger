@@ -35,6 +35,7 @@ local MinimapIconRuntime = ns.BootstrapWindowRuntimeMinimapIconRuntime or requir
 local ToggleFlow = ns.BootstrapWindowRuntimeToggleFlow or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ToggleFlow")
 local RuntimeBindings = ns.BootstrapWindowRuntimeRuntimeBindings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RuntimeBindings")
 local ExternalPreview = ns.BootstrapWindowRuntimeExternalPreview or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ExternalPreview")
+local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
 local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
 local PanelPulse = ns.BootstrapWindowRuntimePanelPulse or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelPulse")
 local IconToggle = ns.BootstrapWindowRuntimeIconToggle or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconToggle")
@@ -161,6 +162,9 @@ function WindowRuntime.Create(options)
   local externalPreview = ExternalPreview.New({
     now = function()
       return runtime.now and runtime.now() or nil
+    end,
+    askWho = function(name)
+      WhoTriggers.AskForName(runtime, name)
     end,
   })
 
