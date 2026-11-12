@@ -20,5 +20,5 @@ return function()
     lastActivityAt = 100,
   }, options)
   assert(row.title.text == "Főnökök", "the row shows the community title, got " .. tostring(row.title.text))
-  assert(row.title:GetFontObject() == _G.WM_Normal_Wide, "the title needs the chat font")
+  assert(row.title:GetFontObject() == rawget(_G, "WM_Normal_Wide"), "the title needs the chat font")
 end

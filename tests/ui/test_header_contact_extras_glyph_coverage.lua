@@ -14,9 +14,9 @@ return function()
   -- test_note_with_double_acute_letters_uses_the_wide_font
   HeaderView.Refresh(header, { displayName = "Arthas", channel = "WOW", note = "főnök" }, {}, nil)
   assert(header.headerNote:IsShown(), "note shown")
-  assert(header.headerNote:GetFontObject() == _G.WM_DisableSmall_Wide, "the note needs the chat font")
+  assert(header.headerNote:GetFontObject() == rawget(_G, "WM_DisableSmall_Wide"), "the note needs the chat font")
 
   -- test_plain_note_keeps_the_usual_font
   HeaderView.Refresh(header, { displayName = "Arthas", channel = "WOW", note = "raid lead" }, {}, nil)
-  assert(header.headerNote:GetFontObject() == _G.WM_DisableSmall, "a plain note keeps the theme font")
+  assert(header.headerNote:GetFontObject() == rawget(_G, "WM_DisableSmall"), "a plain note keeps the theme font")
 end

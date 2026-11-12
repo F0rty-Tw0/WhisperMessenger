@@ -13,8 +13,8 @@ return function()
 
   -- test_sender_and_message_with_double_acute_letters_use_the_wide_font
   preview.setIncomingPreview("Kőszívű", "jössz, főnök?", nil)
-  assert(preview.senderLabel:GetFontObject() == _G.WM_Highlight_Wide, "the sender needs the chat font")
-  assert(preview.messageLabel:GetFontObject() == _G.WM_Highlight_Wide, "the message needs the chat font")
+  assert(preview.senderLabel:GetFontObject() == rawget(_G, "WM_Highlight_Wide"), "the sender needs the chat font")
+  assert(preview.messageLabel:GetFontObject() == rawget(_G, "WM_Highlight_Wide"), "the message needs the chat font")
 
   -- test_message_keeps_its_grey_colour_on_the_wide_font
   local r, g, b = preview.messageLabel:GetTextColor()
@@ -23,6 +23,6 @@ return function()
 
   -- test_plain_whisper_goes_back_to_the_usual_font
   preview.setIncomingPreview("Jaina", "hi", nil)
-  assert(preview.senderLabel:GetFontObject() == _G.WM_Highlight, "a plain sender keeps the theme font")
-  assert(preview.messageLabel:GetFontObject() == _G.WM_Highlight, "a plain message keeps the theme font")
+  assert(preview.senderLabel:GetFontObject() == rawget(_G, "WM_Highlight"), "a plain sender keeps the theme font")
+  assert(preview.messageLabel:GetFontObject() == rawget(_G, "WM_Highlight"), "a plain message keeps the theme font")
 end

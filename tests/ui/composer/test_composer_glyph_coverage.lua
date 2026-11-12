@@ -16,7 +16,7 @@ return function()
   -- test_typing_double_acute_letters_uses_the_wide_font
   input:SetText("tűzőgép")
   input.scripts.OnTextChanged(input)
-  assert(input:GetFontObject() == _G.WM_ChatNormal_Wide, "the box shows ő and ű")
+  assert(input:GetFontObject() == rawget(_G, "WM_ChatNormal_Wide"), "the box shows ő and ű")
 
   -- test_typed_text_keeps_its_colour_on_the_wide_font
   local r, g, b = input:GetTextColor()
@@ -26,5 +26,5 @@ return function()
   -- test_plain_text_goes_back_to_the_theme_font
   input:SetText("szia")
   input.scripts.OnTextChanged(input)
-  assert(input:GetFontObject() == _G.WM_ChatNormal, "back to the usual font")
+  assert(input:GetFontObject() == rawget(_G, "WM_ChatNormal"), "back to the usual font")
 end

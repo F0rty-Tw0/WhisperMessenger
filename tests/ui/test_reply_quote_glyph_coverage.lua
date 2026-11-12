@@ -16,12 +16,12 @@ return function()
   -- test_quote_with_double_acute_letters_uses_the_wide_font
   do
     local label = quoteLabel({ author = "Thrall", snippet = "jössz, főnök?" })
-    assert(label:GetFontObject() == _G.WM_DisableSmall_Wide, "the snippet needs the chat font")
+    assert(label:GetFontObject() == rawget(_G, "WM_DisableSmall_Wide"), "the snippet needs the chat font")
   end
 
   -- test_plain_quote_keeps_the_usual_font
   do
     local label = quoteLabel({ author = "Thrall", snippet = "you coming?" })
-    assert(label:GetFontObject() == _G.WM_DisableSmall, "a plain quote keeps the theme font")
+    assert(label:GetFontObject() == rawget(_G, "WM_DisableSmall"), "a plain quote keeps the theme font")
   end
 end
