@@ -25,12 +25,17 @@ local function setField(conversation, field, value)
 end
 
 -- An unmapped race still shows; its tag and faction are cleared only when the
--- race itself changed, so no faction of another race stays behind.
+-- race itself changed, so no faction of another race stays behind. A chat
+-- with a guid keeps them: on gendered locales /who may spell the same race
+-- another way than the guid lookup did.
 local function applyRace(conversation, raceName)
   local raceTag = RaceTags.FromName(raceName)
   if raceTag == nil then
     if not setField(conversation, "raceName", raceName) then
       return false
+    end
+    if conversation.guid ~= nil then
+      return true
     end
     conversation.raceTag = nil
     conversation.factionName = nil

@@ -122,6 +122,22 @@ return function()
     assert(chat.factionName == nil, "the old faction must not stay with a new race")
   end
 
+  -- test_guid_chat_unmapped_race_keeps_tag_and_faction
+  -- Gendered locales: /who may spell the race another way than the GUID did.
+  do
+    local runtime = start({ row({ raceStr = "Morte-vivante" }) })
+    local chat = saveChat(runtime, "Arthas", {
+      guid = "Player-1-A",
+      raceName = "Mort-vivant",
+      raceTag = "Scourge",
+      factionName = "Horde",
+    })
+    fire("WHO_LIST_UPDATE")
+    assert(chat.raceName == "Morte-vivante", "the /who race still shows")
+    assert(chat.raceTag == "Scourge", "a guid chat keeps its race tag")
+    assert(chat.factionName == "Horde", "a guid chat keeps its faction")
+  end
+
   -- test_same_unmapped_race_keeps_tag_and_faction
   do
     local runtime = start({ row({ raceStr = "Untote" }) })
