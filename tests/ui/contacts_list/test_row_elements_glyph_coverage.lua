@@ -35,6 +35,10 @@ return function()
   local grey = Theme.COLORS.text_secondary
   assert(r == grey[1] and g == grey[2] and b == grey[3], "the preview stays grey")
 
+  -- test_plain_preview_goes_back_to_the_usual_font
+  RowElements.updatePreview(row, { lastPreview = "hi" }, 260, false, nil)
+  assert(row.preview:GetFontObject() == _G.WM_DisableSmall, "a plain preview keeps the theme font")
+
   -- test_draft_preview_with_double_acute_letters_uses_the_wide_font
   RowElements.updatePreview(row, { lastPreview = "hi", draft = "főnök", conversationKey = "a" }, 260, false, "b")
   assert(row.preview:GetFontObject() == _G.WM_DisableSmall_Wide, "the draft needs the chat font")
