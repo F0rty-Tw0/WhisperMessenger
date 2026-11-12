@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ContactSearch = ns.MessengerWindowContactSearch or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactSearch")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 local ContactsSearchController = {}
 
@@ -101,6 +102,7 @@ function ContactsSearchController.Create(options)
     if contactsSearchInput and contactsSearchInput.SetScript then
       contactsSearchInput:SetScript("OnTextChanged", function()
         local searchText = contactsSearchInput.GetText and contactsSearchInput:GetText() or contactsSearchInput.text or ""
+        GlyphCoverage.Apply(contactsSearchInput, searchText)
         contactsSearchQuery = contactSearch.NormalizeSearchQuery(searchText)
         if contactsSearchQuery == "" then
           refresh(nil, getSelectedConversationKey(), true)
