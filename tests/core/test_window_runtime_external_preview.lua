@@ -119,7 +119,78 @@ return function()
     assert(h.get() == new, "an old entry's callbacks leave the new one alone")
   end
 
+  -- A holder whose askWho logs into order.
+  local function newAskingHolder(order)
+    return ExternalPreview.New({
+      now = function()
+        return clock
+      end,
+      askWho = function(name)
+        order[#order + 1] = "who:" .. name
+      end,
+    })
+  end
+
+  -- In game SendWho is blocked once the caller's click code has run (a sent
+  -- whisper, an opened window): the /who must be the click's first act.
+  local function test_click_asks_who_before_the_callback()
+    local order = {}
+    local h = newAskingHolder(order)
+    local e = h.set("ca", {
+      sender = "S",
+      text = "T",
+      who = "Jaina-Proudmoore",
+      onClick = function()
+        order[#order + 1] = "click"
+      end,
+    })
+    e.onClick()
+    assert(table.concat(order, ",") == "who:Jaina-Proudmoore,click", table.concat(order, ","))
+  end
+
+  local function test_click_without_who_asks_nothing()
+    local order = {}
+    local h = newAskingHolder(order)
+    h.set("ca", { sender = "S", text = "T" }).onClick()
+    h.set("ca", { sender = "S", text = "T", who = "" }).onClick()
+    assert(#order == 0, "no name, no /who: " .. table.concat(order, ","))
+  end
+
+  local function test_dismiss_and_shown_ask_nothing()
+    local order = {}
+    local h = newAskingHolder(order)
+    local e = h.set("ca", { sender = "S", text = "T", who = "Jaina" })
+    e.onShown()
+    e.onDismiss()
+    assert(#order == 0, "only a click asks: " .. table.concat(order, ","))
+  end
+
+  local function test_throwing_ask_still_runs_the_callback()
+    local ran = false
+    local h = ExternalPreview.New({
+      now = function()
+        return clock
+      end,
+      askWho = function()
+        error("boom")
+      end,
+    })
+    local e = h.set("ca", {
+      sender = "S",
+      text = "T",
+      who = "Jaina",
+      onClick = function()
+        ran = true
+      end,
+    })
+    assert(pcall(e.onClick) and ran, "a failed /who never costs the caller its click")
+  end
+
   test_set_stamps_the_entry_and_fills_the_slot()
+  test_click_asks_who_before_the_callback()
+  test_click_without_who_asks_nothing()
+  test_dismiss_and_shown_ask_nothing()
+  test_throwing_ask_still_runs_the_callback()
   test_set_carries_the_detail_line()
   test_pulse_is_stored_only_as_true_and_only_when_the_owner_is_not_looking()
   test_click_clears_the_slot_then_runs_the_callback()

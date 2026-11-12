@@ -3,12 +3,15 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
 
 -- Hardware events that send a /who. A contact row click, a preview open, an
 -- icon click that opens a chat, the Toggle Window and Reply keys, a plain
 -- header click, Start New Whisper and a composer send trigger the quiet lookup
--- (AskFor); whoPlayer sends the visible shift-click /who. A right-click
+-- (AskFor); a click on another addon's preview card asks for its who name
+-- first, before the addon's own onClick runs (AskForName); whoPlayer sends the visible
+-- shift-click /who. A right-click
 -- Whisper asks from AutoOpenCoordinator instead (askWho / askWhoForName). A
 -- typed "/w Name " never asks: typing is not a hardware event for SendWho.
 -- SendWho is protected, so these must run inside the click or key press
@@ -19,6 +22,14 @@ local WhoTriggers = {}
 -- The quiet lookup for the chat a hardware event just opened or sent to.
 function WhoTriggers.AskFor(runtime, conversationKey)
   pcall(WhoLookup.TryFor, runtime, conversationKey)
+end
+
+-- The quiet lookup for a player a hardware event is about to open by name
+-- (another addon's preview click), before the chat may exist.
+function WhoTriggers.AskForName(runtime, playerName)
+  pcall(function()
+    WhoLookup.TryForName(runtime, playerName, Identity.ResolveWhisperConversation(runtime, playerName, "WOW"))
+  end)
 end
 
 function WhoTriggers.Create(runtime)

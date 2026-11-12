@@ -118,5 +118,33 @@ return function()
     assert(ok, "throwing visible who never breaks the click")
   end
 
+  -- test_ask_for_name_passes_the_known_chat_or_none
+  do
+    local original = WhoLookup.TryForName
+    local calls = {}
+    rawset(WhoLookup, "TryForName", function(rt, name, key)
+      calls[#calls + 1] = { rt = rt, name = name, key = key }
+      return true
+    end)
+    local rt = { store = { conversations = { [KEY] = { channel = "WOW", displayName = "Jaina", messages = {} } } } }
+    WhoTriggers.AskForName(rt, "Jaina")
+    WhoTriggers.AskForName(rt, "Thrall")
+    rawset(WhoLookup, "TryForName", original)
+    assert(#calls == 2, "one ask per name, got " .. #calls)
+    assert(calls[1].rt == rt and calls[1].name == "Jaina" and calls[1].key == KEY, "a known name asks for its chat")
+    assert(calls[2].name == "Thrall" and calls[2].key == nil, "an unknown name asks by name alone")
+  end
+
+  -- test_ask_for_name_never_throws
+  do
+    local original = WhoLookup.TryForName
+    rawset(WhoLookup, "TryForName", function()
+      error("boom")
+    end)
+    local ok = pcall(WhoTriggers.AskForName, { store = {} }, "Jaina")
+    rawset(WhoLookup, "TryForName", original)
+    assert(ok, "a throwing lookup never breaks the click")
+  end
+
   test_click_then_send_asks_once_per_contact()
 end
