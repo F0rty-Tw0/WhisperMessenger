@@ -11,6 +11,7 @@ local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName
 local LevelColor = ns.LevelColor or require("WhisperMessenger.UI.LevelColor")
 local PlayerMenuClick = ns.ChatBubblePlayerMenuClick or require("WhisperMessenger.UI.ChatBubble.PlayerMenuClick")
 local AddonGreetingText = ns.ChatBubbleAddonGreetingText or require("WhisperMessenger.UI.ChatBubble.AddonGreetingText")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
@@ -106,7 +107,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
         local charnameFS = ensureFontString(frame, "_wmSenderCharnameFS")
         setFontObject(charnameFS, Theme.FONTS.message_time)
         setTextColor(charnameFS, Theme.TAG_GOLD) -- match channel tag gold
-        charnameFS:SetText("- " .. message.senderName)
+        charnameFS:SetText(GlyphCoverage.Apply(charnameFS, "- " .. message.senderName))
         charnameFS:SetPoint("RIGHT", frame, "RIGHT", -Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
         nameFS:SetPoint("RIGHT", charnameFS, "LEFT", -4, 0)
         attachedCharname = true
@@ -137,7 +138,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
   else
     hideCached(frame, "_wmSenderSeenFS")
     DeliveryStatus.Hide(frame)
-    local displayName = DisplayName.Format(message.playerName or message.senderDisplayName) or ""
+    local displayName = GlyphCoverage.Apply(nameFS, DisplayName.Format(message.playerName or message.senderDisplayName) or "")
     -- "Name (20)": only "(20)" takes the difficulty colour.
     local level = message.senderLevel
     if DisplayName.ShowPlayerLevels() and type(level) == "number" and displayName ~= "" then
