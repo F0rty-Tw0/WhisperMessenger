@@ -80,9 +80,11 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
       WoWStatus.ApplySeenLevel(item, runtime)
       WoWStatus.ApplySeenZone(item)
     end
-    -- A guid-less whisper chat has no presence check: a recent /who answer
-    -- for the name is the only proof the player is online.
-    if item.channel == "WOW" and item.guid == nil and item.availability == nil and isFreshWhoAnswer(item) then
+    -- A recent /who answer for the name proves the player is online. It
+    -- beats Offline too: on WoW: Forever a grouped player a /who had just
+    -- listed still showed Offline from the whisper check.
+    local status = item.availability and item.availability.status
+    if item.channel == "WOW" and (status == nil or status == "Offline") and isFreshWhoAnswer(item) then
       item.availability = Availability.FromStatus("CanWhisper")
     end
     -- WoW contacts with no availability after all checks: default to Offline

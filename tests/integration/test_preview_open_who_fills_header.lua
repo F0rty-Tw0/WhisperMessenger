@@ -1,5 +1,6 @@
 local CompactRuntime = require("tests.helpers.compact_runtime")
 local Env = require("tests.helpers.who_lookup_env")
+local Availability = require("WhisperMessenger.Transport.Availability")
 local RaceTags = require("WhisperMessenger.Model.Identity.RaceTags")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
 
@@ -89,6 +90,29 @@ return function()
       assert(string.find(pane.headerStatus.text or "", "Mage", 1, true), "header line 1 shows the class")
       local detail = pane.headerStatusDetail.text or ""
       assert(string.find(detail, "Online", 1, true), "header shows Online, got " .. tostring(detail))
+    end)
+  end)
+
+  -- test_preview_click_who_answer_beats_guid_chat_offline
+  Env.Case("preview who beats guid offline", { whoToUi = false }, function(env)
+    CompactRuntime.Run({ compactLayout = false, showPlayerLevels = true }, function(runtime)
+      receiveWhisper(runtime)
+      -- The game's whisper check said Offline for a player who is online.
+      local conversation = runtime.store.conversations[KEY]
+      assert(conversation.guid ~= nil, "the whisper came with a guid")
+      runtime.availabilityByGUID[conversation.guid] = Availability.FromStatus("Offline")
+      clickPreview(runtime)
+      assert(#env.sent == 1, "the preview click asks /who, sent " .. #env.sent)
+
+      answerWho(env)
+      runtime.refreshWindow()
+
+      local item = contactItem(runtime, KEY)
+      local status = item.availability and item.availability.status
+      assert(status == "CanWhisper", "the /who answer shows Online, got " .. tostring(status))
+      local detail = runtime.window.conversation.headerStatusDetail.text or ""
+      assert(string.find(detail, "Online", 1, true), "header shows Online, got " .. tostring(detail))
+      assert(string.find(detail, "Orgrimmar", 1, true), "header shows the /who zone, got " .. tostring(detail))
     end)
   end)
 
