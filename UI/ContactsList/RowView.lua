@@ -18,6 +18,7 @@ local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessen
 local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.ContactsList.GroupLabel")
 local RowCompact = ns.ContactsListRowCompact or require("WhisperMessenger.UI.ContactsList.RowCompact")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 local RowView = {}
 
@@ -157,7 +158,7 @@ local function bindRow(factory, parent, row, index, item, options)
   -- For group rows, override the display name with the channel label.
   if isGroup and row.title then
     if row.title.SetText then
-      row.title:SetText(GroupLabel.ForItem(item))
+      row.title:SetText(GlyphCoverage.Apply(row.title, GroupLabel.ForItem(item)))
     end
     -- Tint the group row's title by the OWNER character's class color.
     -- `ownerClassTag` is populated from the saved player→class map when

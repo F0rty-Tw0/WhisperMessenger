@@ -8,9 +8,12 @@ local Texture = require("tests.helpers.fake_ui.texture")
 local Templates = require("tests.helpers.fake_ui.templates")
 local Mask = require("tests.helpers.fake_ui.mask")
 
--- options (optional): { masks = true } adds the mask stubs (mask.lua).
+-- options (optional): { masks = true } adds the mask stubs (mask.lua);
+-- { fontColors = true } makes SetFontObject reset the text colour to the
+-- font's, as the game does.
 local function makeCreateFrame(options)
   local masks = options ~= nil and options.masks == true
+  local fontColors = options ~= nil and options.fontColors == true
   local function createFrame(frameType, name, parent, template)
     local frame = {
       frameType = frameType,
@@ -135,6 +138,22 @@ local function makeCreateFrame(options)
 
     function frame:SetFontObject(value)
       self.fontObject = value
+      -- The game's SetFontObject also takes the font's colour over the text's.
+      if fontColors then
+        local font = type(value) == "string" and _G[value] or value
+        self.textColor = type(font) == "table" and font.GetTextColor and { font:GetTextColor() } or nil
+      end
+    end
+
+    -- A FontString made from a font template starts on that font object.
+    function frame:GetFontObject()
+      if self.fontObject ~= nil then
+        return type(self.fontObject) == "string" and _G[self.fontObject] or self.fontObject
+      end
+      if frameType == "FontString" and type(self.template) == "string" then
+        return _G[self.template]
+      end
+      return nil
     end
 
     function frame:GetStringHeight()

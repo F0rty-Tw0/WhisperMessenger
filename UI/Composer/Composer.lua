@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
@@ -201,6 +202,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
 
   input:SetScript("OnTextChanged", function()
     local text = input.GetText and input:GetText() or input.text or ""
+    GlyphCoverage.Apply(input, text)
     if not limit.accept(text, loadingDraft) then
       return
     end

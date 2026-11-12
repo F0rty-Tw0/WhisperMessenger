@@ -13,6 +13,7 @@ local ComposerLimit = ns.ComposerLimit or require("WhisperMessenger.UI.Composer.
 local PreviewMetrics = ns.ToggleIconPreviewMetrics or require("WhisperMessenger.UI.ToggleIcon.PreviewMetrics")
 local ComposerSurface = ns.ComposerSurface or require("WhisperMessenger.UI.Composer.ComposerSurface")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 local setTextColor = UIHelpers.setTextColor
 
 -- The preview card's one-line reply input plus send arrow. UI only: the
@@ -140,7 +141,9 @@ function PreviewReplyRow.Create(factory, parentFrame, options)
   end
 
   input:SetScript("OnTextChanged", function()
-    if not limit.accept(getText()) then
+    local text = getText()
+    GlyphCoverage.Apply(input, text)
+    if not limit.accept(text) then
       return
     end
     syncPlaceholder()
