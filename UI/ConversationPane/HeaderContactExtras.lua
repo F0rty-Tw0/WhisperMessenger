@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 -- Header additions for the player's own contact prefs: nickname (with the
 -- real name dimmed beside it), a muted marker, and the note (gold "Note:"
@@ -150,6 +151,7 @@ function HeaderContactExtras.RefitNote(view)
   -- Fit the plain note into what the label leaves, then colour both, so the
   -- ellipsis never cuts through a colour escape.
   local label = Localization.Text("Note:")
+  GlyphCoverage.Apply(note, text)
   note:SetText(label .. " ")
   local labelWidth = type(note.GetStringWidth) == "function" and note:GetStringWidth() or 0
   local fitted = UIHelpers.fitTextWithEllipsis(note, text, math.max(1, maxWidth - labelWidth))
