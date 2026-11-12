@@ -5,6 +5,7 @@ end
 
 local FontFamilies = ns.ThemeFontFamilies or require("WhisperMessenger.UI.Theme.FontFamilies")
 local FontColors = ns.ThemeFontColors or require("WhisperMessenger.UI.Theme.FontColors")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 local Fonts = {}
 
@@ -197,6 +198,9 @@ local function applyFonts()
       fontObj:SetShadowOffset(SHADOW_OFFSET_X, SHADOW_OFFSET_Y)
       fontObj:SetShadowColor(0, 0, 0, SHADOW_ALPHA)
     end
+
+    -- An inherited multi-script chain must stay whole: no chat-font twin then.
+    GlyphCoverage.UpdateTwin(wmName, fontObj, size, flags, inheritedSource == nil)
   end
 end
 
