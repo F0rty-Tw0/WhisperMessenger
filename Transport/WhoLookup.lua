@@ -7,6 +7,7 @@ local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
 local WhoFreshness = ns.WhoFreshness or require("WhisperMessenger.Transport.WhoFreshness")
+local WhoBlock = ns.WhoBlock or require("WhisperMessenger.Transport.WhoBlock")
 
 -- A quiet /who for a whisper contact whose level, zone and guild are older
 -- than STALE_SECONDS (or never fetched). SendWho is protected: it works only
@@ -32,6 +33,7 @@ local windowOpen = false
 local closesAt = 0
 local windowTimer = nil
 local inFlight = false
+local inFlightNameKey = nil
 local lastSentAt = nil
 local previousWhoToUi = false
 local lastAskedAt = {}
@@ -82,6 +84,15 @@ local function cleanup()
   end
 end
 
+-- Our /who will get no answer, so its name counts as never asked.
+local function forgetInFlight()
+  inFlight = false
+  if inFlightNameKey ~= nil then
+    lastAskedAt[inFlightNameKey] = nil
+  end
+  cleanup()
+end
+
 local function startTimer(seconds, callback)
   local timers = _G.C_Timer
   if timers and timers.NewTimer then
@@ -99,9 +110,10 @@ local function onWindowExpired()
   end
   windowOpen = false
   whoWindowCall("CloseWhoWindow")
+  -- No answer: the server drops a /who sent too soon after another, so the
+  -- name was never really asked and the next click may try again.
   if inFlight then
-    inFlight = false
-    cleanup()
+    forgetInFlight()
   end
 end
 
@@ -137,15 +149,15 @@ end
 
 -- Runs after every SendWho, ours included: the server throttles them all.
 -- Mythic+ runs no addon code, so a suspended hook does nothing.
--- A foreign one ends ours at once so the player's query behaves normally.
+-- A foreign one ends ours at once so the player's query behaves normally;
+-- ours then never gets its answer, so the name counts as not asked.
 local function onSendWho()
   if _G._wmSuspended then
     return
   end
   lastSentAt = now(runtime)
   if inFlight and not sendingOurs then
-    inFlight = false
-    cleanup()
+    forgetInFlight()
   end
   if not DisplayName.ShowPlayerLevels() then
     return
@@ -166,24 +178,7 @@ function WhoLookup.Init(rt)
   hooked = true
 end
 
-local function isBlocked(rt)
-  if _G.InCombatLockdown and _G.InCombatLockdown() then
-    return true
-  end
-  local chatInfo = _G.C_ChatInfo
-  if chatInfo and chatInfo.InChatMessagingLockdown and chatInfo.InChatMessagingLockdown() then
-    return true
-  end
-  if rt.isMythicLockdown and rt.isMythicLockdown() then
-    return true
-  end
-  -- Without NewTimer the window never closes and cleanup never runs.
-  local timers = _G.C_Timer
-  if not (timers and timers.NewTimer) then
-    return true
-  end
-  return (rt.isCompetitiveContent and rt.isCompetitiveContent()) == true
-end
+local isBlocked = WhoBlock.IsBlocked
 
 local function isThrottled(rt)
   if inFlight or windowOpen then
@@ -230,6 +225,7 @@ local function ask(rt, name, conversation)
   lastAskedAt[nameKey] = now(rt)
   lastSentAt = now(rt)
   inFlight = true
+  inFlightNameKey = nameKey
   local ok = pcall(sendQuery, string.match(name, "^[^-]+") or name)
   sendingOurs = false
   if not ok then
@@ -291,6 +287,7 @@ function WhoLookup._reset()
   closesAt = 0
   windowTimer = nil
   inFlight = false
+  inFlightNameKey = nil
   lastSentAt = nil
   previousWhoToUi = false
   lastAskedAt = {}

@@ -55,6 +55,13 @@ local function stampLastSeen(item, runtime)
   OnlineWatch.StampSeen(runtime, Store.Find(runtime.store, item.conversationKey))
 end
 
+-- whoAreaAt is time() seconds; WhoFreshness loads after this file.
+local function isFreshWhoAnswer(item)
+  local WhoFreshness = ns.WhoFreshness or require("WhisperMessenger.Transport.WhoFreshness")
+  local answeredAt = item.whoAreaAt
+  return type(answeredAt) == "number" and _G.time() - answeredAt < WhoFreshness.STALE_SECONDS
+end
+
 function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
   local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
   for _, item in ipairs(contacts) do
@@ -72,6 +79,11 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
     if item.channel == "WOW" then
       WoWStatus.ApplySeenLevel(item, runtime)
       WoWStatus.ApplySeenZone(item)
+    end
+    -- A guid-less whisper chat has no presence check: a recent /who answer
+    -- for the name is the only proof the player is online.
+    if item.channel == "WOW" and item.guid == nil and item.availability == nil and isFreshWhoAnswer(item) then
+      item.availability = Availability.FromStatus("CanWhisper")
     end
     -- WoW contacts with no availability after all checks: default to Offline
     if item.availability == nil and item.channel ~= "BN" then

@@ -57,6 +57,7 @@ Locale/zhTW.lua
 Locale/Localization.lua
 
 Model/Identity/Factions.lua
+Model/Identity/RaceTags.lua
 Model/Identity/ChannelType.lua
 Model/Identity/Identity.lua
 Model/ProfileCharacter.lua
@@ -137,10 +138,12 @@ Transport/BNetResolver/GameAccountProbe.lua
 Transport/BNetResolver/GuidFallback.lua
 Transport/BNetResolver.lua
 Transport/WhoFreshness.lua
+Transport/WhoBlock.lua
 Transport/WhoLookup.lua
 Core/WhoRow.lua
 Core/SeenLevelEvents/WhoLevels.lua
 Core/SeenLevelEvents/Guild.lua
+Core/SeenLevelEvents/WhoIdentity.lua
 Core/SeenLevelEvents.lua
 
 Core/LocalPlayer.lua

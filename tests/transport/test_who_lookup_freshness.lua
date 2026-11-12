@@ -57,6 +57,18 @@ local function test_same_name_asked_again_after_ten_minutes()
   end)
 end
 
+-- The server drops a /who sent too soon after another, without a reply.
+local function test_unanswered_who_is_asked_again_on_next_try()
+  Env.Case("no answer", nil, function(env)
+    Env.AddStranger(env, KEY, "Firstmoon")
+    WhoLookup.TryFor(env.runtime, KEY)
+    env.clock = env.clock + WhoLookup.WINDOW_SECONDS
+    Env.FireDueTimers(env)
+    assert(WhoLookup.TryFor(env.runtime, KEY) == true, "the first /who got no answer")
+    assert(#env.sent == 2)
+  end)
+end
+
 local function test_recent_who_answer_counts_as_fresh()
   Env.Case("recent answer", nil, function(env)
     Env.AddStranger(env, KEY, "Firstmoon")
@@ -133,6 +145,7 @@ return function()
   test_known_level_is_still_asked_when_never_asked()
   test_same_name_not_asked_again_within_ten_minutes()
   test_same_name_asked_again_after_ten_minutes()
+  test_unanswered_who_is_asked_again_on_next_try()
   test_recent_who_answer_counts_as_fresh()
   test_old_who_answer_is_stale()
   test_live_presence_zone_is_never_asked()
