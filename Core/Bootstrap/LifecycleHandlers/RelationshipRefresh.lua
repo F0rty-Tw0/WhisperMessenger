@@ -24,6 +24,30 @@ local function shouldRepaint(Bootstrap, runtime)
   return type(runtime.isWindowVisible) ~= "function" or runtime.isWindowVisible() ~= false
 end
 
+local function readFriendCount()
+  local api = _G.C_FriendList
+  if type(api) ~= "table" or type(api.GetNumFriends) ~= "function" then
+    return nil
+  end
+  local ok, count = pcall(api.GetNumFriends)
+  if not ok or type(count) ~= "number" then
+    return nil
+  end
+  return count
+end
+
+-- FRIENDLIST_UPDATE also fires on every friend login, logout and ShowFriends
+-- call. Only a changed friend count is a membership change; an unreadable
+-- count always counts as one.
+local function friendListChanged(Bootstrap)
+  local count = readFriendCount()
+  if count ~= nil and count == Bootstrap._relationshipFriendCount then
+    return false
+  end
+  Bootstrap._relationshipFriendCount = count
+  return true
+end
+
 -- A membership change drops the relationship cache and repaints once, 2 s
 -- after the last event of a burst (a trailing debounce: every event bumps the
 -- token, only the newest timer repaints). Without timers it repaints at once.
@@ -34,6 +58,9 @@ function RelationshipRefresh.handle(Bootstrap, event, unit)
     return false
   end
   if event == "PLAYER_GUILD_UPDATE" and unit ~= nil and unit ~= "player" then
+    return false
+  end
+  if event == "FRIENDLIST_UPDATE" and not friendListChanged(Bootstrap) then
     return false
   end
 
