@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local CloseGlyphButton = ns.CloseGlyphButton or require("WhisperMessenger.UI.Shared.CloseGlyphButton")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 local ContactsSearchUI = {}
 
@@ -97,7 +98,7 @@ function ContactsSearchUI.Build(factory, contactsPane, options)
   contactsSearchInput:SetPoint("TOPLEFT", contactsSearchFrame, "TOPLEFT", INPUT_LEFT_INSET_WITH_ICON, -4)
   contactsSearchInput:SetPoint("BOTTOMRIGHT", contactsSearchFrame, "BOTTOMRIGHT", -(searchClearButtonSize + 8), 4)
   contactsSearchInput:SetText("")
-  uiHelpers.setFontObject(contactsSearchInput, theme.FONTS.composer_input)
+  GlyphCoverage.SetInputFont(contactsSearchInput, theme.FONTS.composer_input)
   if contactsSearchInput.SetTextInsets then
     contactsSearchInput:SetTextInsets(0, 0, 0, 0)
   end
