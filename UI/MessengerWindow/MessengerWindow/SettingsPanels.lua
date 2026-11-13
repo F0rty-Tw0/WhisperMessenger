@@ -33,6 +33,7 @@ function SettingsPanels.Create(factory, options)
         hideBattleTagNumbers = settingsConfig.hideBattleTagNumbers,
         showPlayerLevels = settingsConfig.showPlayerLevels,
         whoLookups = settingsConfig.whoLookups,
+        showRelationshipMarks = settingsConfig.showRelationshipMarks,
         timeFormat = settingsConfig.timeFormat,
         timeSource = settingsConfig.timeSource,
         interfaceLanguage = settingsConfig.interfaceLanguage,
