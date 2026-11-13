@@ -10,6 +10,7 @@ local KEYS = {
   hideMessagePreview = true,
   hideBattleTagNumbers = true,
   showPlayerLevels = true,
+  whoLookups = true,
   showWidgetMessagePreview = true,
   widgetPreviewReply = true,
   fontFamily = true,

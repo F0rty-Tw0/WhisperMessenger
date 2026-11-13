@@ -8,7 +8,18 @@ end
 -- had typed it there: Blizzard parses it, runs the slash command or emote,
 -- updates the sticky chat type and clears the box. The edit box is passed to
 -- the handler explicitly, so the text is read from and cleared on that box.
+-- A protected command (/use, /target, /cast, ...) is the exception: run from
+-- addon code the game blocks it (ADDON_ACTION_FORBIDDEN), so it is handed to
+-- the chat box for the player to send with Enter, or shown in the copy dialog
+-- when prefilling is not safe (see ChatPrefill.IsSafe).
+local ChatPrefill = ns.ChatPrefill or require("WhisperMessenger.Util.ChatPrefill")
+-- stylua: ignore start
+local PopupUI = ns.ChatBubbleContextMenuManualCopyPopupUI or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI")
+-- stylua: ignore end
+
 local SlashCommand = {}
+
+local COMMAND_PROMPT = "Press Ctrl+C to copy the command, then paste it into chat."
 
 -- The command with leading spaces dropped, or nil when text is not a command.
 function SlashCommand.Parse(text)
@@ -40,10 +51,23 @@ local function isRestricted()
   return restrictions.isChatLocked() or restrictions.isCompetitive()
 end
 
--- Runs the command; false when the game's chat box is unavailable or restricted.
+local function handOff(command)
+  if ChatPrefill.IsSafe(command) then
+    ChatPrefill.Open(command)
+    return
+  end
+  PopupUI.ShowManualCopyDialog(command, { prompt = COMMAND_PROMPT })
+end
+
+-- Runs or hands off the command; false when the game's chat box is
+-- unavailable or restricted.
 function SlashCommand.Run(command)
   if isRestricted() then
     return false
+  end
+  if ChatPrefill.IsProtectedCommand(command) and ChatPrefill.Resolve() ~= nil then
+    handOff(command)
+    return true
   end
   local editBox, handler = resolveEnterHandler()
   if editBox == nil or handler == nil then

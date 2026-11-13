@@ -47,13 +47,15 @@ function MythicSuspendController.Attach(runtime, deps)
       EventBridge.UnregisterSuspendableLifecycleEvents(Bootstrap._loadFrame)
     end
 
+    -- Signal hooksecurefunc hooks (LinkHooks) to bail with zero addon code.
+    -- Set before SetEnabled(false), which keeps an open /who window's events
+    -- unless suspended.
+    _G._wmSuspended = true
+
     local seenLevelEvents = runtime.seenLevelEvents
     if seenLevelEvents and seenLevelEvents.SetEnabled then
       seenLevelEvents.SetEnabled(false)
     end
-
-    -- Signal hooksecurefunc hooks (LinkHooks) to bail with zero addon code.
-    _G._wmSuspended = true
 
     -- Release our R-key override so Blizzard's default /r takes over in M+.
     -- Our messenger composer is disabled here anyway, so R on our button

@@ -20,6 +20,7 @@ local EscapeSetting = ns.BootstrapWindowRuntimeEscapeSetting or require("Whisper
 local IconSettingReactions = ns.BootstrapWindowRuntimeIconSettingReactions
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconSettingReactions")
 local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
+local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
 local WindowScale = ns.MessengerWindowWindowScale
   or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
   or nil
@@ -179,6 +180,9 @@ function SettingsHandler.Create(options)
       timeFormat.Configure({ [key] = persistedValue })
     end
     DisplayNameSetting.Apply(displayName, key, persistedValue, runtime.seenLevelEvents)
+    if key == "whoLookups" then
+      WhoLookup.SetEnabled(persistedValue ~= false)
+    end
     if key == "interfaceLanguage" then
       if localization.Configure then
         localization.Configure({ language = persistedValue })

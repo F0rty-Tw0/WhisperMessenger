@@ -9,6 +9,7 @@ return function()
   local savedSlash = rawget(_G, "SlashCmdList")
   local savedHash = rawget(_G, "hash_SlashCmdList")
   local savedIsSecure = rawget(_G, "issecurevariable")
+  local savedIsSecureCmd = rawget(_G, "IsSecureCmd")
 
   local ok, err = pcall(function()
     -- test_open_passes_text_and_flags_only_during_the_call
@@ -93,6 +94,40 @@ return function()
     safeState()
     assert(ChatPrefill.IsSafe("ginvite Bob") == false, "plain text is not a known command")
     assert(ChatPrefill.IsSafe(nil) == false, "nil text is unsafe")
+
+    -- Protected commands (/use, /target) live in the game's own private table,
+    -- never in hash_SlashCmdList; the game's IsSecureCmd knows them.
+    local function secureState()
+      safeState()
+      rawset(_G, "hash_SlashCmdList", {})
+      rawset(_G, "IsSecureCmd", function(command)
+        return string.upper(command) == "/USE"
+      end)
+    end
+
+    -- test_is_safe_for_protected_command_with_nothing_pending
+    secureState()
+    assert(ChatPrefill.IsSafe("/use Hearthstone") == true, "protected command with nothing pending is safe")
+
+    -- test_is_unsafe_for_protected_command_with_pending_slash_commands
+    secureState()
+    rawset(_G, "SlashCmdList", { SOMEADDON = function() end })
+    assert(ChatPrefill.IsSafe("/use Hearthstone") == false, "pending slash commands are unsafe for protected commands too")
+
+    -- test_is_unsafe_when_is_secure_cmd_throws
+    secureState()
+    rawset(_G, "IsSecureCmd", function()
+      error("boom")
+    end)
+    assert(ChatPrefill.IsSafe("/use Hearthstone") == false, "throwing IsSecureCmd is unsafe")
+
+    -- test_is_protected_command_asks_the_game
+    secureState()
+    assert(ChatPrefill.IsProtectedCommand("/use Hearthstone") == true, "/use is protected")
+    assert(ChatPrefill.IsProtectedCommand("/roll 100") == false, "/roll is not protected")
+    assert(ChatPrefill.IsProtectedCommand(nil) == false, "nil is not protected")
+    rawset(_G, "IsSecureCmd", nil)
+    assert(ChatPrefill.IsProtectedCommand("/use Hearthstone") == false, "no IsSecureCmd -> not protected")
   end)
 
   rawset(_G, "ChatFrameUtil", savedUtil)
@@ -100,5 +135,6 @@ return function()
   rawset(_G, "SlashCmdList", savedSlash)
   rawset(_G, "hash_SlashCmdList", savedHash)
   rawset(_G, "issecurevariable", savedIsSecure)
+  rawset(_G, "IsSecureCmd", savedIsSecureCmd)
   assert(ok, err)
 end

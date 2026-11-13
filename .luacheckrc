@@ -60,6 +60,7 @@ read_globals = {
   -- Secure environment: taint checks and the game's imported slash commands
   "issecurevariable",
   "hash_SlashCmdList",
+  "IsSecureCmd",
 
   -- Core frame/widget API
   "CreateFrame",

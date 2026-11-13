@@ -2,6 +2,7 @@ local AvailabilityEnricher = require("WhisperMessenger.Model.ContactEnricher.Ava
 local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
 local SeenZone = require("WhisperMessenger.Model.SeenZone")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
+local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 
 local function makeMockClubApi(guildMembers)
   return {
@@ -31,7 +32,8 @@ end
 
 return function()
   rawset(_G, "time", rawget(_G, "time") or os.time)
-  DisplayName.Configure({ showPlayerLevels = true })
+  -- Levels off: the /who zone and Online follow the lookup option alone.
+  DisplayName.Configure({ showPlayerLevels = false })
 
   -- test_wow_item_with_guid_and_no_live_zone_gets_who_zone
   do
@@ -102,14 +104,14 @@ return function()
     assert(item.whoAreaAt == nil, "live zone should clear a stale whoAreaAt, got " .. tostring(item.whoAreaAt))
   end
 
-  -- test_who_zone_hidden_when_player_levels_setting_off
+  -- test_who_zone_hidden_when_who_lookups_setting_off
   do
     PresenceCache._reset()
     SeenZone._reset()
     SeenZone.Record("Someone", "Stormwind", 1000)
-    DisplayName.Configure({ showPlayerLevels = false })
+    WhoLookup.SetEnabled(false)
     local item = enrich({ channel = "WOW", displayName = "Someone", whoArea = "Old", whoAreaAt = 5 })
-    DisplayName.Configure({ showPlayerLevels = true })
+    WhoLookup.SetEnabled(true)
     assert(item.whoArea == nil, "setting off should clear whoArea, got " .. tostring(item.whoArea))
     assert(item.whoAreaAt == nil, "setting off should clear whoAreaAt, got " .. tostring(item.whoAreaAt))
   end

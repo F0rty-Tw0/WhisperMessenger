@@ -76,6 +76,41 @@ return function()
     assert(found, "Initialize should hook C_FriendList.SendWho")
   end
 
+  -- test_missing_who_lookups_key_turns_lookups_on
+
+  do
+    WhoLookup.SetEnabled(false)
+    initialize({})
+    assert(WhoLookup.IsEnabled() == true, "existing players without the key get lookups")
+  end
+
+  -- test_saved_who_lookups_off_keeps_lookups_off
+
+  do
+    initialize({ showPlayerLevels = true, whoLookups = false })
+    assert(WhoLookup.IsEnabled() == false, "a saved off choice keeps lookups off")
+    WhoLookup._reset()
+  end
+
+  -- Mythic+ runs no addon code: a /who answer in flight is dropped.
+  -- test_suspend_inside_who_window_drops_who_events
+
+  do
+    local savedSuspended = rawget(_G, "_wmSuspended")
+    local realIsWindowOpen = WhoLookup.IsWindowOpen
+    local runtime = initialize({ showPlayerLevels = true })
+    rawset(WhoLookup, "IsWindowOpen", function()
+      return true
+    end)
+    SeenLevelEvents.OpenWhoWindow()
+    local ok, err = pcall(runtime.suspend)
+    rawset(WhoLookup, "IsWindowOpen", realIsWindowOpen)
+    rawset(_G, "_wmSuspended", savedSuspended)
+    assert(ok, err)
+    assert(SeenLevelEvents._frame:IsEventRegistered("WHO_LIST_UPDATE") == false, "WHO_LIST_UPDATE dropped on suspend")
+    assert(SeenLevelEvents._frame:IsEventRegistered("CHAT_MSG_SYSTEM") == false, "CHAT_MSG_SYSTEM dropped on suspend")
+  end
+
   SeenLevelEvents._reset()
   DisplayName.Configure({ showPlayerLevels = false })
 end

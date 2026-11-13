@@ -3,28 +3,21 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
 local WhoFreshness = ns.WhoFreshness or require("WhisperMessenger.Transport.WhoFreshness")
 local WhoBlock = ns.WhoBlock or require("WhisperMessenger.Transport.WhoBlock")
+local WhoPanels = ns.WhoPanels or require("WhisperMessenger.Transport.WhoPanels")
 
 -- A quiet /who for a whisper contact whose level, zone and guild are older
 -- than STALE_SECONDS (or never fetched). SendWho is protected: it works only
 -- synchronously inside a hardware event (a click or a key press), never from
--- a timer.
--- FriendsFrame pops the Who window on WHO_LIST_UPDATE, and on WoW: Forever
--- so does the Group Finder's Who tab, so their event stays unregistered
--- while our query is in flight.
+-- a timer. WhoPanels keeps the game's Who panels out of it while in flight.
 local WhoLookup = {}
 
 WhoLookup.WINDOW_SECONDS = 5
 WhoLookup.MIN_GAP_SECONDS = 5
 WhoLookup.STALE_SECONDS = WhoFreshness.STALE_SECONDS
-
-local WHO_EVENT = "WHO_LIST_UPDATE"
-local WHO_LISTENERS = { "FriendsFrame", "LFGWhoListFrame" }
-local WHO_PANELS = { "WhoFrame", "LFGWhoListFrame" }
 
 ---@type table|nil
 local runtime = nil
@@ -38,6 +31,8 @@ local lastSentAt = nil
 local previousWhoToUi = false
 local lastAskedAt = {}
 local sendingOurs = false
+-- The "Look up players with /who" option; a missing saved key counts as on.
+local lookupsEnabled = true
 
 -- The client clock: runtime.now is whole-second time(), which can read a
 -- 4 s gap as 5 s.
@@ -55,33 +50,8 @@ local function whoWindowCall(method)
   end
 end
 
-local function setWhoListeners(method)
-  for _, name in ipairs(WHO_LISTENERS) do
-    local frame = _G[name]
-    if frame and frame[method] then
-      frame[method](frame, WHO_EVENT)
-    end
-  end
-end
-
--- IsVisible, not IsShown: a closed parent leaves its Who tab shown.
-local function whoPanelVisible()
-  for _, name in ipairs(WHO_PANELS) do
-    local frame = _G[name]
-    if frame and frame.IsVisible and frame:IsVisible() == true then
-      return true
-    end
-  end
-  return false
-end
-
 local function cleanup()
-  setWhoListeners("RegisterEvent")
-  -- Keep the flag on while a Who panel is on screen.
-  local api = _G.C_FriendList
-  if api and api.SetWhoToUi then
-    api.SetWhoToUi(whoPanelVisible() or previousWhoToUi)
-  end
+  WhoPanels.Release(previousWhoToUi)
 end
 
 -- Our /who will get no answer, so its name counts as never asked.
@@ -134,6 +104,14 @@ function WhoLookup.IsWindowOpen()
   return windowOpen
 end
 
+function WhoLookup.SetEnabled(on)
+  lookupsEnabled = on ~= false
+end
+
+function WhoLookup.IsEnabled()
+  return lookupsEnabled
+end
+
 function WhoLookup.OnWhoListUpdate()
   if not inFlight then
     return
@@ -159,7 +137,7 @@ local function onSendWho()
   if inFlight and not sendingOurs then
     forgetInFlight()
   end
-  if not DisplayName.ShowPlayerLevels() then
+  if not lookupsEnabled then
     return
   end
   WhoLookup.OpenWindow()
@@ -202,13 +180,8 @@ local function lookupName(rt, conversationKey)
 end
 
 local function sendQuery(shortName)
-  setWhoListeners("UnregisterEvent")
-  local api = _G.C_FriendList
-  previousWhoToUi = false
-  if api.GetWhoToUi then
-    previousWhoToUi = api.GetWhoToUi() or false
-  end
-  api.SetWhoToUi(true)
+  previousWhoToUi = false -- kept if Claim throws
+  previousWhoToUi = WhoPanels.Claim()
   WhoLookup.OpenWindow()
   sendingOurs = true
   _G.C_FriendList.SendWho('n-"' .. shortName .. '"')
@@ -236,7 +209,7 @@ local function ask(rt, name, conversation)
 end
 
 function WhoLookup.TryFor(rt, conversationKey)
-  if rt == nil or not DisplayName.ShowPlayerLevels() then
+  if rt == nil or not lookupsEnabled then
     return false
   end
   local name, conversation = lookupName(rt, conversationKey)
@@ -252,7 +225,7 @@ function WhoLookup.TryForName(rt, name, conversationKey)
   if rt ~= nil and Store.Find(rt.store, conversationKey) ~= nil then
     return WhoLookup.TryFor(rt, conversationKey)
   end
-  if rt == nil or not DisplayName.ShowPlayerLevels() or type(name) ~= "string" then
+  if rt == nil or not lookupsEnabled or type(name) ~= "string" then
     return false
   end
   if string.find(name, "|K", 1, true) then
@@ -292,6 +265,7 @@ function WhoLookup._reset()
   previousWhoToUi = false
   lastAskedAt = {}
   sendingOurs = false
+  lookupsEnabled = true
 end
 
 ns.WhoLookup = WhoLookup
