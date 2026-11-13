@@ -3,10 +3,9 @@ local FakeUI = require("tests.helpers.fake_ui")
 local ManualCopyCapture = require("tests.helpers.manual_copy_capture")
 
 -- A protected slash command (/use, /target, /cast, ...) cannot run from addon
--- code: the game blocks it. The composer hands it to the game's chat box for
--- the player to send with Enter, or shows it in the copy dialog when
--- prefilling would taint the game's slash commands. It never runs through the
--- chat box's Enter handler and is never whispered.
+-- code: the game blocks it. The composer shows it in the copy dialog for the
+-- player to paste into chat. It never fills the game's chat box, never runs
+-- through the chat box's Enter handler and is never whispered.
 
 local COMMAND_PROMPT = "Press Ctrl+C to copy the command, then paste it into chat."
 
@@ -51,7 +50,8 @@ end
 
 local SAVED_GLOBALS = { "DEFAULT_CHAT_FRAME", "ChatFrameUtil", "ChatFrame_OpenChat", "IsSecureCmd", "SlashCmdList" }
 
--- Game state where /use and /target are protected and prefilling is safe.
+-- Game state where /use and /target are protected; OpenChat records any fill
+-- of the game's chat box.
 local function setup()
   local editBox = fakeChatEditBox()
   local opened = {}
