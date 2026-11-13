@@ -11,10 +11,15 @@ return function()
     local hasEntry = fixture.hasEntry
     local resetFixture = fixture.reset
 
-    -- test_hidden_without_open_chat_function
+    -- test_hidden_without_copy_dialog
+    resetFixture()
+    rawset(_G, "StaticPopup_Show", nil)
+    assert(not hasEntry(), "no copy dialog hides Guild invite")
+
+    -- test_shown_without_open_chat_function
     resetFixture()
     rawset(_G, "ChatFrameUtil", nil)
-    assert(not hasEntry(), "no open-chat function hides Guild invite")
+    assert(hasEntry(), "Guild invite needs only the copy dialog, not the chat box")
 
     -- test_shown_without_guild_info_api
     resetFixture()

@@ -1,13 +1,12 @@
 local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local SeenGuild = require("WhisperMessenger.Model.SeenGuild")
-local ChatPrefill = require("WhisperMessenger.Util.ChatPrefill")
 local FakeUI = require("tests.helpers.fake_ui")
 
 -- A contact menu wired to stubbed game globals for the "Guild invite" entry.
 -- With(fn) calls fn(fixture) and puts every global back afterwards. The
--- fixture starts eligible (in a guild, invite rights) and in the state where
--- prefilling /ginvite is taint-safe; fixture.reset() returns to that state.
+-- fixture starts eligible (in a guild, invite rights, copy dialog available);
+-- fixture.reset() returns to that state.
 local GuildInviteMenu = {}
 
 local GLOBALS = {
@@ -24,9 +23,7 @@ local GLOBALS = {
   "Ambiguate",
   "issecretvalue",
   "GetPlayerInfoByGUID",
-  "SlashCmdList",
-  "hash_SlashCmdList",
-  "issecurevariable",
+  "StaticPopup_Show",
 }
 
 local function newRoot()
@@ -72,21 +69,18 @@ local function newFixture(anchor, modifiers, opened)
 
   function fixture.reset()
     fixture.opened = {}
-    fixture.openedWhilePrefilling = nil
     fixture.invited = {}
     SeenGuild._reset()
     rawset(_G, "IsInGuild", yes)
     rawset(_G, "CanGuildInvite", yes)
     rawset(_G, "issecretvalue", nil)
     rawset(_G, "GetPlayerInfoByGUID", nil)
+    rawset(_G, "StaticPopup_Show", function() end)
     rawset(_G, "ChatFrame_OpenChat", nil)
-    rawset(_G, "SlashCmdList", {})
-    rawset(_G, "hash_SlashCmdList", { ["/GINVITE"] = function() end })
-    rawset(_G, "issecurevariable", yes)
+    -- Records any fill of the game's chat box; a click must leave it alone.
     rawset(_G, "ChatFrameUtil", {
       OpenChat = function(text)
         fixture.opened[#fixture.opened + 1] = text
-        fixture.openedWhilePrefilling = ChatPrefill.IsOpening()
       end,
     })
     rawset(_G, "C_GuildInfo", {
