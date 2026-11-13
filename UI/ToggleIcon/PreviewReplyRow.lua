@@ -30,7 +30,7 @@ local function noop(_) end
 local function createInput(factory, rowFrame, theme)
   local input = factory.CreateFrame("EditBox", nil, rowFrame)
   input:SetText("")
-  UIHelpers.setFontObject(input, theme.FONTS.composer_input)
+  GlyphCoverage.SetInputFont(input, theme.FONTS.composer_input)
   if input.SetTextInsets then
     input:SetTextInsets(TEXT_INSET, TEXT_INSET, 0, 0)
   end
@@ -142,7 +142,6 @@ function PreviewReplyRow.Create(factory, parentFrame, options)
 
   input:SetScript("OnTextChanged", function()
     local text = getText()
-    GlyphCoverage.Apply(input, text)
     if not limit.accept(text) then
       return
     end
