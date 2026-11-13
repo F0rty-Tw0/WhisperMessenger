@@ -33,6 +33,11 @@ local function bnetStatus()
   return ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
 end
 
+local function isForever()
+  local flavor = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+  return flavor.isForever == true
+end
+
 local function isUsableString(value)
   return type(value) == "string" and not SecretValue.Is(value)
 end
@@ -64,7 +69,11 @@ local function isGuildMember(ctx)
     return false
   end
   -- Forever: the roster knows a guildmate only by the bare name (names never hold "-").
+  -- Elsewhere a bare name is the own-realm namesake, a different character.
   if call(ctx, api.MemberExistsByName, ctx.name) ~= true then
+    if not isForever() then
+      return false
+    end
     local short = ctx.name:match("^(.+)%-[^%-]+$") or ctx.name
     if short == ctx.name or call(ctx, api.MemberExistsByName, short) ~= true then
       return false

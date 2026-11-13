@@ -1,5 +1,6 @@
 local World = require("tests.helpers.relationship_world")
 local Relationship = require("WhisperMessenger.Model.Relationship")
+local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 
 local function tiesOf(rel)
   return rel and table.concat(rel.ties, ",") or "nil"
@@ -230,11 +231,27 @@ return function()
     rawset(_G, "Ambiguate", function(name)
       return name
     end)
+    local savedForever = FlavorCompat.isForever
+    FlavorCompat.isForever = true
     w.playerInfo["Player-6942-00082F35"] = { name = "Istaren Kementaro", realm = "CAMWOWEU4Realm8PvP" }
     w.guildMembers["Istaren Kementaro"] = true
     local rel = Relationship.Resolve(w.item("Player-6942-00082F35", "Istaren Kementaro"), w.runtime)
     rawset(_G, "Ambiguate", savedAmbiguate)
+    FlavorCompat.isForever = savedForever
     assert(tiesOf(rel) == "guild", "bare-name guildmate found, got " .. tiesOf(rel))
+  end
+
+  -- test_cross_realm_namesake_is_not_a_guildmate_outside_forever
+  -- Retail: "Bob-Kazzak" is a different character from the own-realm guildmate "Bob".
+  do
+    local w = World.New()
+    local savedForever = FlavorCompat.isForever
+    FlavorCompat.isForever = false
+    w.playerInfo["Player-99-BOB"] = { name = "Bob", realm = "Kazzak" }
+    w.guildMembers["Bob"] = true
+    local rel = Relationship.Resolve(w.item("Player-99-BOB", "Bob-Kazzak"), w.runtime)
+    FlavorCompat.isForever = savedForever
+    assert(not tiesOf(rel):find("guild"), "namesake gets no guild tie, got " .. tiesOf(rel))
   end
 
   -- test_ties_use_the_guid_name_over_the_display_name
