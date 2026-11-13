@@ -102,5 +102,20 @@ return function()
     mark.hover.scripts.OnLeave(mark.hover)
   end
 
+  -- test_without_click_pass_through_the_hover_frame_never_takes_the_mouse
+  do
+    local savedCreateFrame = _G.CreateFrame
+    _G.CreateFrame = function(...)
+      local frame = factory.CreateFrame(...)
+      frame.SetMouseClickEnabled = nil
+      return frame
+    end
+    local ok, mark = pcall(RelationshipMark.Create, parent, 14)
+    _G.CreateFrame = savedCreateFrame
+    assert(ok, "Create works without SetMouseClickEnabled: " .. tostring(mark))
+    assert(mark.hover.mouseEnabled ~= true, "mouse stays off so row clicks are not swallowed")
+    assert(mark.hover.mouseMotionEnabled ~= true, "motion stays off too")
+  end
+
   _G.GameTooltip = savedTooltip
 end

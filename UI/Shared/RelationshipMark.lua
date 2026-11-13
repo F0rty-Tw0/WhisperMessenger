@@ -49,14 +49,14 @@ function RelationshipMark.Create(parent, size)
 
   local hover = _G.CreateFrame("Frame", nil, parent)
   hover:SetAllPoints(icon)
-  if hover.EnableMouse then
+  -- Without click pass-through a mouse-enabled frame would eat row clicks,
+  -- so such clients get no tooltip instead.
+  if hover.SetMouseClickEnabled and hover.EnableMouse then
     hover:EnableMouse(true)
-  end
-  if hover.SetMouseClickEnabled then
     hover:SetMouseClickEnabled(false)
-  end
-  if hover.SetMouseMotionEnabled then
-    hover:SetMouseMotionEnabled(true)
+    if hover.SetMouseMotionEnabled then
+      hover:SetMouseMotionEnabled(true)
+    end
   end
   hover:Hide()
 
