@@ -12,6 +12,7 @@ local GLOBALS = { "C_GuildInfo", "C_FriendList", "C_Club", "GetGuildInfo", "GetP
 --   w.guildMembers[name] / w.friendGuids[guid] / w.friendNames[name] / w.bnetByGuid[guid] = table / w.clubNames[id]
 --   w.guildName          what GetGuildInfo("player") returns (nil = not in a guild)
 --   w.guildThrows / w.guildSecret   make MemberExistsByName throw / return "SECRET"
+--   w.friendThrows       make GetFriendInfo throw
 --   w.lastGuildName / w.lastFriendName   last name argument seen
 --   w.now                clock used by runtime.now
 --   w.setCommunity(guid, clubId, clubName)   index the guid under a community club (guild club 1 stays empty)
@@ -72,6 +73,9 @@ function World.New()
     GetFriendInfo = function(name)
       hit("friendInfo", name)
       w.lastFriendName = name
+      if w.friendThrows then
+        error("friend api failed")
+      end
       if w.friendNames[name] then
         return { connected = true }
       end

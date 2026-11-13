@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
@@ -17,14 +18,10 @@ local CACHE_SECONDS = 300
 local WOW_TIES = { "guild", "bnet", "friend", "community" }
 local BNET_TIES = { "guild", "community" }
 
--- PresenceCache, OnlineWatch, BNetResolver and BNetStatus load after this
--- file's neighbours or after the files that use it, so they resolve at call time.
+-- PresenceCache, BNetResolver and BNetStatus load after this file's
+-- neighbours or after the files that use it, so they resolve at call time.
 local function presenceCache()
   return ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
-end
-
-local function onlineWatch()
-  return ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
 end
 
 local function bnetResolver()
@@ -91,7 +88,13 @@ local function isCharacterFriend(ctx)
   if not ctx.nameOk then
     return false
   end
-  return call(ctx, onlineWatch().IsCharacterFriend, api, ctx.name) == true
+  -- Through call(), so a throwing lookup marks the result unreliable.
+  -- Same-realm friends are listed under the bare name.
+  if type(call(ctx, api.GetFriendInfo, ctx.name)) == "table" then
+    return true
+  end
+  local short = Identity.ShortName(ctx.name)
+  return short ~= ctx.name and type(call(ctx, api.GetFriendInfo, short)) == "table"
 end
 
 local function readCommunityName(ctx, clubId)

@@ -115,6 +115,30 @@ return function()
     assert(w.calls.guild == 2, "unreliable result must not be cached, guild calls " .. w.calls.guild)
   end
 
+  -- throwing friend-by-name lookup: result not cached
+  do
+    local w = World.New()
+    w.friendThrows = true
+    local item = w.item("Player-1-AAA", "Arthas")
+    assert(Relationship.Resolve(item, w.runtime) == nil, "throwing friend lookup -> no tie")
+    local first = w.calls.friendInfo
+    Relationship.Resolve(item, w.runtime)
+    assert(w.calls.friendInfo > first, "a throwing friend lookup must not be cached")
+  end
+
+  -- friend listed under the short name: the realm-qualified name falls back to it
+  do
+    local w = World.New()
+    local savedAmbiguate = rawget(_G, "Ambiguate")
+    rawset(_G, "Ambiguate", function(name)
+      return (string.gsub(name, "%-.*$", ""))
+    end)
+    w.friendNames["Arthas"] = true
+    local rel = Relationship.Resolve(w.item("Player-1-AAA", "Arthas-Lordaeron"), w.runtime)
+    assert(tiesOf(rel) == "friend", "short-name friend entry found, got " .. tiesOf(rel))
+    rawset(_G, "Ambiguate", savedAmbiguate)
+  end
+
   -- secret value: tie absent, result not cached
   do
     local w = World.New()
