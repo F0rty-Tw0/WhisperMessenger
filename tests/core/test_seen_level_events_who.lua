@@ -109,19 +109,54 @@ return function()
     assertWhoEvents(false, "should stay unregistered while suspended")
   end
 
-  -- test_set_enabled_false_with_window_open_unregisters_all_eight_events
+  -- test_set_enabled_false_outside_who_window_unregisters_every_event
   do
     reset()
     SeenLevelEvents.Init(makeRuntime({}))
     SeenLevelEvents.SetEnabled(true)
-    SeenLevelEvents.OpenWhoWindow()
     SeenLevelEvents.SetEnabled(false)
     for _, event in ipairs(SeenLevelEvents.UNIT_EVENTS) do
       assert(not isRegistered(event), event .. " should be unregistered")
     end
-    assertWhoEvents(false, "should be unregistered when recording turns off")
+    assertWhoEvents(false, "should stay unregistered outside the who window")
     SeenLevelEvents.OpenWhoWindow()
     assertWhoEvents(true, "a later who window registers with level recording off")
+  end
+
+  -- The /who lookup option, not "Show player levels", sent the query: its
+  -- answer must still be read after levels turn off mid-window.
+  -- test_set_enabled_false_inside_who_window_keeps_who_events
+  do
+    reset()
+    local realIsWindowOpen = WhoLookup.IsWindowOpen
+    rawset(WhoLookup, "IsWindowOpen", function()
+      return true
+    end)
+    SeenLevelEvents.Init(makeRuntime({}))
+    SeenLevelEvents.SetEnabled(true)
+    SeenLevelEvents.OpenWhoWindow()
+    SeenLevelEvents.SetEnabled(false)
+    rawset(WhoLookup, "IsWindowOpen", realIsWindowOpen)
+    for _, event in ipairs(SeenLevelEvents.UNIT_EVENTS) do
+      assert(not isRegistered(event), event .. " should be unregistered")
+    end
+    assertWhoEvents(true, "should stay registered while the who window is open")
+  end
+
+  -- test_set_enabled_false_while_suspended_drops_who_events
+  do
+    reset()
+    local realIsWindowOpen = WhoLookup.IsWindowOpen
+    rawset(WhoLookup, "IsWindowOpen", function()
+      return true
+    end)
+    SeenLevelEvents.Init(makeRuntime({}))
+    SeenLevelEvents.SetEnabled(true)
+    SeenLevelEvents.OpenWhoWindow()
+    rawset(_G, "_wmSuspended", true)
+    SeenLevelEvents.SetEnabled(false)
+    rawset(WhoLookup, "IsWindowOpen", realIsWindowOpen)
+    assertWhoEvents(false, "a suspended addon reads no /who answer")
   end
 
   -- test_re_enable_inside_who_window_registers_who_events

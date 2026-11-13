@@ -37,6 +37,13 @@ local function focusComposer(runtime)
   end
 end
 
+-- Another addon's preview card onClick is running: SendWho is blocked once
+-- its code has run, so a whisper it starts asks nothing (its `who` asked first).
+local function insideCardClick(runtime)
+  local preview = runtime.externalPreview
+  return preview ~= nil and preview.isRunningClick ~= nil and preview.isRunningClick() == true
+end
+
 function AutoOpenCoordinator.Attach(options)
   options = options or {}
 
@@ -77,10 +84,14 @@ function AutoOpenCoordinator.Attach(options)
     end,
     -- Quiet /who for a whisper the player started with a click or key press.
     askWho = function(conversationKey)
-      pcall(WhoLookup.TryFor, runtime, conversationKey)
+      if not insideCardClick(runtime) then
+        pcall(WhoLookup.TryFor, runtime, conversationKey)
+      end
     end,
     askWhoForName = function(playerName, conversationKey)
-      pcall(WhoLookup.TryForName, runtime, playerName, conversationKey)
+      if not insideCardClick(runtime) then
+        pcall(WhoLookup.TryForName, runtime, playerName, conversationKey)
+      end
     end,
     getLastReplyKey = function()
       return runtime.lastIncomingWhisperKey

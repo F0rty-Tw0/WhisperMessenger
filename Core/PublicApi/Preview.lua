@@ -21,7 +21,8 @@ local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
 -- missing keeps the two-line preview.
 -- preview.who (optional string): the player the card is about. A click sends
 -- the quiet /who for that name first, before onClick runs (SendWho is blocked
--- once onClick has sent a whisper or opened the window).
+-- once onClick has sent a whisper or opened the window). A whisper onClick
+-- starts asks no /who of its own, so without who the click asks nothing.
 local Preview = {}
 
 -- Same answer as api.IsPanelShown (false on any error), read off the module

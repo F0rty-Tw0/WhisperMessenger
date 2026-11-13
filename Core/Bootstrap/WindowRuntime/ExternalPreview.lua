@@ -19,6 +19,7 @@ function ExternalPreview.New(options)
   local now = options.now or _G.time
   local askWho = options.askWho
   local current = nil
+  local runningClick = false
   local holder = {}
 
   -- The card click is a hardware event, but SendWho is blocked once the
@@ -51,7 +52,10 @@ function ExternalPreview.New(options)
     entry.onClick = function()
       askWhoFor(entry.who)
       clearIfCurrent(entry)
+      -- safeCall is a pcall, so the flag resets even when the caller throws.
+      runningClick = true
       safeCall(preview.onClick)
+      runningClick = false
     end
     entry.onDismiss = function()
       clearIfCurrent(entry)
@@ -66,6 +70,12 @@ function ExternalPreview.New(options)
 
   function holder.get()
     return current
+  end
+
+  -- True only while a card's onClick runs: a whisper that code starts asks no
+  -- /who, since the game blocks SendWho once another addon's code has run.
+  function holder.isRunningClick()
+    return runningClick
   end
 
   function holder.keyOf()

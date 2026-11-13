@@ -12,7 +12,8 @@ local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup"
 -- (AskFor); a click on another addon's preview card asks for its who name
 -- first, before the addon's own onClick runs (AskForName); whoPlayer sends the visible
 -- shift-click /who. A right-click
--- Whisper asks from AutoOpenCoordinator instead (askWho / askWhoForName). A
+-- Whisper asks from AutoOpenCoordinator instead (askWho / askWhoForName),
+-- except while another addon's card onClick runs (blocked by then). A
 -- typed "/w Name " never asks: typing is not a hardware event for SendWho.
 -- SendWho is protected, so these must run inside the click or key press
 -- itself and before the window opens or the selection changes, never from a
