@@ -9,8 +9,9 @@ local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue
 -- Extended letters (Hungarian, Polish, Czech, ...): they draw as squares.
 -- Each WM_ font object on that font gets a twin on the game's chat font
 -- (Arial Narrow, what Blizzard's own chat frame uses) with the same size,
--- outline, shadow and colour. Apply moves a FontString or EditBox to the twin
--- while its text needs one of those letters, and back when it no longer does.
+-- outline, shadow and colour. Apply moves a FontString to the twin while its
+-- text needs one of those letters, and back when it no longer does. Text
+-- boxes (EditBoxes) start on the twin through SetInputFont and stay there.
 local GlyphCoverage = {}
 
 -- A twin stays paired with its base for good, so a widget left on the twin
@@ -56,10 +57,14 @@ local function chatFontPath()
   return CHAT_FONT_PATH
 end
 
+-- Text boxes sit on the twin for good (box -> its base font): a live
+-- EditBox answers nil to GetFontObject, so the base is remembered here.
+local inputs = setmetatable({}, { __mode = "k" })
+
 -- Refreshes base's twin ("<baseName>_Wide") after base changed. allowed is
 -- false when base must keep its own font chain (another script's language):
 -- the twin then just mirrors base. The twin is made the first time base
--- sits on a font without those letters.
+-- sits on a font without those letters; until then text boxes stay on base.
 function GlyphCoverage.UpdateTwin(baseName, base, size, flags, allowed)
   local wanted = allowed ~= false and type(base.GetFont) == "function" and GlyphCoverage.LacksExtendedLatin(base:GetFont())
   local twin = twinOf[base]
@@ -90,6 +95,30 @@ local function swapFont(widget, font)
   widget:SetFontObject(font)
   if r ~= nil and type(widget.SetTextColor) == "function" then
     widget:SetTextColor(r, g, b, a)
+  end
+end
+
+-- The font a text box should use: font's twin when it has one, else font.
+-- font is a font object or its global name.
+function GlyphCoverage.InputFont(font)
+  local base = _G[font] or font
+  return twinOf[base] or base
+end
+
+-- Puts box on the twin of font and keeps it there across font refreshes.
+function GlyphCoverage.SetInputFont(box, font)
+  if type(box) ~= "table" or type(box.SetFontObject) ~= "function" then
+    return
+  end
+  local base = _G[font] or font
+  inputs[box] = base
+  swapFont(box, GlyphCoverage.InputFont(base))
+end
+
+-- Re-points every text box at its twin after the fonts were rebuilt.
+function GlyphCoverage.RefreshInputs()
+  for box, base in pairs(inputs) do
+    swapFont(box, GlyphCoverage.InputFont(base))
   end
 end
 
