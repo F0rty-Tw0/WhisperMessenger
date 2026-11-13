@@ -15,6 +15,7 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local HeaderContactExtras = ns.ConversationPaneHeaderContactExtras or require("WhisperMessenger.UI.ConversationPane.HeaderContactExtras")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local HeaderFit = ns.ConversationPaneHeaderFit or require("WhisperMessenger.UI.ConversationPane.HeaderFit")
+local HeaderRelationship = ns.ConversationPaneHeaderRelationship or require("WhisperMessenger.UI.ConversationPane.HeaderRelationship")
 
 -- Top inset of the name row; the two status rows hang below it.
 local HEADER_NAME_TOP_INSET = 7
@@ -125,6 +126,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
     headerChannelChip = headerChannelChip,
   }
   HeaderContactExtras.Create(factory, view, headerFrame, headerName)
+  HeaderRelationship.Create(view, headerFrame, headerName)
   return view
 end
 
@@ -260,6 +262,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
         view.headerFactionIcon:Hide()
       end
     end
+    HeaderRelationship.Refresh(view, selectedContact, vm and vm.isGroup)
 
     AddonBadge.Refresh(view, selectedContact, conversation)
     HeaderFit.Name(view)
