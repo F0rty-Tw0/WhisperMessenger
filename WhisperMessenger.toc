@@ -138,6 +138,7 @@ Transport/BNetResolver/AccountName.lua
 Transport/BNetResolver/GameAccountProbe.lua
 Transport/BNetResolver/GuidFallback.lua
 Transport/BNetResolver.lua
+Model/Relationship.lua
 Transport/WhoFreshness.lua
 Transport/WhoBlock.lua
 Transport/WhoPanels.lua
