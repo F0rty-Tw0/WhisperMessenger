@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 local Relationship = ns.Relationship or require("WhisperMessenger.Model.Relationship")
 
 -- Small icon for how the player knows a contact, drawn by the contact row and
@@ -19,6 +20,25 @@ local function textureFor(rel)
     return nil
   end
   return Theme.TEXTURES["relationship_" .. rel.primary]
+end
+
+-- Paints the tie's atlas when it has one and the client can draw it.
+-- Returns false otherwise, leaving the icon untouched.
+local function paintAtlas(icon, tie)
+  local atlas = Theme.RelationshipAtlas(tie)
+  if atlas == nil or type(icon.SetAtlas) ~= "function" or NativeArt.AtlasInfo(atlas) == nil then
+    return false
+  end
+  icon:SetAtlas(atlas, false)
+  return true
+end
+
+local function paintTexture(icon, path)
+  icon:SetTexture(path)
+  -- An earlier atlas bind leaves its crop behind; show the whole image.
+  if icon.SetTexCoord then
+    icon:SetTexCoord(0, 1, 0, 1)
+  end
 end
 
 local function showTooltip(mark)
@@ -79,8 +99,12 @@ function RelationshipMark.Bind(mark, rel)
     return false
   end
   local icon = mark.icon
-  icon:SetTexture(path)
-  local tint = Theme.RelationshipTint(rel.primary)
+  -- Atlas art is drawn as is; only the file fallback takes the tie's tint.
+  local tint = nil
+  if not paintAtlas(icon, rel.primary) then
+    paintTexture(icon, path)
+    tint = Theme.RelationshipTint(rel.primary)
+  end
   if icon.SetDesaturated then
     icon:SetDesaturated(tint ~= nil)
   end

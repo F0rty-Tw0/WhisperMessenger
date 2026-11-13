@@ -28,11 +28,12 @@ return function()
       Relationship.Resolve(item, w.runtime)
     end
     assert(w.totalCalls() <= 50 * 4, "cold resolve costs at most 4 calls per contact, got " .. w.totalCalls())
-    local cold = w.totalCalls()
+    local cold, coldNames = w.totalCalls(), w.playerInfoCalls
     for _, item in ipairs(items) do
       Relationship.Resolve(item, w.runtime)
     end
     assert(w.totalCalls() == cold, "warm refresh must make zero tie API calls")
+    assert(w.playerInfoCalls == coldNames, "warm refresh must not look up names, got " .. (w.playerInfoCalls - coldNames))
   end
 
   -- test_entry_expires_after_300_seconds
@@ -80,9 +81,10 @@ return function()
     w.setBNet(7, { characterName = "Frodo", playerGuid = "Player-1-BNF" })
     local chat = w.bnItem(7)
     Relationship.Resolve(chat, w.runtime)
-    local guildCalls, accountCalls = w.calls.guild, w.calls.account
+    local guildCalls, accountCalls, nameCalls = w.calls.guild, w.calls.account, w.playerInfoCalls
     Relationship.Resolve(chat, w.runtime)
     assert(w.calls.guild == guildCalls, "BNet chat hit calls no tie API")
+    assert(w.playerInfoCalls == nameCalls, "BNet chat hit does not look up the character name")
     assert(w.calls.account > accountCalls, "BNet chat hit still asks the account lookup for its key")
     w.setBNet(7, { characterName = "Sam", playerGuid = "Player-1-SAM" })
     Relationship.Resolve(chat, w.runtime)
@@ -99,9 +101,9 @@ return function()
 
   -- test_tooltip_lines_text_and_order
   do
-    local full = { primary = "guild", ties = { "guild", "bnet", "friend", "community" }, guildName = "Moonwatch", communityName = "Trade Hall" }
+    local full = { primary = "bnet", ties = { "bnet", "guild", "friend", "community" }, guildName = "Moonwatch", communityName = "Trade Hall" }
     local lines = Relationship.TooltipLines(full)
-    assert(table.concat(lines, "|") == "Guild: Moonwatch|Battle.net friend|Friend|Community: Trade Hall", "got " .. table.concat(lines, "|"))
+    assert(table.concat(lines, "|") == "Battle.net friend|Guild: Moonwatch|Friend|Community: Trade Hall", "got " .. table.concat(lines, "|"))
     local bare = { primary = "guild", ties = { "guild", "community" } }
     assert(table.concat(Relationship.TooltipLines(bare), "|") == "Guild|Community", "no names -> bare labels")
     assert(#Relationship.TooltipLines(nil) == 0, "nil rel -> no lines")

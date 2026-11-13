@@ -28,6 +28,16 @@ local CHANNEL_CONTEXT_KEYS = {
   "Show their last channel message",
   "When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it.",
 }
+local RELATIONSHIP_KEYS = {
+  "Guild: %s",
+  "Guild",
+  "Battle.net friend",
+  "Friend",
+  "Community: %s",
+  "Community",
+  "Show relationship marks",
+  "Show a small icon next to names for guildmates, friends and community members.",
+}
 local BORDER_REASON_KEY = "Only with Show border on."
 local BORDER_KEYS = {
   "Show border",
@@ -170,6 +180,11 @@ return function()
 
     -- test_community_notice_is_translated
     for _, key in ipairs(COMMUNITY_NOTICE_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_relationship_strings_are_translated
+    for _, key in ipairs(RELATIONSHIP_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 

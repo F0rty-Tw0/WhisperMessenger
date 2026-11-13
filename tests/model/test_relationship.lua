@@ -1,5 +1,6 @@
 local World = require("tests.helpers.relationship_world")
 local Relationship = require("WhisperMessenger.Model.Relationship")
+local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 
 local function tiesOf(rel)
   return rel and table.concat(rel.ties, ",") or "nil"
@@ -40,7 +41,35 @@ return function()
     w.friendGuids["Player-1-AAA"] = true
     w.setCommunity("Player-1-AAA", 5, "Trade Hall")
     local rel = Relationship.Resolve(w.item("Player-1-AAA", "Arthas"), w.runtime)
-    assert(tiesOf(rel) == "guild,bnet,friend,community" and rel.primary == "guild", "priority order, got " .. tiesOf(rel))
+    assert(tiesOf(rel) == "bnet,guild,friend,community" and rel.primary == "bnet", "priority order, got " .. tiesOf(rel))
+  end
+
+  -- test_whisper_from_guildmate_on_battle_net_marks_bnet_first
+  do
+    local w = World.New()
+    w.guildMembers["Arthas"] = true
+    w.bnetByGuid["Player-1-AAA"] = {}
+    local rel = Relationship.Resolve(w.item("Player-1-AAA", "Arthas"), w.runtime)
+    assert(tiesOf(rel) == "bnet,guild" and rel.primary == "bnet", "bnet wins over guild, got " .. tiesOf(rel))
+  end
+
+  -- test_bnet_chat_with_guildmate_in_wow_marks_bnet_then_guild
+  do
+    local w = World.New()
+    w.setBNet(7, { characterName = "Frodo", playerGuid = "Player-1-BNF" })
+    w.guildMembers["Frodo"] = true
+    local rel = Relationship.Resolve(w.bnItem(7), w.runtime)
+    assert(tiesOf(rel) == "bnet,guild" and rel.primary == "bnet", "BNet chat in guild, got " .. tiesOf(rel))
+  end
+
+  -- test_bnet_chat_with_friend_offline_marks_bnet_only
+  do
+    local w = World.New()
+    w.guildMembers["Frodo"] = true
+    w.setBNet(7, { characterName = "", playerGuid = "Player-1-BNF" })
+    local rel = Relationship.Resolve(w.bnItem(7), w.runtime)
+    assert(tiesOf(rel) == "bnet" and rel.primary == "bnet", "offline BNet friend, got " .. tiesOf(rel))
+    assert(w.calls.guild == 0 and w.playerInfoCalls == 0, "offline BNet chat calls no tie API")
   end
 
   -- test_no_ties_returns_nil
@@ -49,7 +78,7 @@ return function()
     assert(Relationship.Resolve(w.item("Player-1-AAA", "Arthas"), w.runtime) == nil, "no tie -> nil")
   end
 
-  -- AC 2: a BNet friend's alt whispering shows bnet; the BNet chat shows only guild/community
+  -- AC 2: a BNet friend's alt whispering shows bnet; the BNet chat shows bnet, then guild/community
   do
     local w = World.New()
     w.bnetByGuid["Player-1-ALT"] = { bnetAccountID = 7 }
@@ -63,20 +92,20 @@ return function()
     w.setCommunity("Player-1-BNF", 5, "Trade Hall")
     local before = { w.calls.bnetGuid, w.calls.isFriend, w.calls.friendInfo }
     local rel = Relationship.Resolve(w.bnItem(7), w.runtime)
-    assert(tiesOf(rel) == "guild,community", "BNet chat: guild/community only, got " .. tiesOf(rel))
+    assert(tiesOf(rel) == "bnet,guild,community", "BNet chat: bnet then guild/community, got " .. tiesOf(rel))
     assert(w.calls.bnetGuid == before[1] and w.calls.isFriend == before[2] and w.calls.friendInfo == before[3], "BNet chat must not ask bnet/friend")
     -- name never carries the realm
     assert(w.lastGuildName == "Frodo", "BNet-chat name must not include realmName, got " .. tostring(w.lastGuildName))
   end
 
-  -- BNet chat: offline, other game, no playerGuid, group channel -> nil
+  -- BNet chat: not in WoW, no playerGuid, throwing lookup -> bnet only; group channel -> nil
   do
     local w = World.New()
     w.guildMembers["Frodo"] = true
     w.setBNet(7, { characterName = "", playerGuid = "Player-1-BNF" })
-    assert(Relationship.Resolve(w.bnItem(7), w.runtime) == nil, "BNet friend not in WoW -> nil")
+    assert(tiesOf(Relationship.Resolve(w.bnItem(7), w.runtime)) == "bnet", "BNet friend not in WoW -> bnet only")
     w.setBNet(8, { characterName = "Frodo" })
-    assert(Relationship.Resolve(w.bnItem(8), w.runtime) == nil, "no playerGuid -> nil")
+    assert(tiesOf(Relationship.Resolve(w.bnItem(8), w.runtime)) == "bnet", "no playerGuid -> bnet only")
     assert(w.nilArgs == 0 and w.calls.guild == 0, "no tie API for a BNet chat without playerGuid")
     assert(
       Relationship.Resolve({ conversationKey = "g", channel = "GUILD", guid = "Player-1-AAA", displayName = "Arthas" }, w.runtime) == nil,
@@ -86,7 +115,8 @@ return function()
     w.runtime.bnetApi.GetAccountInfoByID = function()
       error("bnet api failed")
     end
-    assert(Relationship.Resolve(w.bnItem(9), w.runtime) == nil, "throwing account lookup -> nil, no error")
+    local ok, rel = pcall(Relationship.Resolve, w.bnItem(9), w.runtime)
+    assert(ok and tiesOf(rel) == "bnet", "throwing account lookup -> bnet only, no error")
   end
 
   -- missing API table / missing function -> tie absent, no error
@@ -115,6 +145,30 @@ return function()
     assert(w.calls.guild == 2, "unreliable result must not be cached, guild calls " .. w.calls.guild)
   end
 
+  -- throwing friend-by-name lookup: result not cached
+  do
+    local w = World.New()
+    w.friendThrows = true
+    local item = w.item("Player-1-AAA", "Arthas")
+    assert(Relationship.Resolve(item, w.runtime) == nil, "throwing friend lookup -> no tie")
+    local first = w.calls.friendInfo
+    Relationship.Resolve(item, w.runtime)
+    assert(w.calls.friendInfo > first, "a throwing friend lookup must not be cached")
+  end
+
+  -- friend listed under the short name: the realm-qualified name falls back to it
+  do
+    local w = World.New()
+    local savedAmbiguate = rawget(_G, "Ambiguate")
+    rawset(_G, "Ambiguate", function(name)
+      return (string.gsub(name, "%-.*$", ""))
+    end)
+    w.friendNames["Arthas"] = true
+    local rel = Relationship.Resolve(w.item("Player-1-AAA", "Arthas-Lordaeron"), w.runtime)
+    assert(tiesOf(rel) == "friend", "short-name friend entry found, got " .. tiesOf(rel))
+    rawset(_G, "Ambiguate", savedAmbiguate)
+  end
+
   -- secret value: tie absent, result not cached
   do
     local w = World.New()
@@ -137,7 +191,7 @@ return function()
     assert(w.nilArgs == 0, "no tie API may receive nil, got " .. w.nilArgs)
     w.setBNet(7, { characterName = "Frodo", playerGuid = nil })
     ok, rel = pcall(Relationship.Resolve, w.bnItem(7), w.runtime)
-    assert(ok and rel == nil and w.nilArgs == 0, "BNet chat with no playerGuid -> nil, no nil argument")
+    assert(ok and tiesOf(rel) == "bnet" and w.nilArgs == 0, "BNet chat with no playerGuid -> bnet only, no nil argument")
   end
 
   -- Review Focus 2: player in no guild
@@ -166,6 +220,48 @@ return function()
     assert(tiesOf(rel) == "guild,friend", "space name keeps both ties, got " .. tiesOf(rel))
     assert(w.lastGuildName == "Gurkan Warbringer", "guild check got " .. tostring(w.lastGuildName))
     assert(w.lastFriendName == "Gurkan Warbringer", "friend check got " .. tostring(w.lastFriendName))
+  end
+
+  -- test_guild_check_falls_back_to_the_bare_name (Forever: GUID realm is a server id)
+  -- Ambiguate keeps a realm it does not treat as the player's own, so the
+  -- fallback must not depend on it.
+  do
+    local w = World.New()
+    local savedAmbiguate = rawget(_G, "Ambiguate")
+    rawset(_G, "Ambiguate", function(name)
+      return name
+    end)
+    local savedForever = FlavorCompat.isForever
+    FlavorCompat.isForever = true
+    w.playerInfo["Player-6942-00082F35"] = { name = "Istaren Kementaro", realm = "CAMWOWEU4Realm8PvP" }
+    w.guildMembers["Istaren Kementaro"] = true
+    local rel = Relationship.Resolve(w.item("Player-6942-00082F35", "Istaren Kementaro"), w.runtime)
+    rawset(_G, "Ambiguate", savedAmbiguate)
+    FlavorCompat.isForever = savedForever
+    assert(tiesOf(rel) == "guild", "bare-name guildmate found, got " .. tiesOf(rel))
+  end
+
+  -- test_cross_realm_namesake_is_not_a_guildmate_outside_forever
+  -- Retail: "Bob-Kazzak" is a different character from the own-realm guildmate "Bob".
+  do
+    local w = World.New()
+    local savedForever = FlavorCompat.isForever
+    FlavorCompat.isForever = false
+    w.playerInfo["Player-99-BOB"] = { name = "Bob", realm = "Kazzak" }
+    w.guildMembers["Bob"] = true
+    local rel = Relationship.Resolve(w.item("Player-99-BOB", "Bob-Kazzak"), w.runtime)
+    FlavorCompat.isForever = savedForever
+    assert(not tiesOf(rel):find("guild"), "namesake gets no guild tie, got " .. tiesOf(rel))
+  end
+
+  -- test_ties_use_the_guid_name_over_the_display_name
+  do
+    local w = World.New()
+    w.playerInfo["Player-1-AAA"] = { name = "Arthas", realm = "" }
+    w.guildMembers["Arthas"] = true
+    w.friendNames["Arthas"] = true
+    local rel = Relationship.Resolve(w.item("Player-1-AAA", "Stalename"), w.runtime)
+    assert(tiesOf(rel) == "guild,friend", "GUID name checked, got " .. tiesOf(rel))
   end
 
   print("  All Relationship resolve tests passed")

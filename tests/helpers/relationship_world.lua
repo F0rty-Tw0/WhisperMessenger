@@ -8,9 +8,12 @@ local GLOBALS = { "C_GuildInfo", "C_FriendList", "C_Club", "GetGuildInfo", "GetP
 --   w.runtime            { now, bnetApi, accountState = { settings = {} } }
 --   w.calls              counters: guild, guildInfo, isFriend, friendInfo, bnetGuid, clubInfo, account
 --   w.nilArgs            number of tie-API calls that received a nil argument
+--   w.playerInfoCalls    GetPlayerInfoByGUID calls
+--   w.playerInfo[guid] = { name, realm }   what GetPlayerInfoByGUID answers (nothing by default, so names stay as given)
 --   w.guildMembers[name] / w.friendGuids[guid] / w.friendNames[name] / w.bnetByGuid[guid] = table / w.clubNames[id]
 --   w.guildName          what GetGuildInfo("player") returns (nil = not in a guild)
 --   w.guildThrows / w.guildSecret   make MemberExistsByName throw / return "SECRET"
+--   w.friendThrows       make GetFriendInfo throw
 --   w.lastGuildName / w.lastFriendName   last name argument seen
 --   w.now                clock used by runtime.now
 --   w.setCommunity(guid, clubId, clubName)   index the guid under a community club (guild club 1 stays empty)
@@ -21,6 +24,7 @@ function World.New()
   local w = {
     calls = { guild = 0, guildInfo = 0, isFriend = 0, friendInfo = 0, bnetGuid = 0, clubInfo = 0, account = 0 },
     nilArgs = 0,
+    playerInfoCalls = 0,
     guildMembers = {},
     friendGuids = {},
     friendNames = {},
@@ -28,6 +32,7 @@ function World.New()
     clubNames = {},
     accounts = {},
     communities = {},
+    playerInfo = {},
     guildName = "Moonwatch",
     now = 1000,
   }
@@ -53,6 +58,15 @@ function World.New()
       return w.guildMembers[name] == true
     end,
   })
+  -- Counted apart from w.calls: it is the name lookup, not a tie API.
+  rawset(_G, "GetPlayerInfoByGUID", function(guid)
+    w.playerInfoCalls = w.playerInfoCalls + 1
+    local info = w.playerInfo[guid]
+    if info == nil then
+      return nil
+    end
+    return nil, nil, nil, nil, nil, info.name, info.realm
+  end)
   rawset(_G, "GetGuildInfo", function(unit)
     hit("guildInfo", unit)
     return w.guildName
@@ -65,6 +79,9 @@ function World.New()
     GetFriendInfo = function(name)
       hit("friendInfo", name)
       w.lastFriendName = name
+      if w.friendThrows then
+        error("friend api failed")
+      end
       if w.friendNames[name] then
         return { connected = true }
       end

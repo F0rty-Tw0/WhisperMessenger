@@ -158,6 +158,47 @@ return function()
     assert(RelationshipRefresh.handle(Bootstrap, "PLAYER_GUILD_UPDATE") == true, "no unit counts too")
   end
 
+  -- test_friendlist_update_invalidates_only_when_the_friend_count_changes
+  do
+    local savedFriendList = rawget(_G, "C_FriendList")
+    local count = 5
+    rawset(_G, "C_FriendList", {
+      GetNumFriends = function()
+        return count
+      end,
+    })
+    local scheduled = captureTimers()
+    local Bootstrap, state = build()
+    assert(RelationshipRefresh.handle(Bootstrap, "FRIENDLIST_UPDATE") == true, "the first count is new")
+    local kept = Bootstrap.runtime.relationshipCache
+    local timers = #scheduled
+    assert(RelationshipRefresh.handle(Bootstrap, "FRIENDLIST_UPDATE") == false, "same count: a status change, not a membership change")
+    assert(Bootstrap.runtime.relationshipCache == kept and #scheduled == timers, "same count keeps the cache and schedules nothing")
+    count = 6
+    assert(RelationshipRefresh.handle(Bootstrap, "FRIENDLIST_UPDATE") == true, "a new count invalidates")
+    assert(Bootstrap.runtime.relationshipCache ~= kept and #scheduled == timers + 1, "a new count drops the cache and repaints")
+    assert(RelationshipRefresh.handle(Bootstrap, "CLUB_MEMBER_ADDED") == true, "other events ignore the friend count")
+    assert(state.repaints == 0, "nothing fired yet")
+    rawset(_G, "C_FriendList", savedFriendList)
+  end
+
+  -- test_friendlist_update_with_a_throwing_count_still_invalidates
+  do
+    local savedFriendList = rawget(_G, "C_FriendList")
+    rawset(_G, "C_FriendList", {
+      GetNumFriends = function()
+        error("friend list not ready")
+      end,
+    })
+    captureTimers()
+    local Bootstrap = build()
+    RelationshipRefresh.handle(Bootstrap, "FRIENDLIST_UPDATE")
+    local kept = Bootstrap.runtime.relationshipCache
+    assert(RelationshipRefresh.handle(Bootstrap, "FRIENDLIST_UPDATE") == true, "an unreadable count invalidates every time")
+    assert(Bootstrap.runtime.relationshipCache ~= kept, "the cache drops")
+    rawset(_G, "C_FriendList", savedFriendList)
+  end
+
   -- test_no_runtime_is_harmless
   do
     captureTimers()

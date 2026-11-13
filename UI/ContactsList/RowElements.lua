@@ -25,7 +25,7 @@ local UNREAD_BADGE_BOTTOM_OFFSET = 12
 local RowElements = {}
 
 local NAME_LABEL_LEFT_INSET = RowTextAnchors.NAME_LABEL_LEFT_INSET
-local NAME_TO_ICON_GAP = 4
+local NAME_TO_ICON_GAP = RowRelationship.GAP
 local NAME_TO_TIME_GAP = 2
 local TIME_LABEL_FALLBACK_WIDTH = 14
 local TIME_LABEL_RIGHT_INSET = 6

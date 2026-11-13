@@ -62,6 +62,32 @@ return function()
     assert(PresenceCache.GetCommunityClubId("Player-GuildOnly") == nil, "guild-only member has no community")
   end
 
+  -- GetGuildClubId failed: the guild club is still known by its club type
+  do
+    local savedEnum = rawget(_G, "Enum")
+    rawset(_G, "Enum", { ClubType = { Character = 1, Guild = 2 } })
+    local api = makeApi(nil, {}, {
+      [GUILD] = { { guid = "Player-Both", presence = 1 }, { guid = "Player-GuildOnly", presence = 1 } },
+      [COMM_A] = { { guid = "Player-Both", presence = 1 } },
+    })
+    api.GetGuildClubId = function()
+      error("guild club not ready")
+    end
+    api.GetSubscribedClubs = function()
+      return { { clubId = GUILD, clubType = 2 }, { clubId = COMM_A, clubType = 1 } }
+    end
+    PresenceCache._reset()
+    PresenceCache._initForTest(api, {
+      now = function()
+        return 100
+      end,
+    })
+    assert(PresenceCache.GetCommunityClubId("Player-GuildOnly") == nil, "a guildmate must not be indexed under the guild club")
+    assert(PresenceCache.GetCommunityClubId("Player-Both") == COMM_A, "a guildmate in a community still maps to the community")
+    assert(PresenceCache.GetPresence("Player-GuildOnly") == "online", "guild members still get presence")
+    rawset(_G, "Enum", savedEnum)
+  end
+
   -- member of two communities: the first one in API order wins
   do
     build(GUILD, { GUILD, COMM_A, COMM_B }, {

@@ -24,6 +24,78 @@ local function fakeTooltip()
   return state
 end
 
+local GUILD_ATLAS = "communities-guildbanner-background"
+
+-- Runs fn with a C_Texture that knows the guild atlas when `known`.
+local function withAtlas(known, fn)
+  local saved = rawget(_G, "C_Texture")
+  rawset(_G, "C_Texture", {
+    GetAtlasInfo = function(atlas)
+      if known and atlas == GUILD_ATLAS then
+        return { width = 64, height = 64 }
+      end
+      return nil
+    end,
+  })
+  local ok, err = pcall(fn)
+  rawset(_G, "C_Texture", saved)
+  if not ok then
+    error(err, 0)
+  end
+end
+
+local function assertWhite(icon, label)
+  local c = icon.vertexColor
+  assert(c and c[1] == 1 and c[2] == 1 and c[3] == 1, label .. ": white vertex")
+  assert(icon.desaturated ~= true, label .. ": not desaturated")
+end
+
+local function guildRel()
+  return { primary = "guild", ties = { "guild" } }
+end
+
+local function testGuildAtlas(parent)
+  -- test_guild_uses_the_banner_atlas_untinted_when_the_client_has_it
+  withAtlas(true, function()
+    local mark = RelationshipMark.Create(parent, 14)
+    assert(RelationshipMark.Bind(mark, guildRel()) == true, "atlas guild: shown")
+    assert(mark.icon.atlas == GUILD_ATLAS, "atlas guild: SetAtlas, got " .. tostring(mark.icon.atlas))
+    assert(mark.icon.useAtlasSize == false, "atlas guild: keeps the mark size")
+    assert(mark.icon.texturePath == nil, "atlas guild: no file texture")
+    assertWhite(mark.icon, "atlas guild")
+  end)
+
+  -- test_guild_falls_back_to_the_green_shield_when_the_atlas_is_missing
+  withAtlas(false, function()
+    local mark = RelationshipMark.Create(parent, 14)
+    RelationshipMark.Bind(mark, guildRel())
+    local tint = Theme.RelationshipTint("guild")
+    assert(mark.icon.atlas == nil, "no atlas: SetAtlas not called")
+    assert(mark.icon.texturePath == "Interface\\ICONS\\INV_Shield_06", "no atlas: shield, got " .. tostring(mark.icon.texturePath))
+    assert(mark.icon.desaturated == true and mark.icon.vertexColor[2] == tint[2], "no atlas: green tint")
+  end)
+
+  -- test_guild_falls_back_when_the_texture_cannot_draw_atlases
+  withAtlas(true, function()
+    local mark = RelationshipMark.Create(parent, 14)
+    mark.icon.SetAtlas = nil
+    RelationshipMark.Bind(mark, guildRel())
+    assert(mark.icon.texturePath == Theme.TEXTURES.relationship_guild, "no SetAtlas: shield")
+    assert(mark.icon.desaturated == true, "no SetAtlas: tinted")
+  end)
+
+  -- test_rebinding_atlas_guild_to_friend_leaves_no_stale_atlas_state
+  withAtlas(true, function()
+    local mark = RelationshipMark.Create(parent, 14)
+    RelationshipMark.Bind(mark, guildRel())
+    RelationshipMark.Bind(mark, { primary = "friend", ties = { "friend" } })
+    assert(mark.icon.texturePath == Theme.TEXTURES.relationship_friend, "rebind: friend texture")
+    local tc = mark.icon.texCoords
+    assert(tc and tc[1] == 0 and tc[2] == 1 and tc[3] == 0 and tc[4] == 1, "rebind: atlas crop reset to the full image")
+    assertWhite(mark.icon, "rebind friend")
+  end)
+end
+
 return function()
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", nil, nil)
@@ -58,6 +130,8 @@ return function()
     RelationshipMark.Bind(bnet, { primary = "bnet", ties = { "bnet" } })
     assert(bnet.icon.desaturated ~= true and bnet.icon.vertexColor[1] == 1 and bnet.icon.vertexColor[3] == 1, "bnet untinted")
   end
+
+  testGuildAtlas(parent)
 
   -- test_bind_nil_or_unknown_hides_both
   do
