@@ -53,10 +53,9 @@ function ExternalPreview.New(options)
       askWhoFor(entry.who)
       clearIfCurrent(entry)
       -- safeCall is a pcall, so the flag resets even when the caller throws.
-      local outer = runningClick
       runningClick = true
       safeCall(preview.onClick)
-      runningClick = outer
+      runningClick = false
     end
     entry.onDismiss = function()
       clearIfCurrent(entry)
