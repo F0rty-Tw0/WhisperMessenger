@@ -127,6 +127,16 @@ return function()
       assert(#opened == 0, "an unprotected command is not prefilled")
     end
 
+    -- test_protected_command_without_open_chat_runs_directly_instead_of_vanishing
+    do
+      local editBox = setup()
+      rawset(_G, "ChatFrameUtil", nil)
+      rawset(_G, "ChatFrame_OpenChat", nil)
+      local composer = build()
+      press(composer, "/use Hearthstone")
+      assert(editBox.ran[1] == "/use Hearthstone", "no way to open chat -> runs as before, got " .. tostring(editBox.ran[1]))
+    end
+
     -- test_missing_secure_check_runs_command_directly
     do
       local editBox = setup()
