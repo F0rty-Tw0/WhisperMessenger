@@ -222,11 +222,13 @@ return function()
   end
 
   -- test_guild_check_falls_back_to_the_bare_name (Forever: GUID realm is a server id)
+  -- Ambiguate keeps a realm it does not treat as the player's own, so the
+  -- fallback must not depend on it.
   do
     local w = World.New()
     local savedAmbiguate = rawget(_G, "Ambiguate")
     rawset(_G, "Ambiguate", function(name)
-      return (string.gsub(name, "%-[^%-]*$", ""))
+      return name
     end)
     w.playerInfo["Player-6942-00082F35"] = { name = "Istaren Kementaro", realm = "CAMWOWEU4Realm8PvP" }
     w.guildMembers["Istaren Kementaro"] = true

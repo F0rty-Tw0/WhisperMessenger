@@ -63,9 +63,9 @@ local function isGuildMember(ctx)
   if type(api) ~= "table" or not ctx.nameOk then
     return false
   end
-  -- Forever: the guild roster knows a guildmate only by the bare name.
+  -- Forever: the roster knows a guildmate only by the bare name (names never hold "-").
   if call(ctx, api.MemberExistsByName, ctx.name) ~= true then
-    local short = Identity.ShortName(ctx.name)
+    local short = ctx.name:match("^(.+)%-[^%-]+$") or ctx.name
     if short == ctx.name or call(ctx, api.MemberExistsByName, short) ~= true then
       return false
     end
