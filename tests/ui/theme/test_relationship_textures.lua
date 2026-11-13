@@ -10,6 +10,24 @@ return function()
     seen[path] = true
   end
 
+  -- test_each_tie_uses_the_picked_art
+  local expected = {
+    guild = "Interface\\ICONS\\INV_Shield_06",
+    bnet = "Interface\\FriendsFrame\\Battlenet-Portrait",
+    friend = "Interface\\FriendsFrame\\UI-Toast-ChatInviteIcon",
+    community = "Interface\\ICONS\\Achievement_GuildPerk_EverybodysFriend",
+  }
+  for tie, path in pairs(expected) do
+    local got = Theme.TEXTURES["relationship_" .. tie]
+    assert(got == path, tie .. ": expected " .. path .. ", got " .. tostring(got))
+  end
+
+  -- test_only_guild_has_an_atlas
+  assert(Theme.RelationshipAtlas("guild") == "communities-guildbanner-background", "guild atlas")
+  for _, tie in ipairs({ "bnet", "friend", "community", "nope" }) do
+    assert(Theme.RelationshipAtlas(tie) == nil, tie .. ": no atlas")
+  end
+
   -- test_guild_shield_is_tinted_green_and_the_rest_are_not
   local tint = Theme.RelationshipTint("guild")
   assert(tint and tint[2] > tint[1] and tint[2] > tint[3], "guild tint is green")
