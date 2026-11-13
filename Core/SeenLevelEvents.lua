@@ -242,7 +242,7 @@ local function unregisterAll()
 end
 
 -- A query in flight keeps its answer whichever way levels turn: /who lookups
--- no longer depend on them. OpenWhoWindow stays a no-op while suspended.
+-- do not depend on them. OpenWhoWindow stays a no-op while suspended.
 local function keepWhoWindow()
   if WhoLookup.IsWindowOpen and WhoLookup.IsWindowOpen() then
     SeenLevelEvents.OpenWhoWindow()
