@@ -66,6 +66,7 @@ local Layout = {
   FILTER_ROW_GROWTH_PER_FONT_PX = 2,
   CONTACT_ICON_SIZE = 34,
   CONTACT_FACTION_SIZE = 14,
+  CONTACT_RELATIONSHIP_SIZE = 14,
   CONTACT_STATUS_SIZE = 10,
   CONTACT_PADDING = 6,
   -- Rows start this far in from the list's left edge.
@@ -123,6 +124,7 @@ local Layout = {
   -- rows (name, status, detail) each grow 1px per font px plus line leading.
   HEADER_GROWTH_PER_FONT_PX = 4,
   HEADER_ICON_SIZE = 32,
+  HEADER_RELATIONSHIP_SIZE = 16,
   -- Gap between the class icon and the name / status text.
   HEADER_NAME_GAP = 10,
   HEADER_STATUS_DOT_SIZE = 8,

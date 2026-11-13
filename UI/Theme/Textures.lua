@@ -9,6 +9,11 @@ local Textures = {
   faction_horde = "Interface\\ICONS\\PVPCurrency-Honor-Horde",
   bnet_icon = "Interface\\FriendsFrame\\UI-Toast-ChatInviteIcon",
   addon_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png",
+  -- Relationship marks (guild shield is tinted green via RelationshipTint).
+  relationship_guild = "Interface\\ICONS\\INV_Shield_06",
+  relationship_bnet = "Interface\\FriendsFrame\\UI-Toast-ChatInviteIcon",
+  relationship_friend = "Interface\\FriendsFrame\\UI-Toast-FriendOnlineIcon",
+  relationship_community = "Interface\\ICONS\\Achievement_Reputation_ArgentChampion",
   -- Pin glyphs (bundled, white on transparent; tinted at runtime).
   pin_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\pin.png",
   unpin_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\unpin.png",
@@ -111,8 +116,17 @@ local function ChannelIcon(channel, conversationKey)
   return CHANNEL_ICONS[channel]
 end
 
+local RELATIONSHIP_TINTS = {
+  guild = { 0.35, 0.85, 0.4 },
+}
+
+local function RelationshipTint(tie)
+  return RELATIONSHIP_TINTS[tie]
+end
+
 local ThemeTextures = {
   TEXTURES = Textures,
+  RelationshipTint = RelationshipTint,
   ClassIcon = ClassIcon,
   FactionIcon = FactionIcon,
   ChannelIcon = ChannelIcon,
