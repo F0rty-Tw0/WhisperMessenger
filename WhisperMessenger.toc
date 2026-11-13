@@ -207,6 +207,7 @@ UI/Shared/KeybindHints.lua
 UI/Shared/UnreadSummary.lua
 UI/Shared/PanelBadge.lua
 UI/Shared/CloseGlyphButton.lua
+UI/Shared/RelationshipMark.lua
 UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks/QuestLinkClassic.lua
 UI/Hyperlinks/CombatItemRef.lua
