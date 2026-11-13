@@ -186,7 +186,41 @@ return function()
     assert(pcall(e.onClick) and ran, "a failed /who never costs the caller its click")
   end
 
+  -- A whisper the caller's onClick starts must not ask /who: by then the
+  -- game blocks SendWho. The flag tells our SendTell hooks to skip it.
+  local function test_running_click_is_set_only_during_the_callback()
+    local seen = {}
+    local h = newAskingHolder(seen)
+    local e = h.set("ca", {
+      sender = "S",
+      text = "T",
+      who = "Jaina",
+      onClick = function()
+        seen[#seen + 1] = "click:" .. tostring(h.isRunningClick())
+      end,
+    })
+    assert(h.isRunningClick() == false, "idle before the click")
+    e.onClick()
+    assert(table.concat(seen, ",") == "who:Jaina,click:true", table.concat(seen, ","))
+    assert(h.isRunningClick() == false, "reset after the click")
+  end
+
+  local function test_running_click_resets_after_a_throwing_callback()
+    local h = newHolder()
+    local e = h.set("ca", {
+      sender = "S",
+      text = "T",
+      onClick = function()
+        error("boom")
+      end,
+    })
+    e.onClick()
+    assert(h.isRunningClick() == false, "a caller error still resets the flag")
+  end
+
   test_set_stamps_the_entry_and_fills_the_slot()
+  test_running_click_is_set_only_during_the_callback()
+  test_running_click_resets_after_a_throwing_callback()
   test_click_asks_who_before_the_callback()
   test_click_without_who_asks_nothing()
   test_dismiss_and_shown_ask_nothing()
