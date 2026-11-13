@@ -141,8 +141,9 @@ end
 -- Forever reports a server id there.
 local function bnetChatTarget(item, runtime)
   local accountInfo = bnetResolver().ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid, item.battleTag or item.displayName)
+  ---@type table?
   local gameInfo = type(accountInfo) == "table" and accountInfo.gameAccountInfo or nil
-  if not bnetStatus().IsInWoW(gameInfo) then
+  if type(gameInfo) ~= "table" or not bnetStatus().IsInWoW(gameInfo) then
     return nil
   end
   local guid = gameInfo.playerGuid
