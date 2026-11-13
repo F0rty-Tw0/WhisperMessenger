@@ -12,6 +12,7 @@ local ActionButtons = ns.ContactsListActionButtons or require("WhisperMessenger.
 local StatusDot = ns.ContactsListStatusDot or require("WhisperMessenger.UI.ContactsList.StatusDot")
 local RowElements = ns.ContactsListRowElements or require("WhisperMessenger.UI.ContactsList.RowElements")
 local RowTextAnchors = ns.ContactsListRowTextAnchors or require("WhisperMessenger.UI.ContactsList.RowTextAnchors")
+local RowRelationship = ns.ContactsListRowRelationship or require("WhisperMessenger.UI.ContactsList.RowRelationship")
 local RowMarkers = ns.ContactsListRowMarkers or require("WhisperMessenger.UI.ContactsList.RowMarkers")
 local RowScripts = ns.ContactsListRowScripts or require("WhisperMessenger.UI.ContactsList.RowScripts")
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
@@ -147,6 +148,7 @@ local function bindRow(factory, parent, row, index, item, options)
 
   -- Refit name/faction now that timestamp width is known for this row.
   RowElements.updateNameLabel(row, item, parentWidth)
+  RowRelationship.Bind(row, item, isGroup)
   RowElements.updateFactionIcon(row, item, ns)
   -- Faction icon hidden for group conversations (no Alliance/Horde context).
   -- Must happen AFTER updateFactionIcon, which shows the icon whenever a
