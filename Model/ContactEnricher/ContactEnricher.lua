@@ -97,6 +97,16 @@ function ContactEnricher.EnrichContactsPresence(contacts, runtime)
   end
 end
 
+-- How the player knows each contact (guild, friend, ...), read by the name marks.
+-- Off: the field is cleared and no tie API is touched.
+function ContactEnricher.EnrichContactsRelationship(contacts, runtime)
+  local Relationship = ns.Relationship or require("WhisperMessenger.Model.Relationship")
+  local enabled = Relationship.IsEnabled(runtime)
+  for _, item in ipairs(contacts or {}) do
+    item.relationship = enabled and Relationship.Resolve(item, runtime) or nil
+  end
+end
+
 function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContactsFn)
   local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
   local BNetStatus = ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
@@ -107,6 +117,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
 
   ContactEnricher.EnrichContactsAvailability(contacts, runtime)
   ContactEnricher.EnrichContactsPresence(contacts, runtime)
+  ContactEnricher.EnrichContactsRelationship(contacts, runtime)
 
   if runtime.activeConversationKey == nil then
     return {
@@ -120,6 +131,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
   if selectedContact == nil and conversation ~= nil then
     selectedContact = ConversationSnapshot.Build(conversationKey, conversation, runtime.accountState and runtime.accountState.settings)
     ContactEnricher.EnrichContactsPresence({ selectedContact }, runtime)
+    ContactEnricher.EnrichContactsRelationship({ selectedContact }, runtime)
   end
 
   -- "New messages" divider captured when the conversation was opened.
