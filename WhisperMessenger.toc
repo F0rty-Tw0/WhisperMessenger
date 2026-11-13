@@ -298,6 +298,7 @@ UI/ConversationPane/GroupHeaderViewModel.lua
 UI/ConversationPane/AddonBadge.lua
 UI/ConversationPane/HeaderContactExtras.lua
 UI/ConversationPane/HeaderFit.lua
+UI/ConversationPane/HeaderRelationship.lua
 UI/ConversationPane/HeaderView.lua
 UI/ConversationPane/HeaderMenu.lua
 UI/ConversationPane/TranscriptSetup.lua

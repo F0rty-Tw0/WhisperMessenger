@@ -103,14 +103,15 @@ local function isShown(region)
   return region ~= nil and type(region.IsShown) == "function" and region:IsShown()
 end
 
--- Where the name row's content ends: name, then faction icon and addon badge
--- when shown. Same left offset as the name's anchor in HeaderView.
+-- Where the name row's content ends: name, then relationship mark, faction
+-- icon and addon badge when shown. Same left offset as the name's anchor in
+-- HeaderView.
 local function nameRowRight(view)
   local right = Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER + Theme.LAYOUT.HEADER_ICON_SIZE + Theme.LAYOUT.HEADER_NAME_GAP
   if isShown(view.headerName) then
     right = right + view.headerName:GetStringWidth()
   end
-  for _, region in ipairs({ view.headerFactionIcon, view.headerAddonBadgeButton }) do
+  for _, region in ipairs({ view.headerRelationshipIcon, view.headerFactionIcon, view.headerAddonBadgeButton }) do
     if isShown(region) then
       right = right + NAME_ROW_GAP + region:GetWidth()
     end

@@ -114,6 +114,17 @@ function AddonBadge.SetLanguage(view)
   end
 end
 
+-- The first shown region of the name row, nearest the badge first.
+local function firstShown(...)
+  for i = 1, select("#", ...) do
+    local region = select(i, ...)
+    if type(region) == "table" and type(region.IsShown) == "function" and region:IsShown() then
+      return region
+    end
+  end
+  return nil
+end
+
 function AddonBadge.Refresh(view, selectedContact, conversation)
   if view.headerAddonBadge == nil then
     return
@@ -130,10 +141,7 @@ function AddonBadge.Refresh(view, selectedContact, conversation)
   -- "Show invite link" off hides the invite/sent hint; "(Uses WM)" stays.
   local invitesAllowed = type(view.canInviteContact) ~= "function" or view.canInviteContact() ~= false
   if isDirectContact and (selectedContact.peerHasAddon or invitesAllowed) then
-    local anchor = view.headerFactionIcon
-    if type(anchor) ~= "table" or type(anchor.IsShown) ~= "function" or not anchor:IsShown() then
-      anchor = view.headerName
-    end
+    local anchor = firstShown(view.headerFactionIcon, view.headerRelationshipIcon) or view.headerName
     local anchored = badgeButton or badge
     if anchor and type(anchored.ClearAllPoints) == "function" then
       anchored:ClearAllPoints()
