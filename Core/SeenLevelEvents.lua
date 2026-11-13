@@ -241,10 +241,19 @@ local function unregisterAll()
   end
 end
 
+-- A query in flight keeps its answer whichever way levels turn: /who lookups
+-- no longer depend on them. OpenWhoWindow stays a no-op while suspended.
+local function keepWhoWindow()
+  if WhoLookup.IsWindowOpen and WhoLookup.IsWindowOpen() then
+    SeenLevelEvents.OpenWhoWindow()
+  end
+end
+
 function SeenLevelEvents.SetEnabled(on)
   enabled = on == true
   if not enabled then
     unregisterAll()
+    keepWhoWindow()
     return
   end
   local frame = SeenLevelEvents._frame
@@ -254,10 +263,7 @@ function SeenLevelEvents.SetEnabled(on)
   for _, event in ipairs(SeenLevelEvents.UNIT_EVENTS) do
     frame:RegisterEvent(event)
   end
-  -- Turned back on while a query is in flight: its result must still be read.
-  if WhoLookup.IsWindowOpen and WhoLookup.IsWindowOpen() then
-    SeenLevelEvents.OpenWhoWindow()
-  end
+  keepWhoWindow()
 end
 
 -- Reads the /who answer even with level recording off: the /who lookup
