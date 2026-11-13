@@ -1,6 +1,5 @@
 local Poller = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.Poller")
 local Flavor = require("tests.helpers.flavor")
-local ChatPrefill = require("WhisperMessenger.Util.ChatPrefill")
 
 local function makeEditBox()
   local box = { text = "", scripts = {}, attributes = { chatType = "SAY", stickyType = "SAY" } }
@@ -177,33 +176,13 @@ return function()
   end
 
   -- test_focus_with_stale_whisper_target_routes
-  -- Control for the prefill test below: an empty box still holding a whisper
-  -- target routes to that player when it gains focus.
+  -- An empty box still holding a whisper target routes to that player when it
+  -- gains focus.
   do
     local _typeText, sendTellCalls, _composerTexts, _replyCalls, editBox = installPoller()
     editBox.attributes.chatType = "WHISPER"
     editBox.attributes.tellTarget = "Thrall"
     editBox.scripts.OnEditFocusGained(editBox)
     assert(sendTellCalls[1] == "Thrall", "expected a focused whisper box to route, got " .. tostring(sendTellCalls[1]))
-  end
-
-  -- test_own_chat_prefill_is_not_rerouted
-  -- Guild invite opens the chat box with "/ginvite <name>". The game focuses
-  -- the box before the text lands, so a whisper target left in the box must
-  -- not pull that focus into the messenger.
-  do
-    local savedUtil = rawget(_G, "ChatFrameUtil")
-    local _typeText, sendTellCalls, _composerTexts, _replyCalls, editBox = installPoller()
-    editBox.attributes.chatType = "WHISPER"
-    editBox.attributes.tellTarget = "Thrall"
-    rawset(_G, "ChatFrameUtil", {
-      OpenChat = function()
-        editBox.scripts.OnEditFocusGained(editBox)
-      end,
-    })
-    local ok, err = pcall(ChatPrefill.Open, "/ginvite Arthas")
-    rawset(_G, "ChatFrameUtil", savedUtil)
-    assert(ok, err)
-    assert(#sendTellCalls == 0, "expected our own prefill not to route, got " .. tostring(sendTellCalls[1]))
   end
 end

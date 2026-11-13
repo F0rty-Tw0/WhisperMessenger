@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ChatPrefill = ns.ChatPrefill or require("WhisperMessenger.Util.ChatPrefill")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
@@ -16,23 +16,27 @@ local PopupUI = ns.ChatBubbleContextMenuManualCopyPopupUI or require("WhisperMes
 
 -- A whisper row's "Guild invite" entry. WoW whisper rows only, and shown only
 -- when you are in a guild with invite rights and the player is not you, not a
--- guildmate, and not seen in another guild this session. Clicking it opens the
--- chat box prefilled with "/ginvite <name>" for the player to send: addon code
--- may not call the protected invite API. When prefilling would taint the
--- game's slash commands (see ChatPrefill.IsSafe), the click shows the command
--- in the copy dialog for the player to paste into chat instead.
+-- guildmate, and not seen in another guild this session. Clicking it shows
+-- "/ginvite <name>" in the copy dialog for the player to paste into chat:
+-- addon code may not call the protected invite API, and the game also blocks
+-- the invite when the player presses Enter on a chat box the addon filled
+-- (seen in game), so the click never touches the game's chat box.
 local GuildInviteMenuEntry = {}
 
 local COMMAND_PROMPT = "Press Ctrl+C to copy the command, then paste it into chat."
 
--- Same-realm names drop the realm, as the game's own name display does.
-local function inviteCommand(name)
-  local command = "/ginvite " .. Identity.ShortName(name)
-  if ChatPrefill.IsSafe(command) then
-    ChatPrefill.Open(command)
-    return
+-- Same-realm names drop the realm, as the game's own name display does. WoW:
+-- Forever tags names with a realm, yet /ginvite finds the player only by the
+-- bare name there (seen in game), so the realm always goes.
+local function inviteName(name)
+  if FlavorCompat.isForever then
+    return string.match(name, "^(.+)%-[^%-]+$") or name
   end
-  PopupUI.ShowManualCopyDialog(command, { prompt = COMMAND_PROMPT })
+  return Identity.ShortName(name)
+end
+
+local function inviteCommand(name)
+  PopupUI.ShowManualCopyDialog("/ginvite " .. inviteName(name), { prompt = COMMAND_PROMPT })
 end
 
 -- A missing, throwing or secret check answers "no".
@@ -56,7 +60,7 @@ local function isGuildMember(api, name)
 end
 
 function GuildInviteMenuEntry.Add(rootDescription, item)
-  if ChatPrefill.Resolve() == nil then
+  if type(_G.StaticPopup_Show) ~= "function" then
     return
   end
   if item.channel ~= "WOW" or item.displayName == nil then

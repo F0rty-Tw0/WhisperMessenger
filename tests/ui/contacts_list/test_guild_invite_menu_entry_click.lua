@@ -1,124 +1,78 @@
 local GuildInviteMenu = require("tests.helpers.guild_invite_menu")
 local ManualCopyCapture = require("tests.helpers.manual_copy_capture")
+local Flavor = require("tests.helpers.flavor")
 
--- Clicking "Guild invite" prefills the chat box with "/ginvite <name>" for the
--- player to send (the invite API is protected). When prefilling would taint
--- the game's slash commands, the click shows the command in the copy dialog
--- instead. Same-realm names drop the realm.
+-- Clicking "Guild invite" shows "/ginvite <name>" in the copy dialog for the
+-- player to paste into chat. The invite API is protected, and Enter on a chat
+-- box the addon filled is blocked too (seen in game), so the click never opens
+-- the game's chat box. Same-realm names drop the realm.
 
 local COMMAND_PROMPT = "Press Ctrl+C to copy the command, then paste it into chat."
 
--- Each leaves prefilling unsafe.
-local UNSAFE = {
-  {
-    "no slash command hash",
-    function()
-      rawset(_G, "hash_SlashCmdList", nil)
-    end,
-  },
-  {
-    "command not imported yet",
-    function()
-      rawset(_G, "hash_SlashCmdList", {})
-    end,
-  },
-  {
-    "tainted command entry",
-    function()
-      rawset(_G, "issecurevariable", function()
-        return false, "SomeAddon"
-      end)
-    end,
-  },
-  {
-    "no issecurevariable",
-    function()
-      rawset(_G, "issecurevariable", nil)
-    end,
-  },
-  {
-    "pending slash commands",
-    function()
-      rawset(_G, "SlashCmdList", { SOMEADDON = function() end })
-    end,
-  },
-}
+local function clickCopies(fixture, overrides)
+  local copied
+  ManualCopyCapture.With(function(capture)
+    fixture.entry(overrides).callback()
+    local dialog = _G.StaticPopupDialogs.WHISPER_MESSENGER_BUBBLE_COPY_TEXT
+    copied = { count = capture.count, text = capture.text, prompt = dialog and dialog.text }
+  end)
+  return copied
+end
 
 return function()
   GuildInviteMenu.With(function(fixture)
     local resetFixture = fixture.reset
 
-    -- test_click_opens_chat_with_ginvite_command
+    -- test_click_shows_ginvite_in_copy_dialog
     resetFixture()
-    ManualCopyCapture.With(function(capture)
-      local entry = fixture.entry({ displayName = "Bob-Area52" })
-      assert(entry ~= nil, "eligible row offers Guild invite")
-      entry.callback()
-      assert(fixture.opened[1] == "/ginvite Bob", "prefills the command, got " .. tostring(fixture.opened[1]))
-      assert(#fixture.opened == 1, "opens chat once")
-      assert(capture.count == 0, "no copy dialog when prefilling is safe")
-    end)
+    local copied = clickCopies(fixture, { displayName = "Bob-Area52" })
+    assert(copied.count == 1, "shows the copy dialog once, got " .. tostring(copied.count))
+    assert(copied.text == "/ginvite Bob", "copy dialog holds the command, got " .. tostring(copied.text))
+    assert(copied.prompt == COMMAND_PROMPT, "tells the player to paste it, got " .. tostring(copied.prompt))
 
-    -- test_click_opens_chat_under_the_prefill_guard
-    -- Our chat-box hook skips the box only while ChatPrefill flags it.
-    assert(fixture.openedWhilePrefilling == true, "opens chat through ChatPrefill so the hook leaves the box alone")
+    -- test_click_never_opens_the_chat_box
+    assert(#fixture.opened == 0, "must not fill the game's chat box, got " .. tostring(fixture.opened[1]))
+
+    -- test_click_never_opens_the_legacy_chat_box
+    resetFixture()
+    rawset(_G, "ChatFrameUtil", nil)
+    rawset(_G, "ChatFrame_OpenChat", function(text)
+      fixture.opened[#fixture.opened + 1] = text
+    end)
+    clickCopies(fixture)
+    assert(#fixture.opened == 0, "must not fill the legacy chat box, got " .. tostring(fixture.opened[1]))
 
     -- test_click_keeps_realm_for_other_realm_player
     resetFixture()
-    fixture.entry({ displayName = "Bob-Stormrage" }).callback()
-    assert(fixture.opened[1] == "/ginvite Bob-Stormrage", "keeps another realm, got " .. tostring(fixture.opened[1]))
+    Flavor.With(true, false, function()
+      copied = clickCopies(fixture, { displayName = "Bob-Stormrage" })
+    end)
+    assert(copied.text == "/ginvite Bob-Stormrage", "keeps another realm, got " .. tostring(copied.text))
 
-    -- test_click_prefills_guid_resolved_character_name
+    -- test_click_drops_realm_on_forever
+    -- WoW: Forever tags names with a realm, but /ginvite finds the player only
+    -- by the bare name there (seen in game). Names can hold spaces.
+    resetFixture()
+    Flavor.With(true, true, function()
+      copied = clickCopies(fixture, { displayName = "Jurst Lule-CAMWOWEU5Realm2PvP" })
+    end)
+    assert(copied.text == "/ginvite Jurst Lule", "drops the realm on Forever, got " .. tostring(copied.text))
+
+    -- test_click_copies_guid_resolved_character_name
     resetFixture()
     rawset(_G, "GetPlayerInfoByGUID", function()
       return nil, nil, nil, nil, nil, "Arthas", "Stormrage"
     end)
-    local realmless = fixture.entry({ displayName = "Arthas" })
-    assert(realmless ~= nil, "realm-less row offers Guild invite")
-    realmless.callback()
-    assert(fixture.opened[1] == "/ginvite Arthas-Stormrage", "prefills the GUID-resolved name, got " .. tostring(fixture.opened[1]))
+    copied = clickCopies(fixture, { displayName = "Arthas" })
+    assert(copied.text == "/ginvite Arthas-Stormrage", "copies the GUID-resolved name, got " .. tostring(copied.text))
 
     -- test_click_never_calls_protected_invite
     resetFixture()
     rawset(_G, "GuildInvite", function(name)
       fixture.invited[#fixture.invited + 1] = name
     end)
-    fixture.entry().callback()
+    clickCopies(fixture)
     rawset(_G, "GuildInvite", nil)
     assert(#fixture.invited == 0, "click must not call the protected invite API")
-
-    -- test_click_falls_back_to_legacy_open_chat
-    resetFixture()
-    rawset(_G, "ChatFrameUtil", nil)
-    rawset(_G, "ChatFrame_OpenChat", function(text)
-      fixture.opened[#fixture.opened + 1] = text
-    end)
-    local legacy = fixture.entry()
-    assert(legacy ~= nil, "legacy open-chat still offers Guild invite")
-    legacy.callback()
-    assert(fixture.opened[1] == "/ginvite Arthas", "legacy prefill, got " .. tostring(fixture.opened[1]))
-
-    -- test_click_falls_back_when_chat_frame_util_lacks_open_chat
-    resetFixture()
-    rawset(_G, "ChatFrameUtil", {})
-    rawset(_G, "ChatFrame_OpenChat", function(text)
-      fixture.opened[#fixture.opened + 1] = text
-    end)
-    fixture.entry().callback()
-    assert(fixture.opened[1] == "/ginvite Arthas", "falls back when OpenChat is missing, got " .. tostring(fixture.opened[1]))
-
-    -- test_click_shows_copy_dialog_when_prefill_unsafe
-    for _, case in ipairs(UNSAFE) do
-      resetFixture()
-      case[2]()
-      ManualCopyCapture.With(function(capture)
-        fixture.entry({ displayName = "Bob-Area52" }).callback()
-        assert(#fixture.opened == 0, case[1] .. ": must not open chat")
-        assert(capture.count == 1, case[1] .. ": shows the copy dialog once")
-        assert(capture.text == "/ginvite Bob", case[1] .. ": copy dialog holds the command, got " .. tostring(capture.text))
-        local dialog = _G.StaticPopupDialogs.WHISPER_MESSENGER_BUBBLE_COPY_TEXT
-        assert(dialog.text == COMMAND_PROMPT, case[1] .. ": tells the player to paste it, got " .. tostring(dialog.text))
-      end)
-    end
   end)
 end
