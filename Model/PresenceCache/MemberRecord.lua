@@ -58,6 +58,10 @@ end
 function MemberRecord.RecordMember(acc, clubId, memberId, info)
   acc.club[info.guid] = clubId
   acc.member[info.guid] = memberId
+  -- Before the zone/level reads, so a secret zone or level can't drop it.
+  if clubId ~= acc.guildClubId and acc.community[info.guid] == nil then
+    acc.community[info.guid] = clubId
+  end
   acc.freshAt[info.guid] = acc.now
   local p = MemberRecord.PresenceToString(info.presence)
   if p then
@@ -87,6 +91,38 @@ function MemberRecord.CacheClub(acc, api, clubId)
       pcall(MemberRecord.RecordMember, acc, clubId, memberId, info)
     end
   end
+end
+
+local function guildClubType()
+  local enum = _G.Enum
+  local clubTypes = type(enum) == "table" and enum.ClubType or nil
+  return type(clubTypes) == "table" and clubTypes.Guild or nil
+end
+
+local function readClubType(club)
+  return club.clubType
+end
+
+local function isGuildType(club)
+  local guildType = guildClubType()
+  if guildType == nil then
+    return false
+  end
+  local ok, clubType = pcall(readClubType, club)
+  return ok and clubType == guildType
+end
+
+-- GetSubscribedClubs lists the guild club too. It is skipped when
+-- GetGuildClubId already cached it; when that call failed, the club type
+-- still marks it as the guild, so guildmates are not indexed as community.
+function MemberRecord.CacheSubscribedClub(acc, api, club)
+  if club.clubId == acc.guildClubId then
+    return
+  end
+  if acc.guildClubId == nil and isGuildType(club) then
+    acc.guildClubId = club.clubId
+  end
+  MemberRecord.CacheClub(acc, api, club.clubId)
 end
 
 ns.PresenceCacheMemberRecord = MemberRecord

@@ -86,6 +86,7 @@ Model/OnlineWatch.lua
 Model/QuickReplies.lua
 Model/ChannelMessageStore.lua
 Model/PresenceCache/MemberRecord.lua
+Model/PresenceCache/CommunityIndex.lua
 Model/PresenceCache.lua
 Model/ZoneWatch.lua
 Model/SeenLevel.lua
@@ -137,6 +138,7 @@ Transport/BNetResolver/AccountName.lua
 Transport/BNetResolver/GameAccountProbe.lua
 Transport/BNetResolver/GuidFallback.lua
 Transport/BNetResolver.lua
+Model/Relationship.lua
 Transport/WhoFreshness.lua
 Transport/WhoBlock.lua
 Transport/WhoPanels.lua
@@ -205,6 +207,7 @@ UI/Shared/KeybindHints.lua
 UI/Shared/UnreadSummary.lua
 UI/Shared/PanelBadge.lua
 UI/Shared/CloseGlyphButton.lua
+UI/Shared/RelationshipMark.lua
 UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks/QuestLinkClassic.lua
 UI/Hyperlinks/CombatItemRef.lua
@@ -255,6 +258,7 @@ UI/ContactsList/StatusDot.lua
 UI/ContactsList/PinnedMarker.lua
 UI/ContactsList/RowMarkers.lua
 UI/ContactsList/RowTextAnchors.lua
+UI/ContactsList/RowRelationship.lua
 UI/ContactsList/RowElements.lua
 UI/ContactsList/RailAvatar.lua
 UI/ContactsList/RowCompact.lua
@@ -294,6 +298,7 @@ UI/ConversationPane/GroupHeaderViewModel.lua
 UI/ConversationPane/AddonBadge.lua
 UI/ConversationPane/HeaderContactExtras.lua
 UI/ConversationPane/HeaderFit.lua
+UI/ConversationPane/HeaderRelationship.lua
 UI/ConversationPane/HeaderView.lua
 UI/ConversationPane/HeaderMenu.lua
 UI/ConversationPane/TranscriptSetup.lua
@@ -516,6 +521,7 @@ Core/Bootstrap/LifecycleHandlers/StaleRestrictions.lua
 Core/Bootstrap/LifecycleHandlers/ScanFieldDiff.lua
 Core/Bootstrap/LifecycleHandlers/Presence.lua
 Core/Bootstrap/LifecycleHandlers/GroupMembership.lua
+Core/Bootstrap/LifecycleHandlers/RelationshipRefresh.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua
 Core/Bootstrap/WindowRuntime/GameWhisperTab.lua

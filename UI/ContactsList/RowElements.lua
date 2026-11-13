@@ -13,6 +13,7 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local RowMarkers = ns.ContactsListRowMarkers or require("WhisperMessenger.UI.ContactsList.RowMarkers")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local RowTextAnchors = ns.ContactsListRowTextAnchors or require("WhisperMessenger.UI.ContactsList.RowTextAnchors")
+local RowRelationship = ns.ContactsListRowRelationship or require("WhisperMessenger.UI.ContactsList.RowRelationship")
 local createCircularIcon = UIHelpers.createCircularIcon
 local applyClassColor = UIHelpers.applyClassColor
 local setTextColor = UIHelpers.setTextColor
@@ -24,7 +25,7 @@ local UNREAD_BADGE_BOTTOM_OFFSET = 12
 local RowElements = {}
 
 local NAME_LABEL_LEFT_INSET = RowTextAnchors.NAME_LABEL_LEFT_INSET
-local NAME_TO_ICON_GAP = 4
+local NAME_TO_ICON_GAP = RowRelationship.GAP
 local NAME_TO_TIME_GAP = 2
 local TIME_LABEL_FALLBACK_WIDTH = 14
 local TIME_LABEL_RIGHT_INSET = 6
@@ -139,10 +140,9 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
     reliableFaction = nil
   end
 
-  local titleMaxWidth = row.title and row.title.GetWidth and row.title:GetWidth() or 0
-  local textBudget = titleMaxWidth
+  local textBudget = row.title and row.title.GetWidth and row.title:GetWidth() or 0
   if reliableFaction then
-    textBudget = math.max(0, titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
+    textBudget = math.max(0, textBudget - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
   end
   if row.title then
     row.title:SetText(UIHelpers.fitTextWithEllipsis(row.title, GlyphCoverage.Apply(row.title, rowName(item)), textBudget))
@@ -153,7 +153,7 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
   local textW = math.min(titleTextWidth, textBudget)
   row.factionIcon:ClearAllPoints()
   if row.title then
-    row.factionIcon:SetPoint("LEFT", row.title, "LEFT", textW + NAME_TO_ICON_GAP, 0)
+    row.factionIcon:SetPoint("LEFT", row.title, "LEFT", RowRelationship.Anchor(row, textW), 0)
   end
 
   if reliableFaction then

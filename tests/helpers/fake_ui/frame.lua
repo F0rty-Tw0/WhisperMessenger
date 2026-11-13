@@ -531,6 +531,14 @@ local function makeCreateFrame(options)
       self.mouseEnabled = value
     end
 
+    function frame:SetMouseClickEnabled(value)
+      self.mouseClickEnabled = value
+    end
+
+    function frame:SetMouseMotionEnabled(value)
+      self.mouseMotionEnabled = value
+    end
+
     function frame:RegisterForDrag(...)
       -- WoW semantics: no arguments unregisters drag entirely.
       if select("#", ...) == 0 then

@@ -5,6 +5,8 @@ end
 
 local MemberRecord = ns.PresenceCacheMemberRecord or require("WhisperMessenger.Model.PresenceCache.MemberRecord")
 
+local CommunityIndex = ns.PresenceCacheCommunityIndex or require("WhisperMessenger.Model.PresenceCache.CommunityIndex")
+
 local PresenceCache = {}
 
 -- A full guild/community enumeration allocates one info table per member, so
@@ -69,6 +71,7 @@ function PresenceCache.Initialize(api, options)
   levelByGuid = {}
   freshAt = {}
   rescanMissed = {}
+  CommunityIndex.Clear()
   indexBuiltAt = nil
   -- Don't rebuild immediately — club data may not be loaded yet at ADDON_LOADED time.
   -- Mark dirty so the first timer tick or event triggers the rebuild when data is ready.
@@ -77,29 +80,26 @@ end
 
 function PresenceCache.Rebuild()
   local now = nowFn()
-  local acc = { cache = {}, club = {}, member = {}, zoneByGuid = {}, levelByGuid = {}, freshAt = {}, now = now }
+  local acc = { cache = {}, club = {}, member = {}, community = {}, zoneByGuid = {}, levelByGuid = {}, freshAt = {}, now = now }
 
   if type(clubApi) == "table" then
-    local guildId = nil
-
     -- Cache guild members
     if type(clubApi.GetGuildClubId) == "function" then
       local ok, id = pcall(clubApi.GetGuildClubId)
       if ok and id then
-        guildId = id
+        acc.guildClubId = id
         MemberRecord.CacheClub(acc, clubApi, id)
       end
     end
 
-    -- Cache all community members. The guild club is also listed here, so
-    -- skip it rather than enumerating every guild member a second time.
+    -- Cache all community members. The guild club is also listed here;
+    -- CacheSubscribedClub skips it rather than enumerating every guild
+    -- member a second time.
     if type(clubApi.GetSubscribedClubs) == "function" then
       local ok, clubs = pcall(clubApi.GetSubscribedClubs)
       if ok and clubs then
         for _, club in ipairs(clubs) do
-          if club.clubId ~= guildId then
-            MemberRecord.CacheClub(acc, clubApi, club.clubId)
-          end
+          MemberRecord.CacheSubscribedClub(acc, clubApi, club)
         end
       end
     end
@@ -111,6 +111,7 @@ function PresenceCache.Rebuild()
   zoneByGuid = acc.zoneByGuid
   levelByGuid = acc.levelByGuid
   freshAt = acc.freshAt
+  CommunityIndex.Swap(acc.community)
   indexBuiltAt = now
   dirty = false
 end
@@ -270,6 +271,7 @@ function PresenceCache._reset()
   levelByGuid = {}
   freshAt = {}
   rescanMissed = {}
+  CommunityIndex.Clear()
   indexBuiltAt = nil
   dirty = true
   clubApi = nil
@@ -288,6 +290,9 @@ function PresenceCache._setCache(tbl)
   cache = tbl or {}
   dirty = false
 end
+
+PresenceCache.GetCommunityClubId = CommunityIndex.Get
+PresenceCache.IndexGeneration = CommunityIndex.Generation
 
 ns.PresenceCache = PresenceCache
 

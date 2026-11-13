@@ -11,6 +11,7 @@ local AddonGreetingText = ns.ChatBubbleAddonGreetingText or require("WhisperMess
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.ContactsList.GroupLabel")
 local RailAvatar = ns.ContactsListRailAvatar or require("WhisperMessenger.UI.ContactsList.RailAvatar")
+local Relationship = ns.Relationship or require("WhisperMessenger.Model.Relationship")
 
 -- Hover card for collapsed-rail rows, which show no text of their own: who
 -- it is, where, their status, the last line and the unread count.
@@ -50,6 +51,14 @@ local function statusLine(item)
   return Localization.Text(avail.label), Theme.COLORS[avail.color]
 end
 
+-- Every tie on one line ("Guild: X, Battle.net friend"); nil without a tie.
+local function relationshipLine(item)
+  if item.relationship == nil then
+    return nil
+  end
+  return table.concat(Relationship.TooltipLines(item.relationship), ", ")
+end
+
 local function personLines(lines, item)
   local name, detail = nameAndDetail(item)
   local r, g, b = RailAvatar.ClassColor(item.classTag)
@@ -58,6 +67,7 @@ local function personLines(lines, item)
   add(lines, item.areaName, DETAIL_COLOR)
   local status, statusColor = statusLine(item)
   add(lines, status, statusColor or DETAIL_COLOR)
+  add(lines, relationshipLine(item), DETAIL_COLOR)
 end
 
 -- Lines as { text, color }, title first. hideMessagePreview leaves out the

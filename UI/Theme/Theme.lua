@@ -61,6 +61,8 @@ Theme.TEXTURES = ThemeTextures.TEXTURES
 Theme.ClassIcon = ThemeTextures.ClassIcon
 Theme.FactionIcon = ThemeTextures.FactionIcon
 Theme.ChannelIcon = ThemeTextures.ChannelIcon
+Theme.RelationshipTint = ThemeTextures.RelationshipTint
+Theme.RelationshipAtlas = ThemeTextures.RelationshipAtlas
 
 local function grownFontPx()
   return math.max(0, Fonts.GetFontSize() - Fonts.DEFAULT_BASE_SIZE)

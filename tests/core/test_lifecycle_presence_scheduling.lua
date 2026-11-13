@@ -56,10 +56,13 @@ return function()
       LifecycleHandlers.Handle(Bootstrap, event, deps)
 
       assert(calls.invalidate == 1, event .. " should invalidate presence once, got " .. calls.invalidate)
-      assert(#scheduled == 1 and scheduled[1].delay == 2, event .. " should schedule only the short zone check, got " .. #scheduled)
-      scheduled[1].fn()
+      -- CLUB_MEMBER_ADDED/REMOVED also schedule the relationship repaint, first;
+      -- the zone check is scheduled last.
+      local own = (event == "CLUB_MEMBER_ADDED" or event == "CLUB_MEMBER_REMOVED") and 1 or 0
+      assert(#scheduled == 1 + own and scheduled[#scheduled].delay == 2, event .. " should schedule only the short zone check, got " .. #scheduled)
+      scheduled[#scheduled].fn()
       assert(calls.rebuild == 0, event .. " must not rebuild presence, got " .. calls.rebuild)
-      assert(#scheduled == 1, event .. " zone check must not reschedule itself, got " .. #scheduled)
+      assert(#scheduled == 1 + own, event .. " zone check must not reschedule itself, got " .. #scheduled)
       assert(Bootstrap._presenceRebuildPending == nil, event .. " must not leave a pending-rebuild flag behind")
     end
   end

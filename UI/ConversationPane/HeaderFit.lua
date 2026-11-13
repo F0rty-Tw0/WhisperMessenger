@@ -8,13 +8,14 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local fitTextWithEllipsis = UIHelpers.fitTextWithEllipsis
 
 -- Fits the header's text rows to the header width: the name row (name,
--- faction icon, addon badge, group chip) and the two status lines. Re-run
--- after a resize, a font change or new header content.
+-- relationship mark, faction icon, addon badge, group chip) and the two
+-- status lines. Re-run after a resize, a font change or new header content.
 local HeaderFit = {}
 
 local RIGHT_INSET = 8
 -- Gap between the name and each region anchored after it.
 local NAME_ROW_GAP = 6
+HeaderFit.NAME_ROW_GAP = NAME_ROW_GAP
 
 local function isShown(region)
   return region ~= nil and type(region.IsShown) == "function" and region:IsShown()
@@ -24,7 +25,7 @@ end
 -- (a font string sized to its text) its string width.
 local function reservedAfterName(view)
   local reserved = 0
-  for _, region in ipairs({ view.headerFactionIcon, view.headerAddonBadgeButton }) do
+  for _, region in ipairs({ view.headerRelationshipIcon, view.headerFactionIcon, view.headerAddonBadgeButton }) do
     if isShown(region) then
       reserved = reserved + NAME_ROW_GAP + (region:GetWidth() or 0)
     end
