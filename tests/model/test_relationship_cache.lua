@@ -101,9 +101,9 @@ return function()
 
   -- test_tooltip_lines_text_and_order
   do
-    local full = { primary = "guild", ties = { "guild", "bnet", "friend", "community" }, guildName = "Moonwatch", communityName = "Trade Hall" }
+    local full = { primary = "bnet", ties = { "bnet", "guild", "friend", "community" }, guildName = "Moonwatch", communityName = "Trade Hall" }
     local lines = Relationship.TooltipLines(full)
-    assert(table.concat(lines, "|") == "Guild: Moonwatch|Battle.net friend|Friend|Community: Trade Hall", "got " .. table.concat(lines, "|"))
+    assert(table.concat(lines, "|") == "Battle.net friend|Guild: Moonwatch|Friend|Community: Trade Hall", "got " .. table.concat(lines, "|"))
     local bare = { primary = "guild", ties = { "guild", "community" } }
     assert(table.concat(Relationship.TooltipLines(bare), "|") == "Guild|Community", "no names -> bare labels")
     assert(#Relationship.TooltipLines(nil) == 0, "nil rel -> no lines")

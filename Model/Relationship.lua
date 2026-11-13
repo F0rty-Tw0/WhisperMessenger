@@ -8,14 +8,16 @@ local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
--- How the player knows a contact: guild > Battle.net friend > character friend
+-- How the player knows a contact: Battle.net friend > guild > character friend
 -- > shared community. Resolve decides the ties, caches them on the runtime and
 -- never throws; a tie whose API is missing, throws or answers a secret value
 -- is simply absent.
 local Relationship = {}
 
 local CACHE_SECONDS = 300
-local WOW_TIES = { "guild", "bnet", "friend", "community" }
+local WOW_TIES = { "bnet", "guild", "friend", "community" }
+-- A BNet chat is always a Battle.net tie; only the friend's current character
+-- is checked, for guild and community.
 local BNET_TIES = { "guild", "community" }
 
 -- PresenceCache, BNetResolver and BNetStatus load after this file's
@@ -140,8 +142,8 @@ local function whisperTarget(item)
   return { guid = guid, rawName = item.displayName, key = item.conversationKey, ties = WOW_TIES }
 end
 
--- A BNet chat marks the friend's current character. Never uses realmName:
--- Forever reports a server id there.
+-- A BNet chat checks the friend's current character, or nil when the friend
+-- is not in WoW on one. Never uses realmName: Forever reports a server id there.
 local function bnetChatTarget(item, runtime)
   local accountInfo = bnetResolver().ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid, item.battleTag or item.displayName)
   ---@type table?
@@ -154,17 +156,20 @@ local function bnetChatTarget(item, runtime)
     return nil
   end
   local key = isUsableString(item.conversationKey) and (item.conversationKey .. "|" .. guid) or nil
-  return { guid = guid, rawName = gameInfo.characterName, key = key, ties = BNET_TIES }
+  return { guid = guid, rawName = gameInfo.characterName, key = key, known = "bnet", ties = BNET_TIES }
 end
 
 local function buildTarget(item, runtime)
   if item.channel == "WOW" then
     return whisperTarget(item)
   end
-  if item.channel == "BN" then
-    return bnetChatTarget(item, runtime)
-  end
-  return nil
+  return bnetChatTarget(item, runtime)
+end
+
+-- A BNet chat whose friend is offline, elsewhere or unresolvable. Costs no
+-- API call, so it is never cached.
+local function bnetOnly()
+  return { primary = "bnet", ties = { "bnet" } }
 end
 
 local function now(runtime)
@@ -202,7 +207,7 @@ local function gather(target, runtime)
   if not ctx.nameOk then
     ctx.reliable = false
   end
-  local ties = {}
+  local ties = { target.known }
   for _, tie in ipairs(target.ties) do
     if CHECKS[tie](ctx) then
       ties[#ties + 1] = tie
@@ -224,7 +229,7 @@ function Relationship.Resolve(item, runtime)
   end
   local built, target = pcall(buildTarget, item, runtime)
   if not built or target == nil then
-    return nil
+    return item.channel == "BN" and bnetOnly() or nil
   end
   local entries = target.key ~= nil and entriesOf(runtime) or nil
   local at = now(runtime)
