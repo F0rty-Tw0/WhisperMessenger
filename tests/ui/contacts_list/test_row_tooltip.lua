@@ -147,5 +147,25 @@ return function()
     assert(state.shown ~= true, "expanded rows show no tooltip")
   end
 
+  -- test_tooltip_lists_every_tie_on_one_line_after_the_status
+  do
+    local rel = { primary = "guild", ties = { "guild", "bnet" }, guildName = "Stormguard" }
+    local all = texts(RowTooltip.Lines(person({ relationship = rel }), false))
+    local tieIndex, statusIndex
+    for index, text in ipairs(all) do
+      tieIndex = text == "Guild: Stormguard, Battle.net friend" and index or tieIndex
+      statusIndex = text == "Online" and index or statusIndex
+    end
+    assert(tieIndex ~= nil, "one joined tie line, got " .. table.concat(all, " | "))
+    assert(statusIndex ~= nil and tieIndex == statusIndex + 1, "right after the status line")
+  end
+
+  -- test_tooltip_has_no_tie_line_without_a_relationship
+  do
+    for _, text in ipairs(texts(RowTooltip.Lines(person(), false))) do
+      assert(not string.find(text, "Guild", 1, true) and not string.find(text, "friend", 1, true), "no tie line, got " .. text)
+    end
+  end
+
   _G.RAID_CLASS_COLORS, _G.GameTooltip = savedColors, savedTooltip
 end

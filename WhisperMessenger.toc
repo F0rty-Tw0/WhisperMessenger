@@ -207,6 +207,7 @@ UI/Shared/KeybindHints.lua
 UI/Shared/UnreadSummary.lua
 UI/Shared/PanelBadge.lua
 UI/Shared/CloseGlyphButton.lua
+UI/Shared/RelationshipMark.lua
 UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks/QuestLinkClassic.lua
 UI/Hyperlinks/CombatItemRef.lua
@@ -257,6 +258,7 @@ UI/ContactsList/StatusDot.lua
 UI/ContactsList/PinnedMarker.lua
 UI/ContactsList/RowMarkers.lua
 UI/ContactsList/RowTextAnchors.lua
+UI/ContactsList/RowRelationship.lua
 UI/ContactsList/RowElements.lua
 UI/ContactsList/RailAvatar.lua
 UI/ContactsList/RowCompact.lua
