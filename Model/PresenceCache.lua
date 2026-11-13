@@ -92,15 +92,14 @@ function PresenceCache.Rebuild()
       end
     end
 
-    -- Cache all community members. The guild club is also listed here, so
-    -- skip it rather than enumerating every guild member a second time.
+    -- Cache all community members. The guild club is also listed here;
+    -- CacheSubscribedClub skips it rather than enumerating every guild
+    -- member a second time.
     if type(clubApi.GetSubscribedClubs) == "function" then
       local ok, clubs = pcall(clubApi.GetSubscribedClubs)
       if ok and clubs then
         for _, club in ipairs(clubs) do
-          if club.clubId ~= acc.guildClubId then
-            MemberRecord.CacheClub(acc, clubApi, club.clubId)
-          end
+          MemberRecord.CacheSubscribedClub(acc, clubApi, club)
         end
       end
     end
