@@ -518,6 +518,7 @@ Core/Bootstrap/LifecycleHandlers/StaleRestrictions.lua
 Core/Bootstrap/LifecycleHandlers/ScanFieldDiff.lua
 Core/Bootstrap/LifecycleHandlers/Presence.lua
 Core/Bootstrap/LifecycleHandlers/GroupMembership.lua
+Core/Bootstrap/LifecycleHandlers/RelationshipRefresh.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua
 Core/Bootstrap/WindowRuntime/GameWhisperTab.lua

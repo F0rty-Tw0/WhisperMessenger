@@ -32,6 +32,7 @@ return function()
     hideBattleTagNumbers = false,
     showPlayerLevels = true,
     whoLookups = false,
+    showRelationshipMarks = false,
     timeFormat = "24h",
     timeSource = "server",
     interfaceLanguage = "ruRU",
@@ -135,6 +136,7 @@ return function()
   assert(generalCapture.config.hideBattleTagNumbers == false, "general config should carry hideBattleTagNumbers")
   assert(generalCapture.config.showPlayerLevels == true, "general config should carry showPlayerLevels")
   assert(generalCapture.config.whoLookups == false, "general config should carry whoLookups")
+  assert(generalCapture.config.showRelationshipMarks == false, "general config should carry showRelationshipMarks")
   assert(
     generalCapture.config.interfaceLanguage == "ruRU",
     "expected general config.interfaceLanguage=ruRU, got: " .. tostring(generalCapture.config.interfaceLanguage)

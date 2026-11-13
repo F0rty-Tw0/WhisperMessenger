@@ -21,6 +21,7 @@ local IconSettingReactions = ns.BootstrapWindowRuntimeIconSettingReactions
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconSettingReactions")
 local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
 local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
+local Relationship = ns.Relationship or require("WhisperMessenger.Model.Relationship")
 local WindowScale = ns.MessengerWindowWindowScale
   or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
   or nil
@@ -182,6 +183,9 @@ function SettingsHandler.Create(options)
     DisplayNameSetting.Apply(displayName, key, persistedValue, runtime.seenLevelEvents)
     if key == "whoLookups" then
       WhoLookup.SetEnabled(persistedValue ~= false)
+    end
+    if key == "showRelationshipMarks" then
+      Relationship.Invalidate(runtime)
     end
     if key == "interfaceLanguage" then
       if localization.Configure then
