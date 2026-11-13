@@ -95,31 +95,20 @@ return function()
     assert(ChatPrefill.IsSafe("ginvite Bob") == false, "plain text is not a known command")
     assert(ChatPrefill.IsSafe(nil) == false, "nil text is unsafe")
 
-    -- Protected commands (/use, /target) live in the game's own private table,
-    -- never in hash_SlashCmdList; the game's IsSecureCmd knows them.
+    -- Protected commands (/use, /target): the game's IsSecureCmd knows them.
+    -- Enter on a box we prefilled is still blocked for them (seen in game).
     local function secureState()
       safeState()
-      rawset(_G, "hash_SlashCmdList", {})
       rawset(_G, "IsSecureCmd", function(command)
-        return string.upper(command) == "/USE"
+        local key = string.upper(command)
+        return key == "/USE" or key == "/GINVITE"
       end)
     end
 
-    -- test_is_safe_for_protected_command_with_nothing_pending
+    -- test_is_unsafe_for_protected_command_even_when_imported_securely
     secureState()
-    assert(ChatPrefill.IsSafe("/use Hearthstone") == true, "protected command with nothing pending is safe")
-
-    -- test_is_unsafe_for_protected_command_with_pending_slash_commands
-    secureState()
-    rawset(_G, "SlashCmdList", { SOMEADDON = function() end })
-    assert(ChatPrefill.IsSafe("/use Hearthstone") == false, "pending slash commands are unsafe for protected commands too")
-
-    -- test_is_unsafe_when_is_secure_cmd_throws
-    secureState()
-    rawset(_G, "IsSecureCmd", function()
-      error("boom")
-    end)
-    assert(ChatPrefill.IsSafe("/use Hearthstone") == false, "throwing IsSecureCmd is unsafe")
+    assert(ChatPrefill.IsSafe("/ginvite Bob") == false, "a protected command is never safe to prefill")
+    assert(ChatPrefill.IsSafe("/use Hearthstone") == false, "a protected command outside the hash is unsafe")
 
     -- test_is_protected_command_asks_the_game
     secureState()
