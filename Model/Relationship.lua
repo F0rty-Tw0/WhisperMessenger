@@ -128,13 +128,13 @@ local CHECKS = {
 }
 
 -- Who is checked and under which cache key, or nil when no mark applies.
+-- rawName becomes the checked name in gather, so a cache hit skips the lookup.
 local function whisperTarget(item)
   local guid = item.guid
   if not isUsableString(guid) then
     return nil
   end
-  local name = IgnoreList.CharacterName(item.displayName, guid)
-  return { guid = guid, name = name, key = item.conversationKey, ties = WOW_TIES }
+  return { guid = guid, rawName = item.displayName, key = item.conversationKey, ties = WOW_TIES }
 end
 
 -- A BNet chat marks the friend's current character. Never uses realmName:
@@ -149,9 +149,8 @@ local function bnetChatTarget(item, runtime)
   if not isUsableString(guid) then
     return nil
   end
-  local name = IgnoreList.CharacterName(gameInfo.characterName, guid)
   local key = isUsableString(item.conversationKey) and (item.conversationKey .. "|" .. guid) or nil
-  return { guid = guid, name = name, key = key, ties = BNET_TIES }
+  return { guid = guid, rawName = gameInfo.characterName, key = key, ties = BNET_TIES }
 end
 
 local function buildTarget(item, runtime)
@@ -188,11 +187,12 @@ local function entriesOf(runtime)
 end
 
 local function gather(target, runtime)
+  local name = IgnoreList.CharacterName(target.rawName, target.guid)
   local ctx = {
     runtime = runtime,
     guid = target.guid,
-    name = target.name,
-    nameOk = isUsableString(target.name),
+    name = name,
+    nameOk = isUsableString(name),
     reliable = true,
   }
   if not ctx.nameOk then
