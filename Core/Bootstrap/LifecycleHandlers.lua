@@ -19,11 +19,19 @@ local GroupMembership = ns.BootstrapLifecycleHandlersGroupMembership
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.GroupMembership"))
   or nil
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
+local RelationshipRefresh = ns.BootstrapLifecycleHandlersRelationshipRefresh
+  or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.RelationshipRefresh")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 
 local LifecycleHandlers = {}
 
 function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
+  -- Runs first and never consumes the event: the branches below return.
+  RelationshipRefresh.handle(Bootstrap, event, ...)
+  if event == "PLAYER_GUILD_UPDATE" then
+    return true
+  end
+
   if event == "ADDON_RESTRICTION_STATE_CHANGED" then
     local restrictionType, newState = ...
     return RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState, deps)

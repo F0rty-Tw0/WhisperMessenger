@@ -27,4 +27,12 @@ return function()
     end
     assert(found["PLAYER_REGEN_DISABLED"], "should include PLAYER_REGEN_DISABLED")
   end
+  -- PLAYER_GUILD_UPDATE drives the relationship-mark cache invalidation.
+  do
+    local found = {}
+    for _, name in ipairs(Constants.LIFECYCLE_EVENT_NAMES) do
+      found[name] = true
+    end
+    assert(found["PLAYER_GUILD_UPDATE"], "should include PLAYER_GUILD_UPDATE")
+  end
 end
