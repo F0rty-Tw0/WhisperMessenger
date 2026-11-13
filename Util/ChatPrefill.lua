@@ -48,9 +48,9 @@ end
 -- moved handlers stay tainted and the game blocks the protected call they
 -- make when the player presses Enter (ADDON_ACTION_FORBIDDEN). So a slash
 -- command is safe to prefill only when nothing is waiting to be moved and the
--- game already moved it securely. Protected commands (/use, /target) sit in
--- the game's own private table, which addons cannot change, so for them the
--- empty queue is enough.
+-- game already moved it securely. A protected command (/use, /target) is never
+-- safe: the player's Enter on a box we prefilled is still blocked (seen in
+-- game), and those commands are not in hash_SlashCmdList anyway.
 local function slashCommandSafe(text)
   local command = string.match(text, "^(/[^%s]+)")
   local hash = _G.hash_SlashCmdList
@@ -60,7 +60,7 @@ local function slashCommandSafe(text)
     return false
   end
   if ChatPrefill.IsProtectedCommand(command) then
-    return true
+    return false
   end
   if type(hash) ~= "table" or type(isSecure) ~= "function" then
     return false

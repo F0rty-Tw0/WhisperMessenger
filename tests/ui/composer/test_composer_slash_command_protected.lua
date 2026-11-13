@@ -77,17 +77,22 @@ return function()
   end
 
   local ok, err = pcall(function()
-    -- test_protected_command_prefills_chat_box_for_the_player_to_send
+    -- Prefilling the game's chat box from addon code taints its chat-type
+    -- state, so the protected command the player then sends from it is still
+    -- blocked (seen in game). The copy dialog is the only safe hand-off.
+
+    -- test_protected_command_shows_copy_dialog_and_never_touches_chat_box
     do
       local editBox, opened = setup()
       local composer, sent = build()
       ManualCopyCapture.With(function(capture)
         press(composer, "/use Hearthstone")
-        assert(opened[1] == "/use Hearthstone", "prefills the chat box, got " .. tostring(opened[1]))
-        assert(#opened == 1, "opens chat once")
-        assert(capture.count == 0, "no copy dialog when prefilling is safe")
+        assert(capture.count == 1 and capture.text == "/use Hearthstone", "copy dialog holds the command, got " .. tostring(capture.text))
+        local dialog = _G.StaticPopupDialogs.WHISPER_MESSENGER_BUBBLE_COPY_TEXT
+        assert(dialog.text == COMMAND_PROMPT, "tells the player to paste it, got " .. tostring(dialog.text))
       end)
-      assert(#editBox.ran == 0, "a protected command never runs through the Enter handler")
+      assert(#opened == 0, "a protected command never prefills the chat box")
+      assert(#editBox.ran == 0 and editBox.text == "", "a protected command never touches the chat box")
       assert(#sent == 0, "a protected command is never whispered")
       assert(composer.input:GetText() == "", "composer cleared after handing off the command")
     end
@@ -96,26 +101,23 @@ return function()
     do
       local editBox, opened = setup()
       local composer = build()
-      press(composer, "  /TARGET Arthas")
-      assert(opened[1] == "/TARGET Arthas", "prefills the trimmed command, got " .. tostring(opened[1]))
-      assert(#editBox.ran == 0, "never runs through the Enter handler")
+      ManualCopyCapture.With(function(capture)
+        press(composer, "  /TARGET Arthas")
+        assert(capture.text == "/TARGET Arthas", "copy dialog holds the trimmed command, got " .. tostring(capture.text))
+      end)
+      assert(#opened == 0 and #editBox.ran == 0, "never touches the chat box")
     end
 
-    -- test_protected_command_shows_copy_dialog_when_prefill_unsafe
+    -- test_protected_command_without_copy_dialog_keeps_the_text
     do
       local editBox, opened = setup()
-      rawset(_G, "SlashCmdList", { SOMEADDON = function() end })
-      local composer, sent = build()
-      ManualCopyCapture.With(function(capture)
-        press(composer, "/target Arthas")
-        assert(#opened == 0, "unsafe prefill -> chat box not opened")
-        assert(capture.count == 1 and capture.text == "/target Arthas", "copy dialog holds the command, got " .. tostring(capture.text))
-        local dialog = _G.StaticPopupDialogs.WHISPER_MESSENGER_BUBBLE_COPY_TEXT
-        assert(dialog.text == COMMAND_PROMPT, "tells the player to paste it, got " .. tostring(dialog.text))
-      end)
-      assert(#editBox.ran == 0, "unsafe prefill -> never runs through the Enter handler")
-      assert(#sent == 0, "unsafe prefill -> never whispered")
-      assert(composer.input:GetText() == "", "composer cleared after handing off the command")
+      local savedShow = rawget(_G, "StaticPopup_Show")
+      rawset(_G, "StaticPopup_Show", nil)
+      local composer = build()
+      press(composer, "/use Hearthstone")
+      rawset(_G, "StaticPopup_Show", savedShow)
+      assert(composer.input:GetText() == "/use Hearthstone", "no copy dialog -> text stays in the composer")
+      assert(#opened == 0 and #editBox.ran == 0, "no copy dialog -> chat box still untouched")
     end
 
     -- test_unprotected_command_still_runs_directly
@@ -125,16 +127,6 @@ return function()
       press(composer, "/roll 100")
       assert(editBox.ran[1] == "/roll 100", "runs /roll through the chat box, got " .. tostring(editBox.ran[1]))
       assert(#opened == 0, "an unprotected command is not prefilled")
-    end
-
-    -- test_protected_command_without_open_chat_runs_directly_instead_of_vanishing
-    do
-      local editBox = setup()
-      rawset(_G, "ChatFrameUtil", nil)
-      rawset(_G, "ChatFrame_OpenChat", nil)
-      local composer = build()
-      press(composer, "/use Hearthstone")
-      assert(editBox.ran[1] == "/use Hearthstone", "no way to open chat -> runs as before, got " .. tostring(editBox.ran[1]))
     end
 
     -- test_missing_secure_check_runs_command_directly
