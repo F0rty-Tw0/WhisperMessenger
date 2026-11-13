@@ -98,11 +98,11 @@ local function swapFont(widget, font)
   end
 end
 
--- The font a text box should use: font's twin when it has one, else font.
--- font is a font object or its global name.
+-- The font a text box should use: font's twin while it is on the chat font,
+-- else font. font is a font object or its global name.
 function GlyphCoverage.InputFont(font)
   local base = _G[font] or font
-  return twinOf[base] or base
+  return inUse[base] and twinOf[base] or base
 end
 
 -- Puts box on the twin of font and keeps it there across font refreshes.

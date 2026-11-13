@@ -69,6 +69,27 @@ return function()
     assert(GlyphCoverage.InputFont(plain) == plain, "a font without a twin stays as it is")
   end
 
+  -- test_other_language_display_moves_a_box_back_to_its_base_font
+  -- That language keeps the game's multi-script font chain on base.
+  do
+    local savedGetLocale = rawget(_G, "GetLocale")
+    rawset(_G, "GetLocale", function()
+      return "enUS"
+    end)
+    Fonts.Initialize("default")
+    local base = rawget(_G, "WM_ChatNormal")
+    local box = factory.CreateFrame("EditBox", nil, nil)
+    GlyphCoverage.SetInputFont(box, "WM_ChatNormal")
+    Fonts.SetLanguage("ruRU")
+    local onBase = box.fontObject == base
+    Fonts.SetLanguage("auto")
+    local backOnTwin = box.fontObject == GlyphCoverage.TwinOf(base)
+    rawset(_G, "GetLocale", savedGetLocale)
+    Fonts.Initialize("default")
+    assert(onBase, "the box is on the base font for that language")
+    assert(backOnTwin, "the box is back on the twin after auto")
+  end
+
   -- test_set_input_font_keeps_the_text_colour
   do
     Fonts.Initialize("default")
