@@ -10,7 +10,7 @@ local RelationshipMark = ns.RelationshipMark or require("WhisperMessenger.UI.Sha
 -- pushes the faction icon one more gap to the right. Group rows never show it.
 local RowRelationship = {}
 
--- Same as the name-to-faction gap in RowElements.
+-- Also the name-to-faction gap: RowElements budgets the name with it.
 local GAP = 4
 RowRelationship.GAP = GAP
 
