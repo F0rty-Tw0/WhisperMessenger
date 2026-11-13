@@ -58,6 +58,10 @@ end
 function MemberRecord.RecordMember(acc, clubId, memberId, info)
   acc.club[info.guid] = clubId
   acc.member[info.guid] = memberId
+  -- Before the zone/level reads, so a secret zone or level can't drop it.
+  if clubId ~= acc.guildClubId and acc.community[info.guid] == nil then
+    acc.community[info.guid] = clubId
+  end
   acc.freshAt[info.guid] = acc.now
   local p = MemberRecord.PresenceToString(info.presence)
   if p then
