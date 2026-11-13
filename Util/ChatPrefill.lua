@@ -47,18 +47,26 @@ end
 -- SlashCmdList entries) into hash_SlashCmdList. Done under our taint, the
 -- moved handlers stay tainted and the game blocks the protected call they
 -- make when the player presses Enter (ADDON_ACTION_FORBIDDEN). So a slash
--- command is safe to prefill only when the game already moved it securely
--- and nothing is waiting to be moved.
+-- command is safe to prefill only when nothing is waiting to be moved and the
+-- game already moved it securely. Protected commands (/use, /target) sit in
+-- the game's own private table, which addons cannot change, so for them the
+-- empty queue is enough.
 local function slashCommandSafe(text)
   local command = string.match(text, "^(/[^%s]+)")
   local hash = _G.hash_SlashCmdList
   local pending = _G.SlashCmdList
   local isSecure = _G.issecurevariable
-  if command == nil or type(hash) ~= "table" or type(pending) ~= "table" or type(isSecure) ~= "function" then
+  if command == nil or type(pending) ~= "table" or next(pending) ~= nil then
+    return false
+  end
+  if ChatPrefill.IsProtectedCommand(command) then
+    return true
+  end
+  if type(hash) ~= "table" or type(isSecure) ~= "function" then
     return false
   end
   local key = string.upper(command)
-  if hash[key] == nil or next(pending) ~= nil then
+  if hash[key] == nil then
     return false
   end
 
@@ -70,6 +78,21 @@ function ChatPrefill.IsSafe(text)
   local ok, safe = pcall(slashCommandSafe, text)
 
   return ok and safe == true
+end
+
+-- True when the game lists the text's command as protected (/use, /target,
+-- /cast, ...): addon code running it gets blocked. Any error answers "no".
+function ChatPrefill.IsProtectedCommand(text)
+  if type(text) ~= "string" or type(_G.IsSecureCmd) ~= "function" then
+    return false
+  end
+  local command = string.match(text, "^(/[^%s]+)")
+  if command == nil then
+    return false
+  end
+  local ok, protected = pcall(_G.IsSecureCmd, command)
+
+  return ok and protected == true
 end
 
 ns.ChatPrefill = ChatPrefill
