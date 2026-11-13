@@ -27,6 +27,7 @@ end
 return function()
   local factory = FakeUI.NewFactory()
   local savedFaction, savedFocus = _G.UnitFactionGroup, _G.GetMouseFocus
+  ---@diagnostic disable-next-line: duplicate-set-field
   _G.UnitFactionGroup = function()
     return "Alliance", "Alliance"
   end
@@ -112,11 +113,13 @@ return function()
     row.scripts.OnEnter(row)
     assert(row.hoverFill.shown == true, "row highlighted on enter")
     row.mouseOver = false -- only the focus walk can keep it now
+    ---@diagnostic disable-next-line: duplicate-set-field
     _G.GetMouseFocus = function()
       return row.relationshipHover
     end
     row.scripts.OnLeave(row)
     assert(row.hoverFill.shown == true, "highlight kept while the pointer is on the mark")
+    ---@diagnostic disable-next-line: duplicate-set-field
     _G.GetMouseFocus = function()
       return nil
     end
