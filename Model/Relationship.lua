@@ -16,8 +16,7 @@ local Relationship = {}
 
 local CACHE_SECONDS = 300
 local WOW_TIES = { "bnet", "guild", "friend", "community" }
--- A BNet chat is always a Battle.net tie; only the friend's current character
--- is checked, for guild and community.
+-- A BNet chat is always bnet; its friend's character is checked for these.
 local BNET_TIES = { "guild", "community" }
 
 -- PresenceCache, BNetResolver and BNetStatus load after this file's
@@ -64,8 +63,12 @@ local function isGuildMember(ctx)
   if type(api) ~= "table" or not ctx.nameOk then
     return false
   end
+  -- Forever: the guild roster knows a guildmate only by the bare name.
   if call(ctx, api.MemberExistsByName, ctx.name) ~= true then
-    return false
+    local short = Identity.ShortName(ctx.name)
+    if short == ctx.name or call(ctx, api.MemberExistsByName, short) ~= true then
+      return false
+    end
   end
   readGuildName(ctx)
   return true
@@ -166,8 +169,7 @@ local function buildTarget(item, runtime)
   return bnetChatTarget(item, runtime)
 end
 
--- A BNet chat whose friend is offline, elsewhere or unresolvable. Costs no
--- API call, so it is never cached.
+-- BNet chat with the friend offline, elsewhere or unresolvable: no API call, never cached.
 local function bnetOnly()
   return { primary = "bnet", ties = { "bnet" } }
 end

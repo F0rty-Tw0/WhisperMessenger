@@ -221,5 +221,29 @@ return function()
     assert(w.lastFriendName == "Gurkan Warbringer", "friend check got " .. tostring(w.lastFriendName))
   end
 
+  -- test_guild_check_falls_back_to_the_bare_name (Forever: GUID realm is a server id)
+  do
+    local w = World.New()
+    local savedAmbiguate = rawget(_G, "Ambiguate")
+    rawset(_G, "Ambiguate", function(name)
+      return (string.gsub(name, "%-[^%-]*$", ""))
+    end)
+    w.playerInfo["Player-6942-00082F35"] = { name = "Istaren Kementaro", realm = "CAMWOWEU4Realm8PvP" }
+    w.guildMembers["Istaren Kementaro"] = true
+    local rel = Relationship.Resolve(w.item("Player-6942-00082F35", "Istaren Kementaro"), w.runtime)
+    rawset(_G, "Ambiguate", savedAmbiguate)
+    assert(tiesOf(rel) == "guild", "bare-name guildmate found, got " .. tiesOf(rel))
+  end
+
+  -- test_ties_use_the_guid_name_over_the_display_name
+  do
+    local w = World.New()
+    w.playerInfo["Player-1-AAA"] = { name = "Arthas", realm = "" }
+    w.guildMembers["Arthas"] = true
+    w.friendNames["Arthas"] = true
+    local rel = Relationship.Resolve(w.item("Player-1-AAA", "Stalename"), w.runtime)
+    assert(tiesOf(rel) == "guild,friend", "GUID name checked, got " .. tiesOf(rel))
+  end
+
   print("  All Relationship resolve tests passed")
 end

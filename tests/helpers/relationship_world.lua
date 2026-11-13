@@ -8,7 +8,8 @@ local GLOBALS = { "C_GuildInfo", "C_FriendList", "C_Club", "GetGuildInfo", "GetP
 --   w.runtime            { now, bnetApi, accountState = { settings = {} } }
 --   w.calls              counters: guild, guildInfo, isFriend, friendInfo, bnetGuid, clubInfo, account
 --   w.nilArgs            number of tie-API calls that received a nil argument
---   w.playerInfoCalls    GetPlayerInfoByGUID calls (answers nothing, so names stay as given)
+--   w.playerInfoCalls    GetPlayerInfoByGUID calls
+--   w.playerInfo[guid] = { name, realm }   what GetPlayerInfoByGUID answers (nothing by default, so names stay as given)
 --   w.guildMembers[name] / w.friendGuids[guid] / w.friendNames[name] / w.bnetByGuid[guid] = table / w.clubNames[id]
 --   w.guildName          what GetGuildInfo("player") returns (nil = not in a guild)
 --   w.guildThrows / w.guildSecret   make MemberExistsByName throw / return "SECRET"
@@ -31,6 +32,7 @@ function World.New()
     clubNames = {},
     accounts = {},
     communities = {},
+    playerInfo = {},
     guildName = "Moonwatch",
     now = 1000,
   }
@@ -57,9 +59,13 @@ function World.New()
     end,
   })
   -- Counted apart from w.calls: it is the name lookup, not a tie API.
-  rawset(_G, "GetPlayerInfoByGUID", function()
+  rawset(_G, "GetPlayerInfoByGUID", function(guid)
     w.playerInfoCalls = w.playerInfoCalls + 1
-    return nil
+    local info = w.playerInfo[guid]
+    if info == nil then
+      return nil
+    end
+    return nil, nil, nil, nil, nil, info.name, info.realm
   end)
   rawset(_G, "GetGuildInfo", function(unit)
     hit("guildInfo", unit)
