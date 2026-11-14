@@ -6,6 +6,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+## [2.1.7] - 2026-11-14
+
 - New option under Whispers: hide the player's last channel message that shows above a new whisper.
 - Party, raid and instance chats now show the dungeon, raid or battleground they started in, e.g. "Party - Halls of Atonement - Current".
 - New sound options under Notifications: pick a different sound for mentions, and turn on a sound for whispers you send (off by default).
