@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local RemoveButton = ns.RemoveButton or require("WhisperMessenger.UI.Shared.RemoveButton")
 local BlockedCount = ns.FiltersSettingsBlockedCount or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.BlockedCount")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 -- One row of the block list: the name on top, then this session's blocked
 -- count, the reason and the last blocked line below, and a remove button.
@@ -138,8 +139,8 @@ end
 function IgnoreRow.Bind(row, entry, key)
   row.entryKey = key
   row.entry = entry
-  row.nameText:SetText(entry.name)
-  row.detailText:SetText(table.concat(detailParts(entry), DETAIL_SEPARATOR))
+  row.nameText:SetText(GlyphCoverage.Apply(row.nameText, entry.name))
+  row.detailText:SetText(GlyphCoverage.Apply(row.detailText, table.concat(detailParts(entry), DETAIL_SEPARATOR)))
 end
 
 function IgnoreRow.RefreshTheme(row)

@@ -82,7 +82,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   }
   ComposerLayout.Apply(layoutParts, parentWidth)
 
-  UIHelpers.setFontObject(input, Theme.FONTS.composer_input)
+  GlyphCoverage.SetInputFont(input, Theme.FONTS.composer_input)
   if input.SetTextColor then
     input:SetTextColor(Theme.COLORS.text_primary[1], Theme.COLORS.text_primary[2], Theme.COLORS.text_primary[3], Theme.COLORS.text_primary[4] or 1)
   end
@@ -202,7 +202,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
 
   input:SetScript("OnTextChanged", function()
     local text = input.GetText and input:GetText() or input.text or ""
-    GlyphCoverage.Apply(input, text)
     if not limit.accept(text, loadingDraft) then
       return
     end

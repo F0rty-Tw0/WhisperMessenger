@@ -202,6 +202,7 @@ local function applyFonts()
     -- An inherited multi-script chain must stay whole: no chat-font twin then.
     GlyphCoverage.UpdateTwin(wmName, fontObj, size, flags, inheritedSource == nil)
   end
+  GlyphCoverage.RefreshInputs()
 end
 
 function Fonts.Initialize(mode)
