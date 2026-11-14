@@ -46,6 +46,7 @@ local function buildNative(factory, contactsSearchFrame, theme, uiHelpers)
   input:SetPoint("LEFT", contactsSearchFrame, "LEFT", NATIVE_SEARCH_LEFT_INSET, 0)
   input:SetPoint("RIGHT", contactsSearchFrame, "RIGHT", 0, 0)
   input:SetHeight(NATIVE_SEARCH_HEIGHT)
+  GlyphCoverage.UseChatFace(input)
   if input.SetAutoFocus then
     input:SetAutoFocus(false)
   end
