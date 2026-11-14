@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local GlyphCoverage = require("WhisperMessenger.UI.Theme.GlyphCoverage")
 local Fonts = require("WhisperMessenger.UI.Theme.Fonts")
+local FontBox = require("tests.helpers.font_box")
 
 local SHARED_MEDIA_FONT = "Interface\\AddOns\\SharedMedia\\Roboto.ttf"
 local CHAT_FONT = "Fonts\\ARIALN.TTF"
@@ -88,6 +89,24 @@ return function()
     Fonts.Initialize("default")
     assert(onBase, "the box is on the base font for that language")
     assert(backOnTwin, "the box is back on the twin after auto")
+  end
+
+  -- test_use_chat_face_moves_a_friz_box_to_the_chat_font_and_back
+  do
+    local box = FontBox.Give(factory.CreateFrame("EditBox", nil, nil), FontBox.FRIZ, 13, "OUTLINE")
+    local saved = GlyphCoverage.UseChatFace(box)
+    local path, size, flags = box:GetFont()
+    assert(path == CHAT_FONT and size == 13 and flags == "OUTLINE", "on the chat font at its own size, got " .. tostring(path))
+    assert(GlyphCoverage.UseChatFace(box) == nil, "a second call leaves it alone")
+    GlyphCoverage.RestoreFace(box, saved)
+    assert(box:GetFont() == FontBox.FRIZ, "back on its own font")
+  end
+
+  -- test_use_chat_face_leaves_a_font_with_those_letters_alone
+  do
+    local box = FontBox.Give(factory.CreateFrame("EditBox", nil, nil), "Fonts\\ARKai_T.ttf")
+    assert(GlyphCoverage.UseChatFace(box) == nil, "nothing to restore")
+    assert(box:GetFont() == "Fonts\\ARKai_T.ttf", "a locale font stays")
   end
 
   -- test_set_input_font_keeps_the_text_colour

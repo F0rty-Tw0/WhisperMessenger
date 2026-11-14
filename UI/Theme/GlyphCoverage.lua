@@ -122,6 +122,29 @@ function GlyphCoverage.RefreshInputs()
   end
 end
 
+-- For a game-made text box (a Blizzard template): moves it to the chat font
+-- at its own size when its font lacks those letters. Only the font file
+-- changes, never the font object. Returns what it had, for RestoreFace, or
+-- nil when nothing changed.
+function GlyphCoverage.UseChatFace(box)
+  if type(box) ~= "table" or type(box.GetFont) ~= "function" or type(box.SetFont) ~= "function" then
+    return nil
+  end
+  local path, size, flags = box:GetFont()
+  if not GlyphCoverage.LacksExtendedLatin(path) then
+    return nil
+  end
+  box:SetFont(chatFontPath(), size, flags or "")
+  return { path, size, flags or "" }
+end
+
+function GlyphCoverage.RestoreFace(box, saved)
+  if type(saved) ~= "table" or type(box) ~= "table" or type(box.SetFont) ~= "function" then
+    return
+  end
+  box:SetFont(saved[1], saved[2], saved[3])
+end
+
 -- Points widget at the twin when text needs it, else at the base font.
 -- Returns text, so a call can wrap the text it is about to show.
 function GlyphCoverage.Apply(widget, text)
