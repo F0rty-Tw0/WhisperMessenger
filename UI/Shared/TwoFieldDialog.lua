@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 local DialogChrome = ns.DialogChrome or require("WhisperMessenger.UI.Shared.DialogChrome")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 -- Popup with two labelled one-line inputs (the game's StaticPopup has only
 -- one edit box): an optional first field and a required second one. The
@@ -49,7 +50,7 @@ local function createInput(factory, body)
   local inset = box and NATIVE_INPUT_INSET or 0
   if box == nil then
     box = factory.CreateFrame("EditBox", nil, body)
-    UIHelpers.setFontObject(box, Theme.FONTS.composer_input)
+    GlyphCoverage.SetInputFont(box, Theme.FONTS.composer_input)
     box.background = UIHelpers.createRoundedBackground(box, INPUT_RADIUS)
     if box.SetTextInsets then
       box:SetTextInsets(8, 8, 0, 0)

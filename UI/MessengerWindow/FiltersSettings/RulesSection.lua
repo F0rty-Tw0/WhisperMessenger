@@ -13,6 +13,7 @@ local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.Pick
 local RulePresets = ns.RulePresets or require("WhisperMessenger.Model.Filters.RulePresets")
 local BlockedCount = ns.FiltersSettingsBlockedCount or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.BlockedCount")
 local RuleDialogs = ns.FiltersSettingsRuleDialogs or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.RuleDialogs")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 -- "Keyword rules" section of the Filters page: each rule's name (presets) or
 -- words joined by " + " on one truncated line, this session's blocked count
@@ -155,7 +156,7 @@ function RulesSection.Create(factory, frame, anchor, options)
       row:SetPoint("TOPLEFT", list, "TOPLEFT", 0, -(index - 1) * rowHeight)
       row:SetSize(width, rowHeight)
       row.toggle.setWidth(toggleWidth())
-      row.toggle.label:SetText(ruleLabel(rule))
+      row.toggle.label:SetText(GlyphCoverage.Apply(row.toggle.label, ruleLabel(rule)))
       row.toggle.setValue(rule.enabled ~= false)
       row.countText:SetText(BlockedCount.Text(rule.blocked))
       row:Show()

@@ -1,0 +1,121 @@
+local FakeUI = require("tests.helpers.fake_ui")
+local GlyphCoverage = require("WhisperMessenger.UI.Theme.GlyphCoverage")
+local Fonts = require("WhisperMessenger.UI.Theme.Fonts")
+local FontBox = require("tests.helpers.font_box")
+
+local SHARED_MEDIA_FONT = "Interface\\AddOns\\SharedMedia\\Roboto.ttf"
+local CHAT_FONT = "Fonts\\ARIALN.TTF"
+
+-- A LibSharedMedia that knows one font, "Roboto".
+local function withSharedMedia(fn)
+  local savedLibStub = rawget(_G, "LibStub")
+  local lsm = {
+    List = function()
+      return { "Roboto" }
+    end,
+    Fetch = function(_, _mediaType, name)
+      return name == "Roboto" and SHARED_MEDIA_FONT or nil
+    end,
+  }
+  rawset(
+    _G,
+    "LibStub",
+    setmetatable({}, {
+      __call = function(_, name)
+        return name == "LibSharedMedia-3.0" and lsm or nil
+      end,
+    })
+  )
+  local ok, err = pcall(fn)
+  rawset(_G, "LibStub", savedLibStub)
+  Fonts.Initialize("default")
+  if not ok then
+    error(err, 0)
+  end
+end
+
+-- Text boxes sit on the chat-font twin for good: a live edit box ignores a
+-- font swap made while it holds text, and answers nil to GetFontObject.
+return function()
+  local factory = FakeUI.NewFactory({ fontColors = true })
+
+  -- test_a_box_on_a_font_with_those_letters_moves_to_the_twin_once_one_is_made
+  -- Runs first: no twin may exist yet while the chosen font needs none.
+  withSharedMedia(function()
+    Fonts.Initialize("Roboto")
+    local base = rawget(_G, "WM_ChatNormal")
+    assert(GlyphCoverage.TwinOf(base) == nil, "no twin while the chosen font has those letters")
+
+    local box = factory.CreateFrame("EditBox", nil, nil)
+    ---@diagnostic disable-next-line: duplicate-set-field
+    box.GetFontObject = function()
+      return nil
+    end
+    GlyphCoverage.SetInputFont(box, "WM_ChatNormal")
+    assert(box.fontObject == base, "the box stays on the chosen font")
+
+    Fonts.SetMode("default")
+    local twin = GlyphCoverage.TwinOf(base)
+    assert(twin ~= nil and box.fontObject == twin, "the box moves to the twin made on the switch back")
+    assert(twin:GetFont() == CHAT_FONT, "the twin is on the chat font, got " .. tostring(twin:GetFont()))
+  end)
+
+  -- test_input_font_names_the_twin_for_a_name_or_an_object
+  do
+    Fonts.Initialize("default")
+    local wide = rawget(_G, "WM_ChatNormal_Wide")
+    assert(GlyphCoverage.InputFont("WM_ChatNormal") == wide, "by global name")
+    assert(GlyphCoverage.InputFont(rawget(_G, "WM_ChatNormal")) == wide, "by font object")
+    local plain = rawget(_G, "GameFontNormal")
+    assert(GlyphCoverage.InputFont(plain) == plain, "a font without a twin stays as it is")
+  end
+
+  -- test_other_language_display_moves_a_box_back_to_its_base_font
+  -- That language keeps the game's multi-script font chain on base.
+  do
+    local savedGetLocale = rawget(_G, "GetLocale")
+    rawset(_G, "GetLocale", function()
+      return "enUS"
+    end)
+    Fonts.Initialize("default")
+    local base = rawget(_G, "WM_ChatNormal")
+    local box = factory.CreateFrame("EditBox", nil, nil)
+    GlyphCoverage.SetInputFont(box, "WM_ChatNormal")
+    Fonts.SetLanguage("ruRU")
+    local onBase = box.fontObject == base
+    Fonts.SetLanguage("auto")
+    local backOnTwin = box.fontObject == GlyphCoverage.TwinOf(base)
+    rawset(_G, "GetLocale", savedGetLocale)
+    Fonts.Initialize("default")
+    assert(onBase, "the box is on the base font for that language")
+    assert(backOnTwin, "the box is back on the twin after auto")
+  end
+
+  -- test_use_chat_face_moves_a_friz_box_to_the_chat_font_and_back
+  do
+    local box = FontBox.Give(factory.CreateFrame("EditBox", nil, nil), FontBox.FRIZ, 13, "OUTLINE")
+    local saved = GlyphCoverage.UseChatFace(box)
+    local path, size, flags = box:GetFont()
+    assert(path == CHAT_FONT and size == 13 and flags == "OUTLINE", "on the chat font at its own size, got " .. tostring(path))
+    assert(GlyphCoverage.UseChatFace(box) == nil, "a second call leaves it alone")
+    GlyphCoverage.RestoreFace(box, saved)
+    assert(box:GetFont() == FontBox.FRIZ, "back on its own font")
+  end
+
+  -- test_use_chat_face_leaves_a_font_with_those_letters_alone
+  do
+    local box = FontBox.Give(factory.CreateFrame("EditBox", nil, nil), "Fonts\\ARKai_T.ttf")
+    assert(GlyphCoverage.UseChatFace(box) == nil, "nothing to restore")
+    assert(box:GetFont() == "Fonts\\ARKai_T.ttf", "a locale font stays")
+  end
+
+  -- test_set_input_font_keeps_the_text_colour
+  do
+    Fonts.Initialize("default")
+    local box = factory.CreateFrame("EditBox", nil, nil)
+    box:SetTextColor(0.2, 0.4, 0.6, 1)
+    GlyphCoverage.SetInputFont(box, "WM_ChatNormal")
+    local r, g, b = box:GetTextColor()
+    assert(r == 0.2 and g == 0.4 and b == 0.6, "the colour survives the font change")
+  end
+end

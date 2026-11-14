@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local TemplateFactory = require("tests.helpers.template_factory")
+local FontBox = require("tests.helpers.font_box")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ContactsSearchUI = require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSearchUI")
 local ChromeBuilder = require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
@@ -34,6 +35,13 @@ return function()
     )
     assert(search.native == true, "HUD: search should report the native variant")
     assert(search.roundedBg == nil, "HUD: no custom rounded fill")
+  end
+
+  -- test_hud_search_box_on_friz_uses_the_chat_font
+  -- The template's font lacks letters like ő and ű on some clients.
+  do
+    local search = buildSearch(FontBox.Factory(FakeUI.NewFactory(), FontBox.FRIZ), true)
+    assert(search.input:GetFont() == FontBox.CHAT, "HUD: search box on the chat font, got " .. tostring(search.input:GetFont()))
   end
 
   -- test_hud_search_reuses_template_instructions_and_clear_button

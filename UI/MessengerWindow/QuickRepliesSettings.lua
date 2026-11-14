@@ -12,6 +12,7 @@ local QuickReplies = ns.QuickReplies or require("WhisperMessenger.Model.QuickRep
 local TextInputDialog = ns.TextInputDialog or require("WhisperMessenger.UI.Shared.TextInputDialog")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 local RemoveButton = ns.RemoveButton or require("WhisperMessenger.UI.Shared.RemoveButton")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 -- "Quick replies" section of the Behavior page: the saved replies, each with
 -- a remove button, and an add button (up to QuickReplies.MAX_ENTRIES).
@@ -74,7 +75,7 @@ function QuickRepliesSettings.Create(factory, frame, anchor, options)
       end
       row.index = index
       row:SetWidth(width)
-      row.label:SetText(reply)
+      row.label:SetText(GlyphCoverage.Apply(row.label, reply))
       row:Show()
     end
     for index = #replies + 1, #section.rows do

@@ -11,8 +11,13 @@ local PopupButtonStyling = ns.ChatBubbleContextMenuManualCopyPopupUIButtonStylin
   or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI.ButtonStyling")
 
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 local StyledTextInputPopup = {}
+
+-- The StaticPopup edit box is the game's, shared with every popup: its own
+-- font (edit box -> saved font) comes back when ours closes.
+local savedFaces = setmetatable({}, { __mode = "k" })
 
 -- Classic clients' StaticPopup widens the dialog from its current width when
 -- editBoxWidth is over 260, so a reused popup grows on every open; Retail
@@ -110,6 +115,9 @@ function StyledTextInputPopup.Apply(dialog, dialogName, data, options)
   end
 
   local editBox = resolveEditBox(dialog, dialogName)
+  if editBox and savedFaces[editBox] == nil then
+    savedFaces[editBox] = GlyphCoverage.UseChatFace(editBox)
+  end
   if editBox and (options.fullWidthInput == true or type(options.inputWidth) == "number") then
     applyInputWidth(dialog, editBox, options)
   end
@@ -132,6 +140,10 @@ function StyledTextInputPopup.Restore(dialog, dialogName, options)
   end
 
   local editBox = resolveEditBox(dialog, dialogName)
+  if editBox and savedFaces[editBox] ~= nil then
+    GlyphCoverage.RestoreFace(editBox, savedFaces[editBox])
+    savedFaces[editBox] = nil
+  end
   if options.clearEditBox ~= false and editBox and editBox.SetText then
     editBox:SetText("")
   end
