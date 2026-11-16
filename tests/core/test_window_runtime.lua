@@ -234,7 +234,7 @@ local function makeRuntimeOptions()
       icon = { anchorPoint = "TOPLEFT", relativePoint = "TOPLEFT", x = 25, y = -40 },
     },
     uiFactory = fakeFactory,
-    bootstrap = { _inMythicContent = false },
+    bootstrap = {},
     contactsList = {
       BuildItemsForProfile = function(_savedState, _profileId, cache, dirtyKeys)
         trackers.buildCache = cache

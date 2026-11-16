@@ -1,3 +1,4 @@
+local RestrictionState = require("tests.helpers.restriction_state")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local Localization = require("WhisperMessenger.Locale.Localization")
 
@@ -15,7 +16,7 @@ return function()
   Bootstrap.runtime = {
     store = { conversations = { k = { messages = { { direction = "out", kind = "user", text = "gg", delivery = "queued" } } } } },
     isCompetitiveContent = function()
-      return Bootstrap._inCompetitiveContent == true
+      return RestrictionState.Flag(Bootstrap, "competitive")
     end,
     refreshWindow = function() end,
   }

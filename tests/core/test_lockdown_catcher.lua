@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FakeChatLines = require("tests.helpers.fake_chat_lines")
+local RestrictionState = require("tests.helpers.restriction_state")
 local LockdownCatcher = require("WhisperMessenger.Core.Bootstrap.LockdownCatcher")
 
 local SECRET = FakeChatLines.SECRET
@@ -186,11 +187,11 @@ return function()
   -- test_installed_frame_routes_whispers_to_catcher
 
   do
-    local Bootstrap = { _inMythicContent = true, runtime = {
+    local Bootstrap = RestrictionState.Set({ runtime = {
       now = function()
         return 900
       end,
-    } }
+    } }, { mythic = true })
     local catcher, frame = installWithFakeFrame(Bootstrap)
     local onEvent = frame:GetScript("OnEvent")
     assert(type(onEvent) == "function", "install must set an OnEvent script")

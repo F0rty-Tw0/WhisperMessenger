@@ -1,3 +1,4 @@
+local RestrictionState = require("tests.helpers.restriction_state")
 local Competitive = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Competitive")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
@@ -6,7 +7,6 @@ local PublicApi = require("WhisperMessenger.Core.PublicApi")
 local function makeHarness()
   local calls = { suspend = 0, resume = 0 }
   local Bootstrap = {
-    _inMythicContent = false,
     runtime = {
       suspend = function()
         calls.suspend = calls.suspend + 1
@@ -177,7 +177,7 @@ return function()
   do
     local Bootstrap, deps, state = makeCombatHarness(true, true)
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
-    Bootstrap._inMythicContent = true
+    RestrictionState.Set(Bootstrap, { mythic = true })
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
 
     assert(state.visible == false, "combat end must not reopen the window while Mythic+ keeps it suspended")
@@ -191,7 +191,7 @@ return function()
 
     Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START")
     assert(calls.suspend == 1, "first CHALLENGE_MODE_START suspends")
-    assert(Bootstrap._inMythicContent == true, "mythic flag set")
+    assert(RestrictionState.Flag(Bootstrap, "mythic") == true, "mythic flag set")
 
     -- A duplicate suspend would clobber _wasVisibleBeforeMythic (the window
     -- is already hidden by the first suspend), so it must be skipped.
@@ -209,7 +209,7 @@ return function()
     Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START")
     Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_COMPLETED")
     assert(calls.resume == 1, "COMPLETED after a suspend resumes once")
-    assert(Bootstrap._inMythicContent == false, "mythic flag cleared")
+    assert(RestrictionState.Flag(Bootstrap, "mythic") == false, "mythic flag cleared")
   end
   -- test_challenge_mode_events_are_noops_without_mythic_plus
   do
@@ -219,7 +219,7 @@ return function()
     for _, event in ipairs({ "CHALLENGE_MODE_START", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET" }) do
       local handled = Competitive.handleChallengeModeEvent(Bootstrap, event)
       assert(handled == true, event .. " should remain claimed without Mythic+")
-      assert(Bootstrap._inMythicContent == false, event .. " should not change mythic state without Mythic+")
+      assert(RestrictionState.Flag(Bootstrap, "mythic") == false, event .. " should not change mythic state without Mythic+")
     end
 
     assert(calls.suspend == 0, "challenge mode events must not suspend without Mythic+")

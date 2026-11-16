@@ -1,5 +1,6 @@
 -- Tests that dungeon/competitive chat-log messages and related notices
 -- are routed through Localization and produce Russian strings in ruRU mode.
+local RestrictionState = require("tests.helpers.restriction_state")
 local Localization = require("WhisperMessenger.Locale.Localization")
 
 -- Stubs shared across sub-tests
@@ -20,13 +21,7 @@ return function()
 
     local Common = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
     local runtime = makeRuntime()
-    local Bootstrap = {
-      _inEncounter = true,
-      _inCompetitiveContent = false,
-      _inMythicContent = false,
-      runtime = runtime,
-      onCompetitiveStateChanged = nil,
-    }
+    local Bootstrap = RestrictionState.Set({ runtime = runtime }, { encounter = true })
 
     Common.notifyCompetitiveState(Bootstrap)
 

@@ -1,3 +1,4 @@
+local RestrictionState = require("tests.helpers.restriction_state")
 local ChatFilters = require("WhisperMessenger.Core.Bootstrap.ChatFilters")
 
 return function()
@@ -27,11 +28,7 @@ return function()
       return fn(...)
     end)
 
-    local Bootstrap = {
-      _inCompetitiveContent = false,
-      _inMythicContent = false,
-      _inEncounter = false,
-    }
+    local Bootstrap = {}
     local accountState = { settings = { hideFromDefaultChat = true } }
 
     ChatFilters.Configure(Bootstrap, accountState)
@@ -51,7 +48,7 @@ return function()
 
     -- Now test unregister path
     securecallInvocations = {}
-    Bootstrap._inEncounter = true
+    RestrictionState.Set(Bootstrap, { encounter = true })
     Bootstrap.syncChatFilters()
 
     assert(Bootstrap._filtersRegistered == false, "filters should unregister during encounter")
@@ -86,11 +83,7 @@ return function()
     end)
     rawset(_G, "securecall", nil)
 
-    local Bootstrap = {
-      _inCompetitiveContent = false,
-      _inMythicContent = false,
-      _inEncounter = false,
-    }
+    local Bootstrap = {}
     ChatFilters.Configure(Bootstrap, { settings = { hideFromDefaultChat = true } })
     Bootstrap.syncChatFilters()
 
@@ -122,14 +115,14 @@ return function()
       end,
     })
 
-    local Bootstrap = { _inCompetitiveContent = false, _inMythicContent = false, _inEncounter = false }
+    local Bootstrap = {}
     ChatFilters.Configure(Bootstrap, { settings = { hideFromDefaultChat = true } })
     Bootstrap.syncChatFilters()
 
     assert(Bootstrap._filtersRegistered == true, "filters should register through ChatFrameUtil")
     assert(#added == 4, "expected 4 ChatFrameUtil registrations, got " .. #added)
 
-    Bootstrap._inEncounter = true
+    RestrictionState.Set(Bootstrap, { encounter = true })
     Bootstrap.syncChatFilters()
     assert(Bootstrap._filtersRegistered == false, "filters should unregister during encounter")
     assert(#removed == 4, "expected 4 ChatFrameUtil removals, got " .. #removed)

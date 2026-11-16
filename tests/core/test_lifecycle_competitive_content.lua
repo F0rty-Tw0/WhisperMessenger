@@ -1,3 +1,4 @@
+local RestrictionState = require("tests.helpers.restriction_state")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local ContentDetector = require("WhisperMessenger.Core.ContentDetector")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
@@ -37,7 +38,7 @@ return function()
     local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
-    assert(Bootstrap._inCompetitiveContent == true, "should set _inCompetitiveContent=true when entering battleground")
+    assert(RestrictionState.Flag(Bootstrap, "competitive") == true, "should set the competitive flag when entering battleground")
   end
 
   -- test_player_entering_world_sets_competitive_in_arena
@@ -50,7 +51,7 @@ return function()
     local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
-    assert(Bootstrap._inCompetitiveContent == true, "should set _inCompetitiveContent=true when entering arena")
+    assert(RestrictionState.Flag(Bootstrap, "competitive") == true, "should set the competitive flag when entering arena")
   end
 
   -- test_player_entering_world_clears_competitive_in_open_world
@@ -60,14 +61,14 @@ return function()
       return "Eastern Kingdoms", "none", 0
     end)
 
-    local Bootstrap = { _inCompetitiveContent = true, runtime = { suspend = function() end, resume = function() end } }
+    local Bootstrap = RestrictionState.Set({ runtime = { suspend = function() end, resume = function() end } }, { competitive = true })
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
-    assert(Bootstrap._inCompetitiveContent == false, "should clear _inCompetitiveContent when entering open world")
+    assert(RestrictionState.Flag(Bootstrap, "competitive") == false, "should clear the competitive flag when entering open world")
   end
 
   -- test_player_entering_world_tracks_mythic_separately
-  -- Mythic+ sets _inMythicContent (not _inCompetitiveContent) so the hard
+  -- Mythic+ sets the mythic flag (not the competitive one) so the hard
   -- lockdown is driven by MythicSuspendController / RestrictedActions and
   -- fires only when the key is actually started, not on mere zone entry.
 
@@ -81,8 +82,8 @@ return function()
     local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
-    assert(Bootstrap._inMythicContent == true, "should set _inMythicContent=true for mythic keystone")
-    assert(Bootstrap._inCompetitiveContent == false, "should NOT set _inCompetitiveContent for mythic keystone (mythic is separate)")
+    assert(RestrictionState.Flag(Bootstrap, "mythic") == true, "should set the mythic flag for mythic keystone")
+    assert(RestrictionState.Flag(Bootstrap, "competitive") == false, "should NOT set the competitive flag for mythic keystone (mythic is separate)")
   end
   -- test_player_entering_world_ignores_mythic_keystone_without_mythic_plus
   do
@@ -93,7 +94,6 @@ return function()
 
     local calls = { suspend = 0 }
     local Bootstrap = {
-      _inMythicContent = false,
       runtime = {
         suspend = function()
           calls.suspend = calls.suspend + 1
@@ -103,7 +103,7 @@ return function()
     }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
-    assert(Bootstrap._inMythicContent == false, "should not set _inMythicContent for Mythic Keystone without Mythic+")
+    assert(RestrictionState.Flag(Bootstrap, "mythic") == false, "should not set the mythic flag for Mythic Keystone without Mythic+")
     assert(calls.suspend == 0, "should not suspend for Mythic Keystone without Mythic+")
   end
 
@@ -114,10 +114,10 @@ return function()
       return "Orgrimmar", "none", 0
     end)
 
-    local Bootstrap = { _inCompetitiveContent = true }
+    local Bootstrap = RestrictionState.Set({}, { competitive = true })
     LifecycleHandlers.Handle(Bootstrap, "ZONE_CHANGED_NEW_AREA", makeDeps())
 
-    assert(Bootstrap._inCompetitiveContent == false, "should clear _inCompetitiveContent on zone change out of pvp")
+    assert(RestrictionState.Flag(Bootstrap, "competitive") == false, "should clear the competitive flag on zone change out of pvp")
   end
 
   -- test_legacy_boss_fight_start_keeps_messaging_active
@@ -130,7 +130,6 @@ return function()
       resume = function() end,
     }
     local Bootstrap = {
-      _inEncounter = false,
       runtime = runtime,
       onCompetitiveStateChanged = function()
         callbackCalled = true
@@ -142,7 +141,7 @@ return function()
 
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
 
-    assert(Bootstrap._inEncounter == false, "legacy non-restricted boss fights must keep messaging active")
+    assert(RestrictionState.Flag(Bootstrap, "encounter") == false, "legacy non-restricted boss fights must keep messaging active")
     assert(runtime.messagingNotice == nil, "legacy non-restricted boss fights must not create a restriction notice")
     assert(callbackCalled == false, "encounter start must not emit competitive state changes")
     assert(syncCalled == false, "encounter start must not sync chat filters")
@@ -158,8 +157,7 @@ return function()
       resume = function() end,
       messagingNotice = "authoritative restriction state",
     }
-    local Bootstrap = {
-      _inEncounter = true,
+    local Bootstrap = RestrictionState.Set({
       runtime = runtime,
       onCompetitiveStateChanged = function()
         callbackCalled = true
@@ -167,11 +165,11 @@ return function()
       syncChatFilters = function()
         syncCalled = true
       end,
-    }
+    }, { encounter = true })
 
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
 
-    assert(Bootstrap._inEncounter == true, "encounter end must not clear authoritative restriction state")
+    assert(RestrictionState.Flag(Bootstrap, "encounter") == true, "encounter end must not clear authoritative restriction state")
     assert(runtime.messagingNotice == "authoritative restriction state", "encounter end must not clear an authoritative restriction notice")
     assert(callbackCalled == false, "encounter end must not emit competitive state changes")
     assert(syncCalled == false, "encounter end must not sync chat filters")
@@ -263,7 +261,6 @@ return function()
     }
     local resumeCalls = 0
     local Bootstrap = {
-      _inMythicContent = false,
       runtime = {
         localProfileId = "me",
         store = { conversations = {} },

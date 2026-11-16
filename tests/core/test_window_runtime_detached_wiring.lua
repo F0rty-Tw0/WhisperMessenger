@@ -118,7 +118,7 @@ local function build(settings)
     defaultCharacterState = { window = {}, icon = {} },
     uiFactory = factory,
     uiParent = uiParent,
-    bootstrap = { _inMythicContent = false },
+    bootstrap = {},
     contactsList = {
       BuildItemsForProfile = function()
         local convo = runtime.store.conversations[CONVERSATION_KEY]

@@ -75,12 +75,52 @@ return function()
     assert(instance.isRestricted() == true, "a cached encounter alone is restricted")
   end)
 
-  -- test_only_true_sets_a_flag
+  -- test_any_truthy_value_sets_a_flag
+  withChatLock(false, function()
+    local store = {}
+    local instance = RestrictedActions.New(store)
+    instance.setFlag("mythic", 1)
+    assert(instance.flag("mythic") == true, "a truthy value sets the flag, so no reader can take it for unset")
+    assert(instance.isMythic() == true, "a truthy flag value is mythic")
+    assert(store._inMythicContent == true, "the store holds a boolean, got " .. tostring(store._inMythicContent))
+    instance.setFlag("mythic", nil)
+    assert(store._inMythicContent == false, "nil clears the flag to false, got " .. tostring(store._inMythicContent))
+  end)
+
+  -- test_truthy_value_already_in_the_store_reads_as_set
+  withChatLock(false, function()
+    local instance = RestrictedActions.New({ _inEncounter = 1 })
+    assert(instance.flag("encounter") == true, "a truthy field in the store reads as a set flag")
+  end)
+
+  -- test_unknown_flag_name_is_rejected
   withChatLock(false, function()
     local instance = RestrictedActions.New()
-    instance.setFlag("mythic", 1)
-    assert(instance.flag("mythic") == false, "a flag is set by true alone")
-    assert(instance.isMythic() == false, "a non-boolean flag value is not mythic")
+    local readOk, readErr = pcall(instance.flag, "typo")
+    assert(readOk == false, "reading an unknown flag must fail, not answer false")
+    assert(string.find(tostring(readErr), "typo", 1, true), "the error names the flag, got " .. tostring(readErr))
+    local writeOk, writeErr = pcall(instance.setFlag, "typo", true)
+    assert(writeOk == false, "writing an unknown flag must fail")
+    assert(string.find(tostring(writeErr), "unknown restriction flag", 1, true), "the error says what is wrong, got " .. tostring(writeErr))
+    assert(string.find(tostring(writeErr), "typo", 1, true), "the error names the flag, got " .. tostring(writeErr))
+  end)
+
+  -- test_for_returns_the_instance_the_owner_holds
+  withChatLock(false, function()
+    local instance = RestrictedActions.New()
+    local owner = { restrictions = instance }
+    assert(RestrictedActions.For(owner) == instance, "For must hand back the owner's instance")
+  end)
+
+  -- test_for_gives_an_owner_without_an_instance_one_over_its_own_flags
+  withChatLock(false, function()
+    local owner = { _inMythicContent = true }
+    local instance = RestrictedActions.For(owner)
+    assert(owner.restrictions == instance, "the new instance is kept on the owner")
+    assert(RestrictedActions.For(owner) == instance, "a second ask returns the same instance")
+    assert(instance.flag("mythic") == true, "the owner's own flag fields are the store")
+    instance.setFlag("encounter", true)
+    assert(owner._inEncounter == true, "flags are written to the owner")
   end)
 
   -- test_flags_live_in_the_given_store
