@@ -1,4 +1,4 @@
-local DisplayNameSetting = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DisplayNameSetting")
+local DisplayNameSetting = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingReactions").DisplayNameSetting
 
 return function()
   local last = {}

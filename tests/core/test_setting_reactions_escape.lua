@@ -1,4 +1,4 @@
-local EscapeSetting = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.EscapeSetting")
+local EscapeSetting = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingReactions").EscapeSetting
 
 local function fakeRuntime()
   local calls = { refreshes = 0 }

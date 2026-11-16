@@ -1,4 +1,4 @@
-local TabVisibilitySetting = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.TabVisibilitySetting")
+local TabVisibilitySetting = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingReactions").TabVisibilitySetting
 
 local function fakeRuntime(tabMode)
   local calls = { refreshes = 0, toggles = 0 }

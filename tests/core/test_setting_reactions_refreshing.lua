@@ -1,4 +1,4 @@
-local RefreshingSettings = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RefreshingSettings")
+local RefreshingSettings = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingReactions").RefreshingSettings
 
 local REFRESHING_KEYS = {
   "hideMessagePreview",
