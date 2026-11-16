@@ -49,6 +49,31 @@ return function()
     assert(string.find(lines[9], "0.25", 1, true), "profiler line shows the metric: " .. lines[9])
   end
 
+  -- test_lines_include_stored_message_count
+  do
+    rawset(_G, "C_AddOnProfiler", nil)
+    local conversations = {
+      ["wow::WOW::arthas"] = { messages = { { text = "a" }, { text = "b" }, { text = "c" } } },
+      ["bn::BN::jaina"] = { messages = { { text = "d" } } },
+      ["wow::WOW::empty"] = {},
+    }
+    local lines = PerfCounters.Lines("WhisperMessenger", function()
+      return conversations
+    end)
+    assert(#lines == 9, "the stored count adds one line, got " .. #lines)
+    assert(lines[9] == "stored messages: 4 in 3 chats", "last line counts messages and chats: " .. tostring(lines[9]))
+  end
+
+  -- test_lines_omit_count_when_no_store
+  do
+    rawset(_G, "C_AddOnProfiler", nil)
+    local lines = PerfCounters.Lines("WhisperMessenger", function()
+      return nil
+    end)
+    assert(#lines == 8, "no store means no stored count line, got " .. #lines)
+    assert(#PerfCounters.Lines("WhisperMessenger") == 8, "no getter means no stored count line")
+  end
+
   rawset(_G, "C_AddOnProfiler", savedProfiler)
   rawset(_G, "Enum", savedEnum)
 end
