@@ -237,6 +237,14 @@ local function conversationWithKey(state, conversationKey)
   return conversation
 end
 
+-- On screen: the window's own answer when it gives one, else the selected key.
+local function isOpen(state, conversationKey)
+  if state.isConversationOpen then
+    return state.isConversationOpen(conversationKey) == true
+  end
+  return state.activeConversationKey == conversationKey
+end
+
 local function handlePresence(state, conversationKey, presence, now)
   local typingChanged
   if presence.type == "typing" then
@@ -301,11 +309,7 @@ local function handleReactionMetadata(state, payload, isBattleNet)
     local resolvedConversationKey = result.conversationKey or conversationKey
     recordConvertedReactionFallbackActivity(state, result, resolvedConversationKey)
 
-    local conversation = resolvedConversationKey and state.store.conversations[resolvedConversationKey] or nil
-    if conversation then
-      conversation.conversationKey = resolvedConversationKey
-    end
-    return conversation,
+    return conversationWithKey(state, resolvedConversationKey),
       {
         reactionControl = true,
         reactionChanged = result.changed == true,
@@ -393,10 +397,7 @@ local function handleUnlockedEvent(state, eventName, payload)
       return nil
     end
 
-    local isActive = state.activeConversationKey == conversationKey
-    if state.isConversationOpen then
-      isActive = state.isConversationOpen(conversationKey) == true
-    end
+    local isActive = isOpen(state, conversationKey)
     local replayedAt = payload.replayedAt
     local sentAt = replayedAt or state.now()
     local outgoingFromPendingSend = false
@@ -428,19 +429,13 @@ local function handleUnlockedEvent(state, eventName, payload)
         reactionActorName = resolvedConversation and (resolvedConversation.displayName or resolvedConversation.contactDisplayName)
           or reactionActorName
       end
-      local reactionIsActive = state.activeConversationKey == reactionConversationKey
-      if state.isConversationOpen then
-        reactionIsActive = state.isConversationOpen(reactionConversationKey) == true
-      end
+      local reactionIsActive = isOpen(state, reactionConversationKey)
       confirmWhisperAvailability(state, payload, contact)
       local routeComplete = false
       local degradedConversation
       local onDegraded = state.onReactionFallbackDegraded
       local function appendDegraded(message)
-        local active = state.activeConversationKey == conversationKey
-        if state.isConversationOpen then
-          active = state.isConversationOpen(conversationKey) == true
-        end
+        local active = isOpen(state, conversationKey)
         degradedConversation = Store.InsertIncomingChronological(state.store, conversationKey, message, active)
         if degradedConversation then
           degradedConversation.conversationKey = conversationKey
@@ -482,11 +477,7 @@ local function handleUnlockedEvent(state, eventName, payload)
         end
         if controlResult.converted then
           recordConvertedReactionFallbackActivity(state, controlResult, reactionConversationKey)
-          local conversation = state.store.conversations[reactionConversationKey]
-          if conversation then
-            conversation.conversationKey = reactionConversationKey
-          end
-          return conversation,
+          return conversationWithKey(state, reactionConversationKey),
             {
               reactionControl = true,
               reactionChanged = controlResult.changed == true,
@@ -540,11 +531,7 @@ local function handleUnlockedEvent(state, eventName, payload)
         if target then
           reactionControl.confirmed = true
           MessageReactions.ClearPending(target, reactionControl.pendingToken)
-          local conversation = state.store.conversations[conversationKey]
-          if conversation then
-            conversation.conversationKey = conversationKey
-          end
-          return conversation,
+          return conversationWithKey(state, conversationKey),
             {
               outgoingFromPendingSend = true,
               reactionControl = true,
@@ -580,11 +567,7 @@ local function handleUnlockedEvent(state, eventName, payload)
       Store.AppendIncoming(state.store, conversationKey, buildMessage(state, payload, contact, "in", "system", sentAt), isActive)
     end
 
-    local conversation = state.store.conversations[conversationKey]
-    if conversation then
-      conversation.conversationKey = conversationKey
-    end
-    return conversation, { outgoingFromPendingSend = outgoingFromPendingSend }
+    return conversationWithKey(state, conversationKey), { outgoingFromPendingSend = outgoingFromPendingSend }
   end
 
   return nil
