@@ -178,10 +178,10 @@ return function()
     assert(point and point[2] == composer.box and point[4] == 8, "the placeholder is anchored 8px into the box")
   end
 
-  -- test_template_input_starts_on_the_wide_font
+  -- test_template_input_starts_on_the_base_font
   do
     local composer = build(FakeUI.NewFactory({ fontColors = true }))
-    assert(composer.input:GetFontObject() == rawget(_G, "WM_ChatNormal_Wide"), "the template box is on the wide font")
+    assert(composer.input:GetFontObject() == rawget(_G, "WM_ChatNormal"), "the template box is on the base font")
   end
 
   -- test_client_without_template_keeps_a_plain_edit_box

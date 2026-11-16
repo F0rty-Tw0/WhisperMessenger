@@ -22,6 +22,7 @@ local ComposerSendFocus = ns.ComposerSendFocus or require("WhisperMessenger.UI.C
 local ComposerSubmit = ns.ComposerSubmit or require("WhisperMessenger.UI.Composer.ComposerSubmit")
 local ComposerRows = ns.ComposerRows or require("WhisperMessenger.UI.Composer.ComposerRows")
 local ComposerInputBox = ns.ComposerInputBox or require("WhisperMessenger.UI.Composer.ComposerInputBox")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 local Composer = {}
 
@@ -123,6 +124,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   local reportedHeight = Theme.COMPOSER_HEIGHT
 
   local function refreshRows()
+    GlyphCoverage.UpdateInput(input)
     local text
     if inputBox.multiLine then
       text = input:GetText() or ""

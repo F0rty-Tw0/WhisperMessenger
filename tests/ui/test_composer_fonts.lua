@@ -33,9 +33,9 @@ return function()
   local localizedComposer = Composer.Create(factory, parent, selectedContact, function() end, function() end)
   assert(localizedComposer.placeholder.text == "Enter для отправки", "expected localized composer placeholder")
   Localization.Configure({ language = "enUS" })
-  -- The input EditBox sits on WM_ChatNormal's chat-font twin, so letters
-  -- like ő show while typing.
+  -- The input EditBox starts on WM_ChatNormal itself; the chat font file is
+  -- swapped in only while its text needs it.
   local input = composer.input
-  local expectedInputFont = _G[Theme.FONTS.composer_input .. "_Wide"]
-  assert(input.fontObject == expectedInputFont, "expected input fontObject to be WM_ChatNormal_Wide, got: " .. tostring(input.fontObject))
+  local expectedInputFont = _G[Theme.FONTS.composer_input]
+  assert(input.fontObject == expectedInputFont, "expected input fontObject to be WM_ChatNormal, got: " .. tostring(input.fontObject))
 end

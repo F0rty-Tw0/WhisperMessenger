@@ -69,6 +69,28 @@ return function()
   perLine = nil
   assert(measured.lineHeight() == 12, "no measurement counts the font size, got " .. tostring(measured.lineHeight()))
 
+  -- test_measurer_follows_the_text_onto_the_chat_font
+  local chatRows = ComposerRows.Create(pane, "WM_ChatNormal")
+  chatRows.count("tűz", 70)
+  assert(chatRows.measurer:GetFont() == "Fonts\\ARIALN.TTF", "ű puts the measurer on the chat font, got " .. tostring(chatRows.measurer:GetFont()))
+  chatRows.count("tuz", 70)
+  assert(chatRows.measurer:GetFont() == "Fonts\\FRIZQT__.TTF", "plain text puts it back, got " .. tostring(chatRows.measurer:GetFont()))
+
+  -- test_fit_measures_the_pitch_on_the_new_texts_font
+  -- The pitch is read after count has put the measurer on the font the text needs.
+  local pitchRows = ComposerRows.Create(pane, "WM_ChatNormal")
+  local pitchFace
+  local realHeight = pitchRows.measurer.GetStringHeight
+  pitchRows.measurer.GetStringHeight = function(self)
+    if self.text == "X\nX" then
+      pitchFace = self:GetFont()
+    end
+
+    return realHeight(self)
+  end
+  pitchRows.fit("tűz", 70, nil)
+  assert(pitchFace == "Fonts\\ARIALN.TTF", "the pitch is measured on the chat font, got " .. tostring(pitchFace))
+
   -- test_measurer_stays_hidden
   assert(rows.measurer:IsShown() == false, "the measurer is never shown")
 end

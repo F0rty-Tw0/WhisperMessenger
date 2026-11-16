@@ -68,16 +68,20 @@ function ComposerRows.Create(pane, font)
   function rows.count(text, width)
     measurer:SetWidth(width)
     measurer:SetText(text)
+    GlyphCoverage.UpdateInput(measurer)
 
     return math.max(1, measurer:GetNumLines())
   end
 
-  -- Rows to show (capped by maxBarHeight) and the bar height they need.
+  -- Rows to show (capped by maxBarHeight) and the bar height they need. count
+  -- runs first: it puts the measurer on the font the text needs, and the
+  -- pitch is then measured on that font.
   function rows.fit(text, width, maxBarHeight)
-    local lineHeight = rows.lineHeight()
     local count = 1
-    if text ~= nil then
-      count = math.min(rows.count(text, width), ComposerRows.RowCap(maxBarHeight, lineHeight))
+    local wrapped = text ~= nil and rows.count(text, width)
+    local lineHeight = rows.lineHeight()
+    if wrapped then
+      count = math.min(wrapped, ComposerRows.RowCap(maxBarHeight, lineHeight))
     end
 
     return count, ComposerRows.BarHeight(count, lineHeight)
