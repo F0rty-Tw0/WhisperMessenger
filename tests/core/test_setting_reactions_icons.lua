@@ -1,4 +1,4 @@
-local IconSettingReactions = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconSettingReactions")
+local IconSettingReactions = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingReactions").IconSettingReactions
 
 local function newSpyIcon()
   local calls = {}

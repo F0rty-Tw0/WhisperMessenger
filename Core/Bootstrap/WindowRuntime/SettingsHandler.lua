@@ -12,13 +12,12 @@ local CompactLayoutSetting = ns.BootstrapWindowRuntimeCompactLayoutSetting
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.CompactLayoutSetting")
 local IntegrationSetting = ns.BootstrapWindowRuntimeIntegrationSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationSetting")
 local LanguageSetting = ns.BootstrapWindowRuntimeLanguageSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LanguageSetting")
-local DisplayNameSetting = ns.BootstrapWindowRuntimeDisplayNameSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DisplayNameSetting")
-local TabVisibilitySetting = ns.BootstrapWindowRuntimeTabVisibilitySetting
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.TabVisibilitySetting")
-local RefreshingSettings = ns.BootstrapWindowRuntimeRefreshingSettings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RefreshingSettings")
-local EscapeSetting = ns.BootstrapWindowRuntimeEscapeSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.EscapeSetting")
-local IconSettingReactions = ns.BootstrapWindowRuntimeIconSettingReactions
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconSettingReactions")
+local SettingReactions = ns.BootstrapWindowRuntimeSettingReactions or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingReactions")
+local DisplayNameSetting = SettingReactions.DisplayNameSetting
+local TabVisibilitySetting = SettingReactions.TabVisibilitySetting
+local RefreshingSettings = SettingReactions.RefreshingSettings
+local EscapeSetting = SettingReactions.EscapeSetting
+local IconSettingReactions = SettingReactions.IconSettingReactions
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
 local Relationship = ns.Relationship or require("WhisperMessenger.Model.Relationship")
