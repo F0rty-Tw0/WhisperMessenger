@@ -60,8 +60,6 @@ return function()
         ["me::WOW::arthas-area52"] = conversation("Arthas-Area52", 2),
         ["me::WOW::jaina-proudmoore"] = conversation("Jaina-Proudmoore", 3),
       },
-      contacts = {},
-      pendingHydration = {},
     },
     characterState = {
       window = { x = 0, y = 0, width = 900, height = 560, minimized = false },

@@ -46,8 +46,6 @@ return function()
     local state = {
       schemaVersion = 1,
       conversations = {},
-      contacts = {},
-      pendingHydration = {},
       settings = settings,
     }
     local bootOk, bootErr = pcall(Bootstrap.Initialize, factory, {

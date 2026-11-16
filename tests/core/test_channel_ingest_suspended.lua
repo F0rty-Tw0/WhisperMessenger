@@ -11,7 +11,7 @@ return function()
   _G.C_ChatInfo = {}
 
   local runtime = Bootstrap.Initialize(factory, {
-    accountState = { schemaVersion = 1, conversations = {}, contacts = {}, pendingHydration = {}, settings = {} },
+    accountState = { schemaVersion = 1, conversations = {}, settings = {} },
     characterState = { window = { x = 0, y = 0, width = 900, height = 560 }, icon = {} },
   })
   local function reset()

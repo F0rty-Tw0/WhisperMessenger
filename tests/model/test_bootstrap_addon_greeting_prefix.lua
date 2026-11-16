@@ -50,7 +50,7 @@ return function()
   local factory = FakeUI.NewFactory()
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
   local ok, err = pcall(Bootstrap.Initialize, factory, {
-    accountState = { schemaVersion = 1, conversations = {}, contacts = {}, pendingHydration = {}, settings = {} },
+    accountState = { schemaVersion = 1, conversations = {}, settings = {} },
     characterState = { window = {}, icon = {} },
   })
 

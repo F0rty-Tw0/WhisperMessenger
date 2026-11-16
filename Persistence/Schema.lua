@@ -9,8 +9,6 @@ function Schema.NewAccountState()
   return {
     schemaVersion = 1,
     conversations = {},
-    contacts = {},
-    pendingHydration = {},
     channelMessages = {},
     filters = { ignored = {}, rules = {} },
   }

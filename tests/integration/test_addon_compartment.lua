@@ -31,8 +31,6 @@ local function boot(iconMode, unread)
       schemaVersion = 1,
       settings = { iconMode = iconMode },
       conversations = { ["me::WOW::jaina-proudmoore"] = conversation("Jaina-Proudmoore", unread) },
-      contacts = {},
-      pendingHydration = {},
     },
     characterState = {
       window = { x = 0, y = 0, width = 900, height = 560, minimized = false },

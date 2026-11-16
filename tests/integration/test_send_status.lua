@@ -39,8 +39,6 @@ return function()
           },
         },
       },
-      contacts = {},
-      pendingHydration = {},
     },
     characterState = nil,
     localProfileId = "me",

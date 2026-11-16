@@ -14,6 +14,8 @@ local function rawGuidEqual(a, b)
   return a == b
 end
 
+-- Guid equality inside a pcall to swallow 12.0 secret-string throws
+-- (comparing a tainted guid raises from an addon-tainted call stack).
 local function compareGuids(a, b)
   if a == nil or b == nil then
     return false
@@ -74,12 +76,6 @@ function Direction.Resolve(eventName, payload, state)
     return "out"
   end
   return "in"
-end
-
--- CompareGuids wraps guid equality in a pcall to swallow 12.0 secret-string
--- throws (comparing a tainted guid raises from an addon-tainted call stack).
-function Direction.CompareGuids(a, b)
-  return compareGuids(a, b)
 end
 
 ns.GroupChatIngestDirection = Direction

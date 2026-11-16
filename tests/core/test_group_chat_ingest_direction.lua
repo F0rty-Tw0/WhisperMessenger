@@ -32,19 +32,13 @@ return function()
     assert(Direction.IsLocalSender("CHAT_MSG_BN_CONVERSATION", nil, 78, bnState) == false, "another account is not")
   end
 
-  -- test_compare_guids_swallows_secret_string_throws
+  -- test_missing_guid_is_not_local
   do
-    local throwingMt = {
-      __eq = function()
-        error("attempt to compare field 'guid' (a secret string value tainted by 'WhisperMessenger')")
-      end,
-    }
-    local secret = setmetatable({}, throwingMt)
-    local mine = setmetatable({}, throwingMt)
-    assert(Direction.CompareGuids(secret, mine) == false, "CompareGuids must swallow secret-string throws and return false")
-    assert(Direction.CompareGuids(nil, "x") == false, "nil guid yields false")
-    assert(Direction.CompareGuids("x", nil) == false, "nil localGuid yields false")
-    assert(Direction.CompareGuids("x", "x") == true, "matching plain guids yields true")
-    assert(Direction.CompareGuids("x", "y") == false, "differing plain guids yield false")
+    assert(Direction.IsLocalSender("CHAT_MSG_GUILD", nil, nil, state) == false, "a line without a guid is not the local player's")
+    local savedUnitGuid = rawget(_G, "UnitGUID")
+    rawset(_G, "UnitGUID", nil)
+    local isSelf = Direction.IsLocalSender("CHAT_MSG_GUILD", "Player-1-SELF", nil, {})
+    rawset(_G, "UnitGUID", savedUnitGuid)
+    assert(isSelf == false, "no known local guid means no line is the local player's")
   end
 end

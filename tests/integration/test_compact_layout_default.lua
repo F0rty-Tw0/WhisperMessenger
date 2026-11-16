@@ -18,7 +18,7 @@ local function boot(accountState)
 end
 
 local function savedAccount(settings)
-  return { schemaVersion = 1, conversations = {}, contacts = {}, pendingHydration = {}, settings = settings }
+  return { schemaVersion = 1, conversations = {}, settings = settings }
 end
 
 return function()

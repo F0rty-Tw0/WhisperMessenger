@@ -41,10 +41,6 @@ function GlyphCoverage.LacksExtendedLatin(path)
   return string.find(string.lower(path), FRIZ_QUADRATA_FILE, 1, true) ~= nil
 end
 
-function GlyphCoverage.TwinOf(base)
-  return twinOf[base]
-end
-
 -- The game's chat font, which carries those letters.
 local function chatFontPath()
   local chatFont = _G.ChatFontNormal

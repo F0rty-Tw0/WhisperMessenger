@@ -16,7 +16,7 @@ return function()
   rawset(_G, "C_AddOnProfiler", nil)
 
   local runtime = Bootstrap.Initialize(factory, {
-    accountState = { schemaVersion = 1, conversations = {}, contacts = {}, pendingHydration = {} },
+    accountState = { schemaVersion = 1, conversations = {} },
     characterState = {
       window = { x = 0, y = 0, width = 900, height = 560, minimized = false },
       icon = { anchorPoint = "TOPLEFT", relativePoint = "TOPLEFT", x = 25, y = -40 },

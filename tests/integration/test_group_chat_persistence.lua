@@ -14,8 +14,6 @@ return function()
       conversations = accountState.conversations,
       channelMessages = accountState.channelMessages,
       settings = accountState.settings,
-      contacts = accountState.contacts,
-      pendingHydration = accountState.pendingHydration,
       schemaVersion = accountState.schemaVersion,
     }
     local reloadedAccount, reloadedCharacter = SavedState.Initialize(reloaded, characterState, profileId)
