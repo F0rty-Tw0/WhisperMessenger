@@ -141,6 +141,7 @@ function PreviewReplyRow.Create(factory, parentFrame, options)
   end
 
   input:SetScript("OnTextChanged", function()
+    GlyphCoverage.UpdateInput(input)
     local text = getText()
     if not limit.accept(text) then
       return

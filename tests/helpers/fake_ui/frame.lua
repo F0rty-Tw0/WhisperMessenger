@@ -144,6 +144,7 @@ local function makeCreateFrame(options)
 
     function frame:SetFontObject(value)
       self.fontObject = value
+      self.font = nil
       -- The game's SetFontObject also takes the font's colour over the text's.
       if fontColors then
         local font = type(value) == "string" and _G[value] or value
@@ -160,6 +161,27 @@ local function makeCreateFrame(options)
         return _G[self.template]
       end
       return nil
+    end
+
+    -- Text widgets: GetFont answers what SetFont set last, else the font
+    -- object's (SetFontObject drops the SetFont record, as in the game).
+    if frameType == "EditBox" or frameType == "FontString" then
+      function frame:SetFont(path, size, flags)
+        self.font = { path, size, flags }
+      end
+
+      function frame:GetFont()
+        if self.font then
+          return self.font[1], self.font[2], self.font[3]
+        end
+        local font = self:GetFontObject()
+        -- A widget whose font object is itself would recurse forever (test_bubble_manual_copy).
+        if font ~= self and type(font) == "table" and type(font.GetFont) == "function" then
+          return font:GetFont()
+        end
+
+        return nil
+      end
     end
 
     function frame:GetStringHeight()

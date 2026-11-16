@@ -37,11 +37,11 @@ return function()
     assert(search.roundedBg == nil, "HUD: no custom rounded fill")
   end
 
-  -- test_hud_search_box_on_friz_uses_the_chat_font
+  -- test_hud_search_box_on_friz_keeps_its_own_face_until_text_needs_the_chat_font
   -- The template's font lacks letters like ő and ű on some clients.
   do
     local search = buildSearch(FontBox.Factory(FakeUI.NewFactory(), FontBox.FRIZ), true)
-    assert(search.input:GetFont() == FontBox.CHAT, "HUD: search box on the chat font, got " .. tostring(search.input:GetFont()))
+    assert(search.input:GetFont() == FontBox.FRIZ, "HUD: empty search box on its own face, got " .. tostring(search.input:GetFont()))
   end
 
   -- test_hud_search_reuses_template_instructions_and_clear_button
