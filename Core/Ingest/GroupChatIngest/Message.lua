@@ -4,7 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
-local Mention = ns.GroupChatIngestMention or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Mention")
+local Mention = ns.GroupChatIngestMention or require("WhisperMessenger.Model.Mention")
 local SenderLevel = ns.SenderLevel or require("WhisperMessenger.Model.SenderLevel")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local SeenLevelEvents = ns.SeenLevelEvents or require("WhisperMessenger.Core.SeenLevelEvents")

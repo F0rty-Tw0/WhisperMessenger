@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ChannelKey = ns.ChannelChatIngestChannelKey or require("WhisperMessenger.Core.Ingest.ChannelChatIngest.ChannelKey")
+local ChannelKey = ns.ChannelChatIngestChannelKey or require("WhisperMessenger.Model.Identity.ChannelKey")
 
 -- The live number of a joined chat channel. Numbers follow join order and
 -- change when the player leaves or rejoins channels, so a channel chat looks

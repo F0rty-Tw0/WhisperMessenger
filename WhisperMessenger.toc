@@ -59,6 +59,7 @@ Locale/Localization.lua
 Model/Identity/Factions.lua
 Model/Identity/RaceTags.lua
 Model/Identity/ChannelType.lua
+Model/Identity/ChannelKey.lua
 Model/Identity/Identity.lua
 Model/ProfileCharacter.lua
 Model/ProfileLinks.lua
@@ -131,7 +132,6 @@ Transport/Types.lua
 Transport/Availability.lua
 Transport/AddonComm.lua
 Transport/WhisperGateway.lua
-Core/Ingest/ChannelChatIngest/ChannelKey.lua
 Transport/ChannelIndex.lua
 Transport/JoinedChannels.lua
 Transport/ChatGateway.lua
@@ -156,7 +156,7 @@ Core/SeenLevelEvents.lua
 Core/LocalPlayer.lua
 Core/Ingest/GroupChatIngest/SecretString.lua
 Core/Ingest/GroupChatIngest/Direction.lua
-Core/Ingest/GroupChatIngest/Mention.lua
+Model/Mention.lua
 Core/Bootstrap/WindowRuntime/GroupSendPending.lua
 Core/Ingest/GroupChatIngest/PendingEcho.lua
 Core/Ingest/GroupChatIngest/Message.lua
