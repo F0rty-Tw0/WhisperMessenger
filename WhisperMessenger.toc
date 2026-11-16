@@ -172,6 +172,7 @@ Core/EventRouter/AddonGreetingIngest.lua
 Core/EventRouter/WhisperMessage.lua
 Core/EventRouter/AddonMessage.lua
 Core/EventRouter/IncomingWhisper.lua
+Core/EventRouter/OutgoingWhisper.lua
 Core/EventRouter.lua
 Core/SlashCommands.lua
 
