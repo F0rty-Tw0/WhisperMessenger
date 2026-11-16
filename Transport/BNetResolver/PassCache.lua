@@ -6,7 +6,7 @@ end
 local FriendScan = ns.BNetResolverFriendScan or require("WhisperMessenger.Transport.BNetResolver.FriendScan")
 
 -- Resolver cache for one synchronous pass over the contacts (one window
--- refresh). It remembers what BNetResolver.ResolveAccountInfo answered and
+-- refresh, one friend scan). It remembers what BNetResolver.ResolveAccountInfo answered and
 -- walks the Battle.net friend list once instead of once per contact.
 -- Friend state changes between frames, so the caller must drop the cache
 -- before the pass returns. One cache serves one bnetApi.
