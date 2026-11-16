@@ -35,6 +35,12 @@ return function()
     assert(controllerOptions.rowActions == rowActions, "the controller gets the same table the runtime was given")
   end
 
+  -- test_actions_outside_the_row_actions_table_are_not_forwarded
+  do
+    local controllerOptions = controllerOptionsFor({ onPin = function() end, whoPlayer = function() end })
+    assert(controllerOptions.rowActions == nil, "only options.rowActions reaches the controller")
+  end
+
   -- test_row_actions_are_not_listed_again_for_the_controller
   do
     local rowActions = {}

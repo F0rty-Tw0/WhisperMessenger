@@ -9,7 +9,7 @@ local ScrollView = require("WhisperMessenger.UI.ScrollView")
 
 local PANE_WIDTH = 260
 local PANE_HEIGHT = 120
-local OPTIONS = { onSelect = function() end, onPin = function() end, onRemove = function() end }
+local OPTIONS = { onSelect = function() end, rowActions = { onPin = function() end, onRemove = function() end } }
 
 local function contacts(count)
   local list = {}

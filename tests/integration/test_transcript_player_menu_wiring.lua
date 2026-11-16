@@ -43,5 +43,6 @@ return function()
   assert(received ~= nil, "right-click reaches PlayerMenu")
   local conversation = received.conversation or {}
   assert(conversation.contact and conversation.contact.conversationKey == ARTHAS, "menu gets the selected contact")
-  assert(conversation.onMarkUnread == markUnread and conversation.onUpdatePrefs == updatePrefs, "menu gets the contact-menu callbacks")
+  local rowActions = conversation.rowActions or {}
+  assert(rowActions.onMarkUnread == markUnread and rowActions.onUpdatePrefs == updatePrefs, "menu gets the contact-menu callbacks")
 end

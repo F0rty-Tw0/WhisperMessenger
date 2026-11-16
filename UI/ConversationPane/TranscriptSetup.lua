@@ -44,58 +44,52 @@ local function isOtherPlayerLine(contact, message)
   return contact ~= nil and not NON_PLAYER_SENDER_CHANNELS[contact.channel] and message.direction == "in"
 end
 
-local function canIgnoreSender(view, options, message)
+local function canIgnoreSender(view, rowActions, message)
   return isOtherPlayerLine(view._selectedContact, message)
     and message.kind == "user"
     and type(message.playerName) == "string"
     and not string.find(message.playerName, "|K", 1, true)
     -- Blocking again would drop a timed block's end date.
-    and not (type(options.isPlayerBlocked) == "function" and options.isPlayerBlocked(message.playerName) == true)
+    and not (type(rowActions.isPlayerBlocked) == "function" and rowActions.isPlayerBlocked(message.playerName) == true)
 end
 
-local function canWhoSender(view, options, message)
+local function canWhoSender(view, rowActions, message)
   local name = message.playerName
 
-  return type(options.whoPlayer) == "function"
+  return type(rowActions.whoPlayer) == "function"
     and isOtherPlayerLine(view._selectedContact, message)
     and type(name) == "string"
     and name ~= ""
     and not string.find(name, "|K", 1, true)
 end
 
+-- rowActions: the window's row actions table, the one the contact rows use.
 -- Sender name / portrait right-click: player menu for the selected contact,
--- with the same Mark unread / prefs callbacks the contact rows use. Bubble
--- right-click in group and channel chats: "Block sender…" for other
--- players' lines (options.onIgnorePlayer(name, reason)). Shift + left-click
--- on a group/channel sender sends /who (options.whoPlayer(name)).
-function TranscriptSetup.BindPlayerMenu(transcript, view, options)
-  if type(options.onIgnorePlayer) == "function" then
+-- built from that table. Bubble right-click in group and channel chats:
+-- "Block sender…" for other players' lines
+-- (rowActions.onIgnorePlayer(name, reason)). Shift + left-click on a
+-- group/channel sender sends /who (rowActions.whoPlayer(name)).
+function TranscriptSetup.BindPlayerMenu(transcript, view, rowActions)
+  if type(rowActions.onIgnorePlayer) == "function" then
     transcript.canIgnoreSender = function(message)
-      return canIgnoreSender(view, options, message)
+      return canIgnoreSender(view, rowActions, message)
     end
     transcript.onIgnoreSender = function(message)
       IgnorePrompt.AskReason(function(reason)
-        options.onIgnorePlayer(message.playerName, reason)
+        rowActions.onIgnorePlayer(message.playerName, reason)
       end)
     end
   end
   transcript.openPlayerMenu = function(message, anchor, button)
     if button == "LeftButton" and UIHelpers.isShiftDown() then
-      if canWhoSender(view, options, message) then
-        options.whoPlayer(message.playerName)
+      if canWhoSender(view, rowActions, message) then
+        rowActions.whoPlayer(message.playerName)
       end
 
       return false
     end
 
-    return PlayerMenu.Open(message, anchor, nil, {
-      contact = view._selectedContact,
-      onMarkUnread = options.onMarkUnread,
-      onUpdatePrefs = options.onUpdatePrefs,
-      onIgnorePlayer = options.onIgnorePlayer,
-      isPlayerBlocked = options.isPlayerBlocked,
-      onUnblockPlayer = options.onUnblockPlayer,
-    })
+    return PlayerMenu.Open(message, anchor, nil, { contact = view._selectedContact, rowActions = rowActions })
   end
 end
 

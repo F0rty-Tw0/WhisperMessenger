@@ -26,10 +26,10 @@ local function buildItem(message)
   }
 end
 
--- conversation (optional): { contact, onMarkUnread, onUpdatePrefs, onIgnorePlayer,
--- isPlayerBlocked, onUnblockPlayer }. In a
--- whisper conversation the sender is the selected contact, so the menu gets
--- that contact and our entries; group senders get a bare item.
+-- conversation (optional): { contact, rowActions }, rowActions being the
+-- window's row actions table. In a whisper conversation the sender is the
+-- selected contact, so the menu gets that contact and our entries; group
+-- senders get a bare item.
 function PlayerMenu.Open(message, anchorFrame, contextMenu, conversation)
   if type(message) ~= "table" then
     return false
@@ -47,8 +47,9 @@ function PlayerMenu.Open(message, anchorFrame, contextMenu, conversation)
   end
 
   local contact = type(conversation) == "table" and conversation.contact or nil
+  local actions = type(conversation) == "table" and conversation.rowActions or {}
   if type(contact) == "table" and (contact.channel == "WOW" or contact.channel == "BN") then
-    return CM.Open(contact, anchorFrame, conversation.onMarkUnread, conversation.onUpdatePrefs) and true or false
+    return CM.Open(contact, anchorFrame, actions.onMarkUnread, actions.onUpdatePrefs) and true or false
   end
 
   -- A |K token is a protected Battle.net name: the WoW player menu can't
@@ -59,16 +60,17 @@ function PlayerMenu.Open(message, anchorFrame, contextMenu, conversation)
   end
 
   -- Group and channel senders: our Block… entry, or Unblock when blocked.
-  local rowActions = nil
-  local onIgnorePlayer = type(conversation) == "table" and conversation.onIgnorePlayer or nil
+  -- Only those: a sender is not a contact row, so no Pin or Remove.
+  local senderActions = nil
+  local onIgnorePlayer = actions.onIgnorePlayer
   if type(onIgnorePlayer) == "function" and not isProtected then
-    rowActions = {
+    senderActions = {
       onIgnorePlayer = onIgnorePlayer,
-      isPlayerBlocked = conversation.isPlayerBlocked,
-      onUnblockPlayer = conversation.onUnblockPlayer,
+      isPlayerBlocked = actions.isPlayerBlocked,
+      onUnblockPlayer = actions.onUnblockPlayer,
     }
   end
-  return CM.Open(buildItem(message), anchorFrame, nil, nil, rowActions) and true or false
+  return CM.Open(buildItem(message), anchorFrame, nil, nil, senderActions) and true or false
 end
 
 ns.ChatBubblePlayerMenu = PlayerMenu

@@ -72,7 +72,7 @@ return function()
       { direction = "in", channel = "BN", playerName = "Jaina#1234" },
       anchor,
       stub,
-      { contact = contact, onMarkUnread = markUnread, onUpdatePrefs = updatePrefs }
+      { contact = contact, rowActions = { onMarkUnread = markUnread, onUpdatePrefs = updatePrefs } }
     )
 
     assert(ok == true, "expected whisper-contact open to return true")
@@ -96,7 +96,7 @@ return function()
       { direction = "in", channel = "WOW", playerName = "Thrall-Doomhammer" },
       anchor,
       stub,
-      { contact = group, onMarkUnread = function() end, onUpdatePrefs = function() end }
+      { contact = group, rowActions = { onMarkUnread = function() end, onUpdatePrefs = function() end } }
     )
 
     assert(ok == true, "expected group-sender open to return true")
@@ -142,7 +142,7 @@ return function()
       { direction = "in", channel = "CHANNEL", playerName = "Hilan-Kazzak" },
       anchor,
       stub,
-      { contact = { channel = "CHANNEL" }, onIgnorePlayer = onIgnorePlayer }
+      { contact = { channel = "CHANNEL" }, rowActions = { onIgnorePlayer = onIgnorePlayer } }
     )
 
     assert(opened.rowActions and opened.rowActions.onIgnorePlayer == onIgnorePlayer, "group senders get our Ignore… entry")
@@ -160,9 +160,7 @@ return function()
     local isPlayerBlocked, onUnblockPlayer = function() end, function() end
     PlayerMenu.Open({ direction = "in", channel = "CHANNEL", playerName = "Hilan-Kazzak" }, anchor, stub, {
       contact = { channel = "CHANNEL" },
-      onIgnorePlayer = function() end,
-      isPlayerBlocked = isPlayerBlocked,
-      onUnblockPlayer = onUnblockPlayer,
+      rowActions = { onIgnorePlayer = function() end, isPlayerBlocked = isPlayerBlocked, onUnblockPlayer = onUnblockPlayer },
     })
     assert(
       opened.isPlayerBlocked == isPlayerBlocked and opened.onUnblockPlayer == onUnblockPlayer,
