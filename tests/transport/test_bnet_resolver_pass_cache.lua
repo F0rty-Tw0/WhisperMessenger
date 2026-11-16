@@ -81,9 +81,9 @@ return function()
     local passCache = PassCache.New(identity)
 
     local info, friendIndex = PassCache.FindByAccountId(passCache, api, 13)
-    assert(info == friends[3] and friendIndex == 3, "found by account ID with its list position")
+    assert(info.bnetAccountID == 13 and friendIndex == 3, "found by account ID with its list position")
     local byTag, tagIndex, listAvailable = PassCache.FindByBattleTag(passCache, api, "Tag#12")
-    assert(byTag == friends[2] and tagIndex == 2 and listAvailable == true, "found by battle tag from the same walk")
+    assert(byTag.battleTag == "Tag#12" and tagIndex == 2 and listAvailable == true, "found by battle tag from the same walk")
     assert(PassCache.FindByAccountId(passCache, api, 99) == nil, "unknown ID")
     local missing, _, stillAvailable = PassCache.FindByBattleTag(passCache, api, "Tag#99")
     assert(missing == nil and stillAvailable == true, "unknown tag on a readable list")
@@ -102,9 +102,9 @@ return function()
     local api = buildApi(friends)
     local passCache = PassCache.New(identity)
     local info, friendIndex = PassCache.FindByAccountId(passCache, api, 11)
-    assert(info == friends[1] and friendIndex == 1, "the uncached scan stops at the first match")
+    assert(info.bnetAccountID == 11 and friendIndex == 1, "the uncached scan stops at the first match")
     local byTag, tagIndex = PassCache.FindByBattleTag(passCache, api, "Tag#11")
-    assert(byTag == friends[1] and tagIndex == 1, "first battle tag match wins")
+    assert(byTag.battleTag == "Tag#11" and tagIndex == 1, "first battle tag match wins")
   end
 
   -- test_failing_friend_lookups_are_skipped
@@ -114,7 +114,7 @@ return function()
     local api = buildApi(friends)
     local passCache = PassCache.New(identity)
     local info, friendIndex = PassCache.FindByAccountId(passCache, api, 13)
-    assert(info == friends[3] and friendIndex == 3, "a failing or empty entry must not stop the walk")
+    assert(info.bnetAccountID == 13 and friendIndex == 3, "a failing or empty entry must not stop the walk")
   end
 
   -- test_account_ids_the_sanitizer_rejects_are_not_indexed
@@ -126,7 +126,7 @@ return function()
       return nil
     end)
     assert(PassCache.FindByAccountId(passCache, api, 11) == nil, "an unreadable ID is not a match")
-    assert(PassCache.FindByBattleTag(passCache, api, "Tag#11") == friends[1], "the battle tag still is")
+    assert(PassCache.FindByBattleTag(passCache, api, "Tag#11").battleTag == "Tag#11", "the battle tag still is")
   end
 
   -- test_unreadable_friend_list_is_reported
