@@ -137,6 +137,8 @@ Transport/ChatGateway.lua
 Transport/BNetResolver/AccountName.lua
 Transport/BNetResolver/GameAccountProbe.lua
 Transport/BNetResolver/GuidFallback.lua
+Transport/BNetResolver/FriendScan.lua
+Transport/BNetResolver/PassCache.lua
 Transport/BNetResolver.lua
 Model/Relationship.lua
 Transport/WhoFreshness.lua
