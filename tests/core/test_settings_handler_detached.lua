@@ -21,7 +21,9 @@ return function()
     assert(log[2] == "detached:iconMode=both", "detached hook sees the persisted value, got: " .. tostring(log[2]))
   end
 
-  -- test_theme_preset_repaints_the_detached_card
+  -- test_theme_preset_repaints_the_surfaces
+  -- The detached card is one of them: Surfaces owns the list, and
+  -- test_window_runtime_theme_refresh checks the card through the real wiring.
   do
     local marks = 0
     local theme = {
@@ -34,16 +36,34 @@ return function()
       runtime = { store = { config = {} } },
       accountSettings = {},
       theme = theme,
-      getDetachedPreview = function()
-        return {
-          refreshTheme = function()
-            marks = marks + 1
-          end,
-        }
+      refreshSurfacesTheme = function()
+        marks = marks + 1
       end,
     })
 
     onChange("themePreset", "elvui_dark")
-    assert(marks == 1, "the detached card repaints once, got: " .. marks)
+    assert(marks == 1, "the surfaces repaint once, got: " .. marks)
+    onChange("iconSize", 40)
+    assert(marks == 1, "another setting repaints nothing, got: " .. marks)
+  end
+
+  -- test_a_rejected_theme_preset_repaints_nothing
+  do
+    local marks = 0
+    local onChange = SettingsHandler.Create({
+      runtime = { store = { config = {} } },
+      accountSettings = {},
+      theme = {
+        ResolvePreset = function()
+          return "wow_default", false
+        end,
+      },
+      refreshSurfacesTheme = function()
+        marks = marks + 1
+      end,
+    })
+
+    onChange("themePreset", "missing")
+    assert(marks == 0, "a preset that did not apply repaints nothing, got: " .. marks)
   end
 end
