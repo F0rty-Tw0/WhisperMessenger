@@ -1,4 +1,4 @@
-local IconDrag = require("WhisperMessenger.UI.ToggleIcon.IconDrag")
+local IconDrag = require("WhisperMessenger.UI.ToggleIcon.IconInteraction").IconDrag
 local FakeUI = require("tests.helpers.fake_ui")
 
 local function build(locked)
