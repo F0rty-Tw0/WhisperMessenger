@@ -7,11 +7,11 @@ local ChatReplyState = ns.ChatReplyState or require("WhisperMessenger.Util.ChatR
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
-local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
-local CompactLayoutSetting = ns.BootstrapWindowRuntimeCompactLayoutSetting
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.CompactLayoutSetting")
-local IntegrationSetting = ns.BootstrapWindowRuntimeIntegrationSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationSetting")
-local LanguageSetting = ns.BootstrapWindowRuntimeLanguageSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LanguageSetting")
+local ReloadSettings = ns.BootstrapWindowRuntimeReloadSettings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ReloadSettings")
+local HudStyleSetting = ReloadSettings.HudStyleSetting
+local CompactLayoutSetting = ReloadSettings.CompactLayoutSetting
+local IntegrationSetting = ReloadSettings.IntegrationSetting
+local LanguageSetting = ReloadSettings.LanguageSetting
 local SettingReactions = ns.BootstrapWindowRuntimeSettingReactions or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingReactions")
 local DisplayNameSetting = SettingReactions.DisplayNameSetting
 local TabVisibilitySetting = SettingReactions.TabVisibilitySetting

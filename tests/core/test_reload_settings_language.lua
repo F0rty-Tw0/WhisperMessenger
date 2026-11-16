@@ -1,4 +1,4 @@
-local LanguageSetting = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LanguageSetting")
+local LanguageSetting = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ReloadSettings").LanguageSetting
 local ReloadPrompt = require("WhisperMessenger.UI.Shared.ReloadPrompt")
 local SettingsHandler = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
 local withPopups = require("tests.helpers.reload_popups").With
