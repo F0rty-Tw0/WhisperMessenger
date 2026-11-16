@@ -21,6 +21,30 @@ local SavedStateApply = ns.MessengerWindowSavedStateApply or require("WhisperMes
 
 local MessengerWindow = {}
 
+-- The contact row, transcript and header actions. Add a new one here: the
+-- layers below forward the table, not its keys.
+local ROW_ACTION_NAMES = {
+  "onPin",
+  "onRemove",
+  "onMarkUnread",
+  "onUpdatePrefs",
+  "onIgnorePlayer",
+  "onUnblockPlayer",
+  "isPlayerBlocked",
+  "whoPlayer",
+  "onInviteContact",
+  "canInviteContact",
+}
+
+-- An action the window was not given stays absent, which hides its menu entry.
+local function collectRowActions(options)
+  local rowActions = {}
+  for _, name in ipairs(ROW_ACTION_NAMES) do
+    rowActions[name] = options[name]
+  end
+  return rowActions
+end
+
 function MessengerWindow.Create(factory, options)
   options = options or {}
 
@@ -33,6 +57,7 @@ function MessengerWindow.Create(factory, options)
   local settingsPanels = settingsRuntime.settingsPanels
   local compactMode = CompactWiring.Hooks()
   local dock = DockWiring.Hooks()
+  local rowActions = collectRowActions(options)
 
   local function isShown(target)
     if target and target.IsShown then
@@ -55,6 +80,7 @@ function MessengerWindow.Create(factory, options)
     settingsConfig = settingsConfig,
     windowGeometry = windowGeometry,
     windowOptions = options,
+    rowActions = rowActions,
     getSelectionController = function()
       return selectionController
     end,
@@ -71,6 +97,7 @@ function MessengerWindow.Create(factory, options)
   local conversationWiring = ConversationWiring.Create(factory, {
     threadPane = layout.threadPane,
     windowOptions = options,
+    rowActions = rowActions,
     nativeChrome = shell.nativeChrome,
     tabMode = contactsRuntime.getTabMode(),
     settingsConfig = settingsConfig,
