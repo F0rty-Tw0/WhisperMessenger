@@ -49,17 +49,21 @@ function Presence.handlePlayerLogout(Bootstrap)
   return true
 end
 
--- A closed window shows only the icon badges and preview, so rebuild just
--- the cards this scan changed (the preview's class colour follows the
--- friend's character), and nothing when none changed. An open window
--- rebuilds every card and the header, but only when the scan changed a
--- stored field or a friend's live state (liveChanged: online, away, the
+local function isWindowHidden(runtime)
+  return runtime.refreshWindow ~= nil and runtime.isWindowVisible ~= nil and not runtime.isWindowVisible()
+end
+
+-- A closed window (hidden) shows only the icon badges and preview, so
+-- rebuild just the cards this scan changed (the preview's class colour
+-- follows the friend's character), and nothing when none changed. An open
+-- window rebuilds every card and the header, but only when the scan changed
+-- a stored field or a friend's live state (liveChanged: online, away, the
 -- character and its zone). Opening the window later rebuilds it anyway, and
 -- a change the scan could not tell is drawn by the status tick
 -- (runtime.bnetRepaintPending).
-local function refreshAfterBNetScan(Bootstrap, changedKeys, liveChanged)
+local function refreshAfterBNetScan(Bootstrap, changedKeys, liveChanged, hidden)
   local runtime = Bootstrap.runtime
-  if runtime.refreshWindow and runtime.isWindowVisible and not runtime.isWindowVisible() then
+  if hidden then
     if next(changedKeys) ~= nil then
       runtime.refreshWindow(nil, changedKeys)
     end
@@ -108,17 +112,20 @@ local function refreshBNetConversations(Bootstrap, deps)
   for _, newKey in pairs(mappings) do
     changedKeys[newKey] = true
   end
-  -- Session state: what the last scan saw live for each conversation's friend.
-  local signatures = Bootstrap.runtime.bnetScanSignatures or {}
+  -- Session state: what the last scan saw live for each conversation's
+  -- friend. Only an open window draws it, so a scan under a closed window
+  -- resolves and signs nothing and drops the state: the first scan after the
+  -- window opens starts fresh and redraws.
+  local hidden = isWindowHidden(Bootstrap.runtime)
+  local signatures = nil
+  if not hidden then
+    signatures = Bootstrap.runtime.bnetScanSignatures or {}
+  end
   Bootstrap.runtime.bnetScanSignatures = signatures
   local liveChanged = false
   for key, conversation in pairs(Bootstrap.runtime.store.conversations) do
     if conversation.channel == "BN" and conversation.battleTag then
       local friend = friendMap[conversation.battleTag]
-      local shown = resolveShownAccount(BNetResolver, Bootstrap.runtime.bnetApi, conversation, friend, passCache)
-      if ScanSignature.Update(signatures, key, shown) then
-        liveChanged = true
-      end
       if friend then
         ScanFieldDiff.Capture(conversation)
         conversation.bnetAccountID = friend.bnetAccountID
@@ -141,12 +148,22 @@ local function refreshBNetConversations(Bootstrap, deps)
           changedKeys[key] = true
         end
       end
+      -- Last, so a lookup that raises cannot skip the notify bookkeeping
+      -- above for this conversation.
+      if signatures then
+        local shown = resolveShownAccount(BNetResolver, Bootstrap.runtime.bnetApi, conversation, friend, passCache)
+        if ScanSignature.Update(signatures, key, shown) then
+          liveChanged = true
+        end
+      end
     end
   end
 
-  ScanSignature.Prune(signatures, Bootstrap.runtime.store.conversations)
+  if signatures then
+    ScanSignature.Prune(signatures, Bootstrap.runtime.store.conversations)
+  end
 
-  refreshAfterBNetScan(Bootstrap, changedKeys, liveChanged)
+  refreshAfterBNetScan(Bootstrap, changedKeys, liveChanged, hidden)
 end
 
 function Presence.handleBNetFriendEvent(Bootstrap, deps)
