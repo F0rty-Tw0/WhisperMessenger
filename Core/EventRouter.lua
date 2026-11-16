@@ -9,16 +9,14 @@ local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMesseng
 local QuestLinkText = ns.QuestLinkText or require("WhisperMessenger.Model.QuestLinkText")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
-local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
 local FailedWhisper = ns.EventRouterFailedWhisper or require("WhisperMessenger.Core.EventRouter.FailedWhisper")
-local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
 local PartMerge = ns.EventRouterPartMerge or require("WhisperMessenger.Core.EventRouter.PartMerge")
 local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
 local WhisperMessage = ns.EventRouterWhisperMessage or require("WhisperMessenger.Core.EventRouter.WhisperMessage")
 local AddonMessage = ns.EventRouterAddonMessage or require("WhisperMessenger.Core.EventRouter.AddonMessage")
-local AddonGreetingIngest = ns.EventRouterAddonGreetingIngest or require("WhisperMessenger.Core.EventRouter.AddonGreetingIngest")
+local IncomingWhisper = ns.EventRouterIncomingWhisper or require("WhisperMessenger.Core.EventRouter.IncomingWhisper")
 
 local buildConversationContact = WhisperMessage.BuildConversationContact
 local buildMessage = WhisperMessage.BuildMessage
@@ -26,9 +24,6 @@ local confirmWhisperAvailability = WhisperMessage.ConfirmWhisperAvailability
 local conversationWithKey = WhisperMessage.ConversationWithKey
 local isOpen = WhisperMessage.IsOpen
 local isWhisperProofFresh = WhisperMessage.IsWhisperProofFresh
-local battleNetReactionSenderKey = AddonMessage.BattleNetReactionSenderKey
-local resolveWhisperReactionConversation = AddonMessage.ResolveWhisperReactionConversation
-local recordConvertedReactionFallbackActivity = AddonMessage.RecordConvertedReactionFallbackActivity
 
 local Router = {}
 Router._isSecretString = SecretString.IsSecretString
@@ -101,107 +96,7 @@ local function handleUnlockedEvent(state, eventName, payload)
     local outgoingFromPendingSend = false
 
     if eventName == "CHAT_MSG_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER" then
-      local addonGreeting, hideGreeting
-      if eventName == "CHAT_MSG_WHISPER" then
-        addonGreeting, hideGreeting = AddonGreetingIngest.ClaimForWhisper(state, contact, payload, sentAt)
-        if hideGreeting then
-          return nil
-        end
-      end
-      local incomingMessage = buildMessage(state, payload, contact, "in", "user", sentAt)
-      incomingMessage.addonGreeting = addonGreeting
-      local correlationText = QuestLinkText.CanonicalizeForTransport(incomingMessage.text)
-      local senderKey
-      if eventName == "CHAT_MSG_BN_WHISPER" then
-        senderKey = battleNetReactionSenderKey(state, payload)
-      else
-        senderKey = payload.playerName
-      end
-      local reactionConversationKey = conversationKey
-      local reactionSenderKey = senderKey
-      local reactionActorName = (contact and contact.displayName) or payload.playerName
-      if eventName == "CHAT_MSG_WHISPER" then
-        reactionConversationKey = resolveWhisperReactionConversation(state, payload.playerName, conversationKey)
-        reactionSenderKey = reactionConversationKey
-        local resolvedConversation = state.store.conversations[reactionConversationKey]
-        reactionActorName = resolvedConversation and (resolvedConversation.displayName or resolvedConversation.contactDisplayName)
-          or reactionActorName
-      end
-      local reactionIsActive = isOpen(state, reactionConversationKey)
-      confirmWhisperAvailability(state, payload, contact)
-      local routeComplete = false
-      local degradedConversation
-      local onDegraded = state.onReactionFallbackDegraded
-      local function appendDegraded(message)
-        local active = isOpen(state, conversationKey)
-        degradedConversation = Store.InsertIncomingChronological(state.store, conversationKey, message, active)
-        if degradedConversation then
-          degradedConversation.conversationKey = conversationKey
-        end
-        if routeComplete and type(onDegraded) == "function" then
-          onDegraded(degradedConversation)
-        end
-      end
-
-      local identitySenderKey = senderKey
-      local identityConversationKey = conversationKey
-      if eventName == "CHAT_MSG_WHISPER" then
-        identitySenderKey = reactionSenderKey
-        identityConversationKey = reactionConversationKey
-      end
-
-      MessageReactions.AttachIncomingIdentity(state, identitySenderKey, identityConversationKey, incomingMessage, sentAt, correlationText)
-      MessageReplies.ClaimStaged(state, identityConversationKey, incomingMessage, sentAt)
-      local controlResult = MessageReactions.ConsumeIncomingControl(
-        state,
-        reactionSenderKey,
-        reactionConversationKey,
-        reactionActorName,
-        incomingMessage,
-        "out",
-        sentAt,
-        appendDegraded,
-        correlationText,
-        nil,
-        reactionIsActive
-      )
-      routeComplete = true
-      if controlResult then
-        if controlResult.staged then
-          return nil, {
-            reactionControl = true,
-            reactionStaged = true,
-          }
-        end
-        if controlResult.converted then
-          recordConvertedReactionFallbackActivity(state, controlResult, reactionConversationKey)
-          return conversationWithKey(state, reactionConversationKey),
-            {
-              reactionControl = true,
-              reactionChanged = controlResult.changed == true,
-              reactionOperation = controlResult.operation,
-            }
-        end
-        if controlResult.degraded then
-          return degradedConversation, {
-            reactionDegraded = true,
-          }
-        end
-      end
-
-      local isNewConversation = state.store.conversations[conversationKey] == nil
-      if replayedAt then
-        Store.InsertIncomingChronological(state.store, conversationKey, incomingMessage, isActive)
-      else
-        Store.AppendIncoming(state.store, conversationKey, incomingMessage, isActive)
-      end
-      PartMerge.AfterStore(state, conversationKey, incomingMessage)
-      if isNewConversation and eventName == "CHAT_MSG_WHISPER" then
-        MessageRequests.ClassifyNew(state, state.store.conversations[conversationKey], payload.guid, payload.playerName)
-      end
-      if eventName == "CHAT_MSG_WHISPER" then
-        AddonGreetingIngest.AfterStore(state, contact, payload, conversationKey, incomingMessage, isNewConversation, isActive)
-      end
+      return IncomingWhisper.Handle(state, eventName, payload, contact, conversationKey, isActive, sentAt)
     elseif eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" then
       confirmWhisperAvailability(state, payload, contact)
       local fromPending, pendingText, pendingEntry = PendingOutgoing.Resolve(state, conversationKey, payload, sentAt)
