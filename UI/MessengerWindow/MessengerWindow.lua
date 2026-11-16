@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local RowActions = ns.MessengerWindowRowActions or require("WhisperMessenger.UI.MessengerWindow.RowActions")
 local LifecycleWiring = ns.MessengerWindowLifecycleWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
 local WindowShell = ns.MessengerWindowWindowShell or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowShell")
 local PanelWiring = ns.MessengerWindowPanelWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PanelWiring")
@@ -21,30 +22,6 @@ local SavedStateApply = ns.MessengerWindowSavedStateApply or require("WhisperMes
 
 local MessengerWindow = {}
 
--- The contact row, transcript and header actions. Add a new one here: the
--- layers below forward the table, not its keys.
-local ROW_ACTION_NAMES = {
-  "onPin",
-  "onRemove",
-  "onMarkUnread",
-  "onUpdatePrefs",
-  "onIgnorePlayer",
-  "onUnblockPlayer",
-  "isPlayerBlocked",
-  "whoPlayer",
-  "onInviteContact",
-  "canInviteContact",
-}
-
--- An action the window was not given stays absent, which hides its menu entry.
-local function collectRowActions(options)
-  local rowActions = {}
-  for _, name in ipairs(ROW_ACTION_NAMES) do
-    rowActions[name] = options[name]
-  end
-  return rowActions
-end
-
 function MessengerWindow.Create(factory, options)
   options = options or {}
 
@@ -57,7 +34,7 @@ function MessengerWindow.Create(factory, options)
   local settingsPanels = settingsRuntime.settingsPanels
   local compactMode = CompactWiring.Hooks()
   local dock = DockWiring.Hooks()
-  local rowActions = collectRowActions(options)
+  local rowActions = RowActions.Collect(options)
 
   local function isShown(target)
     if target and target.IsShown then
