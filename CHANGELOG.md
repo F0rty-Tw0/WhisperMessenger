@@ -6,6 +6,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+## [2.1.8] - 2026-11-16
+
 - "Clear on logout" now also deletes the channel messages Whisper Messenger keeps to show above a new whisper. Before, they stayed saved until your next login.
 - Smoother with a long Battle.net friend list: while the window is open, Whisper Messenger now does far less work each time a whisper arrives or a friend's status changes, and redraws the window far less often when the change is for a friend you have no chat with.
 - The message box now grows up to two lines as you type a long message, instead of scrolling sideways.
