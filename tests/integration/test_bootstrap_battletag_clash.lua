@@ -30,8 +30,6 @@ local function initialize(iconMode)
         ["bnet::Mike#1234"] = bnetConversation("Mike#1234"),
         ["bnet::Mike#5678"] = bnetConversation("Mike#5678"),
       },
-      contacts = {},
-      pendingHydration = {},
     },
     characterState = {
       window = { x = 0, y = 0, width = 900, height = 560, minimized = false },

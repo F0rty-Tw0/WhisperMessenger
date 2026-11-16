@@ -1,6 +1,8 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FakeChatLines = require("tests.helpers.fake_chat_lines")
+local RestrictionState = require("tests.helpers.restriction_state")
 local LockdownCatcher = require("WhisperMessenger.Core.Bootstrap.LockdownCatcher")
+local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 local SECRET = FakeChatLines.SECRET
 local RECEIVED_AT = 500
@@ -186,11 +188,11 @@ return function()
   -- test_installed_frame_routes_whispers_to_catcher
 
   do
-    local Bootstrap = { _inMythicContent = true, runtime = {
+    local Bootstrap = RestrictionState.Set({ runtime = {
       now = function()
         return 900
       end,
-    } }
+    } }, { mythic = true })
     local catcher, frame = installWithFakeFrame(Bootstrap)
     local onEvent = frame:GetScript("OnEvent")
     assert(type(onEvent) == "function", "install must set an OnEvent script")
@@ -198,6 +200,46 @@ return function()
     local lines = catcher.drain()
     assert(#lines == 1, "OnEvent must hold a readable whisper while Bootstrap is in mythic content, got " .. #lines)
     assert(lines[1].receivedAt == 900, "held time comes from runtime.now, got " .. tostring(lines[1].receivedAt))
+  end
+
+  -- test_installed_catcher_reads_the_mythic_flag_from_the_restriction_instance
+  -- The instance keeps its own flag store, so reading a field of the
+  -- Bootstrap table would miss it.
+
+  do
+    local instance = RestrictedActions.New()
+    instance.setFlag("mythic", true)
+    local Bootstrap = { restrictions = instance, runtime = {
+      now = function()
+        return 900
+      end,
+    } }
+    local catcher, frame = installWithFakeFrame(Bootstrap)
+    frame:GetScript("OnEvent")(frame, "CHAT_MSG_WHISPER", "hi", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, nil, 9, "Player-1-ABC")
+    assert(#catcher.drain() == 1, "the catcher must hold a readable whisper while the instance says Mythic+")
+  end
+
+  -- test_installed_catcher_follows_the_instance_bootstrap_installs_later
+  -- The catcher frame is live before Bootstrap.Initialize creates the
+  -- instance, and every Initialize installs a new one.
+
+  do
+    local Bootstrap = {}
+    local catcher, frame = installWithFakeFrame(Bootstrap)
+    local onEvent = frame:GetScript("OnEvent")
+    onEvent(frame, "CHAT_MSG_WHISPER", "hi", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, nil, 9, "Player-1-ABC")
+    assert(#catcher.drain() == 0, "before any instance exists a readable whisper is not held")
+
+    local installed = RestrictedActions.New()
+    installed.setFlag("mythic", true)
+    Bootstrap.restrictions = installed
+    Bootstrap.runtime = {
+      now = function()
+        return 900
+      end,
+    }
+    onEvent(frame, "CHAT_MSG_WHISPER", "hi", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, nil, 10, "Player-1-ABC")
+    assert(#catcher.drain() == 1, "the catcher must ask the instance installed after it")
   end
 
   -- test_install_skipped_without_issecretvalue

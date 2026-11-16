@@ -30,6 +30,9 @@ function LifecycleWiring.Setup(options)
     onContactsWidth = options.onContactsWidth,
   })
   local relayoutWindow = relayoutController.relayoutWindow
+  if options.bindComposerHeight then
+    options.bindComposerHeight(relayoutController.setComposerHeight)
+  end
 
   options.refreshContacts(options.getCurrentContacts(), options.selectedContact and options.selectedContact.conversationKey or nil, true)
 

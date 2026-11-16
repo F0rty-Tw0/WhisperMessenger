@@ -36,8 +36,6 @@ return function()
         },
       },
     },
-    contacts = {},
-    pendingHydration = {},
   }
 
   local characterState = {

@@ -2,6 +2,8 @@
 -- restriction going Inactive, the M+ resume, and entering the world.
 local FakeChatLines = require("tests.helpers.fake_chat_lines")
 local ReplayRuntime = require("tests.helpers.lockdown_replay_runtime")
+-- Flags: the lifecycle handler below already has the name RestrictionState.
+local Flags = require("tests.helpers.restriction_state")
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local RestrictionState = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.RestrictionState")
 local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
@@ -19,12 +21,14 @@ end
 local function holdOne()
   local restore = FakeChatLines.Install({ [7] = readable() })
   local runtime = ReplayRuntime.New()
-  runtime.restrictedActions = RestrictedActions.New()
+  local Bootstrap = { runtime = runtime }
+  -- One instance for both, as Bootstrap.Initialize wires it.
+  runtime.restrictedActions = RestrictedActions.For(Bootstrap)
   runtime.isChatLocked = function()
     return runtime.restrictedActions.isChatLocked()
   end
   ReplayRuntime.Hold(runtime, "CHAT_MSG_WHISPER", 7)
-  return { runtime = runtime }, restore
+  return Bootstrap, restore
 end
 
 local function setRestriction(Bootstrap, restrictionType, newState)
@@ -155,7 +159,7 @@ return function()
 
   do
     local Bootstrap, restore = holdOne()
-    Bootstrap._inMythicContent = true
+    Flags.Set(Bootstrap, { mythic = true })
     local resumes, scrubs = 0, 0
     Bootstrap.runtime.resume = function()
       resumes = resumes + 1
@@ -168,7 +172,7 @@ return function()
     rawset(ChatReplyState, "ScrubStaleWhisperReplyState", savedScrub)
     assert(resumes == 1, "a key ending must still resume, got " .. resumes)
     assert(scrubs == 1, "a key ending must still scrub the reply sticky, got " .. scrubs)
-    assert(Bootstrap._inMythicContent == false, "a key ending must still clear the Mythic flag")
+    assert(Flags.Flag(Bootstrap, "mythic") == false, "a key ending must still clear the Mythic flag")
     restore()
   end
 

@@ -3,6 +3,7 @@
 -- the option is toggled. Oracle: the State x event table of the spec.
 
 local FakeUI = require("tests.helpers.fake_ui")
+local PanelRegistry = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelRegistry")
 local WindowRuntime = require("WhisperMessenger.Core.Bootstrap.WindowRuntime")
 local Theme = require("WhisperMessenger.UI.Theme")
 local WindowSizing = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSizing")
@@ -41,7 +42,13 @@ local function build(accountExtras, characterState, compactLayout)
   end
   characterState.icon = characterState.icon or { anchorPoint = "TOP", relativePoint = "TOP", x = 1, y = -2 }
   characterState.minimapIcon = characterState.minimapIcon or { degrees = 45 }
-  local runtime = { accountState = accountState, localProfileId = "me", chatApi = {}, store = { conversations = {}, config = {} } }
+  local runtime = {
+    accountState = accountState,
+    localProfileId = "me",
+    chatApi = {},
+    store = { conversations = {}, config = {} },
+    panelRegistry = PanelRegistry.New(),
+  }
   local trackers = { applied = {} }
   local factory = FakeUI.NewFactory()
   local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
@@ -54,7 +61,7 @@ local function build(accountExtras, characterState, compactLayout)
     defaultCharacterState = { window = {}, icon = {} },
     uiFactory = factory,
     uiParent = uiParent,
-    bootstrap = { _inMythicContent = false },
+    bootstrap = {},
     contactsList = {
       BuildItemsForProfile = function()
         return {}

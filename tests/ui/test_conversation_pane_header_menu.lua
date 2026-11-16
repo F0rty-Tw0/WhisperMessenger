@@ -37,7 +37,7 @@ return function()
     local contact = { displayName = "Arthas", channel = "WOW" }
     local opts = { onMarkUnread = function() end, onUpdatePrefs = function() end }
     local cm, calls = spyMenu()
-    HeaderMenu.Bind(header, { _selectedContact = contact }, opts, cm)
+    HeaderMenu.Bind(header, { _selectedContact = contact }, { rowActions = opts }, cm)
 
     fire(header, "OnMouseUp", "RightButton")
     assert(#calls == 1, "right-click should open the menu once, got " .. #calls)
@@ -47,6 +47,30 @@ return function()
     assert(call[3] == opts.onMarkUnread, "menu should get onMarkUnread")
     assert(call[4] == opts.onUpdatePrefs, "menu should get onUpdatePrefs")
     assert(call.n == 4, "menu should get no row actions, got " .. call.n .. " args")
+  end
+
+  -- test_right_click_menu_reads_the_row_actions_table
+  do
+    local _, _, header = buildChain(factory)
+    local contact = { displayName = "Arthas", channel = "WOW" }
+    local rowActions = { onMarkUnread = function() end, onUpdatePrefs = function() end, onPin = function() end }
+    local cm, calls = spyMenu()
+    HeaderMenu.Bind(header, { _selectedContact = contact }, { rowActions = rowActions }, cm)
+
+    fire(header, "OnMouseUp", "RightButton")
+    local call = calls[1]
+    assert(call[3] == rowActions.onMarkUnread and call[4] == rowActions.onUpdatePrefs, "menu gets both callbacks from the table")
+    assert(call.n == 4, "the header menu still gets no Pin or Remove, got " .. call.n .. " args")
+  end
+
+  -- test_actions_outside_the_row_actions_table_are_not_read
+  do
+    local _, _, header = buildChain(factory)
+    local cm, calls = spyMenu()
+    HeaderMenu.Bind(header, { _selectedContact = { displayName = "Arthas", channel = "WOW" } }, { onMarkUnread = function() end }, cm)
+
+    fire(header, "OnMouseUp", "RightButton")
+    assert(#calls == 1 and calls[1][3] == nil, "only options.rowActions feeds the header menu")
   end
 
   -- test_right_click_on_group_conversation_opens_menu

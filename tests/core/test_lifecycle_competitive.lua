@@ -1,12 +1,14 @@
+local RestrictionState = require("tests.helpers.restriction_state")
 local Competitive = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Competitive")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
+local ContentDetector = require("WhisperMessenger.Core.ContentDetector")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
+local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local PublicApi = require("WhisperMessenger.Core.PublicApi")
 
 local function makeHarness()
   local calls = { suspend = 0, resume = 0 }
   local Bootstrap = {
-    _inMythicContent = false,
     runtime = {
       suspend = function()
         calls.suspend = calls.suspend + 1
@@ -177,7 +179,7 @@ return function()
   do
     local Bootstrap, deps, state = makeCombatHarness(true, true)
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
-    Bootstrap._inMythicContent = true
+    RestrictionState.Set(Bootstrap, { mythic = true })
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
 
     assert(state.visible == false, "combat end must not reopen the window while Mythic+ keeps it suspended")
@@ -191,7 +193,7 @@ return function()
 
     Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START")
     assert(calls.suspend == 1, "first CHALLENGE_MODE_START suspends")
-    assert(Bootstrap._inMythicContent == true, "mythic flag set")
+    assert(RestrictionState.Flag(Bootstrap, "mythic") == true, "mythic flag set")
 
     -- A duplicate suspend would clobber _wasVisibleBeforeMythic (the window
     -- is already hidden by the first suspend), so it must be skipped.
@@ -209,7 +211,7 @@ return function()
     Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START")
     Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_COMPLETED")
     assert(calls.resume == 1, "COMPLETED after a suspend resumes once")
-    assert(Bootstrap._inMythicContent == false, "mythic flag cleared")
+    assert(RestrictionState.Flag(Bootstrap, "mythic") == false, "mythic flag cleared")
   end
   -- test_challenge_mode_events_are_noops_without_mythic_plus
   do
@@ -219,11 +221,74 @@ return function()
     for _, event in ipairs({ "CHALLENGE_MODE_START", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET" }) do
       local handled = Competitive.handleChallengeModeEvent(Bootstrap, event)
       assert(handled == true, event .. " should remain claimed without Mythic+")
-      assert(Bootstrap._inMythicContent == false, event .. " should not change mythic state without Mythic+")
+      assert(RestrictionState.Flag(Bootstrap, "mythic") == false, event .. " should not change mythic state without Mythic+")
     end
 
     assert(calls.suspend == 0, "challenge mode events must not suspend without Mythic+")
     assert(calls.resume == 0, "challenge mode events must not resume without Mythic+")
+  end
+
+  -- The instance keeps its own flag store in the three tests below, so a
+  -- handler that wrote or read fields of the Bootstrap table would miss it.
+
+  -- test_challenge_mode_events_set_and_read_the_mythic_flag_on_the_instance
+  do
+    FlavorCompat.hasMythicPlus = true
+    local Bootstrap, calls = makeHarness()
+    local instance = RestrictedActions.New()
+    Bootstrap.restrictions = instance
+    instance.setFlag("encounter", true)
+    instance.setFlag("competitive", true)
+
+    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START")
+    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START")
+    assert(instance.flag("mythic") == true, "CHALLENGE_MODE_START sets the mythic flag on the instance")
+    assert(calls.suspend == 1, "the second start sees the flag on the instance, got " .. calls.suspend .. " suspends")
+
+    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_COMPLETED")
+    assert(calls.resume == 1, "COMPLETED resumes once, got " .. calls.resume)
+    for _, name in ipairs(RestrictionState.NAMES) do
+      assert(instance.flag(name) == false, "the key ending clears the " .. name .. " flag")
+    end
+  end
+
+  -- test_zone_change_recomputes_flags_on_the_instance
+  do
+    local savedGetInstanceInfo = rawget(_G, "GetInstanceInfo")
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
+    local Bootstrap, calls = makeHarness()
+    local instance = RestrictedActions.New()
+    Bootstrap.restrictions = instance
+    instance.setFlag("competitive", true)
+    instance.setFlag("mythic", true)
+
+    Competitive.handleZoneChangedNewArea(Bootstrap, {
+      getContentDetector = function()
+        return ContentDetector
+      end,
+      getPresenceCache = function()
+        return nil
+      end,
+    })
+    rawset(_G, "GetInstanceInfo", savedGetInstanceInfo)
+
+    assert(instance.flag("competitive") == false, "leaving PvP clears the competitive flag on the instance")
+    assert(instance.flag("mythic") == false, "leaving the dungeon clears the mythic flag on the instance")
+    assert(calls.resume == 1, "leaving the dungeon resumes once, got " .. calls.resume)
+  end
+
+  -- test_combat_end_reads_the_mythic_flag_from_the_instance
+  do
+    local Bootstrap, deps, state = makeCombatHarness(true, true)
+    local instance = RestrictedActions.New()
+    Bootstrap.restrictions = instance
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
+    instance.setFlag("mythic", true)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
+
+    assert(state.visible == false, "combat end must not reopen the window while the instance says Mythic+")
   end
 
   FlavorCompat.hasMythicPlus = savedHasMythicPlus

@@ -8,6 +8,8 @@ local AccountName = ns.BNetResolverAccountName or require("WhisperMessenger.Tran
 -- stylua: ignore start
 local GameAccountProbe = ns.BNetResolverGameAccountProbe or require("WhisperMessenger.Transport.BNetResolver.GameAccountProbe")
 local GuidFallback = ns.BNetResolverGuidFallback or require("WhisperMessenger.Transport.BNetResolver.GuidFallback")
+local FriendScan = ns.BNetResolverFriendScan or require("WhisperMessenger.Transport.BNetResolver.FriendScan")
+local PassCache = ns.BNetResolverPassCache or require("WhisperMessenger.Transport.BNetResolver.PassCache")
 -- stylua: ignore end
 local BNetResolver = {}
 
@@ -64,6 +66,12 @@ function BNetResolver.SanitizeAccountID(value)
   return value
 end
 
+-- A cache for one synchronous pass over many contacts; hand it to every
+-- ResolveAccountInfo call of the pass and drop it before the pass returns.
+function BNetResolver.NewPassCache()
+  return PassCache.New(BNetResolver.SanitizeAccountID)
+end
+
 function BNetResolver.ResolveAccountInfoByGameAccountID(bnetApi, gameAccountID)
   if type(bnetApi) ~= "table" then
     return nil
@@ -96,53 +104,19 @@ function BNetResolver.ResolveAccountInfoByGameAccountID(bnetApi, gameAccountID)
   return accountInfo
 end
 
--- Stage 3: Scan friend list to find entry matching bnetAccountID.
--- Returns accountInfo, friendIndex.
-local function scanFriendListById(bnetApi, bnetAccountID)
-  local getNumFriends = resolveGetNumFriends(bnetApi)
-  if type(getNumFriends) ~= "function" or type(bnetApi.GetFriendAccountInfo) ~= "function" then
-    return nil, nil
+-- passCache (optional): read the pass's friend index instead of scanning.
+function BNetResolver.ResolveFriendByBattleTag(bnetApi, battleTag, guid, passCache)
+  local accountInfo, friendIndex, listAvailable
+  if passCache then
+    accountInfo, friendIndex, listAvailable = PassCache.FindByBattleTag(passCache, bnetApi, battleTag)
+  else
+    accountInfo, friendIndex, listAvailable = FriendScan.ByBattleTag(bnetApi, battleTag)
   end
-  local ok, numFriends = pcall(getNumFriends)
-  if not ok or not numFriends then
-    return nil, nil
-  end
-  for i = 1, numFriends do
-    local ok2, info = pcall(bnetApi.GetFriendAccountInfo, i)
-    if ok2 and info then
-      local candidate = BNetResolver.SanitizeAccountID(info.bnetAccountID)
-      if candidate ~= nil and candidate == bnetAccountID then
-        if info.isOnline ~= nil then
-          return info, i
-        end
-        return info, i
-      end
-    end
-  end
-  return nil, nil
-end
-
-function BNetResolver.ResolveFriendByBattleTag(bnetApi, battleTag, guid)
-  local getNumFriends = resolveGetNumFriends(bnetApi)
-  if type(getNumFriends) ~= "function" or type(bnetApi.GetFriendAccountInfo) ~= "function" then
+  if not listAvailable then
     return nil
   end
-  local ok, numFriends = pcall(getNumFriends)
-  if not ok or not numFriends then
-    return nil
-  end
-  local friendIndex
-  local accountInfo
-  for i = 1, numFriends do
-    local ok2, info = pcall(bnetApi.GetFriendAccountInfo, i)
-    if ok2 and info and info.battleTag == battleTag then
-      if info.isOnline ~= nil then
-        return info
-      end
-      accountInfo = info
-      friendIndex = i
-      break
-    end
+  if accountInfo and accountInfo.isOnline ~= nil then
+    return accountInfo
   end
   -- Try game account iteration if found but isOnline=nil
   local enriched = probeGameAccounts(bnetApi, friendIndex, accountInfo)
@@ -163,15 +137,9 @@ function BNetResolver.ResolveFriendByBattleTag(bnetApi, battleTag, guid)
   return accountInfo
 end
 
-function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid, expectedBattleTag)
-  if bnetApi == nil then
-    return nil
-  end
-  bnetAccountID = BNetResolver.SanitizeAccountID(bnetAccountID)
-  if bnetAccountID == nil then
-    return nil
-  end
-
+-- Stages 1-5 for a sanitized bnetAccountID. With a passCache, stages 2 and 3
+-- read the pass's friend index instead of scanning the friend list.
+local function resolveStages(bnetApi, bnetAccountID, guid, expectedBattleTag, passCache)
   -- Stage 1: Primary lookup by bnetAccountID
   local accountInfo, isStaleId = lookupByAccountId(bnetApi, bnetAccountID, guid, expectedBattleTag)
   if accountInfo and accountInfo.isOnline ~= nil and not isStaleId then
@@ -180,7 +148,7 @@ function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid, expectedB
 
   -- Stage 2: Stale or missing ID recovery via battleTag scan
   if expectedBattleTag and (isStaleId or accountInfo == nil) then
-    local resolved = BNetResolver.ResolveFriendByBattleTag(bnetApi, expectedBattleTag, guid)
+    local resolved = BNetResolver.ResolveFriendByBattleTag(bnetApi, expectedBattleTag, guid, passCache)
     if resolved then
       return resolved
     end
@@ -189,7 +157,12 @@ function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid, expectedB
 
   -- Stage 3: Friend list scan by bnetAccountID (skip when stale)
   if not isStaleId then
-    local scannedInfo, friendIndex = scanFriendListById(bnetApi, bnetAccountID)
+    local scannedInfo, friendIndex
+    if passCache then
+      scannedInfo, friendIndex = PassCache.FindByAccountId(passCache, bnetApi, bnetAccountID)
+    else
+      scannedInfo, friendIndex = FriendScan.ById(bnetApi, bnetAccountID, BNetResolver.SanitizeAccountID)
+    end
     if scannedInfo and scannedInfo.isOnline ~= nil then
       return scannedInfo
     end
@@ -211,6 +184,29 @@ function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid, expectedB
   end
 
   return accountInfo
+end
+
+-- passCache (optional, from NewPassCache): remembers every answer, misses
+-- included, for the pass it belongs to. Without it each call asks the game
+-- again, which is what a caller that acts on the answer (a send) needs.
+function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid, expectedBattleTag, passCache)
+  if bnetApi == nil then
+    return nil
+  end
+  bnetAccountID = BNetResolver.SanitizeAccountID(bnetAccountID)
+  if bnetAccountID == nil then
+    return nil
+  end
+  if passCache == nil then
+    return resolveStages(bnetApi, bnetAccountID, guid, expectedBattleTag, nil)
+  end
+
+  local found, cached = PassCache.Lookup(passCache, bnetAccountID, guid, expectedBattleTag)
+  if found then
+    return cached
+  end
+  local accountInfo = resolveStages(bnetApi, bnetAccountID, guid, expectedBattleTag, passCache)
+  return PassCache.Remember(passCache, bnetAccountID, guid, expectedBattleTag, accountInfo)
 end
 
 function BNetResolver.ResolvePlayerInfo(playerInfoByGUID, guid)

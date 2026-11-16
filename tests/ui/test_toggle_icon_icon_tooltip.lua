@@ -1,6 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Localization = require("WhisperMessenger.Locale.Localization")
-local IconTooltip = require("WhisperMessenger.UI.ToggleIcon.IconTooltip")
+local IconTooltip = require("WhisperMessenger.UI.ToggleIcon.IconInteraction").IconTooltip
 
 return function()
   Localization.Configure({ language = "enUS" })

@@ -3,8 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Identity = ns.Identity or (type(require) == "function" and require("WhisperMessenger.Model.Identity")) or nil
-local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
+local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local ChatReplyState = {}
 
 local function readEditBoxState(editBox, key)
@@ -81,7 +81,7 @@ local function staleWhisperReplyTarget(editBox)
 end
 
 local function ensureWhisperConversation(runtime, target, channel)
-  if type(runtime) ~= "table" or target == nil or target == "" or Identity == nil then
+  if type(runtime) ~= "table" or target == nil or target == "" then
     return nil, channel ~= "BN"
   end
 
@@ -101,7 +101,7 @@ local function ensureWhisperConversation(runtime, target, channel)
   end
 
   conversationKey = Identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
-  if type(conversationKey) ~= "string" or conversationKey == "" or Store == nil then
+  if type(conversationKey) ~= "string" or conversationKey == "" then
     return nil, true
   end
 

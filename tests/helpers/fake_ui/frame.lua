@@ -3,17 +3,23 @@
 -- Depends on Texture and Templates sub-modules.
 
 table.unpack = table.unpack or unpack
+-- Kept here: a test may drop table.unpack to mimic Lua 5.1, and the stubbed
+-- widget methods (C code in game) must keep working.
+local unpackValues = table.unpack
 
 local Texture = require("tests.helpers.fake_ui.texture")
 local Templates = require("tests.helpers.fake_ui.templates")
 local Mask = require("tests.helpers.fake_ui.mask")
+local Wrap = require("tests.helpers.fake_ui.wrap")
 
 -- options (optional): { masks = true } adds the mask stubs (mask.lua);
 -- { fontColors = true } makes SetFontObject reset the text colour to the
--- font's, as the game does.
+-- font's, as the game does; { wrap = true } makes word-wrapped FontStrings
+-- count wrapped lines (wrap.lua).
 local function makeCreateFrame(options)
   local masks = options ~= nil and options.masks == true
   local fontColors = options ~= nil and options.fontColors == true
+  local wrap = options ~= nil and options.wrap == true
   local function createFrame(frameType, name, parent, template)
     local frame = {
       frameType = frameType,
@@ -92,7 +98,7 @@ local function makeCreateFrame(options)
         return nil
       end
 
-      return table.unpack(self.point, 1, self.point.n or #self.point)
+      return unpackValues(self.point, 1, self.point.n or #self.point)
     end
 
     function frame:ClearAllPoints()
@@ -138,6 +144,7 @@ local function makeCreateFrame(options)
 
     function frame:SetFontObject(value)
       self.fontObject = value
+      self.font = nil
       -- The game's SetFontObject also takes the font's colour over the text's.
       if fontColors then
         local font = type(value) == "string" and _G[value] or value
@@ -156,6 +163,27 @@ local function makeCreateFrame(options)
       return nil
     end
 
+    -- Text widgets: GetFont answers what SetFont set last, else the font
+    -- object's (SetFontObject drops the SetFont record, as in the game).
+    if frameType == "EditBox" or frameType == "FontString" then
+      function frame:SetFont(path, size, flags)
+        self.font = { path, size, flags }
+      end
+
+      function frame:GetFont()
+        if self.font then
+          return self.font[1], self.font[2], self.font[3]
+        end
+        local font = self:GetFontObject()
+        -- A widget whose font object is itself would recurse forever (test_bubble_manual_copy).
+        if font ~= self and type(font) == "table" and type(font.GetFont) == "function" then
+          return font:GetFont()
+        end
+
+        return nil
+      end
+    end
+
     function frame:GetStringHeight()
       local text = tostring(self.text or "")
       local _, lineCount = string.gsub(text, "\n", "\n")
@@ -163,6 +191,14 @@ local function makeCreateFrame(options)
       local lineHeight = self.lineHeight or 16
 
       return effectiveLines * lineHeight
+    end
+
+    if frameType == "FontString" then
+      -- Lines the text breaks into; wrap.lua adds word wrapping on top.
+      function frame:GetNumLines()
+        local _, breaks = string.gsub(tostring(self.text or ""), "\n", "\n")
+        return breaks + 1
+      end
     end
 
     -- Like WoW: Show on an already-shown frame fires no OnShow.
@@ -216,9 +252,13 @@ local function makeCreateFrame(options)
       end
     end
 
+    -- Like WoW: SetScript replaces the script and drops every hook on it.
     function frame:SetScript(eventName, handler)
       self.scripts = self.scripts or {}
       self.scripts[eventName] = handler
+      if self._hookScripts then
+        self._hookScripts[eventName] = nil
+      end
     end
 
     function frame:GetScript(eventName)
@@ -407,7 +447,11 @@ local function makeCreateFrame(options)
     end
 
     function frame:CreateFontString(childName, layer, inheritedTemplate)
-      return createFrame("FontString", childName or (self.name or "frame") .. "Text", self, inheritedTemplate)
+      local fontString = createFrame("FontString", childName or (self.name or "frame") .. "Text", self, inheritedTemplate)
+      if wrap then
+        Wrap.AugmentFontString(fontString)
+      end
+      return fontString
     end
 
     function frame:SetTextColor(...)
@@ -578,7 +622,7 @@ local function makeCreateFrame(options)
           table.insert(regions, child)
         end
       end
-      return table.unpack(regions)
+      return unpackValues(regions)
     end
 
     function frame:GetChildren()
@@ -588,7 +632,7 @@ local function makeCreateFrame(options)
           table.insert(frames, child)
         end
       end
-      return table.unpack(frames)
+      return unpackValues(frames)
     end
 
     function frame:GetStringWidth()

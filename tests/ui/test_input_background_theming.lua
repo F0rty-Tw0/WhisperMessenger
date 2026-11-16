@@ -42,8 +42,7 @@ return function()
   local composerParent = factory.CreateFrame("Frame", nil, uiParent)
   composerParent:SetSize(600, Theme.COMPOSER_HEIGHT)
   local composer = Composer.Create(factory, composerParent, { conversationKey = "wow::test" }, function() end)
-  -- The rounded background's first fill is the composer input's first texture.
-  local composerFill = FindUI.ofType(composer.input, "Texture")[1]
+  local composerFill = composer.inputFill.fills[1]
   local sendIcon = assert(
     FindUI.find(composer.sendButton, function(node)
       return node.texturePath == "Interface\\AddOns\\WhisperMessenger\\Media\\send.png"

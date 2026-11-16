@@ -18,13 +18,15 @@ local ContactsController = {}
 -- factory       : frame factory
 -- contactsView  : ScrollView created for the contacts pane
 -- initialContacts : initial list of contacts (table)
--- options       : { onSelect, initialSelectedKey }
+-- options       : { onSelect, initialSelectedKey, rowActions } where
+--                 rowActions is the window's row actions table
 --
 -- Returns:
 --   { rows, refresh, loadMore, content, scrollFrame, scrollBar, view }
 function ContactsController.Create(factory, contactsView, initialContacts, options)
   options = options or {}
 
+  local rowActions = options.rowActions or {}
   local currentContacts = initialContacts or {}
   local currentSelectedKey = options.initialSelectedKey
   local viewportH = contactsView.viewportHeight or 0
@@ -47,6 +49,8 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
   })
   -- Built once and mutated in place. refresh() runs on every background status
   -- tick, and a fresh table plus five wrapper closures per call was pure churn.
+  -- Pin, Remove, Mark unread and the prefs entries show on every row even
+  -- when the window has no callback for them, so those four stay wrapped.
   local rowOptions = {
     onSelect = function(item)
       if options.onSelect then
@@ -54,32 +58,35 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
       end
     end,
     onPin = function(item)
-      if options.onPin then
-        options.onPin(item)
+      if rowActions.onPin then
+        rowActions.onPin(item)
       end
     end,
     onRemove = function(item)
-      if options.onRemove then
-        options.onRemove(item)
+      if rowActions.onRemove then
+        rowActions.onRemove(item)
       end
     end,
     onMarkUnread = function(item)
-      if options.onMarkUnread then
-        options.onMarkUnread(item)
+      if rowActions.onMarkUnread then
+        rowActions.onMarkUnread(item)
       end
     end,
     onUpdatePrefs = function(item, changes)
-      if options.onUpdatePrefs then
-        options.onUpdatePrefs(item, changes)
+      if rowActions.onUpdatePrefs then
+        rowActions.onUpdatePrefs(item, changes)
       end
     end,
-    onIgnorePlayer = options.onIgnorePlayer,
-    onUnblockPlayer = options.onUnblockPlayer,
-    isPlayerBlocked = options.isPlayerBlocked,
-    whoPlayer = options.whoPlayer,
     onDragStart = dragHandlers.handleDragStart,
     onDragStop = dragHandlers.handleDragStop,
   }
+  -- Every other row action reaches the row as the window gave it, absent
+  -- ones included, so a new action needs no line here.
+  for name, action in pairs(rowActions) do
+    if rowOptions[name] == nil then
+      rowOptions[name] = action
+    end
+  end
 
   local function refresh(nextContacts, selectedKey, resetPaging)
     if nextContacts ~= nil then

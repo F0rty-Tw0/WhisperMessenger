@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
+local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
 
 local Disambiguation = {}
 
@@ -28,8 +29,6 @@ local Disambiguation = {}
 --   WrongFaction the whisper check cannot reach. Pass "Offline" when the
 --   whisper check said Offline: with no proof of life it stays Offline.
 function Disambiguation.ResolveWrongFaction(item, runtime, isOpposite, fallbackStatus)
-  local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
-
   local presence = PresenceCache.GetPresence(item.guid)
 
   if isOpposite then

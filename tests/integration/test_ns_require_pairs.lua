@@ -2,6 +2,13 @@
 -- must name a module P that assigns `ns.X`. A typo in either half still
 -- passes in tests (require succeeds) but leaves `ns.X` nil in game, where
 -- the fallback require throws.
+--
+-- A bare `ns.X` read with no fallback (most sit inside functions, reading a
+-- module that loads later) has nothing to pair with, so it is checked against
+-- every shipped file instead: some file must assign `ns.X`. So is the key in
+-- `ns["X"]` and in `loadModule(path, "X")`, which returns `ns.X`.
+local NsScan = require("tests.helpers.ns_scan")
+
 local PREFIX = "WhisperMessenger."
 
 -- The release build renames locals, so `ns` can be any identifier.
@@ -80,4 +87,28 @@ return function()
 
   assert(pairCount > 1000, "expected to find the ns/require fallback pairs, found " .. pairCount)
   assert(#problems == 0, "mismatched ns/require pairs:\n" .. table.concat(problems, "\n"))
+
+  local use = NsScan.newUse()
+  for _, file in ipairs(files) do
+    NsScan.scan(file, readFile(file), use)
+  end
+
+  local assignedCount = 0
+  for _ in pairs(use.assigned) do
+    assignedCount = assignedCount + 1
+  end
+  local unassigned = NsScan.unassigned(use)
+
+  assert(#use.reads > 1000, "expected to find the ns reads, found " .. #use.reads)
+  assert(assignedCount > 500, "expected to find the assigned ns keys, found " .. assignedCount)
+  assert(use.loaderKeys >= 30, "expected to find the module loader keys, found " .. use.loaderKeys)
+  assert(
+    #unassigned == 0,
+    "ns reads of a key that no shipped file assigns ("
+      .. #use.reads
+      .. " reads, "
+      .. assignedCount
+      .. " assigned keys):\n"
+      .. table.concat(unassigned, "\n")
+  )
 end

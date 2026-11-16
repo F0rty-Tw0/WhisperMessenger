@@ -11,9 +11,27 @@ end
 -- NOT re-queried via C_RestrictedActions.IsAddOnRestrictionActive, because
 -- that API returns false during dispatch of its own event.
 --
--- Pre-12.0 clients don't have C_RestrictedActions. We fall back to the
--- existing flag-based approach (Bootstrap._inCompetitiveContent, etc.).
+-- Pre-12.0 clients don't have C_RestrictedActions. There the three detection
+-- flags below are the only source, so an instance answers from the cache
+-- and the flags together.
 local RestrictedActions = {}
+
+-- Flag name -> field of the flag store. Only an instance reads or writes
+-- these fields; everything else goes through setFlag and flag.
+local FLAG_FIELDS = {
+  mythic = "_inMythicContent",
+  competitive = "_inCompetitiveContent",
+  encounter = "_inEncounter",
+}
+
+-- A misspelled name must not read as "not restricted".
+local function fieldOf(name)
+  local field = FLAG_FIELDS[name]
+  if field == nil then
+    error("unknown restriction flag: " .. tostring(name), 3)
+  end
+  return field
+end
 
 -- Mirrors Enum.AddOnRestrictionType
 RestrictedActions.TYPES = {
@@ -49,10 +67,23 @@ function RestrictedActions.ChatApiLocked()
   return locked == true
 end
 
-function RestrictedActions.New()
+-- flagStore: the table that holds the detection flags under FLAG_FIELDS.
+-- Bootstrap passes itself; without one the instance keeps its own.
+function RestrictedActions.New(flagStore)
   local cached = {}
   local updates = {}
+  local flags = flagStore or {}
   local self = {}
+
+  -- name: "mythic", "competitive" or "encounter"; any other name is an
+  -- error. Any truthy value sets the flag, and the store holds a boolean.
+  function self.setFlag(name, value)
+    flags[fieldOf(name)] = value and true or false
+  end
+
+  function self.flag(name)
+    return flags[fieldOf(name)] and true or false
+  end
 
   function self.updateFromEvent(restrictionType, newState)
     if type(restrictionType) ~= "number" or type(newState) ~= "number" then
@@ -87,21 +118,41 @@ function RestrictedActions.New()
     return false
   end
 
-  function self.isCompetitive()
-    return self.isActive(RestrictedActions.TYPES.Encounter)
-      or self.isActive(RestrictedActions.TYPES.ChallengeMode)
-      or self.isActive(RestrictedActions.TYPES.PvPMatch)
-  end
-
-  function self.isMythic()
-    return self.isActive(RestrictedActions.TYPES.ChallengeMode)
-  end
-
   function self.isChatLocked()
     return self.isActive(RestrictedActions.TYPES.Chat) or RestrictedActions.ChatApiLocked()
   end
 
+  -- A chat lock behaves exactly like restricted content.
+  function self.isCompetitive()
+    return self.isActive(RestrictedActions.TYPES.Encounter)
+      or self.isActive(RestrictedActions.TYPES.ChallengeMode)
+      or self.isActive(RestrictedActions.TYPES.PvPMatch)
+      or self.isChatLocked()
+      or self.flag("competitive")
+      or self.flag("encounter")
+  end
+
+  function self.isMythic()
+    return self.isActive(RestrictedActions.TYPES.ChallengeMode) or self.flag("mythic")
+  end
+
+  function self.isRestricted()
+    return self.isCompetitive() or self.isMythic()
+  end
+
   return self
+end
+
+-- The instance that answers for owner (the Bootstrap table). Bootstrap.Initialize
+-- installs one per runtime. An owner asked before that gets one over its own
+-- flag fields: the lockdown catcher's frame is live before Initialize.
+function RestrictedActions.For(owner)
+  local restrictions = owner.restrictions
+  if restrictions == nil then
+    restrictions = RestrictedActions.New(owner)
+    owner.restrictions = restrictions
+  end
+  return restrictions
 end
 
 ns.BootstrapRestrictedActions = RestrictedActions

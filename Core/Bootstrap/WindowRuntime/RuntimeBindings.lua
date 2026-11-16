@@ -4,9 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
-local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
 local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
-local PanelRegistry = ns.BootstrapWindowRuntimePanelRegistry or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelRegistry")
 
 local RuntimeBindings = {}
 
@@ -90,18 +88,6 @@ function RuntimeBindings.Apply(options)
   runtime.externalPreview = options.externalPreview
   runtime.getWidgetIcon = getWidgetIcon
   runtime.updateIconSurfaces = updateIconSurfaces
-  -- Read at call time: the integration registry is set after this runs.
-  runtime.panelRegistry = PanelRegistry.New({
-    isActive = function(key)
-      local registry = runtime.addonIntegrations
-      if registry == nil then
-        return true
-      end
-      local owner = registry.ownerOf("panel", key)
-      return owner == nil or registry.isAllowed(owner)
-    end,
-  })
-  runtime.contactInfo = ContactInfo.New()
 
   return {
     setComposerText = setComposerText,

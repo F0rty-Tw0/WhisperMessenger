@@ -1,18 +1,12 @@
--- Gives fake edit boxes the game's GetFont / SetFont, starting on a font
--- file, like a Blizzard template box whose font object can't be read back.
+-- Starts fake edit boxes on a font file (GetFont / SetFont come from the
+-- fake frame), like a Blizzard template box whose font object can't be read back.
 local FontBox = {}
 
 FontBox.FRIZ = "Fonts\\FRIZQT__.TTF"
 FontBox.CHAT = "Fonts\\ARIALN.TTF"
 
 function FontBox.Give(box, path, size, flags)
-  box.font = { path, size or 14, flags or "" }
-  function box:GetFont()
-    return self.font[1], self.font[2], self.font[3]
-  end
-  function box:SetFont(newPath, newSize, newFlags)
-    self.font = { newPath, newSize, newFlags }
-  end
+  box:SetFont(path, size or 14, flags or "")
   return box
 end
 

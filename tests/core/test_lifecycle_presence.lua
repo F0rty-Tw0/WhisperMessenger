@@ -1,3 +1,4 @@
+local FakeScanResolver = require("tests.helpers.fake_scan_resolver")
 local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
 local Identity = require("WhisperMessenger.Model.Identity")
 
@@ -5,11 +6,9 @@ local function makeDeps(friendMap)
   return {
     loadModule = function(modulePath)
       if string.find(modulePath, "BNetResolver", 1, true) then
-        return {
-          ScanFriendList = function()
-            return friendMap
-          end,
-        }
+        return FakeScanResolver.New(function()
+          return friendMap
+        end)
       end
       return require(modulePath)
     end,
@@ -376,30 +375,7 @@ return function()
     assert(moved.displayName == "Solo#5678", "numeric display name upgrades to the battleTag")
   end
 
-  -- test_real_logout_handler_clears_conversations_and_dependent_keys_atomically
-  do
-    local characterState = { activeConversationKey = "wow::WOW::jaina" }
-    local Bootstrap = {
-      runtime = {
-        accountState = { settings = { clearOnLogout = true } },
-        characterState = characterState,
-        activeConversationKey = "wow::WOW::jaina",
-        lastIncomingWhisperKey = "wow::WOW::jaina",
-        store = {
-          conversations = {
-            ["wow::WOW::jaina"] = { messages = { { id = "1", text = "hi" } } },
-          },
-        },
-      },
-    }
-
-    Presence.handlePlayerLogout(Bootstrap)
-
-    assert(next(Bootstrap.runtime.store.conversations) == nil, "real logout handler should clear all conversations")
-    assert(Bootstrap.runtime.activeConversationKey == nil, "real logout handler should clear runtime selection")
-    assert(characterState.activeConversationKey == nil, "real logout handler should clear saved selection")
-    assert(Bootstrap.runtime.lastIncomingWhisperKey == nil, "real logout handler should clear reply target")
-  end
+  -- The logout handler is covered in test_lifecycle_presence_logout.lua.
 
   -- test_bnet_friend_events_debounce_into_one_scan
   -- BN_FRIEND_INFO_CHANGED fires in bursts; the full friend-list scan must
@@ -409,12 +385,10 @@ return function()
     local deps = {
       loadModule = function(modulePath)
         if string.find(modulePath, "BNetResolver", 1, true) then
-          return {
-            ScanFriendList = function()
-              scans = scans + 1
-              return {}
-            end,
-          }
+          return FakeScanResolver.New(function()
+            scans = scans + 1
+            return {}
+          end)
         end
         return require(modulePath)
       end,

@@ -11,6 +11,12 @@ local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenge
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
+local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+local BNetStatus = ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
+local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
+local Relationship = ns.Relationship or require("WhisperMessenger.Model.Relationship")
+local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 -- stylua: ignore end
 
 local ContactEnricher = {}
@@ -59,7 +65,6 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
   -- WoW contacts: use cached availability from CAN_LOCAL_WHISPER_TARGET_RESPONSE
   if conversation and conversation.guid and runtime.availabilityByGUID[conversation.guid] then
     local cached = WoWStatus.ResolveGuild(runtime.availabilityByGUID[conversation.guid], conversation.factionName, runtime.localFaction)
-    local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
     local isOpposite = AvailabilityEnricher.isOppositeFaction(conversation.factionName, runtime.localFaction)
 
     if isOpposite then
@@ -89,7 +94,6 @@ end
 -- line: `isTyping` while the peer's typing indicator is inside its TTL and
 -- `peerHasAddon` once any addon payload has arrived from them.
 function ContactEnricher.EnrichContactsPresence(contacts, runtime)
-  local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
   local now = type(runtime.now) == "function" and runtime.now() or 0
   for _, item in ipairs(contacts or {}) do
     item.isTyping = LivePresence.IsTyping(runtime, item.conversationKey, now)
@@ -100,17 +104,13 @@ end
 -- How the player knows each contact (guild, friend, ...), read by the name marks.
 -- Off: the field is cleared and no tie API is touched.
 function ContactEnricher.EnrichContactsRelationship(contacts, runtime)
-  local Relationship = ns.Relationship or require("WhisperMessenger.Model.Relationship")
   local enabled = Relationship.IsEnabled(runtime)
   for _, item in ipairs(contacts or {}) do
     item.relationship = enabled and Relationship.Resolve(item, runtime) or nil
   end
 end
 
-function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContactsFn)
-  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
-  local BNetStatus = ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
-  local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
+local function buildSelectionState(runtime, contacts, buildContactsFn)
   if contacts == nil and buildContactsFn then
     contacts = buildContactsFn()
   end
@@ -147,7 +147,8 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
       runtime.bnetApi,
       selectedContact.bnetAccountID,
       selectedContact.guid,
-      selectedContact.battleTag or selectedContact.displayName
+      selectedContact.battleTag or selectedContact.displayName,
+      runtime.bnetPassCache
     )
     if accountInfo then
       local gameInfo = accountInfo.gameAccountInfo
@@ -169,6 +170,17 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
     status = selectedContact and selectedContact.availability or ContactEnricher.BuildConversationStatus(runtime, conversationKey, conversation),
     notice = buildNotice(runtime, selectedContact, conversation),
   }
+end
+
+-- One Battle.net resolver cache serves the whole pass, so the friend list is
+-- walked once instead of once per contact. A fresh cache replaces whatever a
+-- failed pass left behind, and it is dropped before returning: friend state
+-- changes between frames.
+function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContactsFn)
+  runtime.bnetPassCache = BNetResolver.NewPassCache()
+  local state = buildSelectionState(runtime, contacts, buildContactsFn)
+  runtime.bnetPassCache = nil
+  return state
 end
 
 ns.ContactEnricher = ContactEnricher

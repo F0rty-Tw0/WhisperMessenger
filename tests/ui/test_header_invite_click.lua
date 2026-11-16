@@ -106,9 +106,11 @@ return function()
     local contact = { displayName = "Arthas", conversationKey = "wow::WOW::arthas", channel = "WOW", peerHasAddon = false }
     local invited = {}
     local view = ConversationPane.Create(factory, paneParent, contact, { messages = {} }, {
-      onInviteContact = function(target)
-        table.insert(invited, target)
-      end,
+      rowActions = {
+        onInviteContact = function(target)
+          table.insert(invited, target)
+        end,
+      },
     })
 
     clickBadge(view)

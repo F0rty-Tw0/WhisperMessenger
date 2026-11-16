@@ -1,7 +1,7 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local Protocol = require("WhisperMessenger.Model.MessageReactionProtocol")
 local Router = require("WhisperMessenger.Core.EventRouter")
-local QuestLinkClassic = require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
+local QuestLinkClassic = require("WhisperMessenger.Model.QuestLinkText")
 
 local function newState()
   return {

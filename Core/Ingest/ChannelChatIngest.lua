@@ -17,8 +17,8 @@ local SeenLevelEvents = ns.SeenLevelEvents or require("WhisperMessenger.Core.See
 -- stylua: ignore start
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
-local Mention = ns.GroupChatIngestMention or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Mention")
-local ChannelKey = ns.ChannelChatIngestChannelKey or require("WhisperMessenger.Core.Ingest.ChannelChatIngest.ChannelKey")
+local Mention = ns.GroupChatIngestMention or require("WhisperMessenger.Model.Mention")
+local ChannelKey = ns.ChannelChatIngestChannelKey or require("WhisperMessenger.Model.Identity.ChannelKey")
 -- stylua: ignore end
 
 -- Public channel lines (Trade, General, custom channels) become one CHANNEL

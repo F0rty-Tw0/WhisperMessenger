@@ -72,8 +72,8 @@ local function senderMenuGetsBlockState()
   TranscriptSetup.BindPlayerMenu(transcript, { _selectedContact = { channel = "CHANNEL" } }, options)
   transcript.openPlayerMenu({ direction = "in", playerName = "Hilan" }, nil)
   rawset(PlayerMenu, "Open", originalOpen)
-  assert(captured.isPlayerBlocked == options.isPlayerBlocked, "sender menu can tell who is blocked")
-  assert(captured.onUnblockPlayer == options.onUnblockPlayer, "sender menu can unblock")
+  assert(captured.rowActions.isPlayerBlocked == options.isPlayerBlocked, "sender menu can tell who is blocked")
+  assert(captured.rowActions.onUnblockPlayer == options.onUnblockPlayer, "sender menu can unblock")
 end
 
 -- test_blocked_sender_has_no_block_sender (run from the main function)
@@ -169,10 +169,12 @@ return function()
       return true
     end)
     local transcript = {}
-    TranscriptSetup.BindPlayerMenu(transcript, { _selectedContact = { channel = "CHANNEL" } }, { onIgnorePlayer = onIgnorePlayer })
+    local rowActions = { onIgnorePlayer = onIgnorePlayer }
+    TranscriptSetup.BindPlayerMenu(transcript, { _selectedContact = { channel = "CHANNEL" } }, rowActions)
     transcript.openPlayerMenu(incoming, parent)
     rawset(PlayerMenu, "Open", realOpen)
-    assert(passed and passed.onIgnorePlayer == onIgnorePlayer, "the name menu can offer our Ignore…")
+    assert(passed and passed.rowActions == rowActions, "the name menu gets the row actions table, Ignore… included")
+    assert(passed.onIgnorePlayer == nil, "the actions travel only inside that table")
   end
 
   rawset(_G, "MenuUtil", nil)

@@ -1,3 +1,4 @@
+local FakeScanResolver = require("tests.helpers.fake_scan_resolver")
 local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
 local Identity = require("WhisperMessenger.Model.Identity")
 
@@ -24,11 +25,9 @@ return function()
   local deps = {
     loadModule = function(modulePath)
       if string.find(modulePath, "BNetResolver", 1, true) then
-        return {
-          ScanFriendList = function()
-            return { ["Friend#1"] = { bnetAccountID = 42, accountInfo = { battleTag = "Friend#1" } } }
-          end,
-        }
+        return FakeScanResolver.New(function()
+          return { ["Friend#1"] = { bnetAccountID = 42, accountInfo = { battleTag = "Friend#1" } } }
+        end)
       end
       return require(modulePath)
     end,

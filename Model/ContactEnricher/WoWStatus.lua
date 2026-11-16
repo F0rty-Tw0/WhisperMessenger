@@ -8,6 +8,9 @@ local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
 local SeenZone = ns.SeenZone or require("WhisperMessenger.Model.SeenZone")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
+local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
+local Disambiguation = ns.ContactEnricherDisambiguation or require("WhisperMessenger.Model.ContactEnricher.Disambiguation")
 
 local WoWStatus = {}
 
@@ -29,7 +32,6 @@ function WoWStatus.ResolveGuild(availability, itemFaction, localFaction)
   if availability.status ~= "CanWhisperGuild" then
     return availability
   end
-  local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
   local isSameFaction = itemFaction ~= nil and itemFaction ~= "" and itemFaction == localFaction
 
   return Availability.FromStatus(isSameFaction and "CanWhisper" or "XFaction")
@@ -40,8 +42,6 @@ end
 -- WrongFaction/Offline disambiguation via the Disambiguation helper.
 -- Called when: item.guid and runtime.availabilityByGUID[item.guid] is set.
 function WoWStatus.ApplyCached(item, runtime)
-  local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
-  local Disambiguation = ns.ContactEnricherDisambiguation or require("WhisperMessenger.Model.ContactEnricher.Disambiguation")
   local localFaction = runtime.localFaction
 
   item.availability = WoWStatus.ResolveGuild(runtime.availabilityByGUID[item.guid], item.factionName, localFaction)
@@ -87,7 +87,6 @@ end
 -- Uses guild/community presence as an initial status estimate.
 -- Called when: item.guid set, item.channel ~= "BN", and no entry in availabilityByGUID.
 function WoWStatus.ApplyPresenceFallback(item, runtime)
-  local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
   local localFaction = runtime.localFaction
 
   -- No cached availability yet; use guild/community presence as initial status
@@ -115,9 +114,7 @@ end
 -- Copy the zone the last /who showed, only while no live zone is known and
 -- the /who lookup option is on. Online and Last seen from /who follow it.
 -- Kept apart from areaName so contact rows and tooltips never show it.
--- WhoLookup loads after this file.
 function WoWStatus.ApplySeenZone(item)
-  local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
   if not WhoLookup.IsEnabled() or (item.areaName and item.areaName ~= "") then
     item.whoArea, item.whoAreaAt = nil, nil
 

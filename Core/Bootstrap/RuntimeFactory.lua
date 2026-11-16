@@ -12,7 +12,25 @@ local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.
 local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.OutgoingDelivery")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local RulePresets = ns.RulePresets or require("WhisperMessenger.Model.Filters.RulePresets")
+local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
+local PanelRegistry = ns.BootstrapWindowRuntimePanelRegistry or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelRegistry")
+local OptionalFields = ns.BootstrapRuntimeFactoryOptionalFields or require("WhisperMessenger.Core.Bootstrap.RuntimeFactory.OptionalFields")
 local RuntimeFactory = {}
+
+-- Session maps keyed by conversation, declared in CreateRuntimeState and
+-- cleared here when a chat is removed: the alert throttle, "notify when
+-- online" state and the contacts known to run the addon.
+local SESSION_MAPS_BY_CONVERSATION = { "lastAlertAtByConversation", "onlineWatch", "livePresencePeers" }
+
+-- Every runtime field has a default in CreateRuntimeState or is named in
+-- OPTIONAL_FIELDS; tests/core/test_runtime_shape.lua fails on any other.
+RuntimeFactory.OPTIONAL_FIELDS = OptionalFields
+
+local function noop() end
+
+local function returnFalse()
+  return false
+end
 
 local function currentTime()
   if type(_G["time"]) == "function" then
@@ -64,6 +82,17 @@ local function conversationOwnsGUID(store, guid)
     end
   end
   return false
+end
+
+-- A panel whose addon lost its integration permission is inactive. Read at
+-- call time: PublicApi.Publish sets the integration registry later.
+local function isPanelActive(runtime, key)
+  local registry = runtime.addonIntegrations
+  if registry == nil then
+    return true
+  end
+  local owner = registry.ownerOf("panel", key)
+  return owner == nil or registry.isAllowed(owner)
 end
 
 function RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
@@ -118,31 +147,93 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
 
   OutgoingDelivery.SetLocalProfileId(localProfileId)
 
-  local runtime = {
+  local runtime
+  runtime = {
+    -- Identity
     accountState = accountState,
     characterState = characterState,
     localProfileId = localProfileId,
     localPlayerGuid = localPlayerGuid,
     localBnetAccountID = localBnetAccountID,
     getBNetInfo = getBNetInfo,
-    activeConversationKey = characterState.activeConversationKey,
-    groupPartyGUIDsByCategory = characterState.groupPartyGUIDs,
-    pendingOutgoing = {},
-    sendStatusByConversation = {},
-    availabilityByGUID = {},
+    localFaction = options.localFaction or (type(_G["UnitFactionGroup"]) == "function" and _G["UnitFactionGroup"]("player") or nil),
+    now = nowFn,
+
+    -- Game APIs
     chatApi = options.chatApi or _G.C_ChatInfo or {},
     bnetApi = options.bnetApi or _G.C_BattleNet or {},
     friendListApi = options.friendListApi or _G.C_FriendList or {},
     playerInfoByGUID = options.playerInfoByGUID or _G.GetPlayerInfoByGUID,
-    localFaction = options.localFaction or (type(_G["UnitFactionGroup"]) == "function" and _G["UnitFactionGroup"]("player") or nil),
+
+    -- Stores
     store = store,
     channelMessageStore = channelMessageStore,
-    -- Duplicate-collapse index: session only, rebuilt lazily per chat.
+    activeConversationKey = characterState.activeConversationKey,
+    groupPartyGUIDsByCategory = characterState.groupPartyGUIDs,
+    contactInfo = ContactInfo.New(),
+    panelRegistry = PanelRegistry.New({
+      isActive = function(key)
+        return isPanelActive(runtime, key)
+      end,
+    }),
+
+    -- Session caches: gone on reload.
+    pendingOutgoing = {},
+    pendingGroupOutgoing = {},
+    sendStatusByConversation = {},
+    availabilityByGUID = {},
+    availabilityRequestedAt = {},
+    -- Duplicate-collapse index: rebuilt lazily per chat.
     collapseIndex = {},
-    now = nowFn,
+    typingByConversation = {},
+    typingExpiryPending = {},
+    typingOut = {},
+    livePresencePeers = {},
+    lastAlertAtByConversation = {},
+    onlineWatch = {},
+    relationshipCache = {},
+    questLinkInbox = {},
+    questLinkCleanupScheduled = false,
+    replyLinksStaged = {},
+    addonGreetingInbox = {},
+    addonGreetingLate = {},
+    messageReactionWireSequence = 0,
+    queuedSendsLocked = false,
+    zoneRosterPollPending = false,
+
+    -- Restriction predicates. Bootstrap.Initialize points them at the
+    -- restriction instance once the window runtime is built.
     isMythicLockdown = options.isMythicLockdown or function()
       return ContentDetector.IsMythicRestricted(_G.GetInstanceInfo)
     end,
+    isCompetitiveContent = returnFalse,
+    isChannelIngestSuspended = returnFalse,
+
+    -- Window controller: does nothing until WindowRuntime binds it.
+    toggle = noop,
+    toggleTargetKey = noop,
+    setWindowVisible = noop,
+    refreshWindow = noop,
+    scheduleIncomingRefresh = noop,
+    updateIconSurfaces = noop,
+    setComposerText = noop,
+    startConversation = returnFalse,
+    canReact = returnFalse,
+    getWidgetIcon = noop,
+    getGroupSendNotice = noop,
+
+    -- Callbacks other modules replace with their own.
+    syncChatFilters = noop,
+    syncReplyKey = noop,
+    suspend = noop,
+    resume = noop,
+    onAvailabilityChanged = noop,
+    onAutoOpen = noop,
+    onAutoOpenOutgoing = noop,
+    ---@type fun(conversationKey: string)
+    onConversationRemoved = noop,
+    onReactionFallbackDegraded = noop,
+    onGroupReactionFallbackDegraded = noop,
   }
 
   local function clearGUIDCachesIfUnowned(guid)
@@ -161,6 +252,12 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     end
     runtime.sendStatusByConversation[key] = nil
     runtime.collapseIndex[key] = nil
+    for _, field in ipairs(SESSION_MAPS_BY_CONVERSATION) do
+      local map = runtime[field]
+      if map then
+        map[key] = nil
+      end
+    end
 
     clearGUIDCachesIfUnowned(conversation.guid)
 

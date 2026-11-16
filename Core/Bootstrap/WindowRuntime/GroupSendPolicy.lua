@@ -6,7 +6,7 @@ local ChatGateway = ns.ChatGateway or require("WhisperMessenger.Transport.ChatGa
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local Pending = ns.BootstrapWindowRuntimeGroupSendPending or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPending")
 
 local GroupSendPolicy = {}
@@ -105,24 +105,23 @@ function GroupSendPolicy.Create(options)
 
     -- COMMUNITY is receive-only: replies go through the Communities window.
     if channel == ChannelType.COMMUNITY then
-      return Localization and Localization.Text("Read-only here. Reply in the game's Communities window.")
-        or "Read-only here. Reply in the game's Communities window."
+      return Localization.Text("Read-only here. Reply in the game's Communities window.")
     end
 
     -- Foreign-character group history is read-only from this character.
     if isForeignCharacterGroup(runtime, conversation, getPlayerGuildName) then
-      return Localization and Localization.Text("Another character's history — read-only.") or "Another character's history — read-only."
+      return Localization.Text("Another character's history — read-only.")
     end
 
     -- A GUID-scoped conversation stays closed after the character joins a
     -- later group of the same channel type.
     if conversation.leftGroup then
-      return Localization and Localization.Text("Historical group chat — read-only.") or "Historical group chat — read-only."
+      return Localization.Text("Historical group chat — read-only.")
     end
 
     if not chatGateway.CanSend(runtime.chatApi, conversation) then
       local key = channel == ChannelType.CHANNEL and "Not in this channel — can't send." or "Not in group — can't send."
-      return Localization and Localization.Text(key) or key
+      return Localization.Text(key)
     end
 
     return nil

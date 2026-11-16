@@ -12,10 +12,15 @@ return function()
   local reacted = nil
   local copiedStates = {}
 
-  local runtime = {
+  local characterState = {
     activeConversationKey = "wow::WOW::jaina",
-    store = Store.New({ maxMessagesPerConversation = 10 }),
+    contactsTabMode = "whispers",
+    window = { x = 1 },
+    icon = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0 },
   }
+  -- A real runtime: removing a conversation clears its selection through the
+  -- store's removal hook, which only RuntimeFactory installs.
+  local runtime = RuntimeFactory.CreateRuntimeState({ conversations = {} }, characterState, "wow", { maxMessagesPerConversation = 10 })
   runtime.store.conversations["wow::WOW::jaina"] = {
     conversationKey = "wow::WOW::jaina",
     displayName = "Jaina",
@@ -33,12 +38,6 @@ return function()
     unreadCount = 0,
   }
 
-  local characterState = {
-    activeConversationKey = "wow::WOW::jaina",
-    contactsTabMode = "whispers",
-    window = { x = 1 },
-    icon = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0 },
-  }
   local defaultCharacterState = {
     window = { x = 10, y = 20 },
     icon = { anchorPoint = "TOPLEFT", relativePoint = "TOPLEFT", x = 25, y = -40 },

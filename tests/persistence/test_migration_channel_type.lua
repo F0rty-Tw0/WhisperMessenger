@@ -16,8 +16,6 @@ return function()
       conversations = {
         ["wow::WOW::arthas-area52"] = { messages = {} },
       },
-      contacts = {},
-      pendingHydration = {},
       channelMessages = {},
     }
 
@@ -36,8 +34,6 @@ return function()
       conversations = {
         ["bnet::BN::jaina#1234"] = { messages = {} },
       },
-      contacts = {},
-      pendingHydration = {},
       channelMessages = {},
     }
 
@@ -57,8 +53,6 @@ return function()
         ["wow::WOW::foo-realm"] = { messages = {} },
         ["bnet::BN::bar#1"] = { messages = {} },
       },
-      contacts = {},
-      pendingHydration = {},
       channelMessages = {},
     }
 
@@ -75,8 +69,6 @@ return function()
       conversations = {
         ["wow::WOW::somechar-realm"] = { messages = {}, channel = "GUILD" },
       },
-      contacts = {},
-      pendingHydration = {},
       channelMessages = {},
     }
 
@@ -93,8 +85,6 @@ return function()
     local accountState = {
       schemaVersion = 4,
       conversations = {},
-      contacts = {},
-      pendingHydration = {},
       channelMessages = {},
     }
 
@@ -108,8 +98,6 @@ return function()
     local accountState = {
       schemaVersion = 4,
       conversations = nil,
-      contacts = {},
-      pendingHydration = {},
       channelMessages = {},
     }
 
@@ -135,8 +123,6 @@ return function()
         ["alice-stormrage::WOW::bob-stormrage"] = { messages = {} },
         ["alice-stormrage::BN::jaina#1234"] = { messages = {} },
       },
-      contacts = {},
-      pendingHydration = {},
       channelMessages = {},
     }
 
@@ -155,8 +141,6 @@ return function()
         ["wow::WOW::arthas-area52"] = { channel = "WHISPER", messages = {} },
         ["bnet::BN::jaina#1234"] = { channel = "BN_WHISPER", messages = {} },
       },
-      contacts = {},
-      pendingHydration = {},
       channelMessages = {},
     }
 
@@ -194,8 +178,6 @@ return function()
           messages = {},
         },
       },
-      contacts = {},
-      pendingHydration = {},
       channelMessages = {},
     }
     Migrations.Apply(accountState, Schema)

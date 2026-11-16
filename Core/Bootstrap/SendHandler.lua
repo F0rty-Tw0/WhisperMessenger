@@ -8,7 +8,7 @@ local Router = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local Gateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
-local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
+local QuestLinkText = ns.QuestLinkText or require("WhisperMessenger.Model.QuestLinkText")
 local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
 local MessageReactionProtocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
@@ -108,21 +108,21 @@ local function normalizeOutgoingText(payload, text)
   end
   local isClassicCharacterWhisper = FlavorCompat.isClassic and (payload.channel == nil or payload.channel == "WOW")
   if isClassicCharacterWhisper then
-    return QuestLinkClassic.Serialize(text)
+    return QuestLinkText.Serialize(text)
   end
-  return QuestLinkClassic.Rewrite(text)
+  return QuestLinkText.Rewrite(text)
 end
 
 local function canonicalReactionText(text)
-  if type(QuestLinkClassic.CanonicalizeForTransport) == "function" then
-    return QuestLinkClassic.CanonicalizeForTransport(text)
+  if type(QuestLinkText.CanonicalizeForTransport) == "function" then
+    return QuestLinkText.CanonicalizeForTransport(text)
   end
   return text
 end
 
 local function canonicalTargetText(text)
-  if type(QuestLinkClassic.Serialize) == "function" then
-    return QuestLinkClassic.Serialize(text)
+  if type(QuestLinkText.Serialize) == "function" then
+    return QuestLinkText.Serialize(text)
   end
   return text
 end

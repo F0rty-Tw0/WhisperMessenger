@@ -116,30 +116,7 @@ function ContactsRuntime.Create(factory, options)
         options.onSelect(item)
       end
     end,
-    onPin = function(item)
-      if options.onPin then
-        options.onPin(item)
-      end
-    end,
-    onRemove = function(item)
-      if options.onRemove then
-        options.onRemove(item)
-      end
-    end,
-    onMarkUnread = function(item)
-      if options.onMarkUnread then
-        options.onMarkUnread(item)
-      end
-    end,
-    onUpdatePrefs = function(item, changes)
-      if options.onUpdatePrefs then
-        options.onUpdatePrefs(item, changes)
-      end
-    end,
-    onIgnorePlayer = options.onIgnorePlayer,
-    onUnblockPlayer = options.onUnblockPlayer,
-    isPlayerBlocked = options.isPlayerBlocked,
-    whoPlayer = options.whoPlayer,
+    rowActions = options.rowActions,
     onReorder = function(orders)
       if options.onReorder then
         options.onReorder(orders)

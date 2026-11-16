@@ -1,5 +1,4 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local FindUI = require("tests.helpers.find_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local LayoutBuilder = require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
 local Composer = require("WhisperMessenger.UI.Composer")
@@ -57,7 +56,7 @@ local function assertModern(ui, label)
   assert(ui.layout.contactsDivider.shown ~= false, label .. ": one sidebar hairline stays")
   assert(shownSides(ui.composer.border) == "top", label .. ": composer keeps only its top hairline, got " .. shownSides(ui.composer.border))
   assert(ui.composer.inputBg == nil, label .. ": no square input fill")
-  assert(FindUI.ofType(ui.composer.input, "Texture")[1] ~= nil, label .. ": input uses a soft rounded fill")
+  assert(ui.composer.inputFill and ui.composer.inputFill.fills[1] ~= nil, label .. ": input uses a soft rounded fill")
   assert(shownSides(ui.headerBorder) == "bottom", label .. ": header keeps only a bottom hairline, got " .. shownSides(ui.headerBorder))
   -- One subtle gloss sheen per bar (title bar, conversation header, composer).
   -- Title bar regions in creation order: background, sheen, title.

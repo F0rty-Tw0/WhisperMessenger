@@ -5,6 +5,7 @@ end
 
 local FilterApi = ns.BootstrapChatFilterApi or require("WhisperMessenger.Core.Bootstrap.ChatFilters.FilterApi")
 local ConditionalFilters = ns.BootstrapChatFiltersConditionalFilters or require("WhisperMessenger.Core.Bootstrap.ChatFilters.ConditionalFilters")
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 local ChatFilters = {}
 
@@ -71,13 +72,11 @@ function ChatFilters.Configure(Bootstrap, accountState, runtime)
     unregisterWhisperFilters()
   end
 
+  -- Filters are off wherever sends are held back (flags, 12.0 event cache or
+  -- API, chat lock) and while the Mythic+ suspend is in force. The instance is
+  -- looked up per call: Bootstrap.Initialize installs a new one per runtime.
   Bootstrap.syncChatFilters = function()
-    local chatLocked = runtime ~= nil and type(runtime.isChatLocked) == "function" and runtime.isChatLocked()
-    local allowed = not Bootstrap._inCompetitiveContent
-      and not Bootstrap._inMythicContent
-      and not Bootstrap._inEncounter
-      and not _G._wmSuspended
-      and not chatLocked
+    local allowed = not RestrictedActions.For(Bootstrap).isRestricted() and not _G._wmSuspended
     local shouldFilter = accountState.settings.hideFromDefaultChat == true and allowed and not Bootstrap._whisperFiltersDisabled
 
     if shouldFilter and not Bootstrap._filtersRegistered then

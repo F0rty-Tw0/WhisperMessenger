@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local RestrictionState = require("tests.helpers.restriction_state")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 
 return function()
@@ -22,8 +23,6 @@ return function()
       accountState = {
         schemaVersion = 1,
         conversations = {},
-        contacts = {},
-        pendingHydration = {},
         settings = { hideFromDefaultChat = true },
       },
       characterState = {
@@ -71,8 +70,6 @@ return function()
       accountState = {
         schemaVersion = 1,
         conversations = {},
-        contacts = {},
-        pendingHydration = {},
         settings = { hideFromDefaultChat = false },
       },
       characterState = {
@@ -116,8 +113,6 @@ return function()
       accountState = {
         schemaVersion = 1,
         conversations = {},
-        contacts = {},
-        pendingHydration = {},
         settings = { hideFromDefaultChat = true },
       },
       characterState = {
@@ -147,10 +142,10 @@ return function()
     Bootstrap.registerChatFilters()
     assert(Bootstrap._filtersRegistered == true, "filters should be registered before competitive test")
 
-    Bootstrap._inCompetitiveContent = true
+    RestrictionState.Set(Bootstrap, { competitive = true })
     Bootstrap.syncChatFilters()
     assert(Bootstrap._filtersRegistered == false, "syncChatFilters should unregister during competitive content (pvp/arena)")
-    Bootstrap._inCompetitiveContent = nil
+    RestrictionState.Set(Bootstrap, {})
   end
 
   -- test_sync_re_registers_when_leaving_competitive_content

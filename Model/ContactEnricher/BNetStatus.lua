@@ -3,6 +3,10 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
+local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
+
 local BNetStatus = {}
 
 -- True only while the friend is logged into a WoW character. Offline friends
@@ -46,7 +50,6 @@ function BNetStatus.ApplyGameInfoMetadata(target, gameInfo, runtime)
     target.areaName = gameInfo.areaName
   end
   local guid = gameInfo.playerGuid or target.guid
-  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
   local playerInfo = guid and BNetResolver.ResolvePlayerInfo(runtime.playerInfoByGUID, guid)
   if playerInfo and playerInfo.classTag then
     target.classTag = playerInfo.classTag
@@ -70,11 +73,9 @@ end
 -- accountInfo is nil.
 -- Called when: item.channel == "BN" and item.bnetAccountID is set.
 function BNetStatus.Apply(item, runtime)
-  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
-  local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
-  local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
-
-  local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid, item.battleTag or item.displayName)
+  -- runtime.bnetPassCache: set only while a window refresh pass is running.
+  local accountInfo =
+    BNetResolver.ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid, item.battleTag or item.displayName, runtime.bnetPassCache)
   if accountInfo then
     if accountInfo.bnetAccountID then
       item.bnetAccountID = accountInfo.bnetAccountID

@@ -42,8 +42,8 @@ local function buildWindow(nativeChrome, withMessage, style)
 end
 
 local function hasNativeInputBorder(composer)
-  return FindUI.find(composer.input, function(node)
-    return node.texturePath == ComposerSurface.NATIVE_BORDER_TEXTURE
+  return FindUI.find(composer.box, function(node)
+    return node.texturePath == ComposerSurface.NATIVE_INPUT_BORDER.top
   end) ~= nil
 end
 

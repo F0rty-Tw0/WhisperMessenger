@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
 local ReloadPrompt = ns.ReloadPrompt or require("WhisperMessenger.UI.Shared.ReloadPrompt")
 
@@ -15,7 +15,7 @@ local IntegrationAccess = {}
 local QUESTION = "Reload the interface now to apply the addon integration change?"
 
 local function text(key)
-  return Localization and Localization.Text(key) or key
+  return Localization.Text(key)
 end
 
 -- Each step runs alone: one raising step stops no other.

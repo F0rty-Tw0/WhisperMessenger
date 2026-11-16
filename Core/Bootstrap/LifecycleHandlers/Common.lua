@@ -3,11 +3,12 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local function L(key)
-  return Localization and Localization.Text(key) or key
+  return Localization.Text(key)
 end
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local Common = {}
 
 Common.COMPETITIVE_NOTICE = "Messages are paused in competitive content and will resume when you leave."
@@ -27,17 +28,17 @@ function Common.scheduleAfter(delay, callback)
   return false
 end
 
+-- The notice and the icon follow the same answer that holds sends back:
+-- detection flags, the 12.0 event cache or API, and the chat lock.
 function Common.notifyCompetitiveState(Bootstrap)
-  local runtime = Bootstrap.runtime
-  local chatLocked = runtime ~= nil and type(runtime.isChatLocked) == "function" and runtime.isChatLocked()
-  local isActive = Bootstrap._inCompetitiveContent == true
-    or Bootstrap._inMythicContent == true
-    or Bootstrap._inEncounter == true
-    or chatLocked == true
+  local restrictions = RestrictedActions.For(Bootstrap)
+  local isActive = restrictions.isRestricted()
 
   -- Set/clear the messaging notice on the runtime (visible banner in messenger).
-  -- Skip if mythic suspend already owns the notice (its own suspend/resume manages it).
-  if Bootstrap.runtime and not Bootstrap._inMythicContent then
+  -- Skip if mythic suspend already owns the notice (its own suspend/resume
+  -- manages it). That is the mythic flag, not isMythic(): a key only the game
+  -- reports has had no suspend, so nothing else would show a notice.
+  if Bootstrap.runtime and not restrictions.flag("mythic") then
     if isActive then
       Bootstrap.runtime.messagingNotice = L(Common.COMPETITIVE_NOTICE)
     else

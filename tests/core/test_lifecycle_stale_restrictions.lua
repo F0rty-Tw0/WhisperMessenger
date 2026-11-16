@@ -21,14 +21,7 @@ local apiActive = {}
 local deferred = {}
 
 local function newBootstrap()
-  local restrictedActions = RestrictedActions.New()
-  return {
-    runtime = {
-      restrictedActions = restrictedActions,
-      suspend = function() end,
-      resume = function() end,
-    },
-  }
+  return { runtime = { suspend = function() end, resume = function() end } }
 end
 
 local function event(Bootstrap, restrictionType, state)
@@ -74,7 +67,7 @@ return function()
     event(Bootstrap, CHALLENGE_MODE, ACTIVE)
     event(Bootstrap, ENCOUNTER, ACTIVE)
     enterWorld(Bootstrap)
-    local restrictedActions = Bootstrap.runtime.restrictedActions
+    local restrictedActions = RestrictedActions.For(Bootstrap)
     assert(restrictedActions.isMythic() == false, "a Mythic+ lock the game no longer reports must clear")
     assert(restrictedActions.isCompetitive() == false, "a boss lock the game no longer reports must clear")
   end
@@ -85,7 +78,7 @@ return function()
     local Bootstrap = newBootstrap()
     event(Bootstrap, ENCOUNTER, ACTIVE)
     enterWorld(Bootstrap)
-    assert(Bootstrap.runtime.restrictedActions.isCompetitive() == true, "a lock the game still reports must stay")
+    assert(RestrictedActions.For(Bootstrap).isCompetitive() == true, "a lock the game still reports must stay")
   end
 
   -- test_lock_survives_without_the_api
@@ -97,7 +90,7 @@ return function()
     _G.C_RestrictedActions = nil
     enterWorld(Bootstrap)
     _G.C_RestrictedActions = api
-    assert(Bootstrap.runtime.restrictedActions.isCompetitive() == true, "without the API a cached lock must stay")
+    assert(RestrictedActions.For(Bootstrap).isCompetitive() == true, "without the API a cached lock must stay")
   end
 
   -- test_stale_activating_clears_after_grace
@@ -107,9 +100,9 @@ return function()
     local Bootstrap = newBootstrap()
     event(Bootstrap, CHALLENGE_MODE, ACTIVATING)
     enterWorld(Bootstrap)
-    assert(Bootstrap.runtime.restrictedActions.isMythic() == true, "Activating must survive entering the world")
+    assert(RestrictedActions.For(Bootstrap).isMythic() == true, "Activating must survive entering the world")
     flushTimers()
-    assert(Bootstrap.runtime.restrictedActions.isMythic() == false, "Activating with no follow-up event must clear after the grace")
+    assert(RestrictedActions.For(Bootstrap).isMythic() == false, "Activating with no follow-up event must clear after the grace")
   end
 
   -- test_activating_grace_keeps_a_fresh_event
@@ -121,7 +114,7 @@ return function()
     enterWorld(Bootstrap)
     event(Bootstrap, CHALLENGE_MODE, ACTIVATING)
     flushTimers()
-    assert(Bootstrap.runtime.restrictedActions.isMythic() == true, "a fresh Activating event must not be cleared by the grace")
+    assert(RestrictedActions.For(Bootstrap).isMythic() == true, "a fresh Activating event must not be cleared by the grace")
   end
 
   _G.C_RestrictedActions = saved.restricted

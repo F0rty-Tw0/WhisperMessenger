@@ -4,6 +4,7 @@
 -- character's spot; toggle on: A = copy(P), so nothing jumps).
 
 local FakeUI = require("tests.helpers.fake_ui")
+local PanelRegistry = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelRegistry")
 local WindowRuntime = require("WhisperMessenger.Core.Bootstrap.WindowRuntime")
 
 local function fakeCoordinatorModule(trackers)
@@ -86,7 +87,13 @@ local function build(accountExtras, characterState)
   for key, value in pairs(accountExtras) do
     accountState[key] = value
   end
-  local runtime = { accountState = accountState, localProfileId = "me", chatApi = {}, store = { conversations = {}, config = {} } }
+  local runtime = {
+    accountState = accountState,
+    localProfileId = "me",
+    chatApi = {},
+    store = { conversations = {}, config = {} },
+    panelRegistry = PanelRegistry.New(),
+  }
   local trackers = { widgetPoints = {}, minimapApplied = {} }
   local factory = FakeUI.NewFactory()
   local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
@@ -99,7 +106,7 @@ local function build(accountExtras, characterState)
     defaultCharacterState = { window = {}, icon = {} },
     uiFactory = factory,
     uiParent = uiParent,
-    bootstrap = { _inMythicContent = false },
+    bootstrap = {},
     contactsList = {
       BuildItemsForProfile = function()
         return {}

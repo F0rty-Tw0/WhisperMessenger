@@ -1,14 +1,13 @@
+local FakeScanResolver = require("tests.helpers.fake_scan_resolver")
 local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
 
 local function makeDeps(friendMap)
   return {
     loadModule = function(modulePath)
       if string.find(modulePath, "BNetResolver", 1, true) then
-        return {
-          ScanFriendList = function()
-            return friendMap
-          end,
-        }
+        return FakeScanResolver.New(function()
+          return friendMap
+        end)
       end
       return require(modulePath)
     end,

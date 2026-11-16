@@ -1,4 +1,5 @@
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
+local WhoAsked = require("WhisperMessenger.Transport.WhoAsked")
 local Env = require("tests.helpers.who_lookup_env")
 
 local KEY = "me::WOW::firstmoon"
@@ -195,7 +196,56 @@ local function test_init_without_hooksecurefunc()
   end)
 end
 
+local ASK_GAP_SECONDS = 10
+
+-- Asks about `count` different players, each answered, ASK_GAP_SECONDS apart.
+local function askMany(env, count)
+  for index = 1, count do
+    local key = "me::WOW::player" .. index
+    Env.AddStranger(env, key, "Player" .. index)
+    assert(WhoLookup.TryFor(env.runtime, key) == true, "ask " .. index .. " should go out")
+    WhoLookup.OnWhoListUpdate()
+    Env.RunAfters(env)
+    env.clock = env.clock + ASK_GAP_SECONDS
+    Env.FireDueTimers(env)
+  end
+end
+
+local function test_last_asked_is_capped()
+  Env.Case("asked cap", nil, function(env)
+    askMany(env, WhoAsked.MAX_ENTRIES + 50)
+    assert(WhoAsked.Count() <= WhoAsked.MAX_ENTRIES, "remembered names stay under the cap, got " .. WhoAsked.Count())
+  end)
+end
+
+local function test_cap_keeps_names_asked_within_ten_minutes()
+  Env.Case("cap keeps fresh names", nil, function(env)
+    local count = WhoAsked.MAX_ENTRIES + 50
+    askMany(env, count)
+    local sent = #env.sent
+    -- Asked 500 s ago: the cap dropped older names, never this one.
+    assert(WhoLookup.TryFor(env.runtime, "me::WOW::player" .. (count - 49)) == false, "a name asked 500 s ago is still fresh")
+    assert(WhoLookup.TryFor(env.runtime, "me::WOW::player" .. count) == false, "the newest name is still fresh")
+    assert(#env.sent == sent, "no extra /who goes out")
+    assert(WhoLookup.TryFor(env.runtime, "me::WOW::player1") == true, "a name asked over ten minutes ago is asked again")
+  end)
+end
+
+local function test_unanswered_who_is_not_remembered()
+  Env.Case("unanswered not counted", nil, function(env)
+    Env.AddStranger(env, KEY, "Firstmoon")
+    assert(WhoLookup.TryFor(env.runtime, KEY) == true)
+    assert(WhoAsked.Count() == 1)
+    env.clock = env.clock + WhoLookup.WINDOW_SECONDS + 1
+    Env.FireDueTimers(env)
+    assert(WhoAsked.Count() == 0, "a /who with no answer leaves nothing behind")
+  end)
+end
+
 return function()
+  test_last_asked_is_capped()
+  test_cap_keeps_names_asked_within_ten_minutes()
+  test_unanswered_who_is_not_remembered()
   test_query_hides_friends_frame_until_result()
   test_cleanup_restores_false_without_get_who_to_ui()
   test_cleanup_keeps_who_to_ui_on_while_who_panel_shown()

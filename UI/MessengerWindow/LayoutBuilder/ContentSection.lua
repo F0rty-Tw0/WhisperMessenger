@@ -39,7 +39,7 @@ function ContentSection.Build(factory, contentParent, contactsPane, sizing, opti
   threadPane:SetPoint("TOPLEFT", contentPane, "TOPLEFT", 0, 0)
 
   local composerPane = factory.CreateFrame("Frame", nil, contentPane)
-  composerPane:SetSize(contentWidth, theme.COMPOSER_HEIGHT)
+  composerPane:SetSize(contentWidth, sizing.composerHeight or theme.COMPOSER_HEIGHT)
   composerPane:SetPoint("BOTTOMLEFT", contentPane, "BOTTOMLEFT", 0, 0)
   -- Dual-anchor both edges flush with contentPane so the composer container
   -- extends to the window's bottom-right corner. The resize grip sits on

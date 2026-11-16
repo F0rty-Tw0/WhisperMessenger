@@ -17,6 +17,7 @@ LIGHT_STRENGTH = 0.22
 SQUARE_BAND = 0.10  # frame band as a share of the side
 CORNER_RATIO = 0.05  # corner radius as a share of the side
 GLOW_SIZE = 64
+BYTES_PER_PIXEL = 4  # 8-bit RGBA
 # Edge glow, distance inside the edge as a share of the side -> alpha 0-255.
 # Sampled from the circle's inner-glow.png.
 GLOW_PROFILE = [
@@ -130,14 +131,62 @@ def square_rounded_pixel(x, y, size):
     return r, g, b, a * clamp01(outer + 0.5)
 
 
+def paeth(left, up, up_left):
+    """PNG Paeth predictor: whichever neighbour is nearest to left + up - up_left."""
+    estimate = left + up - up_left
+    to_left, to_up, to_up_left = abs(estimate - left), abs(estimate - up), abs(estimate - up_left)
+    if to_left <= to_up and to_left <= to_up_left:
+        return left
+    return up if to_up <= to_up_left else up_left
+
+
+def filter_cost(data):
+    """Sum of the bytes read as signed values: lower tends to compress better."""
+    return sum(value if value < 128 else 256 - value for value in data)
+
+
+def filter_row(row, prior):
+    """One PNG scanline: the filter type byte plus the row under the cheapest filter.
+
+    Tries None (0), Sub (1), Up (2) and Paeth (4) against the row above (`prior`).
+    """
+    blank = bytes(BYTES_PER_PIXEL)
+    left = blank + row[:-BYTES_PER_PIXEL]
+    up_left = blank + prior[:-BYTES_PER_PIXEL]
+    candidates = [
+        (0, row),
+        (1, bytes((value - a) & 255 for value, a in zip(row, left))),
+        (2, bytes((value - b) & 255 for value, b in zip(row, prior))),
+        (4, bytes((value - paeth(a, b, c)) & 255 for value, a, b, c in zip(row, left, prior, up_left))),
+    ]
+    kind, data = min(candidates, key=lambda candidate: filter_cost(candidate[1]))
+    return bytes([kind]) + data
+
+
+def compress_rows(width, rows):
+    """zlib stream of the PNG scanlines for rows of RGBA bytes.
+
+    Row filters shrink smooth art but grow flat art, so both ways are tried and
+    the smaller stream wins.
+    """
+    plain, filtered = [], []
+    prior = bytes(width * BYTES_PER_PIXEL)
+    for row in rows:
+        plain.append(b"\x00" + row)
+        filtered.append(filter_row(row, prior))
+        prior = row
+    return min(zlib.compress(b"".join(plain), 9), zlib.compress(b"".join(filtered), 9), key=len)
+
+
 def write_png(path, width, height, rgba_rows):
+    """Writes rows of RGBA bytes as an 8-bit, non-interlaced RGBA PNG."""
+
     def chunk(tag, data):
         return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data))
 
-    raw = b"".join(b"\x00" + bytes(row) for row in rgba_rows)
     png = b"\x89PNG\r\n\x1a\n"
     png += chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
-    png += chunk(b"IDAT", zlib.compress(raw, 9))
+    png += chunk(b"IDAT", compress_rows(width, [bytes(row) for row in rgba_rows]))
     png += chunk(b"IEND", b"")
     with open(path, "wb") as handle:
         handle.write(png)

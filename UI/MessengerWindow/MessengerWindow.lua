@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local RowActions = ns.MessengerWindowRowActions or require("WhisperMessenger.UI.MessengerWindow.RowActions")
 local LifecycleWiring = ns.MessengerWindowLifecycleWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
 local WindowShell = ns.MessengerWindowWindowShell or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowShell")
 local PanelWiring = ns.MessengerWindowPanelWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PanelWiring")
@@ -33,6 +34,7 @@ function MessengerWindow.Create(factory, options)
   local settingsPanels = settingsRuntime.settingsPanels
   local compactMode = CompactWiring.Hooks()
   local dock = DockWiring.Hooks()
+  local rowActions = RowActions.Collect(options)
 
   local function isShown(target)
     if target and target.IsShown then
@@ -55,6 +57,7 @@ function MessengerWindow.Create(factory, options)
     settingsConfig = settingsConfig,
     windowGeometry = windowGeometry,
     windowOptions = options,
+    rowActions = rowActions,
     getSelectionController = function()
       return selectionController
     end,
@@ -71,6 +74,7 @@ function MessengerWindow.Create(factory, options)
   local conversationWiring = ConversationWiring.Create(factory, {
     threadPane = layout.threadPane,
     windowOptions = options,
+    rowActions = rowActions,
     nativeChrome = shell.nativeChrome,
     tabMode = contactsRuntime.getTabMode(),
     settingsConfig = settingsConfig,
@@ -137,6 +141,7 @@ function MessengerWindow.Create(factory, options)
       windowGeometry.setContactsWidth(currentContactsWidth)
     end,
     composer = composer,
+    bindComposerHeight = composerRuntime.bindHeightChanged,
     contactsController = contactsController,
     conversation = conversation,
     refreshContacts = refreshContacts,

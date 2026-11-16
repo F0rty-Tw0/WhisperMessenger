@@ -3,14 +3,12 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Common = ns.BootstrapLifecycleHandlersCommon
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
-  or nil
+local Common = ns.BootstrapLifecycleHandlersCommon or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
 
-local TimeFormat = ns.TimeFormat or (type(require) == "function" and require("WhisperMessenger.Util.TimeFormat")) or nil
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local function L(key)
-  return Localization and Localization.Text(key) or key
+  return Localization.Text(key)
 end
 
 local GroupMembership = {}
@@ -32,7 +30,7 @@ end
 local function appendLeftMessage(conversation, channel, now)
   conversation.messages = conversation.messages or {}
   local text = L(LEFT_LABEL[channel] or "Left group")
-  local timeStr = TimeFormat and TimeFormat.MessageTime and TimeFormat.MessageTime(now) or ""
+  local timeStr = TimeFormat.MessageTime(now)
   if timeStr ~= "" then
     text = text .. ", " .. timeStr
   end
@@ -99,9 +97,7 @@ local function closeGroupSession(Bootstrap, category, partyGUID)
   end
 
   if changed then
-    if Common and Common.refreshRuntimeWindow then
-      Common.refreshRuntimeWindow(Bootstrap)
-    end
+    Common.refreshRuntimeWindow(Bootstrap)
   end
 
   return true
@@ -126,7 +122,7 @@ local function reopenGroupSession(Bootstrap, category, partyGUID)
     end
   end
 
-  if changed and Common and Common.refreshRuntimeWindow then
+  if changed then
     Common.refreshRuntimeWindow(Bootstrap)
   end
 end
@@ -214,9 +210,7 @@ function GroupMembership.handleGroupRosterUpdate(Bootstrap)
   end
 
   if changed then
-    if Common and Common.refreshRuntimeWindow then
-      Common.refreshRuntimeWindow(Bootstrap)
-    end
+    Common.refreshRuntimeWindow(Bootstrap)
   end
 
   return true

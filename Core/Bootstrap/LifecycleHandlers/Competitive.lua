@@ -3,16 +3,15 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Common = ns.BootstrapLifecycleHandlersCommon
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
-  or nil
-local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
-local FlavorCompat = ns.FlavorCompat or (type(require) == "function" and require("WhisperMessenger.Core.FlavorCompat")) or nil
+local Common = ns.BootstrapLifecycleHandlersCommon or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
+local ChatReplyState = ns.ChatReplyState or require("WhisperMessenger.Util.ChatReplyState")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 local Competitive = {}
 
 local function canClearStaleWhisperReplyState(runtime, deps)
-  if runtime and ChatReplyState and ChatReplyState.CaptureStaleWhisperReplyTarget then
+  if runtime then
     local _, resolved = ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, deps.getNumChatWindows, deps.getEditBox)
     return resolved ~= false
   end
@@ -21,18 +20,20 @@ end
 
 function Competitive.handleChallengeModeEvent(Bootstrap, event)
   if
-    (event == "CHALLENGE_MODE_START" or event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET")
-    and (not FlavorCompat or not FlavorCompat.hasMythicPlus)
+    (event == "CHALLENGE_MODE_START" or event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET") and not FlavorCompat.hasMythicPlus
   then
     return true
   end
 
+  -- The suspend and resume edges below read the mythic flag: it is what
+  -- records that this addon suspended.
+  local restrictions = RestrictedActions.For(Bootstrap)
   if event == "CHALLENGE_MODE_START" then
     -- Guard against double-suspend (ADDON_RESTRICTION_STATE_CHANGED may have
     -- suspended already): a second suspend() would clobber the saved
     -- window-visibility state with the already-hidden window.
-    if not Bootstrap._inMythicContent then
-      Bootstrap._inMythicContent = true
+    if not restrictions.flag("mythic") then
+      restrictions.setFlag("mythic", true)
       if Bootstrap.runtime and Bootstrap.runtime.suspend then
         Bootstrap.runtime.suspend()
       end
@@ -42,10 +43,10 @@ function Competitive.handleChallengeModeEvent(Bootstrap, event)
   end
 
   if event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET" then
-    if Bootstrap._inMythicContent then
-      Bootstrap._inMythicContent = false
-      Bootstrap._inEncounter = false
-      Bootstrap._inCompetitiveContent = false
+    if restrictions.flag("mythic") then
+      restrictions.setFlag("mythic", false)
+      restrictions.setFlag("encounter", false)
+      restrictions.setFlag("competitive", false)
       if Bootstrap.runtime and Bootstrap.runtime.resume then
         Bootstrap.runtime.resume()
       end
@@ -64,7 +65,7 @@ function Competitive.handleEncounterEvent(Bootstrap, event, deps)
   end
 
   if event == "ENCOUNTER_END" then
-    if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) and ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
+    if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) then
       ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
     end
     return true
@@ -98,7 +99,7 @@ local function reopenWindowHiddenByCombat(Bootstrap)
     return
   end
   runtime.hiddenByCombat = nil
-  if Bootstrap._inMythicContent or not (runtime.isWindowVisible and runtime.setWindowVisible) then
+  if RestrictedActions.For(Bootstrap).flag("mythic") or not (runtime.isWindowVisible and runtime.setWindowVisible) then
     return
   end
   -- No composer focus: the player's movement keys would land in it.
@@ -108,7 +109,7 @@ local function reopenWindowHiddenByCombat(Bootstrap)
 end
 
 function Competitive.handleCombatEnd(Bootstrap, deps)
-  if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) and ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
+  if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) then
     ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
   end
   reopenWindowHiddenByCombat(Bootstrap)
@@ -117,25 +118,26 @@ end
 
 function Competitive.handleZoneChangedNewArea(Bootstrap, deps)
   local ContentDetector = deps.getContentDetector()
+  local restrictions = RestrictedActions.For(Bootstrap)
 
   -- Update competitive content flag on every zone change so the chat
   -- filter bypasses correctly when entering/leaving PvP or arenas.
-  if Bootstrap._inCompetitiveContent or Bootstrap._inMythicContent then
+  if restrictions.flag("competitive") or restrictions.flag("mythic") then
     local isCompetitive = ContentDetector and ContentDetector.IsCompetitiveContent(_G.GetInstanceInfo) or false
-    Bootstrap._inCompetitiveContent = isCompetitive
+    restrictions.setFlag("competitive", isCompetitive)
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
     end
     Common.notifyCompetitiveState(Bootstrap)
   end
 
-  if not Bootstrap._inMythicContent then
+  if not restrictions.flag("mythic") then
     return true
   end
 
   local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
   if not isMythic then
-    Bootstrap._inMythicContent = false
+    restrictions.setFlag("mythic", false)
     if Bootstrap.runtime and Bootstrap.runtime.resume then
       Bootstrap.runtime.resume()
     end
@@ -143,7 +145,7 @@ function Competitive.handleZoneChangedNewArea(Bootstrap, deps)
     local PresenceCache = deps.getPresenceCache()
     if PresenceCache then
       Common.scheduleAfter(2, function()
-        if Bootstrap._inMythicContent then
+        if RestrictedActions.For(Bootstrap).flag("mythic") then
           return
         end
         PresenceCache.Rebuild()

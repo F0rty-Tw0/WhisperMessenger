@@ -25,8 +25,6 @@ function PublicApiEnv.Initialize(settings)
     accountState = {
       schemaVersion = 1,
       conversations = {},
-      contacts = {},
-      pendingHydration = {},
       settings = settings,
     },
     characterState = {

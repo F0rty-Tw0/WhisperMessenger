@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
 local select = select
@@ -111,8 +112,10 @@ function LockdownCatcher.Install(deps)
   end
 
   local catcher = LockdownCatcher.New({
+    -- Asked on every whisper, never kept: this frame is live before
+    -- Bootstrap.Initialize, and each Initialize installs a new instance.
     isMythicContent = function()
-      return Bootstrap._inMythicContent == true
+      return RestrictedActions.For(Bootstrap).flag("mythic")
     end,
     now = function()
       local runtime = Bootstrap.runtime

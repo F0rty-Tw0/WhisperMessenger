@@ -7,19 +7,55 @@ import zlib
 from scripts import compose_gold_ring
 
 
-def png_info(data):
-    """(width, height, bit depth, color type, raw scanlines) of a PNG."""
+def png_chunks(data):
+    """(tag, body) of every chunk of a PNG."""
     assert data[:8] == b"\x89PNG\r\n\x1a\n"
-    pos, ihdr, idat = 8, None, b""
+    pos = 8
     while pos < len(data):
         (length,) = struct.unpack(">I", data[pos : pos + 4])
-        tag, body = data[pos + 4 : pos + 8], data[pos + 8 : pos + 8 + length]
+        yield data[pos + 4 : pos + 8], data[pos + 8 : pos + 8 + length]
+        pos += 12 + length
+
+
+def png_info(data):
+    """(width, height, bit depth, color type, raw scanlines) of a PNG."""
+    ihdr, idat = None, b""
+    for tag, body in png_chunks(data):
         if tag == b"IHDR":
             ihdr = struct.unpack(">IIBB", body[:10])
         elif tag == b"IDAT":
             idat += body
-        pos += 12 + length
     return ihdr + (zlib.decompress(idat),)
+
+
+def paeth(left, up, up_left):
+    estimate = left + up - up_left
+    nearest = min(abs(estimate - left), abs(estimate - up), abs(estimate - up_left))
+    if nearest == abs(estimate - left):
+        return left
+    return up if nearest == abs(estimate - up) else up_left
+
+
+def unfilter(width, scanlines):
+    """(filter type of each row, rows of RGBA bytes) from 8-bit RGBA scanlines, per the PNG spec."""
+    stride = width * 4
+    kinds, rows, prior = [], [], [0] * stride
+    for start in range(0, len(scanlines), stride + 1):
+        kind, line = scanlines[start], scanlines[start + 1 : start + 1 + stride]
+        row = []
+        for i, value in enumerate(line):
+            left = row[i - 4] if i >= 4 else 0
+            up_left = prior[i - 4] if i >= 4 else 0
+            predicted = [0, left, prior[i], (left + prior[i]) // 2, paeth(left, prior[i], up_left)][kind]
+            row.append((value + predicted) & 255)
+        kinds.append(kind)
+        rows.append(row)
+        prior = row
+    return kinds, rows
+
+
+def gradient_rows(size):
+    return [[v for x in range(size) for v in (x * 3 % 256, y * 3 % 256, (x + y) % 256, 255)] for y in range(size)]
 
 
 def render(write):
@@ -33,6 +69,53 @@ def render(write):
 def shipped(name):
     with open(os.path.join("Media", name), "rb") as handle:
         return handle.read()
+
+
+def art_rows(pixel, size):
+    return [[compose_gold_ring.to_byte(v) for x in range(size) for v in pixel(x, y, size)] for y in range(size)]
+
+
+def glow_rows():
+    """The square glow art: mostly flat, so row filters only add noise."""
+    return art_rows(compose_gold_ring.square_glow_pixel, compose_gold_ring.GLOW_SIZE)
+
+
+def unfiltered_idat(rows):
+    return zlib.compress(b"".join(b"\x00" + bytes(row) for row in rows), 9)
+
+
+class PngEncodingTests(unittest.TestCase):
+    def written(self, rows):
+        return render(lambda path: compose_gold_ring.write_png(path, len(rows[0]) // 4, len(rows), rows))
+
+    def test_write_png_roundtrips_pixels_with_filtered_rows(self):
+        rows = gradient_rows(48)
+        width, _height, _depth, _color, scanlines = png_info(self.written(rows))
+        kinds, decoded = unfilter(width, scanlines)
+        self.assertEqual(decoded, rows)
+        self.assertTrue(set(kinds) - {0}, "no row was filtered")
+
+    def test_write_png_roundtrips_art_through_sub_up_and_paeth_rows(self):
+        rows = art_rows(compose_gold_ring.ring_pixel, 64)
+        width, _height, _depth, _color, scanlines = png_info(self.written(rows))
+        kinds, decoded = unfilter(width, scanlines)
+        self.assertEqual(decoded, rows)
+        self.assertEqual(set(kinds), {1, 2, 4})
+
+    def idat_size(self, rows):
+        return sum(len(body) for tag, body in png_chunks(self.written(rows)) if tag == b"IDAT")
+
+    def test_filtered_png_is_smaller_than_unfiltered_for_gradient(self):
+        rows = gradient_rows(48)
+        self.assertLess(self.idat_size(rows), len(unfiltered_idat(rows)))
+
+    def test_png_stays_unfiltered_when_filters_make_it_bigger(self):
+        rows = glow_rows()
+        self.assertEqual(self.idat_size(rows), len(unfiltered_idat(rows)))
+
+    def test_write_png_keeps_8_bit_rgba_without_interlace(self):
+        header = dict(png_chunks(self.written(gradient_rows(8))))[b"IHDR"]
+        self.assertEqual(struct.unpack(">IIBBBBB", header), (8, 8, 8, 6, 0, 0, 0))
 
 
 class RingArtTests(unittest.TestCase):

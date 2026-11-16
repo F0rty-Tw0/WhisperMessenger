@@ -4,20 +4,22 @@ if type(ns) ~= "table" then
 end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
-local CompetitiveIndicator = ns.CompetitiveIndicator or require("WhisperMessenger.UI.ToggleIcon.CompetitiveIndicator")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
-local PulseState = ns.ToggleIconPulseState or require("WhisperMessenger.UI.ToggleIcon.PulseState")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 local IconArt = ns.ToggleIconIconArt or require("WhisperMessenger.UI.ToggleIcon.IconArt")
 local IconBorder = ns.ToggleIconIconBorder or require("WhisperMessenger.UI.ToggleIcon.IconBorder")
-local LockGlyph = ns.ToggleIconLockGlyph or require("WhisperMessenger.UI.ToggleIcon.LockGlyph")
-local IconTooltip = ns.ToggleIconIconTooltip or require("WhisperMessenger.UI.ToggleIcon.IconTooltip")
-local IconScripts = ns.ToggleIconIconScripts or require("WhisperMessenger.UI.ToggleIcon.IconScripts")
+local IconInteraction = ns.ToggleIconIconInteraction or require("WhisperMessenger.UI.ToggleIcon.IconInteraction")
+local IconTooltip = IconInteraction.IconTooltip
+local IconScripts = IconInteraction.IconScripts
 local IconRide = ns.ToggleIconIconRide or require("WhisperMessenger.UI.ToggleIcon.IconRide")
-local DockedLook = ns.ToggleIconDockedLook or require("WhisperMessenger.UI.ToggleIcon.DockedLook")
-local IconTransparency = ns.ToggleIconIconTransparency or require("WhisperMessenger.UI.ToggleIcon.IconTransparency")
+local IconLooks = ns.ToggleIconIconLooks or require("WhisperMessenger.UI.ToggleIcon.IconLooks")
+local DockedLook = IconLooks.DockedLook
+local IconTransparency = IconLooks.IconTransparency
+local CompetitiveIndicator = IconLooks.CompetitiveIndicator
+local LockGlyph = IconLooks.LockGlyph
+local PulseState = IconLooks.PulseState
 
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
 

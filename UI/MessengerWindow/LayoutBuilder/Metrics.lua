@@ -131,7 +131,8 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
     contentWidth = contactsWidth
   end
   local contentHeight = contactsHeight
-  local threadHeight = contentHeight - resolvedTheme.COMPOSER_HEIGHT - resolvedTheme.DIVIDER_THICKNESS
+  local composerHeight = layoutState.composerHeight or resolvedTheme.COMPOSER_HEIGHT
+  local threadHeight = contentHeight - composerHeight - resolvedTheme.DIVIDER_THICKNESS
 
   local searchHeight = layoutState.contactsSearchHeight or (layout.CONTACT_SEARCH_HEIGHT or 30)
   local searchMargin = layoutState.contactsSearchMargin or (layout.CONTACT_SEARCH_MARGIN or 10)
@@ -150,6 +151,7 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
     contentWidth = contentWidth,
     optionsContentWidth = optionsContentWidth,
     contentHeight = contentHeight,
+    composerHeight = composerHeight,
     threadHeight = threadHeight,
     searchHeight = searchHeight,
     searchMargin = searchMargin,

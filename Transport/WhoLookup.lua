@@ -6,6 +6,7 @@ end
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
 local WhoFreshness = ns.WhoFreshness or require("WhisperMessenger.Transport.WhoFreshness")
+local WhoAsked = ns.WhoAsked or require("WhisperMessenger.Transport.WhoAsked")
 local WhoBlock = ns.WhoBlock or require("WhisperMessenger.Transport.WhoBlock")
 local WhoPanels = ns.WhoPanels or require("WhisperMessenger.Transport.WhoPanels")
 
@@ -29,7 +30,6 @@ local inFlight = false
 local inFlightNameKey = nil
 local lastSentAt = nil
 local previousWhoToUi = false
-local lastAskedAt = {}
 local sendingOurs = false
 -- The "Look up players with /who" option; a missing saved key counts as on.
 local lookupsEnabled = true
@@ -57,9 +57,7 @@ end
 -- Our /who will get no answer, so its name counts as never asked.
 local function forgetInFlight()
   inFlight = false
-  if inFlightNameKey ~= nil then
-    lastAskedAt[inFlightNameKey] = nil
-  end
+  WhoAsked.Forget(inFlightNameKey)
   cleanup()
 end
 
@@ -189,13 +187,13 @@ end
 
 local function ask(rt, name, conversation)
   local nameKey = SeenLevel.NameKey(name)
-  if nameKey == nil or WhoFreshness.IsFresh(conversation, name, lastAskedAt[nameKey], now(rt)) then
+  if nameKey == nil or WhoFreshness.IsFresh(conversation, name, WhoAsked.Get(nameKey), now(rt)) then
     return false
   end
   if isBlocked(rt) or isThrottled(rt) then
     return false
   end
-  lastAskedAt[nameKey] = now(rt)
+  WhoAsked.Remember(nameKey, now(rt))
   lastSentAt = now(rt)
   inFlight = true
   inFlightNameKey = nameKey
@@ -263,7 +261,7 @@ function WhoLookup._reset()
   inFlightNameKey = nil
   lastSentAt = nil
   previousWhoToUi = false
-  lastAskedAt = {}
+  WhoAsked._reset()
   sendingOurs = false
   lookupsEnabled = true
 end

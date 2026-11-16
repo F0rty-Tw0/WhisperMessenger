@@ -14,7 +14,7 @@ local IconSurfaces = {}
 
 --- The icon number (unread whispers plus the panels' badges) and the
 -- whispers inside it: the glow and the tooltip split follow whispers only.
--- @param panelRegistry table|nil — nil before the runtime is bound
+-- @param panelRegistry table|nil — nil counts whispers only
 -- @return number total, number unread
 function IconSurfaces.Counts(contacts, panelRegistry)
   local unread = BadgeFilter.SumWhisperUnread(contacts)

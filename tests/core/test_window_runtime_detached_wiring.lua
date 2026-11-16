@@ -3,6 +3,7 @@
 
 local FakeUI = require("tests.helpers.fake_ui")
 local IconSurfaces = require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
+local PanelRegistry = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelRegistry")
 local WindowRuntime = require("WhisperMessenger.Core.Bootstrap.WindowRuntime")
 
 local CONVERSATION_KEY = "wow::WOW::arthas-area52"
@@ -84,6 +85,7 @@ local function build(settings)
     accountState = { settings = settings },
     localProfileId = "me",
     chatApi = {},
+    panelRegistry = PanelRegistry.New(),
     store = {
       conversations = {
         [CONVERSATION_KEY] = {
@@ -118,7 +120,7 @@ local function build(settings)
     defaultCharacterState = { window = {}, icon = {} },
     uiFactory = factory,
     uiParent = uiParent,
-    bootstrap = { _inMythicContent = false },
+    bootstrap = {},
     contactsList = {
       BuildItemsForProfile = function()
         local convo = runtime.store.conversations[CONVERSATION_KEY]

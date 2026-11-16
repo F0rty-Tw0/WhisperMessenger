@@ -50,8 +50,8 @@ end
 
 -- Shift + left-click on the name text of a whisper chat sends a /who. A drag
 -- that moves the window also ends in OnMouseUp, so a drag cancels the click.
-local function shouldWho(view, contact, button, options)
-  if button ~= "LeftButton" or type(options.whoPlayer) ~= "function" then
+local function shouldWho(view, contact, button, rowActions)
+  if button ~= "LeftButton" or type(rowActions.whoPlayer) ~= "function" then
     return false
   end
   if contact == nil or contact.channel ~= "WOW" or view._wmHeaderDragged then
@@ -86,14 +86,16 @@ local function bindForwarders(headerFrame, view)
   end
 end
 
--- options: { onMarkUnread, onUpdatePrefs, whoPlayer, onHeaderClicked } (the
--- pane's callbacks). onHeaderClicked(conversationKey) runs on a plain left-click.
+-- options: { rowActions, onHeaderClicked } (from the pane). rowActions is the
+-- window's row actions table; the header uses its onMarkUnread, onUpdatePrefs
+-- and whoPlayer. onHeaderClicked(conversationKey) runs on a plain left-click.
 -- contextMenu (optional): stands in for the contacts list menu in tests.
 function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
   if type(headerFrame) ~= "table" or type(headerFrame.SetScript) ~= "function" then
     return
   end
   options = options or {}
+  local rowActions = options.rowActions or {}
 
   if headerFrame.EnableMouse then
     headerFrame:EnableMouse(true)
@@ -104,8 +106,8 @@ function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
 
   headerFrame:SetScript("OnMouseUp", function(_self, button)
     local contact = view and view._selectedContact
-    if view and shouldWho(view, contact, button, options) then
-      options.whoPlayer(contact.displayName)
+    if view and shouldWho(view, contact, button, rowActions) then
+      rowActions.whoPlayer(contact.displayName)
 
       return
     end
@@ -124,7 +126,7 @@ function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
     if type(cm) ~= "table" or type(cm.Open) ~= "function" then
       return
     end
-    cm.Open(contact, headerFrame, options.onMarkUnread, options.onUpdatePrefs)
+    cm.Open(contact, headerFrame, rowActions.onMarkUnread, rowActions.onUpdatePrefs)
   end)
 
   bindForwarders(headerFrame, view)

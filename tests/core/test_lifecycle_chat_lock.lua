@@ -31,18 +31,11 @@ local enterWorldDeps = {
 local function newBootstrap()
   local spies = { syncChatFilters = 0, refreshWindow = 0, competitive = {} }
   local runtime = {
-    restrictedActions = RestrictedActions.New(),
     store = { conversations = {} },
     refreshWindow = function()
       spies.refreshWindow = spies.refreshWindow + 1
     end,
   }
-  runtime.isChatLocked = function()
-    return runtime.restrictedActions.isChatLocked()
-  end
-  runtime.isCompetitiveContent = function()
-    return runtime.isChatLocked()
-  end
   local Bootstrap = {
     runtime = runtime,
     syncChatFilters = function()
@@ -52,6 +45,10 @@ local function newBootstrap()
       table.insert(spies.competitive, isActive)
     end,
   }
+  -- One instance for both, as Bootstrap.Initialize wires it.
+  runtime.restrictedActions = RestrictedActions.For(Bootstrap)
+  runtime.isChatLocked = runtime.restrictedActions.isChatLocked
+  runtime.isCompetitiveContent = runtime.restrictedActions.isCompetitive
   return Bootstrap, spies
 end
 

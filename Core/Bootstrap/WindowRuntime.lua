@@ -9,6 +9,7 @@ local Store = ns.ConversationStore or require("WhisperMessenger.Model.Conversati
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local WindowCoordinator = ns.BootstrapWindowCoordinator or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator")
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local SendHandler = ns.BootstrapSendHandler or require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local LivePresenceSender = ns.BootstrapLivePresenceSender or require("WhisperMessenger.Core.Bootstrap.LivePresenceSender")
 local ChatGateway = ns.ChatGateway or require("WhisperMessenger.Transport.ChatGateway")
@@ -18,34 +19,18 @@ local ToggleIcon = ns.ToggleIcon or require("WhisperMessenger.UI.ToggleIcon")
 local MessengerWindow = ns.MessengerWindow or require("WhisperMessenger.UI.MessengerWindow")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
-local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
-local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
 
-local SettingsHandler = ns.BootstrapWindowRuntimeSettingsHandler or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
-
-local ConversationSelector = ns.BootstrapWindowRuntimeConversationSelector
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ConversationSelector")
 local WidgetPreview = ns.BootstrapWindowRuntimeWidgetPreview or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WidgetPreview")
-local StartConversation = ns.BootstrapWindowRuntimeStartConversation or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.StartConversation")
 local GroupSendPolicy = ns.BootstrapWindowRuntimeGroupSendPolicy or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPolicy")
-local WindowCallbacks = ns.BootstrapWindowRuntimeWindowCallbacks or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
-local IconRuntime = ns.BootstrapWindowRuntimeIconRuntime or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconRuntime")
-local MinimapIconRuntime = ns.BootstrapWindowRuntimeMinimapIconRuntime or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.MinimapIconRuntime")
-local ToggleFlow = ns.BootstrapWindowRuntimeToggleFlow or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ToggleFlow")
+local WindowActions = ns.BootstrapWindowRuntimeWindowActions or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowActions")
+local Surfaces = ns.BootstrapWindowRuntimeSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.Surfaces")
+local WindowBuilder = ns.BootstrapWindowRuntimeWindowBuilder or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowBuilder")
+local Flows = ns.BootstrapWindowRuntimeFlows or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.Flows")
 local RuntimeBindings = ns.BootstrapWindowRuntimeRuntimeBindings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RuntimeBindings")
 local ExternalPreview = ns.BootstrapWindowRuntimeExternalPreview or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ExternalPreview")
 local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
-local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
-local PanelPulse = ns.BootstrapWindowRuntimePanelPulse or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelPulse")
-local IconToggle = ns.BootstrapWindowRuntimeIconToggle or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconToggle")
-local PreviewOpen = ns.BootstrapWindowRuntimePreviewOpen or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewOpen")
-local PreviewReplyRuntime = ns.BootstrapWindowRuntimePreviewReplyRuntime
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewReplyRuntime")
 local LiveThemeSync = ns.BootstrapWindowRuntimeLiveThemeSync or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LiveThemeSync")
-local GrowSource = ns.BootstrapWindowRuntimeGrowSource or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GrowSource")
 local PositionSlots = ns.BootstrapWindowRuntimePositionSlots or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PositionSlots")
-local IconMode = ns.BootstrapWindowRuntimeIconMode or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconMode")
 local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
 local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DetachedPreviewRuntime")
@@ -72,29 +57,6 @@ function WindowRuntime.Create(options)
   local presenceCache = options.presenceCache or PresenceCache
   local fonts = options.fonts or Fonts
   local theme = options.theme or Theme
-  -- Set once the window exists; live theme changes repaint through it.
-  local liveThemeSettingChanged = nil
-  -- Defined below; the bridge only fires after login, once both exist.
-  local getWidgetIcon
-  local minimapIcon
-  local detachedPreview
-  local ensureDetachedPreview
-  LiveThemeSync.Install(options.ellesmereBridge or EllesmereBridge, theme, function()
-    return liveThemeSettingChanged
-  end, function()
-    local widget = getWidgetIcon and getWidgetIcon()
-    if widget and widget.refreshTheme then
-      widget.refreshTheme()
-    end
-    if minimapIcon and minimapIcon.refreshTheme then
-      minimapIcon.refreshTheme()
-    end
-    if detachedPreview then
-      detachedPreview.refreshTheme()
-    end
-  end)
-
-  local minimapIconRuntimeModule = options.minimapIconRuntime or MinimapIconRuntime
   local markConversationRead = options.markConversationRead
     or function(store, conversationKey)
       return Store.MarkRead(store, conversationKey)
@@ -105,9 +67,9 @@ function WindowRuntime.Create(options)
     end
   local positionSlots = PositionSlots.Create({ accountState = accountState, characterState = characterState, tableUtils = tableUtils })
   local window
-  local icon
-  local minimapRuntime
-  local compartment
+  local function getWindow()
+    return window
+  end
 
   -- dirtyKeys nil rebuilds all contact snapshots; a set rebuilds only those
   -- keys (incoming lines, and a Battle.net scan while the window is hidden).
@@ -116,30 +78,9 @@ function WindowRuntime.Create(options)
     return contactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId, snapshotCache, dirtyKeys)
   end
 
-  -- Create the selected icon surface and initialize the minimap runtime for
-  -- every non-none icon mode. Called at startup and whenever the setting changes.
-  local function resolveIconMode()
-    return IconMode.Resolve(accountState.settings)
-  end
-
-  local ensureIcon
-  local ensureMinimap
-
-  local function applyIconMode()
-    IconMode.Apply(resolveIconMode(), {
-      ensureIcon = ensureIcon,
-      ensureMinimap = ensureMinimap,
-      getIcon = function()
-        return icon
-      end,
-      getMinimap = function()
-        return minimapIcon
-      end,
-    })
-  end
-
+  -- The flag alone, as before: availability requests stop with the suspend.
   local function isMythicRestricted()
-    return bootstrap._inMythicContent == true
+    return RestrictedActions.For(bootstrap).flag("mythic")
   end
 
   local widgetPreview = WidgetPreview.Create({
@@ -156,8 +97,31 @@ function WindowRuntime.Create(options)
     return widgetPreview.acknowledgeLatestWidgetPreview(contacts)
   end
 
+  -- The widget icon, minimap button, detached preview and compartment entry.
+  -- Nothing is built until setHandlers and applyIconMode run below.
+  local surfaces = Surfaces.Create({
+    runtime = runtime,
+    accountState = accountState,
+    characterState = characterState,
+    uiFactory = uiFactory,
+    uiParent = uiParent,
+    tableUtils = tableUtils,
+    positionSlots = positionSlots,
+    toggleIcon = toggleIcon,
+    minimapIconRuntime = options.minimapIconRuntime,
+    buildContacts = buildContacts,
+    buildLatestIncomingPreview = buildLatestIncomingPreview,
+  })
+
+  -- Set once the window exists; live theme changes repaint through it. Until
+  -- then the surfaces repaint alone.
+  local liveThemeSettingChanged = nil
+  LiveThemeSync.Install(options.ellesmereBridge or EllesmereBridge, theme, function()
+    return liveThemeSettingChanged
+  end, surfaces.refreshTheme)
+
   -- Assigned below; the coordinator uses it to follow a replied-to request.
-  local conversationSelector
+  local actions
 
   local externalPreview = ExternalPreview.New({
     now = function()
@@ -168,49 +132,23 @@ function WindowRuntime.Create(options)
     end,
   })
 
-  function getWidgetIcon()
-    if resolveIconMode() == "minimap" or resolveIconMode() == "none" then
-      return nil
-    end
-    return icon
-  end
-
   local coordinator = windowCoordinatorModule.Create({
     runtime = runtime,
     buildContacts = buildContacts,
-    getWindow = function()
-      return window
-    end,
-    getIcon = getWidgetIcon,
-    getMinimapIcon = function()
-      local mode = resolveIconMode()
-      if mode == "widget" or mode == "none" then
-        return nil
-      end
-      return minimapIcon
-    end,
-    getLdbObject = function()
-      if resolveIconMode() == "none" then
-        return nil
-      end
-      return minimapRuntime and minimapRuntime.getLdbObject() or nil
-    end,
-    getCompartment = function()
-      return compartment
-    end,
-    getDetachedPreview = function()
-      return detachedPreview
-    end,
-    previewDetached = function()
-      return DetachedPreviewRuntime.IsDetached(accountState.settings)
-    end,
+    getWindow = getWindow,
+    getIcon = surfaces.getWidgetIcon,
+    getMinimapIcon = surfaces.getMinimapIcon,
+    getLdbObject = surfaces.getLdbObject,
+    getCompartment = surfaces.getCompartment,
+    getDetachedPreview = surfaces.getDetachedPreview,
+    previewDetached = surfaces.isPreviewDetached,
     isMythicRestricted = isMythicRestricted,
     presenceCache = presenceCache,
     livePresenceSender = LivePresenceSender,
     buildMessagePreview = buildLatestIncomingPreview,
     externalPreview = externalPreview,
     selectConversation = function(conversationKey)
-      return conversationSelector.selectConversation(conversationKey)
+      return actions.selectConversation(conversationKey)
     end,
   })
 
@@ -230,343 +168,125 @@ function WindowRuntime.Create(options)
   local function onShareWidgetPositionChanged(enabled)
     positionSlots.onToggle(enabled)
     PositionSlots.Reapply(positionSlots, {
-      icon = icon,
+      icon = surfaces.getIcon(),
       window = window,
       compactLayoutActive = runtime.compactLayoutActive,
-      minimap = minimapIcon,
-      detached = detachedPreview,
+      minimap = surfaces.getMinimap(),
+      detached = surfaces.getDetachedPreview(),
       uiParent = uiParent,
     })
   end
 
-  -- showOptions: see WindowCoordinator.setWindowVisible.
-  local function setWindowVisible(nextVisible, showOptions)
-    -- Acknowledge on both open and close: a whisper that arrived while the
-    -- window was open was already on screen, so closing must not let the
-    -- next background refresh pop it on the widget as if it were new.
-    acknowledgeLatestWidgetPreview(buildContacts())
-    -- Reopening shows the "New messages" divider again only if new
-    -- whispers arrived meanwhile.
-    if not nextVisible then
-      runtime.unreadDivider = nil
-    else
-      -- Any open during combat hands visibility back to the player: combat
-      -- end must not undo a close they make afterwards.
-      runtime.hiddenByCombat = nil
-    end
-    return coordinator.setWindowVisible(nextVisible, showOptions)
-  end
-
-  local function refreshWindow(affectedConversationKey, dirtyKeys)
-    return coordinator.refreshWindow(affectedConversationKey, dirtyKeys)
-  end
-
-  conversationSelector = ConversationSelector.Create({
-    runtime = runtime,
-    characterState = characterState,
-    markConversationRead = markConversationRead,
-    presenceCache = presenceCache,
-    requestAvailability = requestAvailability,
-    refreshWindow = refreshWindow,
-  })
-  local function selectConversation(conversationKey)
-    return conversationSelector.selectConversation(conversationKey)
-  end
-
-  local startConversationFlow = StartConversation.Create({
-    runtime = runtime,
-    identity = Identity,
-    getWindow = function()
-      return window
-    end,
-    selectConversation = function(conversationKey)
-      return selectConversation(conversationKey)
-    end,
-  })
-  local startConversation = startConversationFlow.startConversation
-
-  local windowCallbacks = WindowCallbacks.Create({
-    positionSlots = positionSlots,
+  -- Show and hide, refresh, select, start a conversation, the window callbacks.
+  actions = WindowActions.Create({
     runtime = runtime,
     accountState = accountState,
     characterState = characterState,
     defaultCharacterState = defaultCharacterState,
     uiParent = uiParent,
-    getIcon = function()
-      return icon
-    end,
     tableUtils = tableUtils,
+    positionSlots = positionSlots,
+    coordinator = coordinator,
+    presenceCache = presenceCache,
     groupSendPolicy = groupSendPolicy,
     sendHandler = sendHandler,
     reactionHandler = options.reactionHandler,
-    livePresenceSender = LivePresenceSender,
-    refreshWindow = refreshWindow,
+    markConversationRead = markConversationRead,
+    requestAvailability = requestAvailability,
+    getIcon = surfaces.getIcon,
+    getWindow = getWindow,
     buildContacts = buildContacts,
-    selectConversation = selectConversation,
-    startConversation = startConversation,
-    setWindowVisible = setWindowVisible,
-    dismissWidgetPreview = function()
-      acknowledgeLatestWidgetPreview(buildContacts())
-    end,
+    acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
   })
+  local windowCallbacks = actions.windowCallbacks
   runtime.canReact = windowCallbacks.canReact
 
   local function ensureWindow()
     if window then
       return
     end
-
-    local contacts = buildContacts()
-    local selectedState = coordinator.buildSelectionState(contacts)
-    local settingsState = (function()
-      accountState.settings = accountState.settings or {}
-      return accountState.settings
-    end)()
-    local onSettingChanged = SettingsHandler.Create({
+    WindowBuilder.Build({
       runtime = runtime,
-      accountSettings = settingsState,
+      accountState = accountState,
+      characterState = characterState,
+      uiFactory = uiFactory,
+      messengerWindow = messengerWindow,
+      positionSlots = positionSlots,
       theme = theme,
       fonts = fonts,
-      timeFormat = TimeFormat,
-      getIcon = function()
-        return icon
-      end,
-      getMinimapIcon = function()
-        return minimapIcon
-      end,
+      surfaces = surfaces,
+      coordinator = coordinator,
+      windowCallbacks = windowCallbacks,
+      externalPreview = externalPreview,
       buildContacts = buildContacts,
-      applyIconMode = applyIconMode,
-      onShareWidgetPositionChanged = onShareWidgetPositionChanged,
-      getDetachedPreview = function()
-        return detachedPreview
-      end,
-      onDetachedSetting = function(key, value)
-        DetachedPreviewRuntime.OnSettingChanged({
-          accountState = accountState,
-          ensureSurface = ensureDetachedPreview,
-          updateIconSurfaces = coordinator.updateIconSurfaces,
-        }, key, value)
-      end,
-    })
-    liveThemeSettingChanged = onSettingChanged
-
-    -- Read once: changing the window style takes a reload.
-    local compactLayout = settingsState.compactLayout ~= false
-    runtime.compactLayoutActive = compactLayout
-
-    local growSource = GrowSource.Create({
-      resolveIconMode = resolveIconMode,
-      getWidgetIcon = getWidgetIcon,
-      getMinimapIcon = function()
-        return minimapIcon
-      end,
-      settings = settingsState,
-    })
-
-    local windowOptions = {
-      contacts = contacts,
-      selectedContact = selectedState.selectedContact,
-      conversation = selectedState.conversation,
-      status = selectedState.status,
-      state = positionSlots.read(compactLayout and "compactWindow" or "window"),
-      compactLayout = compactLayout,
-      getDockIcon = getWidgetIcon,
-      getGrowSource = growSource.getGrowSource,
-      isGrowAnimationOn = growSource.isGrowAnimationOn,
-      isIconDockOn = growSource.isIconDockOn,
-      isOpenAtSavedSpot = growSource.isOpenAtSavedSpot,
-      initialTabMode = characterState.contactsTabMode or "whispers",
-      storeConfig = runtime.store.config,
-      settingsConfig = settingsState,
-      filters = accountState.filters,
-      integrations = runtime.addonIntegrations and { registry = runtime.addonIntegrations, enabled = runtime.integrationAllowedAtLoad == true }
-        or nil,
-      onSettingChanged = onSettingChanged,
-      getContactInfoLines = function(contact)
-        return ContactInfo.LinesFor(runtime, contact)
-      end,
-    }
-    -- Every window callback passes straight through.
-    for name, callback in pairs(windowCallbacks) do
-      windowOptions[name] = callback
-    end
-    windowOptions.onPanelShown = PanelPulse.OnPanelShown(externalPreview, coordinator.updateIconSurfaces)
-    windowOptions.onConversationUncovered = ChatCover.OnUncovered({
-      runtime = runtime,
+      selectConversation = actions.selectConversation,
       isWindowVisible = function()
         return controller.isWindowVisible()
       end,
-      selectConversation = selectConversation,
+      acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
+      onShareWidgetPositionChanged = onShareWidgetPositionChanged,
+      onSettingsHandler = function(onSettingChanged)
+        liveThemeSettingChanged = onSettingChanged
+      end,
+      onWindowCreated = function(created)
+        window = created
+      end,
     })
-    window = messengerWindow.Create(uiFactory, windowOptions)
-    runtime.panelRegistry.bind(window)
-
-    if window.frame.Hide then
-      window.frame:Hide()
-    end
-    -- ESC and the game's close-all hide the frame without setWindowVisible:
-    -- acknowledge on every hide so a whisper read in the pane never pops on
-    -- the widget after the window closes.
-    if window.frame.HookScript then
-      window.frame:HookScript("OnHide", function()
-        acknowledgeLatestWidgetPreview(buildContacts())
-      end)
-    end
-
-    runtime.window = window
   end
 
-  local toggleFlow = ToggleFlow.Create({
+  local flows = Flows.Create({
     runtime = runtime,
+    accountState = accountState,
+    windowCallbacks = windowCallbacks,
+    buildContacts = buildContacts,
+    buildLatestIncomingPreview = buildLatestIncomingPreview,
+    acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
+    acknowledgeWidgetPreviewThrough = widgetPreview.acknowledgeWidgetPreviewThrough,
     ensureWindow = ensureWindow,
     isWindowVisible = function()
       return controller.isWindowVisible()
     end,
-    setWindowVisible = setWindowVisible,
-    getWindow = function()
-      return window
-    end,
+    setWindowVisible = actions.setWindowVisible,
+    getWindow = getWindow,
     findLatestUnreadKey = coordinator.findLatestUnreadKey,
-    selectConversation = selectConversation,
-    refreshWindow = refreshWindow,
+    selectConversation = actions.selectConversation,
+    refreshWindow = actions.refreshWindow,
   })
-  local toggle = toggleFlow.toggle
-  local onIconToggle = IconToggle.Wrap(runtime, toggle, buildContacts, toggleFlow.openTargetKey)
-  local onOpenPreview = PreviewOpen.Create({
-    runtime = runtime,
-    buildContacts = buildContacts,
-    buildLatestIncomingPreview = buildLatestIncomingPreview,
-    selectConversation = selectConversation,
-  })
-  local previewReply = PreviewReplyRuntime.Create({
-    runtime = runtime,
-    accountState = accountState,
-    buildContacts = buildContacts,
-    onSend = windowCallbacks.onSend,
-    setDraft = windowCallbacks.onDraftChanged,
-    acknowledgeThrough = widgetPreview.acknowledgeWidgetPreviewThrough,
-    refreshWindow = refreshWindow,
-    openConversation = onOpenPreview,
-  })
-
-  ensureIcon = function()
-    if icon then
-      return icon
-    end
-    icon = IconRuntime.Create({
-      positionSlots = positionSlots,
-      accountState = accountState,
-      characterState = characterState,
-      uiFactory = uiFactory,
-      toggleIcon = toggleIcon,
-      tableUtils = tableUtils,
-      runtime = runtime,
-      buildContacts = buildContacts,
-      buildLatestIncomingPreview = buildLatestIncomingPreview,
-      acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
-      refreshWindow = refreshWindow,
-      onToggle = onIconToggle,
-      onOpenPreview = onOpenPreview,
-      onMarkAllRead = windowCallbacks.onMarkAllRead,
-      quickReply = previewReply.quickReply,
-      isExternalShownElsewhere = function()
-        return detachedPreview ~= nil
-          and DetachedPreviewRuntime.IsDetached(accountState.settings)
-          and detachedPreview.isExternalPreviewShown() == true
-      end,
-    })
-    runtime.icon = icon
-    return icon
-  end
-
-  ensureMinimap = function()
-    if minimapRuntime then
-      return minimapRuntime
-    end
-    minimapRuntime = minimapIconRuntimeModule.Create({
-      positionSlots = positionSlots,
-      accountState = accountState,
-      characterState = characterState,
-      uiFactory = uiFactory,
-      tableUtils = tableUtils,
-      runtime = runtime,
-      buildContacts = buildContacts,
-      acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
-      refreshWindow = refreshWindow,
-      onToggle = onIconToggle,
-      onOpenPreview = onOpenPreview,
-      onMarkAllRead = windowCallbacks.onMarkAllRead,
-      quickReply = previewReply.quickReply,
-    })
-    minimapIcon = minimapRuntime.minimapIcon
-    return minimapRuntime
-  end
-
-  ensureDetachedPreview = function()
-    if detachedPreview then
-      return detachedPreview
-    end
-    detachedPreview = DetachedPreviewRuntime.Create({
-      positionSlots = positionSlots,
-      uiFactory = uiFactory,
-      uiParent = uiParent,
-      accountState = accountState,
-      characterState = characterState,
-      buildContacts = buildContacts,
-      acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
-      refreshWindow = refreshWindow,
-      onOpenPreview = onOpenPreview,
-      quickReply = previewReply.quickReply,
-      getWidgetIcon = getWidgetIcon,
-    })
-    return detachedPreview
-  end
+  surfaces.setHandlers(flows.surfaceHandlers)
 
   positionSlots.seedAll()
 
-  applyIconMode()
-  if DetachedPreviewRuntime.IsDetached(accountState.settings) then
-    ensureDetachedPreview()
+  surfaces.applyIconMode()
+  if surfaces.isPreviewDetached() then
+    surfaces.ensureDetachedPreview()
     coordinator.updateIconSurfaces()
   end
-  compartment = MinimapIconRuntime.CreateCompartment({
-    accountState = accountState,
-    runtime = runtime,
-    buildContacts = buildContacts,
-    onToggle = onIconToggle,
-    onMarkAllRead = windowCallbacks.onMarkAllRead,
-  })
+  surfaces.createCompartment()
 
   RuntimeBindings.Apply({
     runtime = runtime,
     controller = controller,
-    icon = icon,
-    getWindow = function()
-      return window
-    end,
-    getIcon = function()
-      return icon
-    end,
+    icon = surfaces.getIcon(),
+    getWindow = getWindow,
+    getIcon = surfaces.getIcon,
     isWindowVisible = function()
       return coordinator.isWindowVisible()
     end,
     buildContacts = buildContacts,
     ensureWindow = ensureWindow,
-    refreshWindow = refreshWindow,
-    selectConversation = selectConversation,
-    setWindowVisible = setWindowVisible,
-    toggle = toggle,
-    toggleTargetKey = toggleFlow.openTargetKey,
-    startConversation = startConversation,
+    refreshWindow = actions.refreshWindow,
+    selectConversation = actions.selectConversation,
+    setWindowVisible = actions.setWindowVisible,
+    toggle = flows.toggle,
+    toggleTargetKey = flows.openTargetKey,
+    startConversation = actions.startConversation,
     externalPreview = externalPreview,
-    getWidgetIcon = getWidgetIcon,
+    getWidgetIcon = surfaces.getWidgetIcon,
     updateIconSurfaces = coordinator.updateIconSurfaces,
   })
 
   runtime.getActivePreviewSurface = function()
-    return DetachedPreviewRuntime.ActiveSurface(accountState.settings, function()
-      return detachedPreview
-    end, getWidgetIcon)
+    return DetachedPreviewRuntime.ActiveSurface(accountState.settings, surfaces.getDetachedPreview, surfaces.getWidgetIcon)
   end
 
   return controller

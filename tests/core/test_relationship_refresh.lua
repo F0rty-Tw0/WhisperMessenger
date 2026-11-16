@@ -1,6 +1,8 @@
+local RestrictionState = require("tests.helpers.restriction_state")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local RelationshipRefresh = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.RelationshipRefresh")
 local Constants = require("WhisperMessenger.Core.Constants")
+local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 local INVALIDATING = { "CLUB_MEMBER_ADDED", "CLUB_MEMBER_REMOVED", "PLAYER_GUILD_UPDATE", "FRIENDLIST_UPDATE", "BN_FRIEND_LIST_SIZE_CHANGED" }
 local QUIET = { "BN_FRIEND_INFO_CHANGED", "GUILD_ROSTER_UPDATE", "CLUB_MEMBER_UPDATED" }
@@ -101,7 +103,7 @@ return function()
   do
     local scheduled = captureTimers()
     local Bootstrap, state = build()
-    Bootstrap._inMythicContent = true
+    RestrictionState.Set(Bootstrap, { mythic = true })
     RelationshipRefresh.handle(Bootstrap, "CLUB_MEMBER_REMOVED")
     assert(Bootstrap.runtime.relationshipCache ~= state.stale, "the cache still drops")
     assert(#scheduled == 0 and state.repaints == 0, "nothing is scheduled in mythic content")
@@ -112,9 +114,24 @@ return function()
     local scheduled = captureTimers()
     local Bootstrap, state = build()
     RelationshipRefresh.handle(Bootstrap, "FRIENDLIST_UPDATE")
-    Bootstrap._inMythicContent = true
+    RestrictionState.Set(Bootstrap, { mythic = true })
     scheduled[#scheduled].fn()
     assert(state.repaints == 0, "no repaint once mythic content began")
+  end
+
+  -- test_mythic_flag_is_read_from_the_restriction_instance
+  -- The instance keeps its own flag store, so reading a field of the
+  -- Bootstrap table would miss it.
+  do
+    local scheduled = captureTimers()
+    local Bootstrap, state = build()
+    Bootstrap.restrictions = RestrictedActions.New()
+    RelationshipRefresh.handle(Bootstrap, "CLUB_MEMBER_ADDED")
+    Bootstrap.restrictions.setFlag("mythic", true)
+    scheduled[1].fn()
+    assert(state.repaints == 0, "no repaint once the instance says Mythic+")
+    RelationshipRefresh.handle(Bootstrap, "CLUB_MEMBER_REMOVED")
+    assert(#scheduled == 1, "nothing more is scheduled while the instance says Mythic+, got " .. #scheduled)
   end
 
   -- test_setting_off_invalidates_without_repaint

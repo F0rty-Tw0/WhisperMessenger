@@ -1,6 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local IconArt = require("WhisperMessenger.UI.ToggleIcon.IconArt")
-local IconScripts = require("WhisperMessenger.UI.ToggleIcon.IconScripts")
+local IconScripts = require("WhisperMessenger.UI.ToggleIcon.IconInteraction").IconScripts
 
 return function()
   local factory = FakeUI.NewFactory()

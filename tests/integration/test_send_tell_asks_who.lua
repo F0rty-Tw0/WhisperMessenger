@@ -92,7 +92,7 @@ local function boot(opts)
     whoLookups = opts.whoLookups,
     autoOpenOutgoing = opts.autoOpenOutgoing ~= false,
   }
-  local accountState = { conversations = {}, contacts = {}, pendingHydration = {}, schemaVersion = 1, settings = settings }
+  local accountState = { conversations = {}, schemaVersion = 1, settings = settings }
   local characterState = {
     window = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0, width = 920, height = 580, minimized = false },
     icon = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0 },

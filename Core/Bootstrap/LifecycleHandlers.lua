@@ -3,21 +3,11 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Competitive = ns.BootstrapLifecycleHandlersCompetitive
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Competitive"))
-  or nil
-
-local Presence = ns.BootstrapLifecycleHandlersPresence
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence"))
-  or nil
-
+local Competitive = ns.BootstrapLifecycleHandlersCompetitive or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Competitive")
+local Presence = ns.BootstrapLifecycleHandlersPresence or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
 local RestrictionState = ns.BootstrapLifecycleHandlersRestrictionState
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.RestrictionState"))
-  or nil
-
-local GroupMembership = ns.BootstrapLifecycleHandlersGroupMembership
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.GroupMembership"))
-  or nil
+  or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.RestrictionState")
+local GroupMembership = ns.BootstrapLifecycleHandlersGroupMembership or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.GroupMembership")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
 local RelationshipRefresh = ns.BootstrapLifecycleHandlersRelationshipRefresh
   or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.RelationshipRefresh")

@@ -8,7 +8,7 @@ local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 local PulseGlow = require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local IconArt = require("WhisperMessenger.UI.ToggleIcon.IconArt")
-local DockedLook = require("WhisperMessenger.UI.ToggleIcon.DockedLook")
+local DockedLook = require("WhisperMessenger.UI.ToggleIcon.IconLooks").DockedLook
 
 local ROUND_BG = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 local WHITE = { 1, 1, 1, 1 }

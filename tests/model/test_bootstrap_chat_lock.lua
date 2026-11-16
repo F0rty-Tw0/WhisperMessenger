@@ -2,6 +2,7 @@
 -- competitive content: composer sends queue, channel ingest pauses.
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 local FakeUI = require("tests.helpers.fake_ui")
+local RestrictionState = require("tests.helpers.restriction_state")
 local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 
 local KEY = "me::WOW::thrall-nagrand"
@@ -15,11 +16,9 @@ local function boot(apiLocked, sent)
       return apiLocked
     end,
   }
-  Bootstrap._inMythicContent = false
-  Bootstrap._inEncounter = false
-  Bootstrap._inCompetitiveContent = false
+  RestrictionState.Set(Bootstrap, {})
   return Bootstrap.Initialize(factory, {
-    accountState = { schemaVersion = 1, conversations = {}, contacts = {}, pendingHydration = {}, settings = {} },
+    accountState = { schemaVersion = 1, conversations = {}, settings = {} },
     characterState = { window = { x = 0, y = 0, width = 900, height = 560 }, icon = {} },
     localProfileId = "me",
     chatApi = {

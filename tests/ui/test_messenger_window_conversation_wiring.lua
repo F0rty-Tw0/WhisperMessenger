@@ -2,9 +2,10 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local ConversationWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ConversationWiring")
+local ConversationPane = require("WhisperMessenger.UI.ConversationPane")
 local ChannelContextMerger = require("WhisperMessenger.UI.ConversationPane.ChannelContextMerger")
 
-local function makeWiring(windowOptions, nativeChrome, settingsConfig)
+local function makeWiring(windowOptions, nativeChrome, settingsConfig, rowActions)
   local factory = FakeUI.NewFactory()
   local threadPane = factory.CreateFrame("Frame", nil, nil)
   threadPane:SetSize(600, 400)
@@ -13,6 +14,7 @@ local function makeWiring(windowOptions, nativeChrome, settingsConfig)
   return ConversationWiring.Create(factory, {
     threadPane = threadPane,
     windowOptions = windowOptions,
+    rowActions = rowActions,
     nativeChrome = nativeChrome,
     tabMode = "whispers",
     settingsConfig = settingsConfig,
@@ -79,9 +81,26 @@ return function()
     assert(focused == true, "input takes focus after the popup shows")
   end
 
+  -- test_row_actions_table_reaches_the_conversation_pane_as_one_table
+  do
+    local paneOptions
+    local create = ConversationPane.Create
+    rawset(ConversationPane, "Create", function(factory, parent, selectedContact, conversation, options)
+      paneOptions = options
+      return create(factory, parent, selectedContact, conversation, options)
+    end)
+    local rowActions = { onMarkUnread = function() end, onIgnorePlayer = function() end, whoPlayer = function() end }
+    makeWiring({}, nil, nil, rowActions)
+    rawset(ConversationPane, "Create", create)
+    assert(paneOptions.rowActions == rowActions, "the pane gets the window's row actions table itself")
+    for name in pairs(rowActions) do
+      assert(paneOptions[name] == nil, name .. " travels only inside the row actions table")
+    end
+  end
+
   -- test_first_paint_hides_invite_link_when_disabled
   do
-    local wiring = makeWiring({
+    local wiring = makeWiring({}, nil, nil, {
       canInviteContact = function()
         return false
       end,

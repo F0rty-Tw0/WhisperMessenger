@@ -236,7 +236,9 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
   end
 
   TranscriptSetup.BindMessageActions(transcript, view, options.onMessageAction)
-  TranscriptSetup.BindPlayerMenu(transcript, view, options)
+  -- The window's row actions: one table for the transcript, header and badge.
+  local rowActions = options.rowActions or {}
+  TranscriptSetup.BindPlayerMenu(transcript, view, rowActions)
   HeaderMenu.Bind(view.headerFrame, view, options)
 
   if type(options.canReact) == "function" then
@@ -246,10 +248,10 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
   end
 
   -- Read by the header's addon badge button when the invite hint is clicked.
-  if type(options.onInviteContact) == "function" then
-    view.onInviteContact = options.onInviteContact
+  if type(rowActions.onInviteContact) == "function" then
+    view.onInviteContact = rowActions.onInviteContact
   end
-  view.canInviteContact = options.canInviteContact
+  view.canInviteContact = rowActions.canInviteContact
 
   view.hideEmptyHeader = options.hideEmptyHeader == true
   view.isChannelContextShown = options.isChannelContextShown
