@@ -492,6 +492,8 @@ UI/MessengerWindow/MessengerWindow/ComposerRuntime.lua
 UI/MessengerWindow/MessengerWindow/SavedStateApply.lua
 UI/MessengerWindow/MessengerWindow.lua
 
+Core/Bootstrap/WindowRuntime/PanelRegistry.lua
+Core/Bootstrap/RuntimeFactory/OptionalFields.lua
 Core/Bootstrap/RuntimeFactory.lua
 Core/Bootstrap/EventBridge/Registration.lua
 Core/Bootstrap/EventBridge/LivePayload.lua
@@ -564,7 +566,6 @@ Core/Bootstrap/WindowRuntime/WindowCallbacks.lua
 Core/Bootstrap/WindowRuntime/IconRuntime.lua
 Core/Bootstrap/WindowRuntime/MinimapIconRuntime.lua
 Core/Bootstrap/WindowRuntime/ToggleFlow.lua
-Core/Bootstrap/WindowRuntime/PanelRegistry.lua
 Core/Bootstrap/WindowRuntime/RuntimeBindings.lua
 Core/Bootstrap/WindowRuntime/ExternalPreview.lua
 Core/Bootstrap/WindowRuntime/PanelPulse.lua

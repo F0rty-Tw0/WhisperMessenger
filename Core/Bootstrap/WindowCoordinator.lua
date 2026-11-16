@@ -190,7 +190,7 @@ function WindowCoordinator.Create(options)
     getCompartment = options.getCompartment,
     getDetachedPreview = options.getDetachedPreview,
     previewDetached = options.previewDetached,
-    -- The registry (set after Create), not the window: counts before it is built.
+    -- The registry, not the window: counts before the window is built.
     getPanelRegistry = function()
       return runtime.panelRegistry
     end,

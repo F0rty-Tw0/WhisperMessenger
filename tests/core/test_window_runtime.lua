@@ -16,6 +16,7 @@
 -- toggle -> selector, onSettingChanged -> SettingsHandler) survive composition.
 
 local FakeUI = require("tests.helpers.fake_ui")
+local PanelRegistry = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelRegistry")
 local WindowRuntime = require("WhisperMessenger.Core.Bootstrap.WindowRuntime")
 
 local function makeRuntimeOptions()
@@ -25,6 +26,7 @@ local function makeRuntimeOptions()
     accountState = { settings = {} },
     localProfileId = "me",
     chatApi = {},
+    panelRegistry = PanelRegistry.New(),
     store = {
       conversations = {
         [conversationKey] = {
