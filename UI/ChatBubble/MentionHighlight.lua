@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Mention = ns.GroupChatIngestMention or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Mention")
+local Mention = ns.GroupChatIngestMention or require("WhisperMessenger.Model.Mention")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 local PlainText = ns.ChatBubblePlainText or require("WhisperMessenger.UI.ChatBubble.PlainText")
 

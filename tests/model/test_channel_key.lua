@@ -1,4 +1,4 @@
-local ChannelKey = require("WhisperMessenger.Core.Ingest.ChannelChatIngest.ChannelKey")
+local ChannelKey = require("WhisperMessenger.Model.Identity.ChannelKey")
 
 -- Built-in channels key by their zone channel ID (names are localized);
 -- custom channels key by their lowercased base name.

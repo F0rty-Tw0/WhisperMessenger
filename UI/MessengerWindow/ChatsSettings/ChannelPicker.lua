@@ -7,7 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local ChannelKey = ns.ChannelChatIngestChannelKey or require("WhisperMessenger.Core.Ingest.ChannelChatIngest.ChannelKey")
+local ChannelKey = ns.ChannelChatIngestChannelKey or require("WhisperMessenger.Model.Identity.ChannelKey")
 local JoinedChannels = ns.JoinedChannels or require("WhisperMessenger.Transport.JoinedChannels")
 
 -- "Channels" section of the Chats page: one toggle per built-in channel plus

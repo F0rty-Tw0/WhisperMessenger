@@ -1,4 +1,4 @@
-local Mention = require("WhisperMessenger.Core.Ingest.GroupChatIngest.Mention")
+local Mention = require("WhisperMessenger.Model.Mention")
 
 return function()
   -- test_name_anywhere_as_a_word_matches
