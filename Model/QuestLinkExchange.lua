@@ -142,7 +142,7 @@ local function scheduleCleanup(state, recordedAt)
 
   state.questLinkCleanupScheduled = true
   timer.After(INBOX_TTL_SECONDS + 1, function()
-    state.questLinkCleanupScheduled = nil
+    state.questLinkCleanupScheduled = false
     local now = cleanupNow(state, recordedAt + INBOX_TTL_SECONDS + 1)
     purgeExpiredInbox(state, now)
     if hasInboxEntries(state) then

@@ -171,9 +171,9 @@ function Bootstrap.Initialize(factory, options)
   -- Seam for the lockdown catcher; nil until one is installed.
   runtime.lockdownCatcher = Bootstrap._lockdownCatcher
 
-  -- Assigned here, not next to the instance: until this point
-  -- isMythicLockdown is RuntimeFactory's instance-type check and the other
-  -- two do not exist, which is what building the window above ran against.
+  -- Assigned here, not next to the instance: until this point RuntimeFactory's
+  -- defaults answer (the instance-type check, never competitive, no
+  -- isChatLocked), which is what building the window above ran against.
   runtime.isChatLocked = restrictions.isChatLocked
   runtime.isCompetitiveContent = restrictions.isCompetitive
   runtime.isMythicLockdown = restrictions.isMythic

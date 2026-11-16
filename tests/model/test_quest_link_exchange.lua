@@ -125,7 +125,10 @@ return function()
     now = 1016
     scheduled[1].callback()
     assert(state.questLinkInbox.OldSender == nil, "timer should purge expired entries without later traffic")
-    assert(state.questLinkCleanupScheduled == nil, "cleanup flag should clear after final purge")
+    assert(
+      state.questLinkCleanupScheduled == false,
+      "cleanup flag should reset to false after final purge, got: " .. tostring(state.questLinkCleanupScheduled)
+    )
 
     _G.C_Timer = savedTimer
   end

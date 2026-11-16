@@ -62,7 +62,7 @@ return function()
   -- test_removing_conversation_before_any_session_state_exists
   do
     local runtime = build()
-    assert(runtime.lastAlertAtByConversation == nil and runtime.onlineWatch == nil and runtime.livePresencePeers == nil)
+    assert(next(runtime.lastAlertAtByConversation) == nil and next(runtime.onlineWatch) == nil and next(runtime.livePresencePeers) == nil)
     Store.Remove(runtime.store, GONE)
     assert(runtime.store.conversations[GONE] == nil, "removal works while the session maps are still unset")
   end

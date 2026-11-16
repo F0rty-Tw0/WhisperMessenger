@@ -33,8 +33,8 @@ local function shownPreviewKey(runtime)
 end
 
 -- The panel of the addon whose preview is on the widget, else the first
--- panel with a badge. Read at click time: the registry and preview exist only
--- once the runtime is bound.
+-- panel with a badge. Read at click time: the preview exists only once the
+-- runtime is bound.
 local function targetPanelKey(runtime)
   local registry = runtime.panelRegistry
   local ownerKey = shownPreviewKey(runtime)
