@@ -574,6 +574,8 @@ Core/Bootstrap/WindowRuntime/GrowSource.lua
 Core/Bootstrap/WindowRuntime/IconMode.lua
 Core/Bootstrap/WindowRuntime/Surfaces.lua
 Core/Bootstrap/WindowRuntime/WindowBuilder.lua
+Core/Bootstrap/WindowRuntime/WindowActions.lua
+Core/Bootstrap/WindowRuntime/Flows.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/WhisperIngestFailsafe.lua
 Core/Bootstrap/AddonEventFrame.lua

@@ -19,24 +19,16 @@ local ToggleIcon = ns.ToggleIcon or require("WhisperMessenger.UI.ToggleIcon")
 local MessengerWindow = ns.MessengerWindow or require("WhisperMessenger.UI.MessengerWindow")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 
-local ConversationSelector = ns.BootstrapWindowRuntimeConversationSelector
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ConversationSelector")
 local WidgetPreview = ns.BootstrapWindowRuntimeWidgetPreview or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WidgetPreview")
-local StartConversation = ns.BootstrapWindowRuntimeStartConversation or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.StartConversation")
 local GroupSendPolicy = ns.BootstrapWindowRuntimeGroupSendPolicy or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPolicy")
-local WindowCallbacks = ns.BootstrapWindowRuntimeWindowCallbacks or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
+local WindowActions = ns.BootstrapWindowRuntimeWindowActions or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowActions")
 local Surfaces = ns.BootstrapWindowRuntimeSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.Surfaces")
 local WindowBuilder = ns.BootstrapWindowRuntimeWindowBuilder or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowBuilder")
-local ToggleFlow = ns.BootstrapWindowRuntimeToggleFlow or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ToggleFlow")
+local Flows = ns.BootstrapWindowRuntimeFlows or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.Flows")
 local RuntimeBindings = ns.BootstrapWindowRuntimeRuntimeBindings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RuntimeBindings")
 local ExternalPreview = ns.BootstrapWindowRuntimeExternalPreview or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ExternalPreview")
 local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
-local IconToggle = ns.BootstrapWindowRuntimeIconToggle or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconToggle")
-local PreviewOpen = ns.BootstrapWindowRuntimePreviewOpen or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewOpen")
-local PreviewReplyRuntime = ns.BootstrapWindowRuntimePreviewReplyRuntime
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewReplyRuntime")
 local LiveThemeSync = ns.BootstrapWindowRuntimeLiveThemeSync or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LiveThemeSync")
 local PositionSlots = ns.BootstrapWindowRuntimePositionSlots or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PositionSlots")
 local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
@@ -75,6 +67,9 @@ function WindowRuntime.Create(options)
     end
   local positionSlots = PositionSlots.Create({ accountState = accountState, characterState = characterState, tableUtils = tableUtils })
   local window
+  local function getWindow()
+    return window
+  end
 
   -- dirtyKeys nil rebuilds all contact snapshots; a set rebuilds only those
   -- keys (incoming lines, and a Battle.net scan while the window is hidden).
@@ -126,7 +121,7 @@ function WindowRuntime.Create(options)
   end, surfaces.refreshTheme)
 
   -- Assigned below; the coordinator uses it to follow a replied-to request.
-  local conversationSelector
+  local actions
 
   local externalPreview = ExternalPreview.New({
     now = function()
@@ -140,9 +135,7 @@ function WindowRuntime.Create(options)
   local coordinator = windowCoordinatorModule.Create({
     runtime = runtime,
     buildContacts = buildContacts,
-    getWindow = function()
-      return window
-    end,
+    getWindow = getWindow,
     getIcon = surfaces.getWidgetIcon,
     getMinimapIcon = surfaces.getMinimapIcon,
     getLdbObject = surfaces.getLdbObject,
@@ -155,7 +148,7 @@ function WindowRuntime.Create(options)
     buildMessagePreview = buildLatestIncomingPreview,
     externalPreview = externalPreview,
     selectConversation = function(conversationKey)
-      return conversationSelector.selectConversation(conversationKey)
+      return actions.selectConversation(conversationKey)
     end,
   })
 
@@ -184,74 +177,28 @@ function WindowRuntime.Create(options)
     })
   end
 
-  -- showOptions: see WindowCoordinator.setWindowVisible.
-  local function setWindowVisible(nextVisible, showOptions)
-    -- Acknowledge on both open and close: a whisper that arrived while the
-    -- window was open was already on screen, so closing must not let the
-    -- next background refresh pop it on the widget as if it were new.
-    acknowledgeLatestWidgetPreview(buildContacts())
-    -- Reopening shows the "New messages" divider again only if new
-    -- whispers arrived meanwhile.
-    if not nextVisible then
-      runtime.unreadDivider = nil
-    else
-      -- Any open during combat hands visibility back to the player: combat
-      -- end must not undo a close they make afterwards.
-      runtime.hiddenByCombat = nil
-    end
-    return coordinator.setWindowVisible(nextVisible, showOptions)
-  end
-
-  local function refreshWindow(affectedConversationKey, dirtyKeys)
-    return coordinator.refreshWindow(affectedConversationKey, dirtyKeys)
-  end
-
-  conversationSelector = ConversationSelector.Create({
-    runtime = runtime,
-    characterState = characterState,
-    markConversationRead = markConversationRead,
-    presenceCache = presenceCache,
-    requestAvailability = requestAvailability,
-    refreshWindow = refreshWindow,
-  })
-  local function selectConversation(conversationKey)
-    return conversationSelector.selectConversation(conversationKey)
-  end
-
-  local startConversationFlow = StartConversation.Create({
-    runtime = runtime,
-    identity = Identity,
-    getWindow = function()
-      return window
-    end,
-    selectConversation = function(conversationKey)
-      return selectConversation(conversationKey)
-    end,
-  })
-  local startConversation = startConversationFlow.startConversation
-
-  local windowCallbacks = WindowCallbacks.Create({
-    positionSlots = positionSlots,
+  -- Show and hide, refresh, select, start a conversation, the window callbacks.
+  actions = WindowActions.Create({
     runtime = runtime,
     accountState = accountState,
     characterState = characterState,
     defaultCharacterState = defaultCharacterState,
     uiParent = uiParent,
-    getIcon = surfaces.getIcon,
     tableUtils = tableUtils,
+    positionSlots = positionSlots,
+    coordinator = coordinator,
+    presenceCache = presenceCache,
     groupSendPolicy = groupSendPolicy,
     sendHandler = sendHandler,
     reactionHandler = options.reactionHandler,
-    livePresenceSender = LivePresenceSender,
-    refreshWindow = refreshWindow,
+    markConversationRead = markConversationRead,
+    requestAvailability = requestAvailability,
+    getIcon = surfaces.getIcon,
+    getWindow = getWindow,
     buildContacts = buildContacts,
-    selectConversation = selectConversation,
-    startConversation = startConversation,
-    setWindowVisible = setWindowVisible,
-    dismissWidgetPreview = function()
-      acknowledgeLatestWidgetPreview(buildContacts())
-    end,
+    acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
   })
+  local windowCallbacks = actions.windowCallbacks
   runtime.canReact = windowCallbacks.canReact
 
   local function ensureWindow()
@@ -272,7 +219,7 @@ function WindowRuntime.Create(options)
       windowCallbacks = windowCallbacks,
       externalPreview = externalPreview,
       buildContacts = buildContacts,
-      selectConversation = selectConversation,
+      selectConversation = actions.selectConversation,
       isWindowVisible = function()
         return controller.isWindowVisible()
       end,
@@ -287,47 +234,25 @@ function WindowRuntime.Create(options)
     })
   end
 
-  local toggleFlow = ToggleFlow.Create({
+  local flows = Flows.Create({
     runtime = runtime,
+    accountState = accountState,
+    windowCallbacks = windowCallbacks,
+    buildContacts = buildContacts,
+    buildLatestIncomingPreview = buildLatestIncomingPreview,
+    acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
+    acknowledgeWidgetPreviewThrough = widgetPreview.acknowledgeWidgetPreviewThrough,
     ensureWindow = ensureWindow,
     isWindowVisible = function()
       return controller.isWindowVisible()
     end,
-    setWindowVisible = setWindowVisible,
-    getWindow = function()
-      return window
-    end,
+    setWindowVisible = actions.setWindowVisible,
+    getWindow = getWindow,
     findLatestUnreadKey = coordinator.findLatestUnreadKey,
-    selectConversation = selectConversation,
-    refreshWindow = refreshWindow,
+    selectConversation = actions.selectConversation,
+    refreshWindow = actions.refreshWindow,
   })
-  local toggle = toggleFlow.toggle
-  local onIconToggle = IconToggle.Wrap(runtime, toggle, buildContacts, toggleFlow.openTargetKey)
-  local onOpenPreview = PreviewOpen.Create({
-    runtime = runtime,
-    buildContacts = buildContacts,
-    buildLatestIncomingPreview = buildLatestIncomingPreview,
-    selectConversation = selectConversation,
-  })
-  local previewReply = PreviewReplyRuntime.Create({
-    runtime = runtime,
-    accountState = accountState,
-    buildContacts = buildContacts,
-    onSend = windowCallbacks.onSend,
-    setDraft = windowCallbacks.onDraftChanged,
-    acknowledgeThrough = widgetPreview.acknowledgeWidgetPreviewThrough,
-    refreshWindow = refreshWindow,
-    openConversation = onOpenPreview,
-  })
-
-  surfaces.setHandlers({
-    onToggle = onIconToggle,
-    onOpenPreview = onOpenPreview,
-    onMarkAllRead = windowCallbacks.onMarkAllRead,
-    quickReply = previewReply.quickReply,
-    acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
-    refreshWindow = refreshWindow,
-  })
+  surfaces.setHandlers(flows.surfaceHandlers)
 
   positionSlots.seedAll()
 
@@ -342,21 +267,19 @@ function WindowRuntime.Create(options)
     runtime = runtime,
     controller = controller,
     icon = surfaces.getIcon(),
-    getWindow = function()
-      return window
-    end,
+    getWindow = getWindow,
     getIcon = surfaces.getIcon,
     isWindowVisible = function()
       return coordinator.isWindowVisible()
     end,
     buildContacts = buildContacts,
     ensureWindow = ensureWindow,
-    refreshWindow = refreshWindow,
-    selectConversation = selectConversation,
-    setWindowVisible = setWindowVisible,
-    toggle = toggle,
-    toggleTargetKey = toggleFlow.openTargetKey,
-    startConversation = startConversation,
+    refreshWindow = actions.refreshWindow,
+    selectConversation = actions.selectConversation,
+    setWindowVisible = actions.setWindowVisible,
+    toggle = flows.toggle,
+    toggleTargetKey = flows.openTargetKey,
+    startConversation = actions.startConversation,
     externalPreview = externalPreview,
     getWidgetIcon = surfaces.getWidgetIcon,
     updateIconSurfaces = coordinator.updateIconSurfaces,
