@@ -7,15 +7,12 @@ local PopupUI = {}
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local Resolvers = ns.ChatBubbleContextMenuManualCopyPopupUIResolvers
   or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI.Resolvers")
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local MANUAL_COPY_DIALOG_NAME = "WHISPER_MESSENGER_BUBBLE_COPY_TEXT"
 
 local function L(key)
-  if Localization and Localization.Text then
-    return Localization.Text(key)
-  end
-  return key
+  return Localization.Text(key)
 end
 
 -- Refresh the dialog's localized strings every time it's about to show so a

@@ -3,16 +3,14 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Common = ns.BootstrapLifecycleHandlersCommon
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
-  or nil
-local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
-local FlavorCompat = ns.FlavorCompat or (type(require) == "function" and require("WhisperMessenger.Core.FlavorCompat")) or nil
+local Common = ns.BootstrapLifecycleHandlersCommon or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
+local ChatReplyState = ns.ChatReplyState or require("WhisperMessenger.Util.ChatReplyState")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 
 local Competitive = {}
 
 local function canClearStaleWhisperReplyState(runtime, deps)
-  if runtime and ChatReplyState and ChatReplyState.CaptureStaleWhisperReplyTarget then
+  if runtime then
     local _, resolved = ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, deps.getNumChatWindows, deps.getEditBox)
     return resolved ~= false
   end
@@ -21,8 +19,7 @@ end
 
 function Competitive.handleChallengeModeEvent(Bootstrap, event)
   if
-    (event == "CHALLENGE_MODE_START" or event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET")
-    and (not FlavorCompat or not FlavorCompat.hasMythicPlus)
+    (event == "CHALLENGE_MODE_START" or event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET") and not FlavorCompat.hasMythicPlus
   then
     return true
   end
@@ -64,7 +61,7 @@ function Competitive.handleEncounterEvent(Bootstrap, event, deps)
   end
 
   if event == "ENCOUNTER_END" then
-    if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) and ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
+    if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) then
       ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
     end
     return true
@@ -108,7 +105,7 @@ local function reopenWindowHiddenByCombat(Bootstrap)
 end
 
 function Competitive.handleCombatEnd(Bootstrap, deps)
-  if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) and ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
+  if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) then
     ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
   end
   reopenWindowHiddenByCombat(Bootstrap)

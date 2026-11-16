@@ -3,10 +3,10 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local ChatReplyState = ns.ChatReplyState or require("WhisperMessenger.Util.ChatReplyState")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
-local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
 local CompactLayoutSetting = ns.BootstrapWindowRuntimeCompactLayoutSetting
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.CompactLayoutSetting")
@@ -19,12 +19,10 @@ local RefreshingSettings = ns.BootstrapWindowRuntimeRefreshingSettings or requir
 local EscapeSetting = ns.BootstrapWindowRuntimeEscapeSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.EscapeSetting")
 local IconSettingReactions = ns.BootstrapWindowRuntimeIconSettingReactions
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconSettingReactions")
-local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
 local Relationship = ns.Relationship or require("WhisperMessenger.Model.Relationship")
-local WindowScale = ns.MessengerWindowWindowScale
-  or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
-  or nil
+local WindowScale = ns.MessengerWindowWindowScale or require("WhisperMessenger.UI.MessengerWindow.WindowScale")
 
 local RETENTION_SETTING_KEYS = {
   maxMessagesPerConversation = true,
@@ -42,9 +40,9 @@ function SettingsHandler.Create(options)
   local theme = options.theme or {}
   local fonts = options.fonts or {}
   local timeFormat = options.timeFormat or {}
-  local localization = options.localization or Localization or {}
-  local displayName = options.displayName or DisplayName or {}
-  local windowScale = options.windowScale or WindowScale or {}
+  local localization = options.localization or Localization
+  local displayName = options.displayName or DisplayName
+  local windowScale = options.windowScale or WindowScale
   local getIcon = options.getIcon or function()
     return nil
   end
@@ -134,7 +132,7 @@ function SettingsHandler.Create(options)
       runtime.store.config.conversationMaxAge = persistedValue
     end
 
-    if RETENTION_SETTING_KEYS[key] and Store and Store.ApplyRetention then
+    if RETENTION_SETTING_KEYS[key] then
       local activeKey = runtime.activeConversationKey
       local now = runtime.now and runtime.now() or nil
       local removed = Store.ApplyRetention(runtime.store, now, activeKey)
@@ -212,7 +210,7 @@ function SettingsHandler.Create(options)
     if key == "hideFromDefaultChat" and runtime.syncReplyKey then
       runtime.syncReplyKey()
     end
-    if key == "autoOpenOutgoing" and persistedValue == true and ChatReplyState then
+    if key == "autoOpenOutgoing" and persistedValue == true then
       ChatReplyState.ClearStaleWhisperReplyState(getNumChatWindows, getEditBox)
     end
     TabVisibilitySetting.Apply(runtime, accountSettings, key, persistedValue)

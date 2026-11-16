@@ -3,9 +3,9 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local function L(key)
-  return Localization and Localization.Text(key) or key
+  return Localization.Text(key)
 end
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 local Common = {}

@@ -5,17 +5,14 @@ end
 
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local StartConversationDialog = {}
 
 local DIALOG_NAME = "WHISPER_MESSENGER_START_CONVERSATION"
 
 local function L(key)
-  if Localization and Localization.Text then
-    return Localization.Text(key)
-  end
-  return key
+  return Localization.Text(key)
 end
 
 local function resolveConversationPopupEditBox(popup, dialogName)

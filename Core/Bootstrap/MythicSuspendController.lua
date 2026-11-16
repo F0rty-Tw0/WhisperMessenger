@@ -3,12 +3,12 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
+local ChatReplyState = ns.ChatReplyState or require("WhisperMessenger.Util.ChatReplyState")
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local function L(key)
-  return Localization and Localization.Text(key) or key
+  return Localization.Text(key)
 end
 
 local MythicSuspendController = {}
@@ -93,11 +93,8 @@ function MythicSuspendController.Attach(runtime, deps)
     -- If Blizzard handled a whisper while we were suspended, its default chat
     -- edit box may still hold the latest reply target. Capture it into our own
     -- taint-safe reply state before scrubbing Blizzard's sticky attributes.
-    local staleReplyResolved = true
-    if ChatReplyState and ChatReplyState.CaptureStaleWhisperReplyTarget then
-      local _, resolved = ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, getNumChatWindows, getEditBox)
-      staleReplyResolved = resolved ~= false
-    end
+    local _, resolved = ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, getNumChatWindows, getEditBox)
+    local staleReplyResolved = resolved ~= false
 
     -- Scrub Blizzard's stale whisper sticky state on the default chat edit
     -- box. If the user replied via /r or R-key during M+ (Blizzard handled
@@ -105,7 +102,7 @@ function MythicSuspendController.Attach(runtime, deps)
     -- tellTarget remain set. On the next Enter our auto-open poller would
     -- intercept that focused edit box and re-open the messenger to that
     -- conversation — even though the user has not asked for it.
-    if staleReplyResolved and ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
+    if staleReplyResolved then
       ChatReplyState.ClearStaleWhisperReplyState(getNumChatWindows, getEditBox)
     end
 
