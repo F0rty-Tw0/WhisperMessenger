@@ -142,6 +142,7 @@ Transport/BNetResolver/PassCache.lua
 Transport/BNetResolver.lua
 Model/Relationship.lua
 Transport/WhoFreshness.lua
+Transport/WhoAsked.lua
 Transport/WhoBlock.lua
 Transport/WhoPanels.lua
 Transport/WhoLookup.lua

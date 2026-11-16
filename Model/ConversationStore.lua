@@ -248,6 +248,14 @@ function Store.Remove(state, key)
   return StoreRetention.Remove(state, key, StoreRetention.REASON_EXPLICIT)
 end
 
+-- Empties the store one conversation at a time, so each one leaves through
+-- state.onConversationRemoved like any other explicit removal.
+function Store.RemoveAll(state)
+  for key in pairs(state.conversations) do
+    Store.Remove(state, key)
+  end
+end
+
 function Store.SetSortOrder(state, key, order)
   local conversation = state.conversations[key]
   if conversation then

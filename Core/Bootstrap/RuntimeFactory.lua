@@ -14,6 +14,11 @@ local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.Igno
 local RulePresets = ns.RulePresets or require("WhisperMessenger.Model.Filters.RulePresets")
 local RuntimeFactory = {}
 
+-- Session maps keyed by conversation that other modules create on their
+-- first write: the alert throttle, "notify when online" state and the
+-- contacts known to run the addon.
+local SESSION_MAPS_BY_CONVERSATION = { "lastAlertAtByConversation", "onlineWatch", "livePresencePeers" }
+
 local function currentTime()
   if type(_G["time"]) == "function" then
     return _G["time"]()
@@ -161,6 +166,12 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     end
     runtime.sendStatusByConversation[key] = nil
     runtime.collapseIndex[key] = nil
+    for _, field in ipairs(SESSION_MAPS_BY_CONVERSATION) do
+      local map = runtime[field]
+      if map then
+        map[key] = nil
+      end
+    end
 
     clearGUIDCachesIfUnowned(conversation.guid)
 
