@@ -10,6 +10,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Smoother with a long Battle.net friend list: while the window is open, Whisper Messenger now does far less work each time a whisper arrives or a friend's status changes, and redraws the window far less often when the change is for a friend you have no chat with.
 - The message box now grows up to two lines as you type a long message, instead of scrolling sideways.
 - With the Native WoW look, the message box now uses the game's own text box border, which keeps the same thickness when the box grows.
+- The message box, search box and other text boxes keep your theme's font again, and switch to the game's chat font only while you type a letter like ő or ű.
 - Fixed: after a reload or a loading screen in the middle of a boss fight or a PvP match, Whisper Messenger could hold your messages back without showing the "Messages are paused" notice, and could still hide whispers from the game's chat. The notice and the paused icon now show whenever your messages are held back, and whispers and channel messages stay in the game's chat until the fight or match is over.
 
 ## [2.1.7] - 2026-11-14
