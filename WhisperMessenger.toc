@@ -522,6 +522,7 @@ Core/Bootstrap/LifecycleHandlers/ZoneRosterPoll.lua
 Core/Bootstrap/LifecycleHandlers/RestrictionState.lua
 Core/Bootstrap/LifecycleHandlers/StaleRestrictions.lua
 Core/Bootstrap/LifecycleHandlers/ScanFieldDiff.lua
+Core/Bootstrap/LifecycleHandlers/BNetRekey.lua
 Core/Bootstrap/LifecycleHandlers/Presence.lua
 Core/Bootstrap/LifecycleHandlers/GroupMembership.lua
 Core/Bootstrap/LifecycleHandlers/RelationshipRefresh.lua
