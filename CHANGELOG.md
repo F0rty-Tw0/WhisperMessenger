@@ -24,6 +24,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: players who are offline no longer show as online in your contact list and chat header, and cross-faction guild or community members who are online no longer show as offline.
 - Fixed: letters the game's default font doesn't have, like the Hungarian ő and ű or the Polish ł, no longer show as squares. Messages, names, quotes, previews, notes, filter rules and quick replies switch to the game's chat font when the text needs one of them, and the message box, search box and other text boxes always use it, so the letters show while you type.
 - Fixed: with the compact window open, Craft Alert no longer pops its own alert at the top of the screen for a new lead. The Craft Alert tab shows the new lead, and if you close the window soon after, the preview shows on the button.
+- Fixed: after a reload or a loading screen in the middle of a boss fight or a PvP match, Whisper Messenger could hold your messages back without showing the "Messages are paused" notice, and could still hide whispers from the game's chat. The notice and the paused icon now show whenever your messages are held back, and whispers and channel messages stay in the game's chat until the fight or match is over.
 
 ## [2.1.6] - 2026-11-10
 

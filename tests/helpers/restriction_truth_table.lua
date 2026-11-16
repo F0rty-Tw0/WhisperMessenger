@@ -1,7 +1,7 @@
 -- Drives the real modules through every combination of restricted-content
--- inputs and reports what each reader of that state answers. The readers use
--- different formulas, so a row can hold answers that disagree; the table
--- pins each one as it is.
+-- inputs and reports what each reader of that state answers. Not every
+-- reader uses the same formula yet, so a row can hold answers that disagree;
+-- the table pins each one as it is.
 local RestrictionState = require("tests.helpers.restriction_state")
 local RestrictionWorld = require("tests.helpers.restriction_world")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
@@ -34,10 +34,15 @@ TruthTable.READERS = {
 local LOCK_STATES = { "none", "api", "inactive", "active" }
 local CACHED_STATE = { inactive = STATES.Inactive, activating = STATES.Activating, active = STATES.Active }
 local API_SAYS_YES = { api = true, inactive = true }
--- "info": C_ChatInfo.InChatMessagingLockdown; "cached" / "api": restriction type Chat.
-local CHAT_LOCKS = { "off", "info", "cached", "api" }
+-- "info": C_ChatInfo.InChatMessagingLockdown. The others report restriction
+-- type Chat the way LOCK_STATES does; "cached" is an Active event. "info"
+-- follows "off" because the two share a runtime.
+local CHAT_LOCKS = { "off", "info", "cached", "api", "inactive", "activating" }
+local CHAT_LOCK_STATE = { off = "none", cached = "active", api = "api", inactive = "inactive", activating = "activating" }
 -- The string stands in for nil, which a list cannot hold.
-local FLAG_VALUES = { "nil", false, true }
+local SUSPENDED_VALUES = { "nil", false, true }
+-- 1: a truthy value that is not true still sets a flag.
+local FLAG_VALUES = { "nil", false, true, 1 }
 local NOTICE_KEPT = "kept by the truth table"
 local LINE_ID = 9
 
@@ -75,7 +80,7 @@ local function reportLock(world, runtime, restrictionType, lockState)
 end
 
 -- A fresh runtime, because a cached restriction state cannot be emptied.
-local function boot(world, scenario, cachedChat)
+local function boot(world, scenario, chatLockState)
   RestrictionState.Set(Bootstrap, {})
   rawset(_G, "_wmSuspended", nil)
   rawset(_G, "C_RestrictedActions", scenario.api and world.restrictedApi or nil)
@@ -102,9 +107,7 @@ local function boot(world, scenario, cachedChat)
   reportLock(world, runtime, TYPES.Encounter, scenario.encounterLock)
   reportLock(world, runtime, TYPES.ChallengeMode, scenario.challengeLock)
   reportLock(world, runtime, TYPES.PvPMatch, scenario.pvpLock)
-  if cachedChat then
-    reportLock(world, runtime, TYPES.Chat, "active")
-  end
+  reportLock(world, runtime, TYPES.Chat, chatLockState)
   return runtime
 end
 
@@ -162,7 +165,7 @@ end
 local function visitFlagRows(world, runtime, inputs, visit)
   local answers = {}
   local rows = 0
-  for _, suspended in ipairs(FLAG_VALUES) do
+  for _, suspended in ipairs(SUSPENDED_VALUES) do
     inputs.suspended = unbox(suspended)
     rawset(_G, "_wmSuspended", inputs.suspended)
     for _, mythic in ipairs(FLAG_VALUES) do
@@ -188,10 +191,9 @@ local function visitScenario(world, scenario, visit)
     if scenario.api or chatLock ~= "api" then
       -- "off" and "info" differ only in what the chat API answers, so they share a runtime.
       if chatLock ~= "info" then
-        runtime = boot(world, scenario, chatLock == "cached")
+        runtime = boot(world, scenario, CHAT_LOCK_STATE[chatLock])
       end
       world.chatInfoLocked = chatLock == "info"
-      world.apiSaysYes[TYPES.Chat] = chatLock == "api"
       local inputs = {
         encounterLock = scenario.encounterLock,
         challengeLock = scenario.challengeLock,

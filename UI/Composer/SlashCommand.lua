@@ -43,13 +43,13 @@ local function resolveEnterHandler()
   return editBox, handler
 end
 
--- Chat lockdown or competitive content: writing Blizzard's edit box from addon
--- code then taints its reply state until /reload, so the command must not run.
+-- Chat lockdown or competitive content (isCompetitive covers both): writing
+-- Blizzard's edit box from addon code then taints its reply state until
+-- /reload, so the command must not run.
 -- Looked up at call time: RestrictedActions loads later in the TOC.
 local function isRestricted()
   local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
-  local restrictions = RestrictedActions.New()
-  return restrictions.isChatLocked() or restrictions.isCompetitive()
+  return RestrictedActions.New().isCompetitive()
 end
 
 -- Runs the command, or shows a protected one in the copy dialog; false when

@@ -227,6 +227,10 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
   if Bootstrap.runtime and Bootstrap.runtime.syncReplyKey then
     Bootstrap.runtime.syncReplyKey()
   end
+  -- resume() clears the notice, so it runs before the notice is decided.
+  if wasMythic and not isMythic and Bootstrap.runtime and Bootstrap.runtime.resume then
+    Bootstrap.runtime.resume()
+  end
   Common.notifyCompetitiveState(Bootstrap)
 
   if isMythic and not wasMythic then
@@ -234,10 +238,6 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
       Bootstrap.runtime.suspend()
     end
     return true
-  elseif wasMythic and not isMythic then
-    if Bootstrap.runtime and Bootstrap.runtime.resume then
-      Bootstrap.runtime.resume()
-    end
   elseif isMythic then
     return true
   end
