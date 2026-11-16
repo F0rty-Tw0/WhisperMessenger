@@ -143,6 +143,16 @@ function Bootstrap.Initialize(factory, options)
     now = options.now,
   })
 
+  -- The one owner of restricted-content state, created before anything can
+  -- ask it: the 12.0 restriction cache, filled from
+  -- ADDON_RESTRICTION_STATE_CHANGED payloads, plus the three detection
+  -- flags, which stay fields of the Bootstrap table because the lifecycle
+  -- handlers still write them there. Pre-12.0 clients never get the event,
+  -- so there the flags alone answer.
+  local restrictions = RestrictedActions.New(Bootstrap)
+  Bootstrap.restrictions = restrictions
+  runtime.restrictedActions = restrictions
+
   local windowRuntime = WindowRuntime.Create({
     runtime = runtime,
     accountState = accountState,
@@ -158,35 +168,15 @@ function Bootstrap.Initialize(factory, options)
     windowRuntime.buildContacts()
   end
 
-  -- 12.0+ authoritative restriction cache, populated from
-  -- ADDON_RESTRICTION_STATE_CHANGED payload. On pre-12.0 clients the
-  -- instance exists but never receives events — isCompetitive falls back
-  -- to the legacy flag model below.
-  runtime.restrictedActions = RestrictedActions.New()
   -- Seam for the lockdown catcher; nil until one is installed.
   runtime.lockdownCatcher = Bootstrap._lockdownCatcher
 
-  runtime.isChatLocked = function()
-    return runtime.restrictedActions.isChatLocked()
-  end
-
-  -- A chat lock behaves exactly like restricted content.
-  runtime.isCompetitiveContent = function()
-    if runtime.restrictedActions and runtime.restrictedActions.isCompetitive() then
-      return true
-    end
-    if runtime.isChatLocked() then
-      return true
-    end
-    return Bootstrap._inCompetitiveContent == true or Bootstrap._inEncounter == true
-  end
-
-  runtime.isMythicLockdown = function()
-    if runtime.restrictedActions and runtime.restrictedActions.isMythic() then
-      return true
-    end
-    return Bootstrap._inMythicContent == true
-  end
+  -- Assigned here, not next to the instance: until this point
+  -- isMythicLockdown is RuntimeFactory's instance-type check and the other
+  -- two do not exist, which is what building the window above ran against.
+  runtime.isChatLocked = restrictions.isChatLocked
+  runtime.isCompetitiveContent = restrictions.isCompetitive
+  runtime.isMythicLockdown = restrictions.isMythic
 
   local SeenLevelEvents = loadModule("WhisperMessenger.Core.SeenLevelEvents", "SeenLevelEvents")
   SeenLevelEvents.Init(runtime)
