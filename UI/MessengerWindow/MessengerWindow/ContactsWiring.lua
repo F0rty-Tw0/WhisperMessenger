@@ -16,8 +16,9 @@ local ContactsWiring = {}
 -- The conversation pane and selection controller are built after the
 -- contacts, so the callbacks reach them through getters at call time.
 -- options: layout, frame, chrome, settingsConfig, windowGeometry,
--- windowOptions (MessengerWindow.Create options), getSelectionController,
--- getConversation, getSelectedConversationKey
+-- windowOptions (MessengerWindow.Create options), rowActions (the window's
+-- row actions table), getSelectionController, getConversation,
+-- getSelectedConversationKey
 function ContactsWiring.Create(factory, options)
   local layout = options.layout
   local chrome = options.chrome
@@ -74,14 +75,7 @@ function ContactsWiring.Create(factory, options)
     onTabModeSwapSelection = tabSelectionMemory.onTabModeSwapSelection,
     onSelect = tabSelectionMemory.onSelect,
     onContactClicked = windowOptions.onContactClicked,
-    onPin = windowOptions.onPin,
-    onRemove = windowOptions.onRemove,
-    onMarkUnread = windowOptions.onMarkUnread,
-    onUpdatePrefs = windowOptions.onUpdatePrefs,
-    onIgnorePlayer = windowOptions.onIgnorePlayer,
-    onUnblockPlayer = windowOptions.onUnblockPlayer,
-    isPlayerBlocked = windowOptions.isPlayerBlocked,
-    whoPlayer = windowOptions.whoPlayer,
+    rowActions = options.rowActions,
     onReorder = windowOptions.onReorder,
     onAllContactsRefreshed = function(allContacts)
       chrome.setMarkAllReadShown(MarkAllReadButton.HasUnread(allContacts))

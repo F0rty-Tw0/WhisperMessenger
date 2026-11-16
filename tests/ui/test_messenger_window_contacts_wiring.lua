@@ -4,9 +4,10 @@ local FakeUI = require("tests.helpers.fake_ui")
 local ScrollView = require("WhisperMessenger.UI.ScrollView")
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
 local ContactsWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsWiring")
+local ContactsRuntime = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsRuntime")
 local Localization = require("WhisperMessenger.Locale.Localization")
 
-local function makeWiring(late, windowOptions)
+local function makeWiring(late, windowOptions, rowActions)
   local factory = FakeUI.NewFactory()
   local frame = factory.CreateFrame("Frame", nil, nil)
   local pane = factory.CreateFrame("Frame", nil, frame)
@@ -30,6 +31,7 @@ local function makeWiring(late, windowOptions)
       end,
     },
     windowOptions = windowOptions or {},
+    rowActions = rowActions,
     getSelectionController = function()
       return late.selectionController
     end,
@@ -85,6 +87,23 @@ return function()
     }
     runtime.setTabMode("groups")
     assert(#refreshed == 1 and next(refreshed[1]) == nil, "empty tab clears the selection")
+  end
+
+  -- test_row_actions_table_reaches_the_contacts_runtime_as_one_table
+  do
+    local runtimeOptions
+    local create = ContactsRuntime.Create
+    rawset(ContactsRuntime, "Create", function(factory, options)
+      runtimeOptions = options
+      return create(factory, options)
+    end)
+    local rowActions = { onPin = function() end, onIgnorePlayer = function() end, whoPlayer = function() end }
+    makeWiring({}, {}, rowActions)
+    rawset(ContactsRuntime, "Create", create)
+    assert(runtimeOptions.rowActions == rowActions, "the runtime gets the window's row actions table itself")
+    for name in pairs(rowActions) do
+      assert(runtimeOptions[name] == nil, name .. " travels only inside the row actions table")
+    end
   end
 
   -- test_unread_contacts_show_mark_all_read
