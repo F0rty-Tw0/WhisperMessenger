@@ -1,4 +1,4 @@
-local CompactLayoutSetting = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.CompactLayoutSetting")
+local CompactLayoutSetting = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ReloadSettings").CompactLayoutSetting
 local withPopups = require("tests.helpers.reload_popups").With
 
 local function dialog(popups)
