@@ -1,5 +1,6 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local WindowCallbacks = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
+local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
 
 local KEY = "wow::WOW::stranger"
 
@@ -7,13 +8,13 @@ local KEY = "wow::WOW::stranger"
 -- it open there; Delete removes it like the row's remove action.
 return function()
   local tabCalls, selected, refreshes = {}, {}, 0
-  local runtime = {
-    store = Store.New({ maxMessagesPerConversation = 10 }),
-    window = {
-      setTabMode = function(mode)
-        tabCalls[#tabCalls + 1] = mode
-      end,
-    },
+  -- A real runtime: deleting the open request clears the selection through
+  -- the store's removal hook, which only RuntimeFactory installs.
+  local runtime = RuntimeFactory.CreateRuntimeState({ conversations = {} }, {}, "wow", { maxMessagesPerConversation = 10 })
+  runtime.window = {
+    setTabMode = function(mode)
+      tabCalls[#tabCalls + 1] = mode
+    end,
   }
   local conversation = Store.EnsureConversation(runtime.store, KEY)
   conversation.request = true

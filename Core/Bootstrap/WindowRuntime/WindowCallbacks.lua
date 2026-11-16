@@ -85,14 +85,11 @@ function WindowCallbacks.Create(options)
       return
     end
     local conversation = Store.Find(runtime.store, key)
-    MessageReactions.ClearConversation(runtime, key)
+    -- The store's removal hook drops the selection, pending reactions and
+    -- session state kept for the key.
     Store.Remove(runtime.store, key)
     if type(accountState.settings) == "table" and accountState.settings.closeGameWhisperTab == true then
       GameWhisperTab.CloseFor(key, conversation)
-    end
-    if runtime.activeConversationKey == key then
-      runtime.activeConversationKey = nil
-      characterState.activeConversationKey = nil
     end
     refreshWindow()
   end
@@ -189,9 +186,9 @@ function WindowCallbacks.Create(options)
 
     onClearAllChats = function()
       MessageReactions.ClearAll(runtime)
-      for key in pairs(runtime.store.conversations) do
-        Store.Remove(runtime.store, key)
-      end
+      Store.RemoveAll(runtime.store)
+      -- The removal hook clears a selection together with its chat; a saved
+      -- selection can also name a chat that expired while offline.
       runtime.activeConversationKey = nil
       characterState.activeConversationKey = nil
     end,
@@ -199,11 +196,9 @@ function WindowCallbacks.Create(options)
     onPin = function(item)
       local key = item.conversationKey
       if Store.IsPinned(runtime.store, key) then
+        -- An old chat can expire once unpinned; the removal hook then drops
+        -- the selection with it.
         Store.Unpin(runtime.store, key)
-        if runtime.store.conversations[key] == nil and runtime.activeConversationKey == key then
-          runtime.activeConversationKey = nil
-          characterState.activeConversationKey = nil
-        end
       else
         Store.Pin(runtime.store, key)
       end
