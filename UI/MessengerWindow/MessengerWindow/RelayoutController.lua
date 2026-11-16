@@ -20,8 +20,20 @@ function RelayoutController.Create(options)
   local onContactsWidth = options.onContactsWidth
 
   local controller = {}
+  local lastWidth, lastHeight, lastContactsWidth
+  local composerRunning = false
+
+  -- The composer grows to at most a third of the content height.
+  local function composerMaxHeight(metrics)
+    if not metrics.contentHeight then
+      return nil
+    end
+
+    return math.floor(metrics.contentHeight / 3)
+  end
 
   function controller.relayoutWindow(w, h, requestedContactsWidth, refreshContactsLayout)
+    lastWidth, lastHeight, lastContactsWidth = w, h, requestedContactsWidth
     local metrics = layoutBuilder.Relayout(layout, w, h, requestedContactsWidth)
     -- Remember the expanded width: the rail's width is not the one to return to.
     setContactsWidth(metrics.expandedContactsWidth or metrics.contactsWidth)
@@ -31,7 +43,17 @@ function RelayoutController.Create(options)
     end
 
     if composer and composer.relayout then
-      composer.relayout(metrics.contentWidth)
+      local heightBefore = layout.composerHeight
+      composerRunning = true
+      local ok, err = pcall(composer.relayout, metrics.contentWidth, composerMaxHeight(metrics))
+      composerRunning = false
+      if not ok then
+        error(err, 0)
+      end
+      -- Rows never change the width, so one more pass settles the new bar height.
+      if layout.composerHeight ~= heightBefore then
+        metrics = layoutBuilder.Relayout(layout, w, h, requestedContactsWidth)
+      end
     end
     if contactsController and contactsController.fillViewport then
       contactsController.fillViewport(metrics.contactsListHeight or metrics.contactsHeight)
@@ -42,6 +64,18 @@ function RelayoutController.Create(options)
     if refreshContactsLayout then
       refreshContacts(nil, getSelectedConversationKey(), false)
     end
+  end
+
+  function controller.setComposerHeight(height)
+    if layout.composerHeight == height then
+      return
+    end
+    layout.composerHeight = height
+    if composerRunning or not lastWidth then
+      return
+    end
+
+    controller.relayoutWindow(lastWidth, lastHeight, lastContactsWidth, false)
   end
 
   return controller

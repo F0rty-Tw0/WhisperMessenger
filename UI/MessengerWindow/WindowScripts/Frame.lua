@@ -85,7 +85,8 @@ function Frame.WireFrame(refs, options)
     if options.contactsController and options.contactsController.fillViewport then
       options.contactsController.fillViewport(contactsH)
     end
-    local threadH = contactsH - frameTheme.COMPOSER_HEIGHT - frameTheme.DIVIDER_THICKNESS
+    local composerH = (options.layout and options.layout.composerHeight) or frameTheme.COMPOSER_HEIGHT
+    local threadH = contactsH - composerH - frameTheme.DIVIDER_THICKNESS
     if options.conversation then
       ConversationPane.Relayout(options.conversation, contentW, threadH)
     end
