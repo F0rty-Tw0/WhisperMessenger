@@ -17,9 +17,9 @@ local PanelRegistry = ns.BootstrapWindowRuntimePanelRegistry or require("Whisper
 local OptionalFields = ns.BootstrapRuntimeFactoryOptionalFields or require("WhisperMessenger.Core.Bootstrap.RuntimeFactory.OptionalFields")
 local RuntimeFactory = {}
 
--- Session maps keyed by conversation that other modules create on their
--- first write: the alert throttle, "notify when online" state and the
--- contacts known to run the addon.
+-- Session maps keyed by conversation, declared in CreateRuntimeState and
+-- cleared here when a chat is removed: the alert throttle, "notify when
+-- online" state and the contacts known to run the addon.
 local SESSION_MAPS_BY_CONVERSATION = { "lastAlertAtByConversation", "onlineWatch", "livePresencePeers" }
 
 -- Every runtime field has a default in CreateRuntimeState or is named in
