@@ -347,9 +347,7 @@ UI/ToggleIcon/SquareEffects.lua
 UI/ToggleIcon/IconBorder.lua
 UI/ToggleIcon/SquareLook.lua
 UI/ToggleIcon/IconArt.lua
-UI/ToggleIcon/IconTooltip.lua
-UI/ToggleIcon/IconDrag.lua
-UI/ToggleIcon/IconScripts.lua
+UI/ToggleIcon/IconInteraction.lua
 UI/Shared/GlideClock.lua
 UI/ToggleIcon/IconRide.lua
 UI/MessengerWindow/IconSettings/Options.lua
