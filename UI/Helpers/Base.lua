@@ -5,6 +5,8 @@ end
 
 local Base = {}
 
+local INPUT_SCROLL_TEMPLATE = "InputScrollFrameTemplate"
+
 -- Shared fully transparent color; treat as read-only.
 Base.TRANSPARENT = { 0, 0, 0, 0 }
 
@@ -269,6 +271,35 @@ function Base.createTemplatedFrame(factory, frameType, name, parent, template)
     return frame
   end
   return nil
+end
+
+-- Hides every texture region of `frame` (a template's own art).
+function Base.hideTextures(frame)
+  for _, region in ipairs({ frame:GetRegions() }) do
+    if region:GetObjectType() == "Texture" then
+      region:Hide()
+    end
+  end
+end
+
+-- Blizzard's input scroll box (scroll frame holding a multi-line EditBox with
+-- no letter cap), nil on a client without the template. WoW: Forever draws no
+-- letters in an edit box inside an addon-made scroll frame. Callers restyle it.
+function Base.createInputScroll(factory, parent)
+  local scroll = Base.createTemplatedFrame(factory, "ScrollFrame", nil, parent, INPUT_SCROLL_TEMPLATE)
+  if scroll == nil or scroll.EditBox == nil then
+    return nil
+  end
+
+  scroll:Show()
+  -- With no letter cap the count shows a negative number.
+  if scroll.CharCount then
+    scroll.CharCount:Hide()
+  end
+  scroll.EditBox:SetMultiLine(true)
+  scroll.EditBox:SetMaxLetters(0)
+
+  return scroll
 end
 
 ns.UIHelpersBase = Base

@@ -32,9 +32,6 @@ local STATUS_HEIGHT = 14
 local WELL_RADIUS = 6
 local TEXT_INSET = 8
 local SCROLL_STEP = 40
--- WoW: Forever draws no letters in an edit box inside the addon's own scroll
--- view; Blizzard's input scroll box draws them, with its own scroll bar.
-local INPUT_SCROLL_TEMPLATE = "InputScrollFrameTemplate"
 local TEMPLATE_BAR_WIDTH = 18
 -- Font for the fallback box, on clients without that template.
 local EXPORT_FONT = "ChatFontNormal"
@@ -70,20 +67,12 @@ local function createText(parent, font, justify)
   return label
 end
 
-local function hideTextures(frame)
-  for _, region in ipairs({ frame:GetRegions() }) do
-    if region:GetObjectType() == "Texture" then
-      region:Hide()
-    end
-  end
-end
-
 -- Modern look: the themed well replaces Blizzard's border, and the scroll
 -- bar (Back/Forward arrows, a Track holding the Thumb knob, as on WoW:
 -- Forever) keeps only a slim knob. Returns the knob's fill for painting;
 -- a bar of any other shape keeps Blizzard's art.
 local function slimTemplateArt(scroll)
-  hideTextures(scroll)
+  UIHelpers.hideTextures(scroll)
   local bar = scroll.ScrollBar
   local thumb = bar and bar.Track and bar.Track.Thumb
   if thumb == nil then
@@ -92,9 +81,9 @@ local function slimTemplateArt(scroll)
   for _, arrow in ipairs({ bar.Back, bar.Forward }) do
     arrow:Hide()
   end
-  hideTextures(bar)
-  hideTextures(bar.Track)
-  hideTextures(thumb)
+  UIHelpers.hideTextures(bar)
+  UIHelpers.hideTextures(bar.Track)
+  UIHelpers.hideTextures(thumb)
   local fill = thumb:CreateTexture(nil, "OVERLAY")
   fill:SetPoint("TOP", thumb, "TOP", 0, 0)
   fill:SetPoint("BOTTOM", thumb, "BOTTOM", 0, 0)
@@ -103,18 +92,15 @@ local function slimTemplateArt(scroll)
   return fill
 end
 
--- Blizzard's input scroll box, nil on a client without the template.
+-- Blizzard's input scroll box (WoW: Forever draws no letters in an edit box
+-- inside the addon's own scroll view), nil on a client without the template.
 local function createTemplateBox(factory, panel, well, width, height)
-  local scroll = UIHelpers.createTemplatedFrame(factory, "ScrollFrame", nil, well, INPUT_SCROLL_TEMPLATE)
-  if scroll == nil or scroll.EditBox == nil then
+  local scroll = UIHelpers.createInputScroll(factory, well)
+  if scroll == nil then
     return nil
   end
   scroll:SetPoint("TOPLEFT", well, "TOPLEFT", TEXT_INSET, -TEXT_INSET)
   scroll:SetSize(width, height)
-  scroll:Show()
-  if scroll.CharCount then
-    scroll.CharCount:Hide()
-  end
   if not DialogChrome.IsNative() then
     panel.templateThumb = slimTemplateArt(scroll)
   end
@@ -137,6 +123,8 @@ local function createViewBox(factory, panel, well, width, height)
   box:SetPoint("TOPLEFT", view.content, "TOPLEFT", 0, 0)
   box:SetPoint("TOPRIGHT", view.content, "TOPRIGHT", 0, 0)
   UIHelpers.setFontObject(box, _G[EXPORT_FONT] and EXPORT_FONT or Theme.FONTS.composer_input)
+  box:SetMultiLine(true)
+  box:SetMaxLetters(0)
   return box
 end
 
@@ -154,8 +142,6 @@ local function createWell(factory, panel, body, top)
   local width = WIDTH - PADDING * 2 - TEXT_INSET * 2
   local height = wellHeight - TEXT_INSET * 2
   local box = createTemplateBox(factory, panel, well, width, height) or createViewBox(factory, panel, well, width, height)
-  box:SetMultiLine(true)
-  box:SetMaxLetters(0)
   box:SetMaxBytes(0)
   box:SetAutoFocus(false)
   panel.editBox = box

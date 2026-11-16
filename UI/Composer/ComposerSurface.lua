@@ -15,11 +15,11 @@ local ComposerSurface = {}
 local TOP_ONLY = { top = true }
 local INPUT_RADIUS = 8
 
--- Creates the rounded fill and gloss sheen once (the fill follows the input's
--- size) and returns { rounded, sheen, apply }; apply() repaints for the
+-- Creates the rounded fill and gloss sheen once (the fill follows the input
+-- box's size) and returns { rounded, sheen, apply }; apply() repaints for the
 -- active theme.
-function ComposerSurface.Create(pane, input, border)
-  local rounded = UIHelpers.createRoundedBackground(input, INPUT_RADIUS)
+function ComposerSurface.Create(pane, box, border)
+  local rounded = UIHelpers.createRoundedBackground(box, INPUT_RADIUS)
   local sheen = UIHelpers.createSheen(pane)
 
   local function apply()
@@ -32,10 +32,10 @@ function ComposerSurface.Create(pane, input, border)
   return { rounded = rounded, sheen = sheen, apply = apply }
 end
 
--- Native WoW HUD: Blizzard input-box border art drawn on the existing
--- composer EditBox (re-templating it would replace its scripts and insets).
--- Retail HUD uses the search-box atlases when the client has them; every
--- other case uses the file art, which ships with every flavor.
+-- Native WoW HUD single-line input border (the preview reply row; the
+-- composer draws CreateInputBorder below). Retail HUD uses the search-box
+-- atlases when the client has them; every other case uses the file art,
+-- which ships with every flavor.
 ComposerSurface.NATIVE_BORDER_TEXTURE = "Interface\\Common\\Common-Input-Border"
 ComposerSurface.NATIVE_SEARCH_ATLAS = {
   left = "common-search-border-left",
@@ -80,10 +80,54 @@ function ComposerSurface.CreateNativeBorder(input)
   return { left = left, middle = middle, right = right }
 end
 
--- Returns { native, apply }; apply(placeholder) keeps the Blizzard look on
--- every theme refresh (transparent pane, no hairline, fixed text colours).
-function ComposerSurface.CreateNative(input, border, paneBg)
-  ComposerSurface.CreateNativeBorder(input)
+-- The input scroll template's own multi-line border (every flavor ships
+-- these files): 8px corners, stretched edges and a filled middle, so it keeps
+-- its weight at any height.
+ComposerSurface.NATIVE_INPUT_BORDER = {
+  topLeft = "Interface\\Common\\Common-Input-Border-TL",
+  top = "Interface\\Common\\Common-Input-Border-T",
+  topRight = "Interface\\Common\\Common-Input-Border-TR",
+  left = "Interface\\Common\\Common-Input-Border-L",
+  middle = "Interface\\Common\\Common-Input-Border-M",
+  right = "Interface\\Common\\Common-Input-Border-R",
+  bottomLeft = "Interface\\Common\\Common-Input-Border-BL",
+  bottom = "Interface\\Common\\Common-Input-Border-B",
+  bottomRight = "Interface\\Common\\Common-Input-Border-BR",
+}
+local INPUT_BORDER_CORNER = 8
+
+local function stretch(piece, from, fromPoint, to, toPoint)
+  piece:SetPoint("TOPLEFT", from, fromPoint, 0, 0)
+  piece:SetPoint("BOTTOMRIGHT", to, toPoint, 0, 0)
+end
+
+-- Draws that border edge to edge on `box` (the template draws it 5px outside
+-- its scroll frame; the box is the whole input rect). Returns the pieces.
+function ComposerSurface.CreateInputBorder(box)
+  local p = {}
+  for key, path in pairs(ComposerSurface.NATIVE_INPUT_BORDER) do
+    p[key] = box:CreateTexture(nil, "BACKGROUND")
+    p[key]:SetTexture(path)
+  end
+  for key, anchor in pairs({ topLeft = "TOPLEFT", topRight = "TOPRIGHT", bottomLeft = "BOTTOMLEFT", bottomRight = "BOTTOMRIGHT" }) do
+    p[key]:SetSize(INPUT_BORDER_CORNER, INPUT_BORDER_CORNER)
+    p[key]:SetPoint(anchor, box, anchor, 0, 0)
+  end
+  stretch(p.top, p.topLeft, "TOPRIGHT", p.topRight, "BOTTOMLEFT")
+  stretch(p.bottom, p.bottomLeft, "TOPRIGHT", p.bottomRight, "BOTTOMLEFT")
+  stretch(p.left, p.topLeft, "BOTTOMLEFT", p.bottomLeft, "TOPRIGHT")
+  stretch(p.right, p.topRight, "BOTTOMLEFT", p.bottomRight, "TOPRIGHT")
+  stretch(p.middle, p.left, "TOPRIGHT", p.right, "BOTTOMLEFT")
+
+  return p
+end
+
+-- Border on `box` (the input itself on a client without the template), text
+-- colours on `input`. Returns { native, apply }; apply(placeholder) keeps the
+-- Blizzard look on every theme refresh (transparent pane, no hairline, fixed
+-- text colours).
+function ComposerSurface.CreateNative(input, border, paneBg, box)
+  ComposerSurface.CreateInputBorder(box)
 
   local function apply(placeholder)
     UIHelpers.applyColorTexture(paneBg, UIHelpers.TRANSPARENT)

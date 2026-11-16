@@ -5,6 +5,9 @@ end
 
 local RelayoutController = {}
 
+-- The composer grows to at most this share (1/N) of the content height.
+local COMPOSER_MAX_SHARE = 3
+
 function RelayoutController.Create(options)
   options = options or {}
 
@@ -23,13 +26,12 @@ function RelayoutController.Create(options)
   local lastWidth, lastHeight, lastContactsWidth
   local composerRunning = false
 
-  -- The composer grows to at most a third of the content height.
   local function composerMaxHeight(metrics)
     if not metrics.contentHeight then
       return nil
     end
 
-    return math.floor(metrics.contentHeight / 3)
+    return math.floor(metrics.contentHeight / COMPOSER_MAX_SHARE)
   end
 
   function controller.relayoutWindow(w, h, requestedContactsWidth, refreshContactsLayout)
@@ -75,6 +77,7 @@ function RelayoutController.Create(options)
       return
     end
 
+    -- Replays the last size, so every window relayout must go through this controller.
     controller.relayoutWindow(lastWidth, lastHeight, lastContactsWidth, false)
   end
 
