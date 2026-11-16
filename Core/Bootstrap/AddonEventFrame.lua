@@ -5,6 +5,7 @@ end
 
 local EventUtils = ns.EventUtils or require("WhisperMessenger.Core.EventUtils")
 local LockdownCatcher = ns.BootstrapLockdownCatcher or require("WhisperMessenger.Core.Bootstrap.LockdownCatcher")
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local WhisperIngestFailsafe = ns.BootstrapWhisperIngestFailsafe or require("WhisperMessenger.Core.Bootstrap.WhisperIngestFailsafe")
 
 local AddonEventFrame = {}
@@ -115,7 +116,9 @@ function AddonEventFrame.Install(deps)
       return
     end
 
-    if Bootstrap._inMythicContent then
+    -- The flag, not isMythic(): it is set together with the suspend that
+    -- unregisters the live events, so both stop routing at the same moment.
+    if RestrictedActions.For(Bootstrap).flag("mythic") then
       return
     end
 

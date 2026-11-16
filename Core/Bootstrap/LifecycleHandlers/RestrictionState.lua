@@ -11,17 +11,20 @@ local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.C
 
 local RestrictionState = {}
 
-local function applyRestriction(Bootstrap, restrictionType, isActive, deps)
+-- restrictions: the Bootstrap table's restriction instance. The suspend and
+-- resume edges read the mythic flag, not isMythic(): the cache already holds
+-- this event's state, so isMythic() would never show an edge.
+local function applyRestriction(Bootstrap, restrictions, restrictionType, isActive, deps)
   if restrictionType == RestrictedActions.TYPES.ChallengeMode then
-    if isActive and not Bootstrap._inMythicContent then
-      Bootstrap._inMythicContent = true
+    if isActive and not restrictions.flag("mythic") then
+      restrictions.setFlag("mythic", true)
       if Bootstrap.runtime and Bootstrap.runtime.suspend then
         Bootstrap.runtime.suspend()
       end
-    elseif not isActive and Bootstrap._inMythicContent then
-      Bootstrap._inMythicContent = false
-      Bootstrap._inEncounter = false
-      Bootstrap._inCompetitiveContent = false
+    elseif not isActive and restrictions.flag("mythic") then
+      restrictions.setFlag("mythic", false)
+      restrictions.setFlag("encounter", false)
+      restrictions.setFlag("competitive", false)
       if Bootstrap.runtime and Bootstrap.runtime.resume then
         Bootstrap.runtime.resume()
       end
@@ -38,7 +41,7 @@ local function applyRestriction(Bootstrap, restrictionType, isActive, deps)
   end
 
   if restrictionType == RestrictedActions.TYPES.Encounter then
-    Bootstrap._inEncounter = isActive
+    restrictions.setFlag("encounter", isActive)
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
     end
@@ -48,7 +51,7 @@ local function applyRestriction(Bootstrap, restrictionType, isActive, deps)
   end
 
   if restrictionType == RestrictedActions.TYPES.PvPMatch then
-    Bootstrap._inCompetitiveContent = isActive
+    restrictions.setFlag("competitive", isActive)
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
     end
@@ -56,7 +59,7 @@ local function applyRestriction(Bootstrap, restrictionType, isActive, deps)
     return
   end
 
-  -- Chat lock state lives in the restriction cache; no Bootstrap flag.
+  -- Chat lock state lives in the restriction cache; it has no flag.
   if restrictionType == RestrictedActions.TYPES.Chat then
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
@@ -68,13 +71,11 @@ end
 
 function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState, deps)
   deps = deps or {}
-  local ra = Bootstrap.runtime and Bootstrap.runtime.restrictedActions
-  if ra and ra.updateFromEvent then
-    ra.updateFromEvent(restrictionType, newState)
-  end
+  local restrictions = RestrictedActions.For(Bootstrap)
+  restrictions.updateFromEvent(restrictionType, newState)
 
   local isActive = newState == RestrictedActions.STATES.Active or newState == RestrictedActions.STATES.Activating
-  applyRestriction(Bootstrap, restrictionType, isActive, deps)
+  applyRestriction(Bootstrap, restrictions, restrictionType, isActive, deps)
 
   -- Any restriction lifting may be the last one holding chat; the replay
   -- checks readiness itself.

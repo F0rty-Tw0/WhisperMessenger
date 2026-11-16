@@ -4,6 +4,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local RestrictionState = require("tests.helpers.restriction_state")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
+local WindowCoordinator = require("WhisperMessenger.Core.Bootstrap.WindowCoordinator")
 local WindowRuntime = require("WhisperMessenger.Core.Bootstrap.WindowRuntime")
 
 local TYPES = RestrictedActions.TYPES
@@ -33,6 +34,7 @@ return function()
   end
   local savedRestrictions = Bootstrap.restrictions
   local createWindowRuntime = WindowRuntime.Create
+  local createWindowCoordinator = WindowCoordinator.Create
 
   local ok, err = pcall(function()
     -- test_bootstrap_and_runtime_share_one_restriction_instance
@@ -55,16 +57,34 @@ return function()
       assert(seen == runtime.restrictedActions, "the window runtime must see the instance the runtime keeps")
     end
 
-    -- test_instance_flags_are_the_bootstrap_fields
+    -- test_runtime_predicates_follow_the_instance_flags
     do
       local runtime = boot()
       Bootstrap.restrictions.setFlag("encounter", true)
-      assert(Bootstrap._inEncounter == true, "setFlag must write the field today's handlers read")
       assert(runtime.isCompetitiveContent() == true, "a flag set on the instance must reach runtime.isCompetitiveContent")
       RestrictionState.Set(Bootstrap, { mythic = true })
-      assert(Bootstrap.restrictions.flag("mythic") == true, "a field today's handlers write must reach the instance")
-      assert(Bootstrap.restrictions.flag("encounter") == false, "a cleared field must clear the flag")
-      assert(runtime.isMythicLockdown() == true, "the mythic field must reach runtime.isMythicLockdown")
+      assert(runtime.isCompetitiveContent() == false, "a cleared encounter flag must reach runtime.isCompetitiveContent")
+      assert(runtime.isMythicLockdown() == true, "the mythic flag must reach runtime.isMythicLockdown")
+    end
+
+    -- test_window_runtime_reads_the_mythic_flag_from_the_instance
+    -- The second instance keeps its own flag store, so reading a field of
+    -- the Bootstrap table would miss it.
+    do
+      local isMythicRestricted
+      WindowCoordinator.Create = function(options)
+        isMythicRestricted = options.isMythicRestricted
+        return createWindowCoordinator(options)
+      end
+      boot()
+      WindowCoordinator.Create = createWindowCoordinator
+      assert(isMythicRestricted() == false, "no flag: the window may request availability")
+      local installed = Bootstrap.restrictions
+      Bootstrap.restrictions = RestrictedActions.New()
+      Bootstrap.restrictions.setFlag("mythic", true)
+      local answer = isMythicRestricted()
+      Bootstrap.restrictions = installed
+      assert(answer == true, "the window runtime must ask the Bootstrap table's restriction instance")
     end
 
     -- test_runtime_predicates_answer_from_the_instance
@@ -81,6 +101,7 @@ return function()
   end)
 
   WindowRuntime.Create = createWindowRuntime
+  WindowCoordinator.Create = createWindowCoordinator
   RestrictionState.Set(Bootstrap, {})
   Bootstrap.restrictions = savedRestrictions
   for _, name in ipairs({ "UIParent", "C_ChatInfo", "C_RestrictedActions" }) do

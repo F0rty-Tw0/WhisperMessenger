@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local RestrictionState = require("tests.helpers.restriction_state")
 local AddonEventFrame = require("WhisperMessenger.Core.Bootstrap.AddonEventFrame")
+local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -181,6 +182,17 @@ return function()
   RestrictionState.Set(Bootstrap, { mythic = true })
   frame.scripts.OnEvent(frame, "CHAT_MSG_WHISPER", "blocked")
   assert(table.concat(calls, ",") == "LifecycleHandlers:CHAT_MSG_WHISPER", "expected mythic guard to stop live routing after lifecycle handling")
+
+  -- The guard asks the Bootstrap table's restriction instance. This one keeps
+  -- its own flag store, so a read of a Bootstrap field would miss it.
+  calls = {}
+  RestrictionState.Set(Bootstrap, {})
+  local installedInstance = Bootstrap.restrictions
+  Bootstrap.restrictions = RestrictedActions.New()
+  Bootstrap.restrictions.setFlag("mythic", true)
+  frame.scripts.OnEvent(frame, "CHAT_MSG_WHISPER", "blocked again")
+  Bootstrap.restrictions = installedInstance
+  assert(table.concat(calls, ",") == "LifecycleHandlers:CHAT_MSG_WHISPER", "expected the mythic guard to read the restriction instance")
 
   -- fake_ui installs a default _G.CreateFrame so the production code can run
   -- under lupa; suppress it here to exercise the degenerate branch.

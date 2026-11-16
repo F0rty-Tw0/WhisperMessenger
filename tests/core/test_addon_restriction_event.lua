@@ -109,4 +109,52 @@ return function()
 
     _G.C_RestrictedActions = savedApi
   end
+
+  -- test_restriction_events_set_and_read_flags_on_the_instance
+  -- The instance keeps its own flag store here, so a handler that wrote or
+  -- read fields of the Bootstrap table would miss it.
+  do
+    local TYPES, STATES = RestrictedActions.TYPES, RestrictedActions.STATES
+    local suspendCalls, resumeCalls = 0, 0
+    local instance = RestrictedActions.New()
+    local Bootstrap = {
+      restrictions = instance,
+      runtime = {
+        restrictedActions = instance,
+        suspend = function()
+          suspendCalls = suspendCalls + 1
+        end,
+        resume = function()
+          resumeCalls = resumeCalls + 1
+        end,
+      },
+    }
+    local function report(restrictionType, state)
+      LifecycleHandlers.Handle(Bootstrap, "ADDON_RESTRICTION_STATE_CHANGED", {}, restrictionType, state)
+    end
+
+    report(TYPES.ChallengeMode, STATES.Active)
+    assert(instance.flag("mythic") == true, "ChallengeMode active sets the mythic flag on the instance")
+    report(TYPES.ChallengeMode, STATES.Active)
+    assert(suspendCalls == 1, "the second Active sees the flag already set and does not suspend again, got " .. suspendCalls)
+
+    report(TYPES.Encounter, STATES.Active)
+    assert(instance.flag("encounter") == true, "Encounter active sets the encounter flag on the instance")
+    report(TYPES.PvPMatch, STATES.Active)
+    assert(instance.flag("competitive") == true, "PvPMatch active sets the competitive flag on the instance")
+
+    report(TYPES.ChallengeMode, STATES.Inactive)
+    assert(resumeCalls == 1, "ChallengeMode inactive resumes once, got " .. resumeCalls)
+    for _, name in ipairs(RestrictionState.NAMES) do
+      assert(instance.flag(name) == false, "the key ending clears the " .. name .. " flag")
+    end
+  end
+
+  -- test_restriction_event_reaches_the_instance_cache_without_a_runtime_copy
+  do
+    local instance = RestrictedActions.New()
+    local Bootstrap = { restrictions = instance, runtime = {} }
+    LifecycleHandlers.Handle(Bootstrap, "ADDON_RESTRICTION_STATE_CHANGED", {}, RestrictedActions.TYPES.PvPMatch, RestrictedActions.STATES.Active)
+    assert(instance.cachedState(RestrictedActions.TYPES.PvPMatch) == RestrictedActions.STATES.Active, "the event payload is cached on the instance")
+  end
 end

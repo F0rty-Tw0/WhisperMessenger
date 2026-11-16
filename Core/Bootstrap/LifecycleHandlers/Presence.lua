@@ -8,6 +8,7 @@ local Store = ns.ConversationStore or require("WhisperMessenger.Model.Conversati
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 local BNetRekey = ns.BootstrapLifecycleHandlersBNetRekey or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.BNetRekey")
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
 local ZoneNotify = ns.BootstrapLifecycleHandlersZoneNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneNotify")
 -- stylua: ignore
@@ -200,7 +201,7 @@ end
 -- re-enumerating every member every TTL.
 local function schedulePresenceRefresh(Bootstrap, PresenceCache)
   Common.scheduleAfter(2, function()
-    if Bootstrap._inMythicContent then
+    if RestrictedActions.For(Bootstrap).flag("mythic") then
       return
     end
     PresenceCache.Rebuild()
@@ -211,12 +212,13 @@ end
 function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
   StaleRestrictions.Clear(Bootstrap)
   local ContentDetector = deps.getContentDetector()
-  local wasMythic = Bootstrap._inMythicContent or false
+  local restrictions = RestrictedActions.For(Bootstrap)
+  local wasMythic = restrictions.flag("mythic")
   local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
   local isCompetitive = ContentDetector and ContentDetector.IsCompetitiveContent(_G.GetInstanceInfo) or false
-  Bootstrap._inMythicContent = isMythic
-  Bootstrap._inCompetitiveContent = isCompetitive
-  Bootstrap._inEncounter = false
+  restrictions.setFlag("mythic", isMythic)
+  restrictions.setFlag("competitive", isCompetitive)
+  restrictions.setFlag("encounter", false)
   if Bootstrap.syncChatFilters then
     Bootstrap.syncChatFilters()
   end
@@ -289,7 +291,7 @@ function Presence.handlePresenceInvalidation(Bootstrap, deps)
   end
 
   PresenceCache.Invalidate()
-  if not Bootstrap._inMythicContent then
+  if not RestrictedActions.For(Bootstrap).flag("mythic") then
     scheduleZoneCheck(Bootstrap, PresenceCache)
   end
 

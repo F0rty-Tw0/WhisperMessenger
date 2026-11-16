@@ -21,12 +21,14 @@ end
 local function holdOne()
   local restore = FakeChatLines.Install({ [7] = readable() })
   local runtime = ReplayRuntime.New()
-  runtime.restrictedActions = RestrictedActions.New()
+  local Bootstrap = { runtime = runtime }
+  -- One instance for both, as Bootstrap.Initialize wires it.
+  runtime.restrictedActions = RestrictedActions.For(Bootstrap)
   runtime.isChatLocked = function()
     return runtime.restrictedActions.isChatLocked()
   end
   ReplayRuntime.Hold(runtime, "CHAT_MSG_WHISPER", 7)
-  return { runtime = runtime }, restore
+  return Bootstrap, restore
 end
 
 local function setRestriction(Bootstrap, restrictionType, newState)

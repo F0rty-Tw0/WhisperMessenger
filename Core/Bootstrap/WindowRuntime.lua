@@ -9,6 +9,7 @@ local Store = ns.ConversationStore or require("WhisperMessenger.Model.Conversati
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local WindowCoordinator = ns.BootstrapWindowCoordinator or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator")
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local SendHandler = ns.BootstrapSendHandler or require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local LivePresenceSender = ns.BootstrapLivePresenceSender or require("WhisperMessenger.Core.Bootstrap.LivePresenceSender")
 local ChatGateway = ns.ChatGateway or require("WhisperMessenger.Transport.ChatGateway")
@@ -138,8 +139,9 @@ function WindowRuntime.Create(options)
     })
   end
 
+  -- The flag alone, as before: availability requests stop with the suspend.
   local function isMythicRestricted()
-    return bootstrap._inMythicContent == true
+    return RestrictedActions.For(bootstrap).flag("mythic")
   end
 
   local widgetPreview = WidgetPreview.Create({
