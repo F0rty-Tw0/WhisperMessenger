@@ -8,6 +8,8 @@ end
 -- Only an observed offline -> online change is worth an alert.
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
+local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+local BNetStatus = ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
 
 local OnlineWatch = {}
 
@@ -61,10 +63,7 @@ function OnlineWatch.IsCharacterFriend(api, name)
   return friendInfo(api, name) ~= nil
 end
 
--- BNetStatus loads after this module in the TOC, so resolve it lazily.
 local function readBNetFriend(api, conversation)
-  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
-  local BNetStatus = ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
   local accountInfo = BNetResolver.ResolveAccountInfo(api, conversation.bnetAccountID, conversation.guid, conversation.battleTag)
   return BNetStatus.IsOnline(accountInfo)
 end

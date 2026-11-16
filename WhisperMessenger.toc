@@ -83,7 +83,6 @@ Model/OutgoingDelivery.lua
 Model/ContactPrefs.lua
 Model/MessageRequests.lua
 Model/AlertPolicy.lua
-Model/OnlineWatch.lua
 Model/QuickReplies.lua
 Model/ChannelMessageStore.lua
 Model/PresenceCache/MemberRecord.lua
@@ -114,11 +113,6 @@ Model/MessageReactions.lua
 Model/LivePresence.lua
 Model/MessageReplies.lua
 Model/ConversationExport.lua
-Model/ContactEnricher/Disambiguation.lua
-Model/ContactEnricher/WoWStatus.lua
-Model/ContactEnricher/BNetStatus.lua
-Model/ContactEnricher/AvailabilityEnricher.lua
-Model/ContactEnricher/ContactEnricher.lua
 
 Persistence/Schema.lua
 Persistence/Migrations.lua
@@ -147,6 +141,12 @@ Transport/WhoAsked.lua
 Transport/WhoBlock.lua
 Transport/WhoPanels.lua
 Transport/WhoLookup.lua
+Model/ContactEnricher/Disambiguation.lua
+Model/ContactEnricher/WoWStatus.lua
+Model/ContactEnricher/BNetStatus.lua
+Model/OnlineWatch.lua
+Model/ContactEnricher/AvailabilityEnricher.lua
+Model/ContactEnricher/ContactEnricher.lua
 Core/WhoRow.lua
 Core/SeenLevelEvents/WhoLevels.lua
 Core/SeenLevelEvents/Guild.lua
