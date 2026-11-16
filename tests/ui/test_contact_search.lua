@@ -88,4 +88,46 @@ return function()
 
     assert(senderLowers == 1, "a sender repeated across messages should be checked once; lowered " .. senderLowers .. " times")
   end
+
+  -- test_multi_term_query_matches_terms_spread_across_fields
+  do
+    local items = {
+      {
+        conversationKey = "me::WOW::arthas",
+        displayName = "Arthas-Area52",
+        note = "Sells Flasks",
+        conversation = { messages = { { text = "Meet in Stormwind", playerName = "Khadgar" } } },
+      },
+    }
+    local function visibleFor(query)
+      return #ContactSearch.BuildVisibleContacts(items, ContactSearch.NormalizeSearchQuery(query))
+    end
+
+    assert(visibleFor("arthas flasks stormwind khadgar") == 1, "each term may match a different field or message")
+    assert(visibleFor("stormwind arthas") == 1, "term order must not matter")
+    assert(visibleFor("arthas flasks orgrimmar") == 0, "every term must match somewhere in the contact")
+    assert(visibleFor("arthas arthas") == 1, "a repeated term is satisfied by one match")
+  end
+
+  -- test_multi_term_query_lowers_each_value_once
+  do
+    local items = { { displayName = "Arthas", conversation = { messages = { { text = "Meet In Stormwind" } } } } }
+
+    local originalLower = string.lower
+    local textLowers = 0
+    rawset(string, "lower", function(value)
+      if value == "Meet In Stormwind" then
+        textLowers = textLowers + 1
+      end
+      return originalLower(value)
+    end)
+    local ok, visible = pcall(ContactSearch.BuildVisibleContacts, items, "zzz qqq yyy")
+    rawset(string, "lower", originalLower)
+    if not ok then
+      error(visible, 0)
+    end
+
+    assert(#visible == 0, "no term matches, so the contact stays hidden")
+    assert(textLowers == 1, "a message text should be lowered once however many terms there are; lowered " .. textLowers .. " times")
+  end
 end

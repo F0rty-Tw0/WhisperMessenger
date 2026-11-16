@@ -25,6 +25,9 @@ function ContactsSearchController.Create(options)
   local currentContacts = options.initialContacts or {}
   local contactsSearchQuery = ""
   local pendingRefreshTimer = nil
+  -- Kept across refreshes so a query left in the box searches only the
+  -- conversations that changed. The search empties it when the query changes.
+  local searchMatchCache = {}
 
   local function syncSearchInputVisual()
     local hasSearch = contactsSearchQuery ~= ""
@@ -55,7 +58,7 @@ function ContactsSearchController.Create(options)
       currentContacts = nextContacts
     end
 
-    local visibleContacts = contactSearch.BuildVisibleContacts(currentContacts, contactsSearchQuery)
+    local visibleContacts = contactSearch.BuildVisibleContacts(currentContacts, contactsSearchQuery, searchMatchCache)
 
     -- Apply tab filter (Whispers / Groups) when provided
     if type(getTabFilter) == "function" then
