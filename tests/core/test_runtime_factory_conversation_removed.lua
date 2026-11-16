@@ -59,12 +59,12 @@ return function()
     assert(LivePresence.HasPeer(runtime, KEPT) == true, "a chat that still exists keeps its addon-peer flag")
   end
 
-  -- test_removing_conversation_before_any_session_state_exists
+  -- test_removing_conversation_while_session_maps_are_empty
   do
     local runtime = build()
     assert(next(runtime.lastAlertAtByConversation) == nil and next(runtime.onlineWatch) == nil and next(runtime.livePresencePeers) == nil)
     Store.Remove(runtime.store, GONE)
-    assert(runtime.store.conversations[GONE] == nil, "removal works while the session maps are still unset")
+    assert(runtime.store.conversations[GONE] == nil, "removal works while the session maps are still empty")
   end
 
   -- test_capacity_and_retention_removals_clear_session_maps_too
