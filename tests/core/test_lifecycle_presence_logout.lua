@@ -3,6 +3,7 @@ local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Pres
 local IncomingAlerts = require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 local OnlineWatch = require("WhisperMessenger.Model.OnlineWatch")
 local LivePresence = require("WhisperMessenger.Model.LivePresence")
+local ChannelMessageStore = require("WhisperMessenger.Model.ChannelMessageStore")
 
 local NOW = 1000
 local WHISPER = "me::WOW::jaina"
@@ -38,10 +39,46 @@ local function build(clearOnLogout, activeKey)
   IncomingAlerts.Throttled(runtime, WHISPER, NOW)
   OnlineWatch.Observe(runtime, WHISPER, true)
   LivePresence.RecordPeer(runtime, WHISPER)
+  -- Channel lines kept to show above a new whisper from the same player.
+  ChannelMessageStore.Record(runtime.channelMessageStore, "Thrall-Realm", "WTS sword", "Trade", NOW, 2)
+  ChannelMessageStore.Record(runtime.channelMessageStore, "Jaina-Realm", "LF healer", "LookingForGroup", NOW, 26)
   return runtime, accountState, characterState
 end
 
 return function()
+  -- test_logout_with_setting_on_removes_saved_channel_lines
+  do
+    local runtime, accountState = build(true)
+    local saved = accountState.channelMessages
+    assert(saved == runtime.channelMessageStore and saved.entryCount == 2, "fixture: two channel lines are saved")
+
+    Presence.handlePlayerLogout({ runtime = runtime })
+
+    assert(accountState.channelMessages == saved, "the saved table itself is emptied")
+    assert(next(saved.entries) == nil and saved.entryCount == 0, "no channel line is left to save")
+    assert(ChannelMessageStore.GetLatest(saved, "thrall-realm", NOW) == nil, "a cleared line is not found again")
+  end
+
+  -- test_logout_with_setting_off_keeps_saved_channel_lines
+  do
+    local runtime, accountState = build(false)
+
+    Presence.handlePlayerLogout({ runtime = runtime })
+
+    assert(accountState.channelMessages.entryCount == 2, "channel lines stay")
+    assert(ChannelMessageStore.GetLatest(accountState.channelMessages, "thrall-realm", NOW) ~= nil, "a kept line is still found")
+  end
+
+  -- test_logout_with_setting_on_and_no_channel_store_still_clears_conversations
+  do
+    local runtime, accountState = build(true)
+    runtime.channelMessageStore = nil
+
+    assert(Presence.handlePlayerLogout({ runtime = runtime }) == true)
+
+    assert(next(accountState.conversations) == nil, "conversations are cleared without a channel store")
+  end
+
   -- test_logout_with_setting_on_removes_whisper_group_and_channel_conversations
   do
     local runtime, accountState = build(true)
