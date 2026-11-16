@@ -7,6 +7,8 @@ local WoWStatus = ns.ContactEnricherWoWStatus or require("WhisperMessenger.Model
 local BNetStatus = ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
 local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
+local WhoFreshness = ns.WhoFreshness or require("WhisperMessenger.Transport.WhoFreshness")
 
 local AvailabilityEnricher = {}
 
@@ -55,15 +57,13 @@ local function stampLastSeen(item, runtime)
   OnlineWatch.StampSeen(runtime, Store.Find(runtime.store, item.conversationKey))
 end
 
--- whoAreaAt is time() seconds; WhoFreshness loads after this file.
+-- whoAreaAt is time() seconds.
 local function isFreshWhoAnswer(item)
-  local WhoFreshness = ns.WhoFreshness or require("WhisperMessenger.Transport.WhoFreshness")
   local answeredAt = item.whoAreaAt
   return type(answeredAt) == "number" and _G.time() - answeredAt < WhoFreshness.STALE_SECONDS
 end
 
 function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
-  local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
   for _, item in ipairs(contacts) do
     if item.guid and runtime.availabilityByGUID[item.guid] then
       WoWStatus.ApplyCached(item, runtime)

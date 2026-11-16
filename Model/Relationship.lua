@@ -7,6 +7,7 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
+local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 
 -- How the player knows a contact: Battle.net friend > guild > character friend
 -- > shared community. Resolve decides the ties, caches them on the runtime and
@@ -19,14 +20,11 @@ local WOW_TIES = { "bnet", "guild", "friend", "community" }
 -- A BNet chat is always bnet; its friend's character is checked for these.
 local BNET_TIES = { "guild", "community" }
 
--- PresenceCache, BNetResolver and BNetStatus load after this file's
--- neighbours or after the files that use it, so they resolve at call time.
+-- Only BNetStatus loads after this file, so it has to resolve at call time.
+-- PresenceCache and FlavorCompat load before it and are looked up at call
+-- time by choice.
 local function presenceCache()
   return ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
-end
-
-local function bnetResolver()
-  return ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 end
 
 local function bnetStatus()
@@ -160,7 +158,7 @@ end
 -- the character it finds); runtime.bnetPassCache keeps it cheap in a refresh.
 local function bnetChatTarget(item, runtime)
   local battleTag = item.battleTag or item.displayName
-  local accountInfo = bnetResolver().ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid, battleTag, runtime.bnetPassCache)
+  local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid, battleTag, runtime.bnetPassCache)
   ---@type table?
   local gameInfo = type(accountInfo) == "table" and accountInfo.gameAccountInfo or nil
   if type(gameInfo) ~= "table" or not bnetStatus().IsInWoW(gameInfo) then
