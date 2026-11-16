@@ -1,5 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local CompetitiveIndicator = require("WhisperMessenger.UI.ToggleIcon.CompetitiveIndicator")
+local CompetitiveIndicator = require("WhisperMessenger.UI.ToggleIcon.IconLooks").CompetitiveIndicator
 
 return function()
   local factory = FakeUI.NewFactory()

@@ -1,4 +1,4 @@
-local PulseState = require("WhisperMessenger.UI.ToggleIcon.PulseState")
+local PulseState = require("WhisperMessenger.UI.ToggleIcon.IconLooks").PulseState
 
 local function build(opts)
   opts = opts or {}
