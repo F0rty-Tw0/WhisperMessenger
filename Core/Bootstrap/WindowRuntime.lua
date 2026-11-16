@@ -20,10 +20,6 @@ local MessengerWindow = ns.MessengerWindow or require("WhisperMessenger.UI.Messe
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
-local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
-local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
-
-local SettingsHandler = ns.BootstrapWindowRuntimeSettingsHandler or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
 
 local ConversationSelector = ns.BootstrapWindowRuntimeConversationSelector
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ConversationSelector")
@@ -32,20 +28,17 @@ local StartConversation = ns.BootstrapWindowRuntimeStartConversation or require(
 local GroupSendPolicy = ns.BootstrapWindowRuntimeGroupSendPolicy or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPolicy")
 local WindowCallbacks = ns.BootstrapWindowRuntimeWindowCallbacks or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
 local Surfaces = ns.BootstrapWindowRuntimeSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.Surfaces")
+local WindowBuilder = ns.BootstrapWindowRuntimeWindowBuilder or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowBuilder")
 local ToggleFlow = ns.BootstrapWindowRuntimeToggleFlow or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ToggleFlow")
 local RuntimeBindings = ns.BootstrapWindowRuntimeRuntimeBindings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RuntimeBindings")
 local ExternalPreview = ns.BootstrapWindowRuntimeExternalPreview or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ExternalPreview")
 local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
-local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
-local PanelPulse = ns.BootstrapWindowRuntimePanelPulse or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelPulse")
 local IconToggle = ns.BootstrapWindowRuntimeIconToggle or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconToggle")
 local PreviewOpen = ns.BootstrapWindowRuntimePreviewOpen or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewOpen")
 local PreviewReplyRuntime = ns.BootstrapWindowRuntimePreviewReplyRuntime
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewReplyRuntime")
 local LiveThemeSync = ns.BootstrapWindowRuntimeLiveThemeSync or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LiveThemeSync")
-local GrowSource = ns.BootstrapWindowRuntimeGrowSource or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GrowSource")
 local PositionSlots = ns.BootstrapWindowRuntimePositionSlots or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PositionSlots")
-local IconMode = ns.BootstrapWindowRuntimeIconMode or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconMode")
 local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
 local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DetachedPreviewRuntime")
@@ -265,99 +258,33 @@ function WindowRuntime.Create(options)
     if window then
       return
     end
-
-    local contacts = buildContacts()
-    local selectedState = coordinator.buildSelectionState(contacts)
-    local settingsState = (function()
-      accountState.settings = accountState.settings or {}
-      return accountState.settings
-    end)()
-    local onSettingChanged = SettingsHandler.Create({
+    WindowBuilder.Build({
       runtime = runtime,
-      accountSettings = settingsState,
+      accountState = accountState,
+      characterState = characterState,
+      uiFactory = uiFactory,
+      messengerWindow = messengerWindow,
+      positionSlots = positionSlots,
       theme = theme,
       fonts = fonts,
-      timeFormat = TimeFormat,
-      getIcon = surfaces.getIcon,
-      getMinimapIcon = surfaces.getMinimap,
+      surfaces = surfaces,
+      coordinator = coordinator,
+      windowCallbacks = windowCallbacks,
+      externalPreview = externalPreview,
       buildContacts = buildContacts,
-      applyIconMode = surfaces.applyIconMode,
-      onShareWidgetPositionChanged = onShareWidgetPositionChanged,
-      refreshSurfacesTheme = surfaces.refreshTheme,
-      onDetachedSetting = function(key, value)
-        DetachedPreviewRuntime.OnSettingChanged({
-          accountState = accountState,
-          ensureSurface = surfaces.ensureDetachedPreview,
-          updateIconSurfaces = coordinator.updateIconSurfaces,
-        }, key, value)
-      end,
-    })
-    liveThemeSettingChanged = onSettingChanged
-
-    -- Read once: changing the window style takes a reload.
-    local compactLayout = settingsState.compactLayout ~= false
-    runtime.compactLayoutActive = compactLayout
-
-    local growSource = GrowSource.Create({
-      resolveIconMode = function()
-        return IconMode.Resolve(accountState.settings)
-      end,
-      getWidgetIcon = surfaces.getWidgetIcon,
-      getMinimapIcon = surfaces.getMinimap,
-      settings = settingsState,
-    })
-
-    local windowOptions = {
-      contacts = contacts,
-      selectedContact = selectedState.selectedContact,
-      conversation = selectedState.conversation,
-      status = selectedState.status,
-      state = positionSlots.read(compactLayout and "compactWindow" or "window"),
-      compactLayout = compactLayout,
-      getDockIcon = surfaces.getWidgetIcon,
-      getGrowSource = growSource.getGrowSource,
-      isGrowAnimationOn = growSource.isGrowAnimationOn,
-      isIconDockOn = growSource.isIconDockOn,
-      isOpenAtSavedSpot = growSource.isOpenAtSavedSpot,
-      initialTabMode = characterState.contactsTabMode or "whispers",
-      storeConfig = runtime.store.config,
-      settingsConfig = settingsState,
-      filters = accountState.filters,
-      integrations = runtime.addonIntegrations and { registry = runtime.addonIntegrations, enabled = runtime.integrationAllowedAtLoad == true }
-        or nil,
-      onSettingChanged = onSettingChanged,
-      getContactInfoLines = function(contact)
-        return ContactInfo.LinesFor(runtime, contact)
-      end,
-    }
-    -- Every window callback passes straight through.
-    for name, callback in pairs(windowCallbacks) do
-      windowOptions[name] = callback
-    end
-    windowOptions.onPanelShown = PanelPulse.OnPanelShown(externalPreview, coordinator.updateIconSurfaces)
-    windowOptions.onConversationUncovered = ChatCover.OnUncovered({
-      runtime = runtime,
+      selectConversation = selectConversation,
       isWindowVisible = function()
         return controller.isWindowVisible()
       end,
-      selectConversation = selectConversation,
+      acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
+      onShareWidgetPositionChanged = onShareWidgetPositionChanged,
+      onSettingsHandler = function(onSettingChanged)
+        liveThemeSettingChanged = onSettingChanged
+      end,
+      onWindowCreated = function(created)
+        window = created
+      end,
     })
-    window = messengerWindow.Create(uiFactory, windowOptions)
-    runtime.panelRegistry.bind(window)
-
-    if window.frame.Hide then
-      window.frame:Hide()
-    end
-    -- ESC and the game's close-all hide the frame without setWindowVisible:
-    -- acknowledge on every hide so a whisper read in the pane never pops on
-    -- the widget after the window closes.
-    if window.frame.HookScript then
-      window.frame:HookScript("OnHide", function()
-        acknowledgeLatestWidgetPreview(buildContacts())
-      end)
-    end
-
-    runtime.window = window
   end
 
   local toggleFlow = ToggleFlow.Create({
