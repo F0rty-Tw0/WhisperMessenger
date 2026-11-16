@@ -7,16 +7,18 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local ContactPrefsDialog = ns.ContactsListContactPrefsDialog or require("WhisperMessenger.UI.ContactsList.ContactPrefsDialog")
-local NotifyMenuEntries = ns.ContactsListNotifyMenuEntries or require("WhisperMessenger.UI.ContactsList.NotifyMenuEntries")
+local MenuEntries = ns.ContactsListMenuEntries or require("WhisperMessenger.UI.ContactsList.MenuEntries")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local BlockMenuEntry = ns.ContactsListBlockMenuEntry or require("WhisperMessenger.UI.ContactsList.BlockMenuEntry")
-local ExportMenuEntry = ns.ContactsListExportMenuEntry or require("WhisperMessenger.UI.ContactsList.ExportMenuEntry")
-local AddFriendMenuEntry = ns.ContactsListAddFriendMenuEntry or require("WhisperMessenger.UI.ContactsList.AddFriendMenuEntry")
 local GuildInviteMenuEntry = ns.ContactsListGuildInviteMenuEntry or require("WhisperMessenger.UI.ContactsList.GuildInviteMenuEntry")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
-local ProfileLinksMenuEntry = ns.ContactsListProfileLinksMenuEntry or require("WhisperMessenger.UI.ContactsList.ProfileLinksMenuEntry")
 local ProtectedMenuEntries = ns.ContactsListProtectedMenuEntries or require("WhisperMessenger.UI.ContactsList.ProtectedMenuEntries")
+
+local ExportMenuEntry = MenuEntries.Export
+local NotifyMenuEntries = MenuEntries.Notify
+local AddFriendMenuEntry = MenuEntries.AddFriend
+local BlockMenuEntry = MenuEntries.Block
+local ProfileLinksMenuEntry = MenuEntries.ProfileLinks
 
 local ContextMenu = {}
 

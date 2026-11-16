@@ -1,5 +1,5 @@
 local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
-local ProfileLinksMenuEntry = require("WhisperMessenger.UI.ContactsList.ProfileLinksMenuEntry")
+local ProfileLinksMenuEntry = require("WhisperMessenger.UI.ContactsList.MenuEntries").ProfileLinks
 local PopupUI = require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 local Localization = require("WhisperMessenger.Locale.Localization")
