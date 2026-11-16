@@ -107,7 +107,7 @@ function ContactEnricher.EnrichContactsRelationship(contacts, runtime)
   end
 end
 
-function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContactsFn)
+local function buildSelectionState(runtime, contacts, buildContactsFn)
   local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
   local BNetStatus = ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
   local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
@@ -147,7 +147,8 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
       runtime.bnetApi,
       selectedContact.bnetAccountID,
       selectedContact.guid,
-      selectedContact.battleTag or selectedContact.displayName
+      selectedContact.battleTag or selectedContact.displayName,
+      runtime.bnetPassCache
     )
     if accountInfo then
       local gameInfo = accountInfo.gameAccountInfo
@@ -169,6 +170,18 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
     status = selectedContact and selectedContact.availability or ContactEnricher.BuildConversationStatus(runtime, conversationKey, conversation),
     notice = buildNotice(runtime, selectedContact, conversation),
   }
+end
+
+-- One Battle.net resolver cache serves the whole pass, so the friend list is
+-- walked once instead of once per contact. A fresh cache replaces whatever a
+-- failed pass left behind, and it is dropped before returning: friend state
+-- changes between frames.
+function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContactsFn)
+  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+  runtime.bnetPassCache = BNetResolver.NewPassCache()
+  local state = buildSelectionState(runtime, contacts, buildContactsFn)
+  runtime.bnetPassCache = nil
+  return state
 end
 
 ns.ContactEnricher = ContactEnricher
