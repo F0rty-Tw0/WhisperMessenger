@@ -15,6 +15,8 @@ local ZoneRosterPoll = ns.BootstrapLifecycleHandlersZoneRosterPoll or require("W
 -- stylua: ignore
 local ScanFieldDiff = ns.BootstrapLifecycleHandlersScanFieldDiff or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ScanFieldDiff")
 -- stylua: ignore
+local ScanSignature = ns.BootstrapLifecycleHandlersScanSignature or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ScanSignature")
+-- stylua: ignore
 local StaleRestrictions = ns.BootstrapLifecycleHandlersStaleRestrictions or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.StaleRestrictions")
 
 local Presence = {}
@@ -49,9 +51,13 @@ end
 
 -- A closed window shows only the icon badges and preview, so rebuild just
 -- the cards this scan changed (the preview's class colour follows the
--- friend's character), and nothing when none changed. An open window, and
--- opening it later, rebuild every card.
-local function refreshAfterBNetScan(Bootstrap, changedKeys)
+-- friend's character), and nothing when none changed. An open window
+-- rebuilds every card and the header, but only when the scan changed a
+-- stored field or a friend's live state (liveChanged: online, away, the
+-- character and its zone). Opening the window later rebuilds it anyway, and
+-- a change the scan could not tell is drawn by the status tick
+-- (runtime.bnetRepaintPending).
+local function refreshAfterBNetScan(Bootstrap, changedKeys, liveChanged)
   local runtime = Bootstrap.runtime
   if runtime.refreshWindow and runtime.isWindowVisible and not runtime.isWindowVisible() then
     if next(changedKeys) ~= nil then
@@ -59,17 +65,38 @@ local function refreshAfterBNetScan(Bootstrap, changedKeys)
     end
     return
   end
-  Common.refreshRuntimeWindow(Bootstrap)
+  if liveChanged or next(changedKeys) ~= nil then
+    Common.refreshRuntimeWindow(Bootstrap)
+  end
+end
+
+-- The account an open window draws for a conversation: the resolver's
+-- answer, which looks past the friend-list entry's primary game account (the
+-- Battle.net app, another game) for one in WoW and falls back to the stored
+-- character GUID. friend nil (battleTag renamed, or no longer a friend): the
+-- stored account ID, as the window reads it.
+local function resolveShownAccount(BNetResolver, bnetApi, conversation, friend, passCache)
+  local bnetAccountID = conversation.bnetAccountID
+  if friend then
+    bnetAccountID = friend.bnetAccountID
+  end
+  return BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, conversation.guid, conversation.battleTag, passCache)
 end
 
 local function refreshBNetConversations(Bootstrap, deps)
   if Bootstrap.runtime == nil then
     return
   end
+  -- Marked again before anything is read: a status tick may have drawn the
+  -- window since the event, and a scan that fails half way must still be
+  -- followed by a draw.
+  Bootstrap.runtime.bnetRepaintPending = true
 
   local BNetResolver = deps.loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
   local BNetStatus = deps.loadModule("WhisperMessenger.Model.ContactEnricher.BNetStatus", "ContactEnricherBNetStatus")
   local friendMap = BNetResolver.ScanFriendList(Bootstrap.runtime.bnetApi)
+  -- Serves every lookup of this scan from one more friend-list walk.
+  local passCache = BNetResolver.NewPassCache()
 
   local Identity = deps.loadModule("WhisperMessenger.Model.Identity", "Identity")
   local maxMessages = Bootstrap.runtime.store.config and Bootstrap.runtime.store.config.maxMessagesPerConversation
@@ -81,9 +108,17 @@ local function refreshBNetConversations(Bootstrap, deps)
   for _, newKey in pairs(mappings) do
     changedKeys[newKey] = true
   end
+  -- Session state: what the last scan saw live for each conversation's friend.
+  local signatures = Bootstrap.runtime.bnetScanSignatures or {}
+  Bootstrap.runtime.bnetScanSignatures = signatures
+  local liveChanged = false
   for key, conversation in pairs(Bootstrap.runtime.store.conversations) do
     if conversation.channel == "BN" and conversation.battleTag then
       local friend = friendMap[conversation.battleTag]
+      local shown = resolveShownAccount(BNetResolver, Bootstrap.runtime.bnetApi, conversation, friend, passCache)
+      if ScanSignature.Update(signatures, key, shown) then
+        liveChanged = true
+      end
       if friend then
         ScanFieldDiff.Capture(conversation)
         conversation.bnetAccountID = friend.bnetAccountID
@@ -109,13 +144,19 @@ local function refreshBNetConversations(Bootstrap, deps)
     end
   end
 
-  refreshAfterBNetScan(Bootstrap, changedKeys)
+  ScanSignature.Prune(signatures, Bootstrap.runtime.store.conversations)
+
+  refreshAfterBNetScan(Bootstrap, changedKeys, liveChanged)
 end
 
 function Presence.handleBNetFriendEvent(Bootstrap, deps)
   if Bootstrap.runtime == nil then
     return true
   end
+  -- The open window owes a full draw from here on. The scan below draws it
+  -- when it can tell a change; otherwise the window's status tick does
+  -- (WindowCoordinator), and either full draw clears the mark.
+  Bootstrap.runtime.bnetRepaintPending = true
 
   -- BN_FRIEND_INFO_CHANGED fires in bursts (one per presence change, often
   -- several per second with a large friend list), and each scan walks every
