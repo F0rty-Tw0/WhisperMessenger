@@ -6,7 +6,7 @@ end
 local Common = ns.BootstrapLifecycleHandlersCommon or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
 local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
-local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
+local ChatReplyState = ns.ChatReplyState or require("WhisperMessenger.Util.ChatReplyState")
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 
 local RestrictionState = {}
@@ -26,7 +26,7 @@ local function applyRestriction(Bootstrap, restrictionType, isActive, deps)
         Bootstrap.runtime.resume()
       end
     end
-    if not isActive and ChatReplyState and ChatReplyState.ScrubStaleWhisperReplyState then
+    if not isActive then
       -- CHALLENGE_MODE_COMPLETED usually fires resume() (and its scrub) while
       -- this restriction is still Active, where edit-box reads can be secret
       -- and the scrub silently skips. Inactive is the last safe point to

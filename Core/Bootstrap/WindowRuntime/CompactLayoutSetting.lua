@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ReloadPrompt = ns.ReloadPrompt or require("WhisperMessenger.UI.Shared.ReloadPrompt")
 
 -- The window is built for one style, so a new style is saved only when the
@@ -17,7 +17,7 @@ local QUESTION = "Reload the interface now to switch the window style?"
 local pendingStyle = nil
 
 local function text(key)
-  return Localization and Localization.Text(key) or key
+  return Localization.Text(key)
 end
 
 -- enabled: the toggle's new state. running: the style this session was built

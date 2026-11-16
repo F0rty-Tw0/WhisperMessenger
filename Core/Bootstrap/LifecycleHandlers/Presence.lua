@@ -3,9 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Common = ns.BootstrapLifecycleHandlersCommon
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
-  or nil
+local Common = ns.BootstrapLifecycleHandlersCommon or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
 local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
@@ -189,11 +187,10 @@ function Presence.handleBNetFriendEvent(Bootstrap, deps)
     return true
   end
   Bootstrap._bnetFriendRefreshPending = true
-  local scheduled = Common ~= nil
-    and Common.scheduleAfter(2, function()
-      Bootstrap._bnetFriendRefreshPending = false
-      refreshBNetConversations(Bootstrap, deps)
-    end)
+  local scheduled = Common.scheduleAfter(2, function()
+    Bootstrap._bnetFriendRefreshPending = false
+    refreshBNetConversations(Bootstrap, deps)
+  end)
   if not scheduled then
     Bootstrap._bnetFriendRefreshPending = false
     refreshBNetConversations(Bootstrap, deps)
@@ -205,9 +202,6 @@ end
 -- then on presence is read per contact, so there is no repeating refresh loop
 -- re-enumerating every member every TTL.
 local function schedulePresenceRefresh(Bootstrap, PresenceCache)
-  if Common == nil then
-    return
-  end
   Common.scheduleAfter(2, function()
     if Bootstrap._inMythicContent then
       return
@@ -264,7 +258,7 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
 end
 
 local function checkZones(Bootstrap, PresenceCache)
-  if ZoneNotify.handleRosterUpdate(Bootstrap, PresenceCache) and Common ~= nil then
+  if ZoneNotify.handleRosterUpdate(Bootstrap, PresenceCache) then
     Common.refreshRuntimeWindow(Bootstrap)
   end
 end
@@ -277,11 +271,10 @@ local function scheduleZoneCheck(Bootstrap, PresenceCache)
     return
   end
   Bootstrap._zoneCheckPending = true
-  local scheduled = Common ~= nil
-    and Common.scheduleAfter(2, function()
-      Bootstrap._zoneCheckPending = false
-      checkZones(Bootstrap, PresenceCache)
-    end)
+  local scheduled = Common.scheduleAfter(2, function()
+    Bootstrap._zoneCheckPending = false
+    checkZones(Bootstrap, PresenceCache)
+  end)
   if not scheduled then
     Bootstrap._zoneCheckPending = false
     checkZones(Bootstrap, PresenceCache)

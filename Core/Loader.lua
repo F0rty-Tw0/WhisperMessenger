@@ -10,14 +10,16 @@ function Loader.LoadModule(name, key)
     return ns[key]
   end
 
-  if type(require) == "function" then
-    local ok, loaded = pcall(require, name)
-    if ok then
-      return loaded
-    end
+  if type(require) ~= "function" then
+    error(key .. " module not available")
   end
 
-  error(key .. " module not available")
+  local ok, loaded = pcall(require, name)
+  if not ok then
+    error(key .. " module failed to load: " .. tostring(loaded))
+  end
+
+  return loaded
 end
 
 ns.Loader = Loader

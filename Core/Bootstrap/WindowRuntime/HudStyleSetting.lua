@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local ReloadPrompt = ns.ReloadPrompt or require("WhisperMessenger.UI.Shared.ReloadPrompt")
 local Presets = ns.ThemePresets or require("WhisperMessenger.UI.Theme.Presets")
@@ -23,7 +23,7 @@ local ELLESMERE_QUESTION = "The EllesmereUI theme shows best with the Native WoW
 local pendingStyle = nil
 
 local function text(key)
-  return Localization and Localization.Text(key) or key
+  return Localization.Text(key)
 end
 
 local function save(accountSettings, style)

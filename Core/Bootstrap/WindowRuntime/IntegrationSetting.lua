@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ReloadPrompt = ns.ReloadPrompt or require("WhisperMessenger.UI.Shared.ReloadPrompt")
 
 -- allowAddonIntegration is read once at load (the public API is built from
@@ -19,7 +19,7 @@ local QUESTION = "Reload the interface now to apply the addon integration change
 local pending = nil
 
 local function text(key)
-  return Localization and Localization.Text(key) or key
+  return Localization.Text(key)
 end
 
 local function isAllowed(accountSettings)
