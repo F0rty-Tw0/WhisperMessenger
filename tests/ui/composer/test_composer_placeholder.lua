@@ -26,8 +26,9 @@ return function()
     local placeholder = composer.placeholder
 
     -- test_placeholder_draws_above_input_fill: the rounded fill lives on the
-    -- input frame, which renders above every region of the pane. A pane
-    -- FontString is hidden behind it, so the placeholder must be the input's.
+    -- input box, which renders above every region of the pane, and the input
+    -- renders above the box. A pane or box FontString is hidden behind the
+    -- fill, so the placeholder must be the input's.
     assert(placeholder:GetParent() == composer.input, key .. ": placeholder must be parented to the input")
 
     -- test_placeholder_contrasts_with_input_fill

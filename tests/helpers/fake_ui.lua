@@ -11,6 +11,8 @@ local FakeUI = {}
 
 -- options (optional): { masks = true } gives frames CreateMaskTexture and
 -- their textures AddMaskTexture (tests/helpers/fake_ui/mask.lua).
+-- { wrap = true } makes FontStrings with SetWordWrap(true) wrap at 7 px per
+-- character (tests/helpers/fake_ui/wrap.lua).
 function FakeUI.NewFactory(options)
   local factory = {}
   factory.CreateFrame = FrameModule.makeCreateFrame(options)

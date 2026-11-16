@@ -163,6 +163,12 @@ function SettingsHandler.Create(options)
     if key == "fontOutline" and fonts.SetOutline then
       fonts.SetOutline(persistedValue or "NONE")
     end
+    if key == "fontFamily" or key == "fontSize" or key == "fontOutline" then
+      local composer = runtime.window and runtime.window.composer
+      if composer and composer.remeasure then
+        composer.remeasure()
+      end
+    end
     if key == "fontColor" and fonts.SetFontColor then
       fonts.SetFontColor(persistedValue or "default")
     end

@@ -4,7 +4,6 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
@@ -20,7 +19,9 @@ local ComposerLaunchers = ns.ComposerLaunchers or require("WhisperMessenger.UI.C
 local ReplyState = ns.ComposerReplyState or require("WhisperMessenger.UI.Composer.ReplyState")
 local ComposerLimit = ns.ComposerLimit or require("WhisperMessenger.UI.Composer.ComposerLimit")
 local ComposerSendFocus = ns.ComposerSendFocus or require("WhisperMessenger.UI.Composer.ComposerSendFocus")
-local SlashCommand = ns.ComposerSlashCommand or require("WhisperMessenger.UI.Composer.SlashCommand")
+local ComposerSubmit = ns.ComposerSubmit or require("WhisperMessenger.UI.Composer.ComposerSubmit")
+local ComposerRows = ns.ComposerRows or require("WhisperMessenger.UI.Composer.ComposerRows")
+local ComposerInputBox = ns.ComposerInputBox or require("WhisperMessenger.UI.Composer.ComposerInputBox")
 
 local Composer = {}
 
@@ -29,6 +30,7 @@ local Composer = {}
 -- options.getQuickReplies(): saved quick-reply list (nil = defaults).
 -- options.onReplyChanged(replyTo | nil): the open conversation's reply target.
 -- options.getDeselectOnSend(): the "deselect after sending" setting.
+-- options.onHeightChanged(height): the bar's new height, when it changes.
 function Composer.Create(factory, parent, selectedContact, onSend, onEscape, getDoubleEscapeToClose, onTyping, options)
   options = type(options) == "table" and options or {}
   local nativeChrome = options.nativeChrome == true
@@ -55,9 +57,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   local button = factory.CreateFrame("Button", nil, pane)
   local paintSendButton = SendButtonStyle.Create(button)
 
-  -- Plain EditBox (no template)
-  local input = factory.CreateFrame("EditBox", nil, pane)
-  input:SetText("")
+  local inputBox = ComposerInputBox.Create(factory, pane)
+  local box, input = inputBox.box, inputBox.input
+  local rows = ComposerRows.Create(pane, Theme.FONTS.composer_input)
   local limit = ComposerLimit.Create(input)
   local sendFocus = ComposerSendFocus.Create(pane, input, {
     isOn = function()
@@ -74,39 +76,30 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   })
   local layoutParts = {
     pane = pane,
+    box = box,
+    scroll = inputBox.scroll,
     input = input,
     sendButton = button,
     emojiButton = launchers.emojiButton,
     emojiIcon = launchers.emojiButton.icon,
     quickReplyButton = launchers.quickReplyButton,
   }
-  ComposerLayout.Apply(layoutParts, parentWidth)
+  ComposerLayout.Apply(layoutParts, parentWidth, 1, rows.lineHeight())
 
-  GlyphCoverage.SetInputFont(input, Theme.FONTS.composer_input)
-  if input.SetTextColor then
-    input:SetTextColor(Theme.COLORS.text_primary[1], Theme.COLORS.text_primary[2], Theme.COLORS.text_primary[3], Theme.COLORS.text_primary[4] or 1)
+  local surface
+  if nativeChrome then
+    surface = ComposerSurface.CreateNative(input, composerBorder, paneBg, box)
+  else
+    surface = ComposerSurface.Create(pane, box, composerBorder)
   end
-  if input.SetTextInsets then
-    input:SetTextInsets(8, 8, 4, 4)
-  end
-  if input.SetAutoFocus then
-    input:SetAutoFocus(false)
-  end
-  if input.SetAltArrowKeyMode then
-    input:SetAltArrowKeyMode(false)
-  end
-  if input.SetHyperlinksEnabled then
-    input:SetHyperlinksEnabled(true)
-  end
-  local surface = nativeChrome and ComposerSurface.CreateNative(input, composerBorder, paneBg) or ComposerSurface.Create(pane, input, composerBorder)
   surface.apply()
 
   -- Placeholder text. Parented to the input: the modern rounded fill is drawn
-  -- on the input frame, which renders above every pane region and would hide
-  -- a pane-level FontString behind it.
+  -- on the box, and the input renders above every box and pane region, which
+  -- would hide a FontString of theirs behind the fill.
   local placeholder = input:CreateFontString(nil, "OVERLAY")
   UIHelpers.setFontObject(placeholder, Theme.FONTS.composer_input)
-  placeholder:SetPoint("LEFT", input, "LEFT", 8, 0)
+  placeholder:SetPoint("LEFT", box, "LEFT", ComposerLayout.TEXT_INSET_X, 0)
   placeholder:SetText(Localization.Text("Enter to send"))
   setTextColor(placeholder, Theme.COLORS.text_secondary)
   placeholder:Show()
@@ -116,10 +109,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
 
   LinkHooks.RegisterInput(input)
 
-  local function relayoutLauncher(width)
-    ComposerLayout.Apply(layoutParts, width)
-  end
-
   local function currentParentWidth(fallback)
     local width = sizeValue(parent, "GetWidth", "width", fallback)
     if type(width) ~= "number" or width <= 0 then
@@ -127,6 +116,29 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     end
     return width
   end
+
+  -- Rows follow the text (a client without the template keeps one row); the
+  -- window hears of a new bar height only when it changes.
+  local layoutWidth, maxHeight = parentWidth, nil
+  local reportedHeight = Theme.COMPOSER_HEIGHT
+
+  local function refreshRows()
+    local text
+    if inputBox.multiLine then
+      text = input:GetText() or ""
+    end
+    local count, height = rows.fit(text, ComposerLayout.TextWidth(layoutWidth), maxHeight)
+    ComposerLayout.Apply(layoutParts, layoutWidth, count, rows.lineHeight())
+    if height == reportedHeight then
+      return
+    end
+    reportedHeight = height
+    if options.onHeightChanged then
+      options.onHeightChanged(height)
+    end
+  end
+  -- A hook: SetScript here would drop the OnShow hook send focus put on the pane.
+  pane:HookScript("OnShow", refreshRows)
 
   button.disabled = sendDisabled
   paintSendButton(sendDisabled, false)
@@ -141,52 +153,19 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     PickerStyles.HideTooltip()
   end)
 
-  local function clearAfterSend()
-    replies.clear()
-    input:SetText("")
-    limit.remember()
-    if onDraftChanged then
-      onDraftChanged(selectedContact.conversationKey, "")
-    end
-    sendFocus.afterSend()
-  end
-
-  local function submitMessage()
-    if sendDisabled then
-      return
-    end
-
-    local text = input.GetText and input:GetText() or input.text
-    if text == nil or text == "" then
-      return
-    end
-
-    -- A slash command never goes out as a whisper; with no chat box to run it, the text stays put.
-    local command = SlashCommand.Parse(text)
-    if command ~= nil then
-      if SlashCommand.Run(command) then
-        clearAfterSend()
-      end
-      return
-    end
-
-    local accepted = onSend({
-      conversationKey = selectedContact.conversationKey,
-      target = selectedContact.displayName,
-      displayName = selectedContact.displayName,
-      channel = selectedContact.channel,
-      bnetAccountID = selectedContact.bnetAccountID,
-      conversationID = selectedContact.conversationID,
-      guid = selectedContact.guid,
-      gameAccountName = selectedContact.gameAccountName,
-      text = text,
-      replyTo = replies.current(),
-    })
-
-    if accepted ~= false then
-      clearAfterSend()
-    end
-  end
+  local submitMessage = ComposerSubmit.Create({
+    input = input,
+    replies = replies,
+    limit = limit,
+    sendFocus = sendFocus,
+    selectedContact = selectedContact,
+    onSend = onSend,
+    onDraftChanged = onDraftChanged,
+    isDisabled = function()
+      return sendDisabled
+    end,
+    afterClear = refreshRows,
+  })
 
   local function syncPlaceholder(text)
     if text == nil or text == "" then
@@ -200,12 +179,13 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   -- already stored, and it is not the player typing.
   local loadingDraft = false
 
-  input:SetScript("OnTextChanged", function()
+  ComposerInputBox.SetTextChanged(input, function()
     local text = input.GetText and input:GetText() or input.text or ""
     if not limit.accept(text, loadingDraft) then
       return
     end
     syncPlaceholder(text)
+    refreshRows()
     if onDraftChanged and not loadingDraft and selectedContact.conversationKey ~= nil then
       onDraftChanged(selectedContact.conversationKey, text)
     end
@@ -220,38 +200,20 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     loadingDraft = false
     limit.remember()
     syncPlaceholder(text)
+    refreshRows()
     replies.sync()
   end
 
-  input:SetScript("OnEnterPressed", function()
-    submitMessage()
-  end)
-  button:SetScript("OnClick", function()
-    submitMessage()
-  end)
-  input:SetScript("OnEscapePressed", function()
-    if replies.current() ~= nil then
-      replies.clear()
-      return
-    end
-    if getDoubleEscapeToClose and getDoubleEscapeToClose() then
-      if input.ClearFocus then
-        input:ClearFocus()
-      end
-      return
-    end
-    if onEscape then
-      onEscape()
-      return
-    end
-    if input.ClearFocus then
-      input:ClearFocus()
-    end
-  end)
+  input:SetScript("OnEnterPressed", submitMessage)
+  button:SetScript("OnClick", submitMessage)
+  ComposerInputBox.WireEscape(input, replies, getDoubleEscapeToClose, onEscape)
 
   return {
     frame = pane,
+    box = box,
+    scroll = inputBox.scroll,
     input = input,
+    inputFill = surface.rounded,
     sheen = surface.sheen,
     paneBg = paneBg,
     border = composerBorder,
@@ -291,21 +253,21 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       else
         applyColorTexture(paneBg, Theme.COLORS.bg_composer)
         surface.apply()
-        if input.SetTextColor then
-          input:SetTextColor(
-            Theme.COLORS.text_primary[1],
-            Theme.COLORS.text_primary[2],
-            Theme.COLORS.text_primary[3],
-            Theme.COLORS.text_primary[4] or 1
-          )
-        end
+        setTextColor(input, Theme.COLORS.text_primary)
         setTextColor(placeholder, Theme.COLORS.text_secondary)
       end
       paintSendButton(sendDisabled, false)
       launchers.refreshTheme()
-      relayoutLauncher(currentParentWidth(parentWidth))
+      layoutWidth = currentParentWidth(layoutWidth)
+      refreshRows()
     end,
-    relayout = function(parentW)
+    getHeight = function()
+      return reportedHeight
+    end,
+    -- The font changed: the same text may take other rows or row heights.
+    remeasure = refreshRows,
+    -- maxBarHeight caps the rows (nil = up to two).
+    relayout = function(parentW, maxBarHeight)
       -- Prefer the pane's live width over the passed-in hint: the caller
       -- passes the full content width, but composerPane has a right-margin
       -- anchor (-20 in fake_ui, -8 in production WoW) that makes the pane
@@ -314,7 +276,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       if type(effectiveW) ~= "number" or effectiveW <= 0 then
         return
       end
-      relayoutLauncher(effectiveW)
+      layoutWidth, maxHeight = effectiveW, maxBarHeight
+      refreshRows()
     end,
   }
 end

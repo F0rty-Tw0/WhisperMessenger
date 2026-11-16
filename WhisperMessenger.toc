@@ -328,6 +328,10 @@ UI/MessengerWindow/WindowScripts/Frame/PointerFocus.lua
 UI/Composer/ComposerEnterButton.lua
 UI/Composer/ComposerSendFocus.lua
 UI/Composer/SlashCommand.lua
+UI/Composer/LineBreaks.lua
+UI/Composer/ComposerRows.lua
+UI/Composer/ComposerInputBox.lua
+UI/Composer/ComposerSubmit.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/PreviewMetrics.lua

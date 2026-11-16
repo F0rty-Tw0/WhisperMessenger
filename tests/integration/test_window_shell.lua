@@ -1,5 +1,4 @@
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
-local FindUI = require("tests.helpers.find_ui")
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 local SlashCommands = require("WhisperMessenger.Core.SlashCommands")
 local FakeUI = require("tests.helpers.fake_ui")
@@ -106,13 +105,13 @@ return function()
     window.conversation.transcript.scrollFrame.width == window.conversation.transcript.width,
     "expected transcript viewport to use full width when scrollbar is hidden"
   )
-  assert(window.composer.input.point[1] == "BOTTOMLEFT")
-  assert(window.composer.input.width ~= nil)
+  assert(window.composer.box.point[1] == "BOTTOMLEFT")
+  assert(window.composer.box.width ~= nil)
   assert(window.composer.sendButton.point[1] == "BOTTOMRIGHT")
   assert(window.composer.sendButton.width ~= nil)
   assert(window.composer.inputTopBorder == nil, "expected composer input top border to be removed")
   assert(window.composer.sendButton.sendBorderTop == nil, "expected send button top border tracking to be removed")
-  local composerInputFill = FindUI.ofType(window.composer.input, "Texture")[1]
+  local composerInputFill = window.composer.inputFill.fills[1]
   assert(composerInputFill.color ~= nil, "expected composer input background color")
   local expectedComposerInputBg = Theme.COLORS.bg_message_input or Theme.COLORS.bg_input
   for i = 1, 4 do

@@ -34,9 +34,42 @@ local function atlasPieces(input)
   return out
 end
 
-local function assertFileBorder(input, label)
-  assert(#borderTextures(input) == 3, label .. ": 3 file-art pieces, got " .. #borderTextures(input))
-  assert(next(atlasPieces(input)) == nil, label .. ": no atlas pieces")
+-- The input scroll template's multi-line border pieces on `frame`, by key.
+local function templateBorder(frame)
+  local keyByPath = {}
+  for key, path in pairs(ComposerSurface.NATIVE_INPUT_BORDER) do
+    keyByPath[path] = key
+  end
+  local pieces, count = {}, 0
+  for _, child in ipairs(frame and frame.children or {}) do
+    local key = child.frameType == "Texture" and keyByPath[child.texturePath]
+    if key then
+      pieces[key] = child
+      count = count + 1
+    end
+  end
+  return pieces, count
+end
+
+local CORNERS = { topLeft = "TOPLEFT", topRight = "TOPRIGHT", bottomLeft = "BOTTOMLEFT", bottomRight = "BOTTOMRIGHT" }
+
+-- Nine pieces framing the box edge to edge: 8px corners on the box corners,
+-- edges and middle stretched between them; nothing on the scrolling frame.
+local function assertTemplateBorder(composer, label)
+  local box = composer.box
+  local pieces, count = templateBorder(box)
+  assert(count == 9, label .. ": 9 border pieces on the box, got " .. count)
+  for key, anchor in pairs(CORNERS) do
+    local corner = pieces[key]
+    assert(corner.width == 8 and corner.height == 8, label .. ": " .. key .. " is 8x8")
+    local pt = corner.points and corner.points[1] or {}
+    assert(pt[1] == anchor and pt[2] == box and pt[3] == anchor and pt[4] == 0 and pt[5] == 0, label .. ": " .. key .. " sits on the box corner")
+  end
+  local middle = pieces.middle.points or {}
+  assert(middle[1] and middle[1][2] == pieces.left and middle[2] and middle[2][2] == pieces.right, label .. ": middle fills between the edges")
+  local _, onScroll = templateBorder(composer.scroll)
+  assert(onScroll == 0, label .. ": no border piece on the scrolling frame")
+  assert(#borderTextures(box) == 0 and next(atlasPieces(box)) == nil, label .. ": no single-line border art mixed in")
 end
 
 local function anyEdgeShown(border)
@@ -81,11 +114,22 @@ return function()
     assert(pieces.left.width == 8 and pieces.right.width == 8, "8px edges")
   end
 
-  -- test_hud_composer_draws_blizzard_input_border_on_existing_edit_box
+  -- test_native_input_border_files_are_the_input_scroll_templates
+  do
+    local base = "Interface\\Common\\Common-Input-Border-"
+    local suffix =
+      { topLeft = "TL", top = "T", topRight = "TR", left = "L", middle = "M", right = "R", bottomLeft = "BL", bottom = "B", bottomRight = "BR" }
+    for key, tail in pairs(suffix) do
+      local got = ComposerSurface.NATIVE_INPUT_BORDER[key]
+      assert(got == base .. tail, key .. " file, got " .. tostring(got))
+    end
+  end
+
+  -- test_hud_composer_draws_the_multi_line_input_border_on_the_box
   do
     local composer = create(true)
-    assert(composer.input.template == nil, "HUD: composer keeps its own EditBox (art applied, not re-templated)")
-    assert(#borderTextures(composer.input) == 3, "HUD: left/middle/right input border art, got " .. #borderTextures(composer.input))
+    assert(composer.scroll:GetParent() == composer.box, "HUD: the input scroll frame sits inside the box")
+    assertTemplateBorder(composer, "HUD")
   end
 
   -- test_hud_composer_has_no_custom_fill
@@ -119,51 +163,31 @@ return function()
     assert(composer.sendButton.scripts.OnClick ~= nil and composer.emojiButton.scripts.OnClick ~= nil, "HUD: send + emoji buttons wired")
   end
 
-  -- test_retail_hud_composer_uses_search_border_atlases
+  -- test_retail_hud_composer_draws_the_same_border
   RetailHud.With(function()
     RetailHud.WithAtlas(true, function()
-      local composer = create(true)
-      local atlases = atlasPieces(composer.input)
-      assert(next(atlases) ~= nil, "retail HUD: composer draws atlas pieces")
-      for _, name in pairs(ComposerSurface.NATIVE_SEARCH_ATLAS) do
-        assert(atlases[name], "retail HUD: composer draws atlas " .. name)
-      end
-      assert(#borderTextures(composer.input) == 0, "retail HUD: no file-art pieces mixed in")
+      assertTemplateBorder(create(true), "retail HUD")
     end)
   end)
 
-  -- test_retail_hud_without_atlas_keeps_file_border
-  RetailHud.With(function()
-    RetailHud.WithAtlas(false, function()
-      assertFileBorder(create(true).input, "retail HUD, atlas unknown")
-    end)
-  end)
-
-  -- test_retail_hud_without_set_atlas_keeps_file_border
-  RetailHud.With(function()
-    RetailHud.WithAtlas(true, function()
-      local factory = RetailHud.Factory(FakeUI, {
-        decorate = function(frame, _)
-          if frame.frameType == "EditBox" then
-            RetailHud.WithoutAtlas(frame)
-          end
-        end,
-      })
-      assertFileBorder(create(true, nil, factory).input, "retail HUD, no SetAtlas")
-    end)
-  end)
-
-  -- test_classic_hud_ignores_atlases
+  -- test_classic_hud_composer_draws_the_same_border
   Hud.Configure("classic")
-  RetailHud.WithAtlas(true, function()
-    assertFileBorder(create(true).input, "classic HUD")
-  end)
+  assertTemplateBorder(create(true), "classic HUD")
   Hud.Configure("off")
+
+  -- test_hud_plain_edit_box_gets_the_border_too
+  do
+    local factory = RetailHud.Factory(FakeUI, { missing = { InputScrollFrameTemplate = true } })
+    local composer = create(true, nil, factory)
+    assert(composer.box == composer.input, "setup: no template, the edit box is the box")
+    assertTemplateBorder(composer, "plain edit box")
+  end
 
   -- test_modern_composer_unchanged
   do
     local composer = create(false)
-    assert(#borderTextures(composer.input) == 0, "modern: no Blizzard border art")
+    assert(#borderTextures(composer.box) == 0, "modern: no Blizzard border art")
+    assert(select(2, templateBorder(composer.box)) == 0, "modern: no multi-line border art")
     assert(composer.sheen ~= nil, "modern: sheen kept")
     assert(composer.paneBg.color[4] ~= 0 or Theme.COLORS.bg_composer[4] == 0, "modern: pane painted with bg_composer")
     assert(composer.border.top.shown == true, "modern: top hairline kept")
@@ -175,6 +199,6 @@ return function()
     local parent = factory.CreateFrame("Frame", nil, nil)
     parent:SetSize(600, 60)
     local composer = Composer.Create(factory, parent, CONTACT, function() end)
-    assert(#borderTextures(composer.input) == 0 and composer.sheen ~= nil, "no options -> modern composer")
+    assert(#borderTextures(composer.box) == 0 and composer.sheen ~= nil, "no options -> modern composer")
   end
 end
