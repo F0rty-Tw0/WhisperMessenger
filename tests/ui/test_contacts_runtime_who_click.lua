@@ -15,7 +15,7 @@ local function makeRuntime(calls, whoPlayer)
     contactsPane = pane,
     contactsView = contactsView,
     settingsConfig = {},
-    whoPlayer = whoPlayer,
+    rowActions = { whoPlayer = whoPlayer },
     onContactClicked = function(item)
       calls[#calls + 1] = { name = "clicked", item = item }
     end,

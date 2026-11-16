@@ -34,12 +34,13 @@ local function setup(factory, contact, overName, withWho)
   local whoNames = {}
   local headerClicks = {}
   local options = {
+    rowActions = {},
     onHeaderClicked = function(conversationKey)
       headerClicks[#headerClicks + 1] = conversationKey
     end,
   }
   if withWho ~= false then
-    options.whoPlayer = function(name)
+    options.rowActions.whoPlayer = function(name)
       whoNames[#whoNames + 1] = name
       return true
     end

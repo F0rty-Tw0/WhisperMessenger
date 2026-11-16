@@ -69,6 +69,19 @@ return function()
     end
   end
 
+  -- test_row_menu_gets_a_row_action_the_controller_does_not_name
+  do
+    local onSomethingNew = function() end
+    local opened = openRowMenu({ rowActions = { onSomethingNew = onSomethingNew } })
+    assert(opened.rowActions.onSomethingNew == onSomethingNew, "a new row action needs no line in the controller")
+  end
+
+  -- test_actions_outside_the_row_actions_table_are_not_read
+  do
+    local opened = openRowMenu({ onIgnorePlayer = function() end, whoPlayer = function() end })
+    assert(opened.rowActions.onIgnorePlayer == nil and opened.rowActions.whoPlayer == nil, "only options.rowActions feeds the row")
+  end
+
   -- test_absent_block_action_stays_absent_in_the_row_menu
   do
     local opened = openRowMenu({ rowActions = {} })

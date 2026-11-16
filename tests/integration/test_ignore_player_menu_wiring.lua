@@ -86,7 +86,8 @@ return function()
   end)
   window.conversation.transcript.openPlayerMenu(incoming, nil)
   rawset(PlayerMenu, "Open", originalPlayerOpen)
-  assert(senderConversation and senderConversation.isPlayerBlocked("Arthas") == true, "sender menu can tell who is blocked")
-  senderConversation.onUnblockPlayer("Spammer-Realm")
+  local senderActions = senderConversation and senderConversation.rowActions
+  assert(senderActions and senderActions.isPlayerBlocked("Arthas") == true, "sender menu can tell who is blocked")
+  senderActions.onUnblockPlayer("Spammer-Realm")
   assert(ignored.unblocked == "Spammer-Realm", "sender menu unblock reaches the window option")
 end

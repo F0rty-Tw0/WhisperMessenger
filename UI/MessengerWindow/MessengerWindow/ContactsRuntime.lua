@@ -116,7 +116,7 @@ function ContactsRuntime.Create(factory, options)
         options.onSelect(item)
       end
     end,
-    rowActions = options.rowActions or options,
+    rowActions = options.rowActions,
     onReorder = function(orders)
       if options.onReorder then
         options.onReorder(orders)

@@ -26,7 +26,7 @@ local ContactsController = {}
 function ContactsController.Create(factory, contactsView, initialContacts, options)
   options = options or {}
 
-  local rowActions = options.rowActions or options
+  local rowActions = options.rowActions or {}
   local currentContacts = initialContacts or {}
   local currentSelectedKey = options.initialSelectedKey
   local viewportH = contactsView.viewportHeight or 0
@@ -77,13 +77,16 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
         rowActions.onUpdatePrefs(item, changes)
       end
     end,
-    onIgnorePlayer = rowActions.onIgnorePlayer,
-    onUnblockPlayer = rowActions.onUnblockPlayer,
-    isPlayerBlocked = rowActions.isPlayerBlocked,
-    whoPlayer = rowActions.whoPlayer,
     onDragStart = dragHandlers.handleDragStart,
     onDragStop = dragHandlers.handleDragStop,
   }
+  -- Every other row action reaches the row as the window gave it, absent
+  -- ones included, so a new action needs no line here.
+  for name, action in pairs(rowActions) do
+    if rowOptions[name] == nil then
+      rowOptions[name] = action
+    end
+  end
 
   local function refresh(nextContacts, selectedKey, resetPaging)
     if nextContacts ~= nil then
