@@ -146,9 +146,9 @@ function Bootstrap.Initialize(factory, options)
   -- The one owner of restricted-content state, created before anything can
   -- ask it: the 12.0 restriction cache, filled from
   -- ADDON_RESTRICTION_STATE_CHANGED payloads, plus the three detection
-  -- flags, which stay fields of the Bootstrap table because the lifecycle
-  -- handlers still write them there. Pre-12.0 clients never get the event,
-  -- so there the flags alone answer.
+  -- flags. Their values live on the Bootstrap table, so they outlive this
+  -- instance, but only the instance reads or writes them. Pre-12.0 clients
+  -- never get the event, so there the flags alone answer.
   local restrictions = RestrictedActions.New(Bootstrap)
   Bootstrap.restrictions = restrictions
   runtime.restrictedActions = restrictions

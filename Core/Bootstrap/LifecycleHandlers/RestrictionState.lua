@@ -36,6 +36,12 @@ local function applyRestriction(Bootstrap, restrictions, restrictionType, isActi
       -- clear a /r whisper sticky left by Blizzard chat during the key.
       ChatReplyState.ScrubStaleWhisperReplyState(Bootstrap.runtime, deps.getNumChatWindows, deps.getEditBox)
     end
+    -- resume() syncs the filters only on the flag edge above. A key completed
+    -- before this Inactive, or one only the game reported, has no flag left,
+    -- and this event is what lifts the restriction the filters wait on.
+    if Bootstrap.syncChatFilters then
+      Bootstrap.syncChatFilters()
+    end
     Common.notifyCompetitiveState(Bootstrap)
     return
   end

@@ -56,10 +56,7 @@ end
 -- Runs before entering the world resyncs filters, notice and suspend state,
 -- so a stale Active is dropped straight from the cache.
 function StaleRestrictions.Clear(Bootstrap)
-  local restrictedActions = Bootstrap.runtime and Bootstrap.runtime.restrictedActions
-  if restrictedActions == nil then
-    return
-  end
+  local restrictedActions = RestrictedActions.For(Bootstrap)
   for _, restrictionType in pairs(RestrictedActions.TYPES) do
     local cachedState = restrictedActions.cachedState(restrictionType)
     local isOn = cachedState == RestrictedActions.STATES.Active or cachedState == RestrictedActions.STATES.Activating

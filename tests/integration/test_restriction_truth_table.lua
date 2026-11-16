@@ -1,35 +1,46 @@
 -- Characterization of every reader of the restricted-content state. Each
 -- formula below is what that reader computes today, written out again from
 -- the inputs alone; the real modules must give the same answer in every row.
--- The readers do not agree with each other (issue #220): a change to one of
+-- Sends, the paused notice and the chat filters share one answer; the three
+-- flag-only readers at the end do not yet (issue #220). A change to one of
 -- these formulas is a behaviour change and has to be made here on purpose.
 local TruthTable = require("tests.helpers.restriction_truth_table")
 
-local EXPECTED_ROWS = 21951
+-- 67 lock scenarios with the restriction API x 6 chat locks, plus 5 chat
+-- locks on a client without it, each x 3 suspended values x 4^3 flag values.
+local EXPECTED_ROWS = 78144
 local MAX_REPORTED = 5
 
 local LOCK_REPORTED = { api = true, activating = true, active = true }
+-- A cached Inactive overrules the API, so "inactive" leaves chat unlocked.
+local CHAT_LOCKED = { info = true, cached = true, api = true, activating = true }
+
+local function isSet(flagValue)
+  return flagValue and true or false
+end
 
 local function expectedAnswers(inputs)
-  local chatLocked = inputs.chatLock ~= "off"
+  local chatLocked = CHAT_LOCKED[inputs.chatLock] == true
   local cacheCompetitive = LOCK_REPORTED[inputs.encounterLock] == true
     or LOCK_REPORTED[inputs.challengeLock] == true
     or LOCK_REPORTED[inputs.pvpLock] == true
-  local mythic, competitive, encounter = inputs.mythic == true, inputs.competitive == true, inputs.encounter == true
+  -- Any truthy value sets a flag.
+  local mythic, competitive, encounter = isSet(inputs.mythic), isSet(inputs.competitive), isSet(inputs.encounter)
 
   -- Sends and channel ingest: event cache or API, chat lock, two of the flags.
   local isCompetitive = cacheCompetitive or chatLocked or competitive or encounter
   local isMythic = LOCK_REPORTED[inputs.challengeLock] == true or mythic
-  -- The paused banner and the icon: the three flags and the chat lock, never the cache.
-  local notified = competitive or mythic or encounter or chatLocked
+  -- The paused banner and the icon: whatever holds sends back. The Mythic+
+  -- suspend, which the mythic flag records, keeps its own banner.
+  local notified = isCompetitive or isMythic
   local notice = "cleared"
   if mythic then
     notice = "kept"
   elseif notified then
     notice = "shown"
   end
-  -- Chat filters: the flags, the Mythic+ suspend and the chat lock, never the cache.
-  local filtersAllowed = not (competitive or mythic or encounter or inputs.suspended or chatLocked)
+  -- Chat filters: off wherever sends are held, and under the Mythic+ suspend.
+  local filtersAllowed = not (isCompetitive or isMythic or inputs.suspended)
 
   return {
     isCompetitive,
@@ -79,9 +90,9 @@ return function()
   -- test_table_visits_every_combination
   assert(rows == EXPECTED_ROWS, "expected " .. EXPECTED_ROWS .. " rows, got " .. rows)
 
-  -- test_cache_only_restriction_holds_sends_but_keeps_whisper_filters
-  assert(sendsHeldWhileFiltersOn > 0, "the cache-only rows must be in the table")
+  -- test_whisper_filters_are_never_on_while_sends_are_held
+  assert(sendsHeldWhileFiltersOn == 0, sendsHeldWhileFiltersOn .. " rows hold sends while the whisper filters stay registered")
 
-  -- test_cache_only_restriction_holds_sends_without_the_paused_notice
-  assert(sendsHeldWithoutNotice > 0, "the cache-only rows must be in the table")
+  -- test_sends_are_never_held_without_telling_the_notice_and_icon
+  assert(sendsHeldWithoutNotice == 0, sendsHeldWithoutNotice .. " rows hold sends while the notice and icon are told nothing is restricted")
 end
