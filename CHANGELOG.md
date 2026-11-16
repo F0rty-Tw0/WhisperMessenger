@@ -7,6 +7,13 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 ## [Unreleased]
 
 - "Clear on logout" now also deletes the channel messages Whisper Messenger keeps to show above a new whisper. Before, they stayed saved until your next login.
+- Smoother with a long Battle.net friend list: while the window is open, Whisper Messenger now does far less work each time a whisper arrives or a friend's status changes, and redraws the window far less often when the change is for a friend you have no chat with.
+- The message box now grows up to two lines as you type a long message, instead of scrolling sideways.
+- With the Native WoW look, the message box now uses the game's own text box border, which keeps the same thickness when the box grows.
+- Fixed: after a reload or a loading screen in the middle of a boss fight or a PvP match, Whisper Messenger could hold your messages back without showing the "Messages are paused" notice, and could still hide whispers from the game's chat. The notice and the paused icon now show whenever your messages are held back, and whispers and channel messages stay in the game's chat until the fight or match is over.
+
+## [2.1.7] - 2026-11-14
+
 - New option under Whispers: hide the player's last channel message that shows above a new whisper.
 - Party, raid and instance chats now show the dungeon, raid or battleground they started in, e.g. "Party - Halls of Atonement - Current".
 - New sound options under Notifications: pick a different sound for mentions, and turn on a sound for whispers you send (off by default).
@@ -18,15 +25,11 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - New option under General: "Look up players with /who". It's on by default; turn it off and Whisper Messenger stops these lookups, and the chat header no longer shows the zone or Online status they found. "Show player levels" now only shows or hides the level.
 - That lookup now also fills in the player's class, race and faction in the chat header. A player the lookup finds now shows as Online, with the zone they're in, for 10 minutes, even when the game's own check said they were offline. After that, "Last seen" counts the lookup too.
 - Contacts now show a small icon next to their name, in your contact list and at the top of the chat, when they are in your guild, on your Battle.net or friends list, or in one of your communities. Hover it to see all of them. You can turn it off with "Show relationship marks" in General settings.
-- Smoother with a long Battle.net friend list: while the window is open, Whisper Messenger now does far less work each time a whisper arrives or a friend's status changes, and redraws the window far less often when the change is for a friend you have no chat with.
-- The message box now grows up to two lines as you type a long message, instead of scrolling sideways.
-- With the Native WoW look, the message box now uses the game's own text box border, which keeps the same thickness when the box grows.
 - Fixed: typing a command like /use, /target, /focus or /cast in the message box no longer gets blocked by the game with an "AddOn tried to call a protected function" error. The game only allows these from its own chat box, so Whisper Messenger now shows the command ready to copy and paste into chat. Other commands like /roll and emotes still run right away.
 - Fixed: "Guild invite" in a player's right-click menu no longer gets blocked by the game when you press Enter. It now shows the invite command ready to copy and paste into chat. On WoW: Forever the command now leaves out the realm, so the game finds the player.
 - Fixed: players who are offline no longer show as online in your contact list and chat header, and cross-faction guild or community members who are online no longer show as offline.
-- Fixed: letters the game's default font doesn't have, like the Hungarian ő and ű or the Polish ł, no longer show as squares. Messages, names, quotes, previews, notes, filter rules and quick replies switch to the game's chat font when the text needs one of them, and the message box, search box and other text boxes switch to it while you type one of those letters.
+- Fixed: letters the game's default font doesn't have, like the Hungarian ő and ű or the Polish ł, no longer show as squares. Messages, names, quotes, previews, notes, filter rules and quick replies switch to the game's chat font when the text needs one of them, and the message box, search box and other text boxes always use it, so the letters show while you type.
 - Fixed: with the compact window open, Craft Alert no longer pops its own alert at the top of the screen for a new lead. The Craft Alert tab shows the new lead, and if you close the window soon after, the preview shows on the button.
-- Fixed: after a reload or a loading screen in the middle of a boss fight or a PvP match, Whisper Messenger could hold your messages back without showing the "Messages are paused" notice, and could still hide whispers from the game's chat. The notice and the paused icon now show whenever your messages are held back, and whispers and channel messages stay in the game's chat until the fight or match is over.
 
 ## [2.1.6] - 2026-11-10
 
