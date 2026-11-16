@@ -11,6 +11,7 @@ local WATCHED = {
   ["Model/ContactEnricher/AvailabilityEnricher.lua"] = true,
   ["Model/ContactEnricher/ContactEnricher.lua"] = true,
   ["Model/OnlineWatch.lua"] = true,
+  ["Model/ProfileCharacter.lua"] = true,
 }
 
 -- Relationship keeps three call-time lookups; only its resolver is checked.
@@ -126,6 +127,9 @@ local function calls(ns)
     end,
     function()
       ns.Relationship.Resolve(bnetItem(), newRuntime())
+    end,
+    function()
+      ns.ProfileCharacter.FromItem(bnetItem(), {}, { projectId = 1, regionId = 1 })
     end,
   }
 end

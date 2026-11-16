@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
+local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 
 -- The WoW character a contact stands for, for profile links: { name, realm,
 -- displayRealm }. Chat names carry the realm without spaces ("Area52"), or
@@ -44,7 +45,6 @@ end
 -- or nil when they are not in WoW on this game version and region: a stored
 -- character may be one they logged off from, or on another version.
 local function liveFriendCharacter(item, game)
-  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
   local accountInfo = BNetResolver.ResolveAccountInfo(_G.C_BattleNet, item.bnetAccountID, item.guid, item.battleTag or item.displayName)
   local info = type(accountInfo) == "table" and accountInfo.gameAccountInfo or nil
   if type(info) ~= "table" then

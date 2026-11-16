@@ -61,7 +61,6 @@ Model/Identity/RaceTags.lua
 Model/Identity/ChannelType.lua
 Model/Identity/ChannelKey.lua
 Model/Identity/Identity.lua
-Model/ProfileCharacter.lua
 Model/ProfileLinks.lua
 Model/Retention.lua
 Model/ConversationMerge.lua
@@ -133,6 +132,7 @@ Transport/BNetResolver/FriendScan.lua
 Transport/BNetResolver/PassCache.lua
 Transport/BNetResolver.lua
 Model/Relationship.lua
+Model/ProfileCharacter.lua
 Transport/WhoFreshness.lua
 Transport/WhoAsked.lua
 Transport/WhoBlock.lua
