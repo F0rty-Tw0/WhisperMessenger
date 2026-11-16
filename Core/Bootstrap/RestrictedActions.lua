@@ -16,13 +16,22 @@ end
 -- and the flags together.
 local RestrictedActions = {}
 
--- Flag name -> field of the flag store. The lifecycle handlers still write
--- these fields on the Bootstrap table directly.
+-- Flag name -> field of the flag store. Only an instance reads or writes
+-- these fields; everything else goes through setFlag and flag.
 local FLAG_FIELDS = {
   mythic = "_inMythicContent",
   competitive = "_inCompetitiveContent",
   encounter = "_inEncounter",
 }
+
+-- A misspelled name must not read as "not restricted".
+local function fieldOf(name)
+  local field = FLAG_FIELDS[name]
+  if field == nil then
+    error("unknown restriction flag: " .. tostring(name), 3)
+  end
+  return field
+end
 
 -- Mirrors Enum.AddOnRestrictionType
 RestrictedActions.TYPES = {
@@ -66,13 +75,14 @@ function RestrictedActions.New(flagStore)
   local flags = flagStore or {}
   local self = {}
 
-  -- name: "mythic", "competitive" or "encounter".
+  -- name: "mythic", "competitive" or "encounter"; any other name is an
+  -- error. Any truthy value sets the flag, and the store holds a boolean.
   function self.setFlag(name, value)
-    flags[FLAG_FIELDS[name]] = value
+    flags[fieldOf(name)] = value and true or false
   end
 
   function self.flag(name)
-    return flags[FLAG_FIELDS[name]] == true
+    return flags[fieldOf(name)] and true or false
   end
 
   function self.updateFromEvent(restrictionType, newState)
@@ -131,6 +141,18 @@ function RestrictedActions.New(flagStore)
   end
 
   return self
+end
+
+-- The instance that answers for owner (the Bootstrap table). Bootstrap.Initialize
+-- installs one per runtime. An owner asked before that gets one over its own
+-- flag fields: the lockdown catcher's frame is live before Initialize.
+function RestrictedActions.For(owner)
+  local restrictions = owner.restrictions
+  if restrictions == nil then
+    restrictions = RestrictedActions.New(owner)
+    owner.restrictions = restrictions
+  end
+  return restrictions
 end
 
 ns.BootstrapRestrictedActions = RestrictedActions

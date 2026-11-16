@@ -1,3 +1,4 @@
+local RestrictionState = require("tests.helpers.restriction_state")
 local ChatFilters = require("WhisperMessenger.Core.Bootstrap.ChatFilters")
 local MythicSuspendController = require("WhisperMessenger.Core.Bootstrap.MythicSuspendController")
 local RulePresets = require("WhisperMessenger.Model.Filters.RulePresets")
@@ -83,11 +84,11 @@ return function()
   end)
 
   -- test_restricted_content_unregisters_the_filters
-  for _, flag in ipairs({ "_inMythicContent", "_inEncounter", "_inCompetitiveContent" }) do
+  for _, flag in ipairs(RestrictionState.NAMES) do
     run(function()
       local Bootstrap, active, _, restore = setup({}, { ignored = { ["spammer-realm"] = { name = "Spammer-Realm" } }, rules = {} })
       Bootstrap.syncChatFilters()
-      Bootstrap[flag] = true
+      RestrictionState.Set(Bootstrap, { [flag] = true })
       Bootstrap.syncChatFilters()
       restore()
       assert(next(active) == nil, flag .. " removes every conditional filter")

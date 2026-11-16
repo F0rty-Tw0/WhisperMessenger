@@ -4,6 +4,7 @@
 return function()
   local Bootstrap = require("WhisperMessenger.Bootstrap")
   local FakeUI = require("tests.helpers.fake_ui")
+  local RestrictionState = require("tests.helpers.restriction_state")
   local factory = FakeUI.NewFactory()
   local savedUIParent = _G.UIParent
   local savedChatInfo = _G.C_ChatInfo
@@ -15,9 +16,7 @@ return function()
     characterState = { window = { x = 0, y = 0, width = 900, height = 560 }, icon = {} },
   })
   local function reset()
-    Bootstrap._inMythicContent = false
-    Bootstrap._inEncounter = false
-    Bootstrap._inCompetitiveContent = false
+    RestrictionState.Set(Bootstrap, {})
   end
 
   -- test_open_world_without_lockdown_api_is_not_suspended
@@ -25,9 +24,8 @@ return function()
   assert(runtime.isChannelIngestSuspended() == false, "open world on a client without the lockdown API ingests channels")
 
   -- test_restricted_content_suspends
-  for _, flag in ipairs({ "_inMythicContent", "_inEncounter", "_inCompetitiveContent" }) do
-    reset()
-    Bootstrap[flag] = true
+  for _, flag in ipairs(RestrictionState.NAMES) do
+    RestrictionState.Set(Bootstrap, { [flag] = true })
     assert(runtime.isChannelIngestSuspended() == true, flag .. " suspends channel chats")
   end
 

@@ -54,7 +54,7 @@ local function build(accountExtras, characterState, compactLayout)
     defaultCharacterState = { window = {}, icon = {} },
     uiFactory = factory,
     uiParent = uiParent,
-    bootstrap = { _inMythicContent = false },
+    bootstrap = {},
     contactsList = {
       BuildItemsForProfile = function()
         return {}

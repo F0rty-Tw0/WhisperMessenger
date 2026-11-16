@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local RestrictionState = require("tests.helpers.restriction_state")
 local AddonEventFrame = require("WhisperMessenger.Core.Bootstrap.AddonEventFrame")
 
 return function()
@@ -177,7 +178,7 @@ return function()
   assert(#loadedModules == 0, "expected cached handlers and bridge on later live event routing")
 
   calls = {}
-  Bootstrap._inMythicContent = true
+  RestrictionState.Set(Bootstrap, { mythic = true })
   frame.scripts.OnEvent(frame, "CHAT_MSG_WHISPER", "blocked")
   assert(table.concat(calls, ",") == "LifecycleHandlers:CHAT_MSG_WHISPER", "expected mythic guard to stop live routing after lifecycle handling")
 
@@ -192,7 +193,7 @@ return function()
   assert(noFrameResult == nil, "expected Install to return nil when createFrame is unavailable")
 
   calls = {}
-  Bootstrap._inMythicContent = false
+  RestrictionState.Set(Bootstrap, {})
   Bootstrap.runtime = nil
   frame.scripts.OnEvent(frame, "CHAT_MSG_DND", "without runtime")
   assert(

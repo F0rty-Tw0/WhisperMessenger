@@ -1,17 +1,22 @@
+local RestrictionState = require("tests.helpers.restriction_state")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
+
+-- A fake Bootstrap wired as Bootstrap.Initialize wires the real one: the
+-- runtime keeps the Bootstrap table's restriction instance.
+local function newBootstrap(fields, flags)
+  local Bootstrap = RestrictionState.Set(fields, flags)
+  Bootstrap.runtime.restrictedActions = Bootstrap.restrictions
+  return Bootstrap
+end
 
 return function()
   -- test_addon_restriction_challenge_mode_active_triggers_suspend
 
   do
     local suspendCalls, resumeCalls = 0, 0
-    local Bootstrap = {
-      _inMythicContent = false,
-      _inEncounter = false,
-      _inCompetitiveContent = false,
+    local Bootstrap = newBootstrap({
       runtime = {
-        restrictedActions = RestrictedActions.New(),
         suspend = function()
           suspendCalls = suspendCalls + 1
         end,
@@ -19,7 +24,7 @@ return function()
           resumeCalls = resumeCalls + 1
         end,
       },
-    }
+    })
 
     local handled = LifecycleHandlers.Handle(
       Bootstrap,
@@ -30,7 +35,7 @@ return function()
     )
 
     assert(handled == true, "Handle should claim the ADDON_RESTRICTION_STATE_CHANGED event")
-    assert(Bootstrap._inMythicContent == true, "ChallengeMode active should set _inMythicContent")
+    assert(RestrictionState.Flag(Bootstrap, "mythic") == true, "ChallengeMode active should set the mythic flag")
     assert(suspendCalls == 1, "should call runtime.suspend exactly once, got " .. suspendCalls)
     assert(Bootstrap.runtime.restrictedActions.isMythic() == true, "restrictedActions instance must reflect the cached payload state")
   end
@@ -39,12 +44,8 @@ return function()
 
   do
     local suspendCalls, resumeCalls = 0, 0
-    local Bootstrap = {
-      _inMythicContent = true,
-      _inEncounter = false,
-      _inCompetitiveContent = false,
+    local Bootstrap = newBootstrap({
       runtime = {
-        restrictedActions = RestrictedActions.New(),
         suspend = function()
           suspendCalls = suspendCalls + 1
         end,
@@ -52,7 +53,7 @@ return function()
           resumeCalls = resumeCalls + 1
         end,
       },
-    }
+    }, { mythic = true })
 
     local handled = LifecycleHandlers.Handle(
       Bootstrap,
@@ -63,7 +64,7 @@ return function()
     )
 
     assert(handled == true, "Handle should claim the event")
-    assert(Bootstrap._inMythicContent == false, "ChallengeMode inactive should clear _inMythicContent")
+    assert(RestrictionState.Flag(Bootstrap, "mythic") == false, "ChallengeMode inactive should clear the mythic flag")
     assert(resumeCalls == 1, "should call runtime.resume exactly once, got " .. resumeCalls)
   end
 
@@ -71,19 +72,16 @@ return function()
 
   do
     local syncCalls = 0
-    local Bootstrap = {
-      _inEncounter = false,
-      _inMythicContent = false,
-      _inCompetitiveContent = false,
-      runtime = { restrictedActions = RestrictedActions.New() },
+    local Bootstrap = newBootstrap({
+      runtime = {},
       syncChatFilters = function()
         syncCalls = syncCalls + 1
       end,
-    }
+    })
 
     LifecycleHandlers.Handle(Bootstrap, "ADDON_RESTRICTION_STATE_CHANGED", {}, RestrictedActions.TYPES.Encounter, RestrictedActions.STATES.Active)
 
-    assert(Bootstrap._inEncounter == true, "Encounter active should set _inEncounter=true")
+    assert(RestrictionState.Flag(Bootstrap, "encounter") == true, "Encounter active should set the encounter flag")
     assert(syncCalls == 1, "should sync chat filters once on encounter state change")
   end
 
@@ -98,16 +96,12 @@ return function()
       end,
     }
 
-    local Bootstrap = {
-      _inMythicContent = false,
-      _inEncounter = false,
-      _inCompetitiveContent = false,
+    local Bootstrap = newBootstrap({
       runtime = {
-        restrictedActions = RestrictedActions.New(),
         suspend = function() end,
         resume = function() end,
       },
-    }
+    })
 
     LifecycleHandlers.Handle(Bootstrap, "ADDON_RESTRICTION_STATE_CHANGED", {}, RestrictedActions.TYPES.ChallengeMode, RestrictedActions.STATES.Active)
 

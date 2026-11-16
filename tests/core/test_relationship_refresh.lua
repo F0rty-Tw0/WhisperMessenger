@@ -1,3 +1,4 @@
+local RestrictionState = require("tests.helpers.restriction_state")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local RelationshipRefresh = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.RelationshipRefresh")
 local Constants = require("WhisperMessenger.Core.Constants")
@@ -101,7 +102,7 @@ return function()
   do
     local scheduled = captureTimers()
     local Bootstrap, state = build()
-    Bootstrap._inMythicContent = true
+    RestrictionState.Set(Bootstrap, { mythic = true })
     RelationshipRefresh.handle(Bootstrap, "CLUB_MEMBER_REMOVED")
     assert(Bootstrap.runtime.relationshipCache ~= state.stale, "the cache still drops")
     assert(#scheduled == 0 and state.repaints == 0, "nothing is scheduled in mythic content")
@@ -112,7 +113,7 @@ return function()
     local scheduled = captureTimers()
     local Bootstrap, state = build()
     RelationshipRefresh.handle(Bootstrap, "FRIENDLIST_UPDATE")
-    Bootstrap._inMythicContent = true
+    RestrictionState.Set(Bootstrap, { mythic = true })
     scheduled[#scheduled].fn()
     assert(state.repaints == 0, "no repaint once mythic content began")
   end

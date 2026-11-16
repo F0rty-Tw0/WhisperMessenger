@@ -2,6 +2,7 @@
 -- restriction APIs, the chat filter registry, and the real event frame and
 -- lockdown catcher installed over the real Bootstrap table.
 local FakeUI = require("tests.helpers.fake_ui")
+local RestrictionState = require("tests.helpers.restriction_state")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 local AddonEventFrame = require("WhisperMessenger.Core.Bootstrap.AddonEventFrame")
 local WindowCoordinator = require("WhisperMessenger.Core.Bootstrap.WindowCoordinator")
@@ -14,9 +15,7 @@ local SAVED_FIELDS = {
   "onCompetitiveStateChanged",
   "_loadFrame",
   "_lockdownCatcher",
-  "_inMythicContent",
-  "_inCompetitiveContent",
-  "_inEncounter",
+  "restrictions",
 }
 
 local function fakeFrame(frames)
@@ -102,6 +101,10 @@ function RestrictionWorld.Install()
   for _, name in ipairs(SAVED_FIELDS) do
     world.saved[name] = Bootstrap[name]
   end
+  world.savedFlags = {}
+  for _, name in ipairs(RestrictionState.NAMES) do
+    world.savedFlags[name] = RestrictionState.Flag(Bootstrap, name)
+  end
   world.createCoordinator = WindowCoordinator.Create
   -- WindowRuntime keeps isMythicRestricted to itself and hands it only to
   -- its coordinator, so take the real closure from there.
@@ -125,6 +128,7 @@ end
 
 function RestrictionWorld.Restore(world)
   WindowCoordinator.Create = world.createCoordinator
+  RestrictionState.Set(Bootstrap, world.savedFlags)
   for _, name in ipairs(SAVED_FIELDS) do
     Bootstrap[name] = world.saved[name]
   end
