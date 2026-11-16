@@ -169,6 +169,7 @@ Core/EventRouter/PendingOutgoing.lua
 Core/EventRouter/FailedWhisper.lua
 Core/EventRouter/PartMerge.lua
 Core/EventRouter/AddonGreetingIngest.lua
+Core/EventRouter/WhisperMessage.lua
 Core/EventRouter.lua
 Core/SlashCommands.lua
 
