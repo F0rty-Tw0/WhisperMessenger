@@ -5,6 +5,7 @@ end
 
 local Common = ns.BootstrapLifecycleHandlersCommon or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
 local Relationship = ns.Relationship or require("WhisperMessenger.Model.Relationship")
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 local RelationshipRefresh = {}
 
@@ -18,7 +19,7 @@ local EVENTS = {
 }
 
 local function shouldRepaint(Bootstrap, runtime)
-  if Bootstrap._inMythicContent or not Relationship.IsEnabled(runtime) then
+  if RestrictedActions.For(Bootstrap).flag("mythic") or not Relationship.IsEnabled(runtime) then
     return false
   end
   return type(runtime.isWindowVisible) ~= "function" or runtime.isWindowVisible() ~= false
@@ -72,7 +73,7 @@ function RelationshipRefresh.handle(Bootstrap, event, unit)
   local token = (Bootstrap._relationshipRefreshToken or 0) + 1
   Bootstrap._relationshipRefreshToken = token
   local function repaint()
-    if Bootstrap._relationshipRefreshToken == token and not Bootstrap._inMythicContent then
+    if Bootstrap._relationshipRefreshToken == token and not RestrictedActions.For(Bootstrap).flag("mythic") then
       Common.refreshRuntimeWindow(Bootstrap)
     end
   end

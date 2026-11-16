@@ -21,14 +21,10 @@ local apiActive = {}
 local deferred = {}
 
 local function newBootstrap()
-  local restrictedActions = RestrictedActions.New()
-  return {
-    runtime = {
-      restrictedActions = restrictedActions,
-      suspend = function() end,
-      resume = function() end,
-    },
-  }
+  local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
+  -- One instance for both, as Bootstrap.Initialize wires it.
+  Bootstrap.runtime.restrictedActions = RestrictedActions.For(Bootstrap)
+  return Bootstrap
 end
 
 local function event(Bootstrap, restrictionType, state)
