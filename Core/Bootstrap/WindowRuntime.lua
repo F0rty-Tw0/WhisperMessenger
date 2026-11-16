@@ -125,24 +125,12 @@ function WindowRuntime.Create(options)
     buildLatestIncomingPreview = buildLatestIncomingPreview,
   })
 
-  -- Set once the window exists; live theme changes repaint through it.
+  -- Set once the window exists; live theme changes repaint through it. Until
+  -- then the surfaces repaint alone.
   local liveThemeSettingChanged = nil
   LiveThemeSync.Install(options.ellesmereBridge or EllesmereBridge, theme, function()
     return liveThemeSettingChanged
-  end, function()
-    local widget = surfaces.getWidgetIcon()
-    if widget and widget.refreshTheme then
-      widget.refreshTheme()
-    end
-    local minimapIcon = surfaces.getMinimap()
-    if minimapIcon and minimapIcon.refreshTheme then
-      minimapIcon.refreshTheme()
-    end
-    local detachedPreview = surfaces.getDetachedPreview()
-    if detachedPreview then
-      detachedPreview.refreshTheme()
-    end
-  end)
+  end, surfaces.refreshTheme)
 
   -- Assigned below; the coordinator uses it to follow a replied-to request.
   local conversationSelector
@@ -295,7 +283,7 @@ function WindowRuntime.Create(options)
       buildContacts = buildContacts,
       applyIconMode = surfaces.applyIconMode,
       onShareWidgetPositionChanged = onShareWidgetPositionChanged,
-      getDetachedPreview = surfaces.getDetachedPreview,
+      refreshSurfacesTheme = surfaces.refreshTheme,
       onDetachedSetting = function(key, value)
         DetachedPreviewRuntime.OnSettingChanged({
           accountState = accountState,

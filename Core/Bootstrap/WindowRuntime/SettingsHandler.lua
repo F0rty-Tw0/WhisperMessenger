@@ -217,17 +217,9 @@ function SettingsHandler.Create(options)
       if runtime.window and runtime.window.refreshTheme then
         runtime.window.refreshTheme()
       end
-      local themeIcon = getIcon()
-      if themeIcon and themeIcon.refreshTheme then
-        themeIcon.refreshTheme()
-      end
-      local minimapIcon = options.getMinimapIcon and options.getMinimapIcon()
-      if minimapIcon and minimapIcon.refreshTheme then
-        minimapIcon.refreshTheme()
-      end
-      local detached = options.getDetachedPreview and options.getDetachedPreview()
-      if detached and detached.refreshTheme then
-        detached.refreshTheme()
+      -- The widget icon, minimap button and detached preview: Surfaces owns the list.
+      if options.refreshSurfacesTheme then
+        options.refreshSurfacesTheme()
       end
       if runtime.refreshWindow then
         runtime.refreshWindow()
