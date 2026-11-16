@@ -125,7 +125,11 @@ function WindowCoordinator.Create(options)
       if not coordinator.isWindowVisible() then
         return
       end
-      if applyRetention() then
+      -- bnetRepaintPending: a Battle.net friend event arrived since the last
+      -- full draw. Its scan redraws only for a change it can tell, so a
+      -- missed one (away and back before the scan ran, a scan that failed)
+      -- is drawn here, one tick later at most.
+      if applyRetention() or runtime.bnetRepaintPending then
         coordinator.refreshWindow()
       else
         coordinator.refreshContacts()
@@ -256,6 +260,10 @@ function WindowCoordinator.Create(options)
         window.refreshContacts(nextState.contacts, selectedConversationKey)
       elseif window.refreshSelection then
         window.refreshSelection(nextState)
+        -- Every contact and the header were just drawn from live friend data.
+        if dirtyKeys == nil then
+          runtime.bnetRepaintPending = nil
+        end
       end
       -- The selected conversation is on screen now (not under a panel or the
       -- options pane), so its newest message counts as seen by the user.
