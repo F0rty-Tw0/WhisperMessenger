@@ -582,14 +582,9 @@ Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/WhisperIngestFailsafe.lua
 Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua
-Core/PublicApi/ContactInfo.lua
 Core/PublicApi/Preview.lua
 Core/PublicApi/BlockList.lua
-Core/PublicApi/UnreadCount.lua
-Core/PublicApi/Look.lua
-Core/PublicApi/Animation.lua
-Core/PublicApi/CompactWindow.lua
-Core/PublicApi/InsertLink.lua
+Core/PublicApi/Queries.lua
 Core/PublicApi/Connect.lua
 Core/Bootstrap/WindowRuntime/IntegrationAccess.lua
 Core/PublicApi.lua
