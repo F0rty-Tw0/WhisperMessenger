@@ -74,7 +74,9 @@ function BNetStatus.Apply(item, runtime)
   local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
   local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 
-  local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid, item.battleTag or item.displayName)
+  -- runtime.bnetPassCache: set only while a window refresh pass is running.
+  local accountInfo =
+    BNetResolver.ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid, item.battleTag or item.displayName, runtime.bnetPassCache)
   if accountInfo then
     if accountInfo.bnetAccountID then
       item.bnetAccountID = accountInfo.bnetAccountID

@@ -156,8 +156,11 @@ end
 
 -- A BNet chat checks the friend's current character, or nil when the friend
 -- is not in WoW on one. Never uses realmName: Forever reports a server id there.
+-- This lookup runs before the relationship cache is read (the cache key holds
+-- the character it finds); runtime.bnetPassCache keeps it cheap in a refresh.
 local function bnetChatTarget(item, runtime)
-  local accountInfo = bnetResolver().ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid, item.battleTag or item.displayName)
+  local battleTag = item.battleTag or item.displayName
+  local accountInfo = bnetResolver().ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid, battleTag, runtime.bnetPassCache)
   ---@type table?
   local gameInfo = type(accountInfo) == "table" and accountInfo.gameAccountInfo or nil
   if type(gameInfo) ~= "table" or not bnetStatus().IsInWoW(gameInfo) then
