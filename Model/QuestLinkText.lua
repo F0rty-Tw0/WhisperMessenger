@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local QuestLinkClassic = {}
+local QuestLinkText = {}
 
 -- Classic shift-click of a quest from the quest log inserts a plain string in
 -- one of two forms (no `|H...|h` envelope):
@@ -45,7 +45,7 @@ end
 local QUEST_LINK_WITH_COLOR_PATTERN = "|c%x+|Hquest:(%d+)[^|]*|h%[([^%]]+)%]|h|r"
 local QUEST_LINK_BARE_PATTERN = "|Hquest:(%d+)[^|]*|h%[([^%]]+)%]|h"
 
-function QuestLinkClassic.Serialize(text)
+function QuestLinkText.Serialize(text)
   if type(text) ~= "string" then
     return text
   end
@@ -61,11 +61,11 @@ function QuestLinkClassic.Serialize(text)
   end)
   return result
 end
-function QuestLinkClassic.CanonicalizeForTransport(text)
+function QuestLinkText.CanonicalizeForTransport(text)
   if type(text) ~= "string" then
     return text
   end
-  local canonical = QuestLinkClassic.Serialize(text)
+  local canonical = QuestLinkText.Serialize(text)
   canonical = string.gsub(canonical, CLASSIC_QUEST_LEVEL_PATTERN, function(_, name)
     return "[" .. name .. "]"
   end)
@@ -75,7 +75,7 @@ function QuestLinkClassic.CanonicalizeForTransport(text)
   return canonical
 end
 
-function QuestLinkClassic.Rewrite(text)
+function QuestLinkText.Rewrite(text)
   if type(text) ~= "string" then
     return text
   end
@@ -104,5 +104,5 @@ function QuestLinkClassic.Rewrite(text)
   return table.concat(output)
 end
 
-ns.UIHyperlinksQuestLinkClassic = QuestLinkClassic
-return QuestLinkClassic
+ns.QuestLinkText = QuestLinkText
+return QuestLinkText

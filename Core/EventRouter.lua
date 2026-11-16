@@ -8,6 +8,7 @@ local Store = ns.ConversationStore or require("WhisperMessenger.Model.Conversati
 local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
 local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMessenger.Core.EventRouter.PendingOutgoing")
 local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
+local QuestLinkText = ns.QuestLinkText or require("WhisperMessenger.Model.QuestLinkText")
 local MessageReactionProtocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
@@ -30,25 +31,6 @@ local QUEST_LINK_ADDON_PREFIX = AddonComm.PREFIX_QUEST_LINK
 local REACTION_ADDON_PREFIX = AddonComm.PREFIX_REACTION
 local ADDON_GREETING_PREFIX = AddonComm.PREFIX_ADDON_GREETING
 local CRAFT_SCAN_PREFIX = AddonComm.PREFIX_CRAFT_SCAN
-
--- QuestLinkClassic loads after this module in the TOC, so resolve it lazily.
-local function getQuestLinkClassic()
-  return ns.UIHyperlinksQuestLinkClassic or (rawget(_G, "require") and require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic"))
-end
-local function canonicalReactionText(text)
-  local questLinks = getQuestLinkClassic()
-  if questLinks and type(questLinks.CanonicalizeForTransport) == "function" then
-    return questLinks.CanonicalizeForTransport(text)
-  end
-  return text
-end
-local function canonicalTargetText(text)
-  local questLinks = getQuestLinkClassic()
-  if questLinks and type(questLinks.Serialize) == "function" then
-    return questLinks.Serialize(text)
-  end
-  return text
-end
 
 local function battleNetReactionSenderKey(state, payload)
   if payload.bnetAccountID ~= nil then
@@ -159,10 +141,7 @@ local function buildMessage(state, payload, contact, direction, kind, sentAt)
   -- clickable link. Idempotent on already-hyperlinked text.
   local messageText = payload.text
   if type(messageText) == "string" then
-    local questLinks = getQuestLinkClassic()
-    if questLinks and type(questLinks.Rewrite) == "function" then
-      messageText = questLinks.Rewrite(messageText)
-    end
+    messageText = QuestLinkText.Rewrite(messageText)
     -- Classic strips the `(id)` too, leaving just `[Name]`. The paired
     -- addon-message side channel carries the id back; splice it in here.
     -- Character whispers key the inbox by player name; BNet whispers key by
@@ -316,7 +295,7 @@ local function handleReactionMetadata(state, payload, isBattleNet)
   if metadata.type ~= "reaction" then
     return nil
   end
-  local result = MessageReactions.RecordOperation(state, reactionSenderKey, conversationKey, actorName, metadata, "out", now, canonicalTargetText)
+  local result = MessageReactions.RecordOperation(state, reactionSenderKey, conversationKey, actorName, metadata, "out", now, QuestLinkText.Serialize)
 
   if result and result.converted then
     local resolvedConversationKey = result.conversationKey or conversationKey
@@ -432,7 +411,7 @@ local function handleUnlockedEvent(state, eventName, payload)
       end
       local incomingMessage = buildMessage(state, payload, contact, "in", "user", sentAt)
       incomingMessage.addonGreeting = addonGreeting
-      local correlationText = canonicalReactionText(incomingMessage.text)
+      local correlationText = QuestLinkText.CanonicalizeForTransport(incomingMessage.text)
       local senderKey
       if eventName == "CHAT_MSG_BN_WHISPER" then
         senderKey = battleNetReactionSenderKey(state, payload)
@@ -556,7 +535,7 @@ local function handleUnlockedEvent(state, eventName, payload)
           reactionControl.actorName,
           "in",
           sentAt,
-          canonicalTargetText
+          QuestLinkText.Serialize
         )
         if target then
           reactionControl.confirmed = true

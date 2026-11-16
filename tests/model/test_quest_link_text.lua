@@ -1,4 +1,4 @@
-local QuestLinkClassic = require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
+local QuestLinkClassic = require("WhisperMessenger.Model.QuestLinkText")
 
 local QUEST_PREFIX = "|cffffff00|Hquest:"
 local QUEST_END = "|h|r"

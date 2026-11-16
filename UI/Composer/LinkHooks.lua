@@ -4,7 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ChatLinkSources = ns.ComposerChatLinkSources or require("WhisperMessenger.UI.Composer.ChatLinkSources")
-local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
+local QuestLinkText = ns.QuestLinkText or require("WhisperMessenger.Model.QuestLinkText")
 local UrlFormatter = ns.UIHyperlinksUrlFormatter or require("WhisperMessenger.UI.Hyperlinks.UrlFormatter")
 
 local LinkHooks = {}
@@ -64,7 +64,7 @@ local function tryInsertLink(link, options)
   -- they were checked against still holds.
   local insertable = link
   if type(insertable) == "string" and options.keepText ~= true then
-    insertable = QuestLinkClassic.Rewrite(insertable)
+    insertable = QuestLinkText.Rewrite(insertable)
   end
 
   -- ponytail: one insert per frame. A single shift-click fans out into several
