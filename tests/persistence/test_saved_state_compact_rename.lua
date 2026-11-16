@@ -1,5 +1,5 @@
-local CompactRename = require("WhisperMessenger.Persistence.SavedState.CompactRename")
 local SavedState = require("WhisperMessenger.Persistence.SavedState")
+local CompactRename = SavedState.CompactRename
 
 return function()
   -- test_phone_layout_moves_to_compact_layout

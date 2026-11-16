@@ -1,4 +1,4 @@
-local PrefixMigration = require("WhisperMessenger.Persistence.SavedState.PrefixMigration")
+local PrefixMigration = require("WhisperMessenger.Persistence.SavedState").PrefixMigration
 
 return function()
   -- test_collision_merge_preserves_pinned_order_cap_key_references_and_idempotence
