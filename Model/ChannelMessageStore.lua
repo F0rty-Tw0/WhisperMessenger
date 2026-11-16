@@ -290,5 +290,11 @@ function ChannelMessageStore.GetLatest(state, canonicalName, now)
   return entry
 end
 
+-- Drops every recorded line; the indexes are rebuilt on the next use.
+function ChannelMessageStore.Clear(state)
+  state.entries, state.entryCount = {}, 0
+  indexes[state] = nil
+end
+
 ns.ChannelMessageStore = ChannelMessageStore
 return ChannelMessageStore
