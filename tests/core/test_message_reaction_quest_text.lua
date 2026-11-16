@@ -2,7 +2,7 @@ local Store = require("WhisperMessenger.Model.ConversationStore")
 local Protocol = require("WhisperMessenger.Model.MessageReactionProtocol")
 local Router = require("WhisperMessenger.Core.EventRouter")
 local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
-local QuestLinkClassic = require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
+local QuestLinkClassic = require("WhisperMessenger.Model.QuestLinkText")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 
 local function newStore()

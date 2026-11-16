@@ -98,6 +98,7 @@ Model/SenderLevel.lua
 Model/RosterLookup.lua
 Model/ConversationSnapshot.lua
 Model/QuestLinkExchange.lua
+Model/QuestLinkText.lua
 Model/AddonGreetings.lua
 Model/MessageReactionProtocol/Wire.lua
 Model/MessageReactionProtocol/Fallback.lua
@@ -212,7 +213,6 @@ UI/Shared/PanelBadge.lua
 UI/Shared/CloseGlyphButton.lua
 UI/Shared/RelationshipMark.lua
 UI/Hyperlinks/UrlFormatter.lua
-UI/Hyperlinks/QuestLinkClassic.lua
 UI/Hyperlinks/CombatItemRef.lua
 UI/ChatBubble/ReactionAssets.lua
 UI/Hyperlinks.lua
