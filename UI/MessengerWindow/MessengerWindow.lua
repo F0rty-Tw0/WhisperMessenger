@@ -141,6 +141,7 @@ function MessengerWindow.Create(factory, options)
       windowGeometry.setContactsWidth(currentContactsWidth)
     end,
     composer = composer,
+    bindComposerHeight = composerRuntime.bindHeightChanged,
     contactsController = contactsController,
     conversation = conversation,
     refreshContacts = refreshContacts,

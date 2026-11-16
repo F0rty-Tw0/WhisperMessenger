@@ -118,7 +118,7 @@ function Apply.Relayout(layout, relayout, theme)
   -- matches the dual-anchor in production WoW where contentPane is
   -- shorter than `contentWidth` by CONTENT_PANE_RIGHT_INSET.
   local contentPaneWidth = (layout.contentPane.GetWidth and layout.contentPane:GetWidth()) or layout.contentPane.width or contentWidth
-  layout.composerPane:SetSize(contentPaneWidth, resolvedTheme.COMPOSER_HEIGHT)
+  layout.composerPane:SetSize(contentPaneWidth, relayout.composerHeight or resolvedTheme.COMPOSER_HEIGHT)
   if layout.composerPane.ClearAllPoints then
     layout.composerPane:ClearAllPoints()
     layout.composerPane:SetPoint("BOTTOMLEFT", layout.contentPane, "BOTTOMLEFT", 0, 0)
@@ -214,6 +214,7 @@ function Apply.Relayout(layout, relayout, theme)
     contentWidth = contentWidth,
     contactsHeight = contactsHeight,
     contactsListHeight = contactsListHeight,
+    contentHeight = contentHeight,
     threadHeight = threadHeight,
   }
 end
