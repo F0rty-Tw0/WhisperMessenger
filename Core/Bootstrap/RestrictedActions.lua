@@ -11,9 +11,18 @@ end
 -- NOT re-queried via C_RestrictedActions.IsAddOnRestrictionActive, because
 -- that API returns false during dispatch of its own event.
 --
--- Pre-12.0 clients don't have C_RestrictedActions. We fall back to the
--- existing flag-based approach (Bootstrap._inCompetitiveContent, etc.).
+-- Pre-12.0 clients don't have C_RestrictedActions. There the three detection
+-- flags below are the only source, so an instance answers from the cache
+-- and the flags together.
 local RestrictedActions = {}
+
+-- Flag name -> field of the flag store. The lifecycle handlers still write
+-- these fields on the Bootstrap table directly.
+local FLAG_FIELDS = {
+  mythic = "_inMythicContent",
+  competitive = "_inCompetitiveContent",
+  encounter = "_inEncounter",
+}
 
 -- Mirrors Enum.AddOnRestrictionType
 RestrictedActions.TYPES = {
@@ -49,10 +58,22 @@ function RestrictedActions.ChatApiLocked()
   return locked == true
 end
 
-function RestrictedActions.New()
+-- flagStore: the table that holds the detection flags under FLAG_FIELDS.
+-- Bootstrap passes itself; without one the instance keeps its own.
+function RestrictedActions.New(flagStore)
   local cached = {}
   local updates = {}
+  local flags = flagStore or {}
   local self = {}
+
+  -- name: "mythic", "competitive" or "encounter".
+  function self.setFlag(name, value)
+    flags[FLAG_FIELDS[name]] = value
+  end
+
+  function self.flag(name)
+    return flags[FLAG_FIELDS[name]] == true
+  end
 
   function self.updateFromEvent(restrictionType, newState)
     if type(restrictionType) ~= "number" or type(newState) ~= "number" then
@@ -87,18 +108,26 @@ function RestrictedActions.New()
     return false
   end
 
+  function self.isChatLocked()
+    return self.isActive(RestrictedActions.TYPES.Chat) or RestrictedActions.ChatApiLocked()
+  end
+
+  -- A chat lock behaves exactly like restricted content.
   function self.isCompetitive()
     return self.isActive(RestrictedActions.TYPES.Encounter)
       or self.isActive(RestrictedActions.TYPES.ChallengeMode)
       or self.isActive(RestrictedActions.TYPES.PvPMatch)
+      or self.isChatLocked()
+      or self.flag("competitive")
+      or self.flag("encounter")
   end
 
   function self.isMythic()
-    return self.isActive(RestrictedActions.TYPES.ChallengeMode)
+    return self.isActive(RestrictedActions.TYPES.ChallengeMode) or self.flag("mythic")
   end
 
-  function self.isChatLocked()
-    return self.isActive(RestrictedActions.TYPES.Chat) or RestrictedActions.ChatApiLocked()
+  function self.isRestricted()
+    return self.isCompetitive() or self.isMythic()
   end
 
   return self
