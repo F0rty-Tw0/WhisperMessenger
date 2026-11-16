@@ -3,8 +3,9 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
--- Session counters for /wmsg perf: how much work incoming chat causes.
--- The readout is a developer debug aid, so its lines are not localized.
+-- Session counters for /wmsg perf: how much work incoming chat causes, plus
+-- how much chat history is saved. The readout is a developer debug aid, so
+-- its lines are not localized.
 local PerfCounters = {}
 
 local ORDER = { "groupLines", "channelLines", "unknownChannelIDs", "ignored", "ruleBlocked", "collapsed", "refreshes", "snapshotBuilds" }
@@ -37,12 +38,31 @@ local function profilerLine(name)
   return "recentAverageTime: " .. tostring(value) .. " ms"
 end
 
-function PerfCounters.Lines(name)
+-- How much chat history is saved, counted only when the readout is asked for.
+local function storedLine(getConversations)
+  local conversations = type(getConversations) == "function" and getConversations() or nil
+  if type(conversations) ~= "table" then
+    return nil
+  end
+  local chats, messages = 0, 0
+  for _, conversation in pairs(conversations) do
+    chats = chats + 1
+    if type(conversation.messages) == "table" then
+      messages = messages + #conversation.messages
+    end
+  end
+  return "stored messages: " .. messages .. " in " .. chats .. " chats"
+end
+
+-- getConversations is optional: a function returning the saved conversations
+-- keyed by conversation key.
+function PerfCounters.Lines(name, getConversations)
   local lines = {}
   for _, counter in ipairs(ORDER) do
     lines[#lines + 1] = counter .. ": " .. PerfCounters.Get(counter)
   end
   lines[#lines + 1] = profilerLine(name)
+  lines[#lines + 1] = storedLine(getConversations)
   return lines
 end
 

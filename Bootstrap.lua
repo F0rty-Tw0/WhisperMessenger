@@ -242,7 +242,10 @@ function Bootstrap.Initialize(factory, options)
     toggle = runtime.toggle,
     replyToLast = ReplyToLast.Create({ runtime = runtime, windowRuntime = windowRuntime }),
     perf = function()
-      for _, line in ipairs(PerfCounters.Lines(addonName)) do
+      local function getConversations()
+        return runtime.store.conversations
+      end
+      for _, line in ipairs(PerfCounters.Lines(addonName, getConversations)) do
         ChatPrint.Print(line)
       end
     end,
