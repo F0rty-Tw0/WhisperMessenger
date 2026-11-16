@@ -5,6 +5,7 @@ end
 
 local Common = ns.BootstrapLifecycleHandlersCommon or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
 local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
 local ZoneNotify = ns.BootstrapLifecycleHandlersZoneNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneNotify")
@@ -22,14 +23,13 @@ function Presence.handlePlayerLogout(Bootstrap)
     local runtime = Bootstrap.runtime
     local settings = runtime.accountState and runtime.accountState.settings
     if settings and settings.clearOnLogout then
-      for key in pairs(runtime.store.conversations) do
-        runtime.store.conversations[key] = nil
-      end
+      Store.RemoveAll(runtime.store)
+      -- The removal hook clears a selection together with its chat; a saved
+      -- selection can also name a chat that expired while offline.
       runtime.activeConversationKey = nil
       if runtime.characterState then
         runtime.characterState.activeConversationKey = nil
       end
-      runtime.lastIncomingWhisperKey = nil
     end
   end
 

@@ -83,10 +83,11 @@ return function()
   _G.C_Timer = nil
   local key = "wow::WOW::arthas-area52"
 
-  -- Removing one conversation cancels its staged expiry closure.
+  -- Removing one conversation cancels its staged expiry closure (through the
+  -- store's removal hook, so this needs the real runtime).
   do
     local now = { value = 100 }
-    local runtime = newRuntime(now)
+    local runtime = newManagedRuntime(now)
     putTarget(runtime, key, 90)
     stageFallback(runtime, key, 1)
     callbacksFor(runtime).onRemove({ conversationKey = key, displayName = "Arthas-Area52" })

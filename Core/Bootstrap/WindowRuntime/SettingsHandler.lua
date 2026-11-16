@@ -133,15 +133,10 @@ function SettingsHandler.Create(options)
     end
 
     if RETENTION_SETTING_KEYS[key] then
-      local activeKey = runtime.activeConversationKey
       local now = runtime.now and runtime.now() or nil
-      local removed = Store.ApplyRetention(runtime.store, now, activeKey)
-      if activeKey ~= nil and removed[activeKey] then
-        runtime.activeConversationKey = nil
-        if runtime.characterState then
-          runtime.characterState.activeConversationKey = nil
-        end
-      end
+      -- A selected chat that expires here loses the selection through the
+      -- store's removal hook.
+      Store.ApplyRetention(runtime.store, now, runtime.activeConversationKey)
       if runtime.refreshWindow then
         runtime.refreshWindow()
       end
