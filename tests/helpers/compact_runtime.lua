@@ -38,8 +38,6 @@ local function boot(settings)
         [CompactRuntime.KEY] = conversation("Arthas-Area52", 2),
         [CompactRuntime.OTHER] = conversation("Jaina-Area52", 0),
       },
-      contacts = {},
-      pendingHydration = {},
       settings = accountSettings,
     },
     characterState = { window = { x = 0, y = 0, width = 900, height = 560 }, icon = {} },

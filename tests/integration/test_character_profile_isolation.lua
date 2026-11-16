@@ -21,8 +21,6 @@ return function()
   local accountState = {
     schemaVersion = 1,
     conversations = {},
-    contacts = {},
-    pendingHydration = {},
   }
 
   local arthasCharacterState = {

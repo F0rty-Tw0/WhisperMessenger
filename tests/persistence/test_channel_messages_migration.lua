@@ -7,8 +7,6 @@ return function()
     local accountState = {
       schemaVersion = 3,
       conversations = {},
-      contacts = {},
-      pendingHydration = {},
       channelMessages = {
         ["arthas-area52"] = {
           nextSequence = 2,
@@ -84,8 +82,6 @@ return function()
     local accountState = {
       schemaVersion = 4,
       conversations = {},
-      contacts = {},
-      pendingHydration = {},
       channelMessages = existing,
     }
 

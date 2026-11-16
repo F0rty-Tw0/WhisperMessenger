@@ -39,8 +39,6 @@ local function boot(settings)
   local accountState = {
     schemaVersion = 1,
     conversations = {},
-    contacts = {},
-    pendingHydration = {},
     settings = settings,
   }
 

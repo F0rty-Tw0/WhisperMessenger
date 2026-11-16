@@ -68,8 +68,8 @@ return function()
   -- test_default_fonts_get_a_chat_font_twin_of_the_same_size
   do
     Fonts.Initialize("default")
-    local twin = GlyphCoverage.TwinOf(rawget(_G, "WM_Highlight"))
-    assert(twin ~= nil and twin == rawget(_G, "WM_Highlight_Wide"), "message text has a twin")
+    local twin = rawget(_G, "WM_Highlight_Wide")
+    assert(twin ~= nil and GlyphCoverage.InputFont("WM_Highlight") == twin, "message text has a twin")
     local path, size = twin:GetFont()
     assert(path == "Fonts\\ARIALN.TTF", "twin uses the chat font, got " .. tostring(path))
     local _, baseSize = rawget(_G, "WM_Highlight"):GetFont()

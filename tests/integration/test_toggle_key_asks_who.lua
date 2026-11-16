@@ -29,8 +29,6 @@ local function boot()
         messages = {},
       },
     },
-    contacts = {},
-    pendingHydration = {},
     schemaVersion = 1,
     settings = { showPlayerLevels = true },
   }

@@ -12,7 +12,7 @@ end
 
 return function()
   local factory = FakeUI.NewFactory()
-  local accountState = { conversations = {}, contacts = {}, pendingHydration = {}, schemaVersion = 1 }
+  local accountState = { conversations = {}, schemaVersion = 1 }
   local characterState = {
     window = {
       anchorPoint = "CENTER",

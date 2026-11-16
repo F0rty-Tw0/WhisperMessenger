@@ -54,8 +54,6 @@ return function()
         conversationKey = conversationKey,
       },
     },
-    contacts = {},
-    pendingHydration = {},
     schemaVersion = 1,
   }
   _G.WhisperMessengerCharacterDB = {

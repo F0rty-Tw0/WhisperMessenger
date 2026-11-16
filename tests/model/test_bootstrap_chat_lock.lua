@@ -19,7 +19,7 @@ local function boot(apiLocked, sent)
   Bootstrap._inEncounter = false
   Bootstrap._inCompetitiveContent = false
   return Bootstrap.Initialize(factory, {
-    accountState = { schemaVersion = 1, conversations = {}, contacts = {}, pendingHydration = {}, settings = {} },
+    accountState = { schemaVersion = 1, conversations = {}, settings = {} },
     characterState = { window = { x = 0, y = 0, width = 900, height = 560 }, icon = {} },
     localProfileId = "me",
     chatApi = {

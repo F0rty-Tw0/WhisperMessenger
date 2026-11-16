@@ -22,8 +22,6 @@ return function()
       accountState = {
         schemaVersion = 1,
         conversations = {},
-        contacts = {},
-        pendingHydration = {},
         settings = { hideFromDefaultChat = true },
       },
       characterState = {
@@ -71,8 +69,6 @@ return function()
       accountState = {
         schemaVersion = 1,
         conversations = {},
-        contacts = {},
-        pendingHydration = {},
         settings = { hideFromDefaultChat = false },
       },
       characterState = {
@@ -116,8 +112,6 @@ return function()
       accountState = {
         schemaVersion = 1,
         conversations = {},
-        contacts = {},
-        pendingHydration = {},
         settings = { hideFromDefaultChat = true },
       },
       characterState = {

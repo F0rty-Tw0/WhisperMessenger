@@ -27,8 +27,6 @@ return function()
       accountState = {
         schemaVersion = 1,
         conversations = {},
-        contacts = {},
-        pendingHydration = {},
         settings = {},
         filters = { ignored = { ["spammer-realm"] = { name = "Spammer-Realm", addedAt = 0, blocked = 0 } }, rules = {} },
       },

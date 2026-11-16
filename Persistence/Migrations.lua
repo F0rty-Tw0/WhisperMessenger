@@ -72,6 +72,13 @@ local function dropRetiredSettings(settings)
   settings.classColorSenderNames = nil
 end
 
+-- Account tables that were saved but never read; dropped on every load so old
+-- saves get cleaned. Versions before this one put both back as empty tables.
+local function dropRetiredAccountKeys(accountState)
+  accountState.contacts = nil
+  accountState.pendingHydration = nil
+end
+
 function Migrations.Apply(accountState, schema)
   accountState = accountState or schema.NewAccountState()
 
@@ -81,14 +88,6 @@ function Migrations.Apply(accountState, schema)
 
   if accountState.conversations == nil then
     accountState.conversations = {}
-  end
-
-  if accountState.contacts == nil then
-    accountState.contacts = {}
-  end
-
-  if accountState.pendingHydration == nil then
-    accountState.pendingHydration = {}
   end
 
   if accountState.channelMessages == nil then
@@ -130,6 +129,7 @@ function Migrations.Apply(accountState, schema)
   end
 
   dropRetiredSettings(accountState.settings)
+  dropRetiredAccountKeys(accountState)
 
   accountState.schemaVersion = Migrations.CURRENT_VERSION
   return accountState
