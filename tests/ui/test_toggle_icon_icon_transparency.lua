@@ -1,5 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local IconTransparency = require("WhisperMessenger.UI.ToggleIcon.IconTransparency")
+local IconTransparency = require("WhisperMessenger.UI.ToggleIcon.IconLooks").IconTransparency
 
 local EPSILON = 1e-9
 

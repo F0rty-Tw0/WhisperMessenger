@@ -1,5 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local LockGlyph = require("WhisperMessenger.UI.ToggleIcon.LockGlyph")
+local LockGlyph = require("WhisperMessenger.UI.ToggleIcon.IconLooks").LockGlyph
 
 return function()
   local factory = FakeUI.NewFactory()
