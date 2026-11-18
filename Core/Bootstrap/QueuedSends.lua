@@ -15,10 +15,10 @@ local ONE_WAITING_KEY = "1 queued message is waiting — open the messenger to s
 local MANY_WAITING_KEY = "%d queued messages are waiting — open the messenger to send or discard."
 
 function QueuedSends.IsChatLocked(runtime)
-  if type(runtime.isMythicLockdown) == "function" and runtime.isMythicLockdown() then
+  if runtime.isMythicLockdown() then
     return true
   end
-  return type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent() == true
+  return runtime.isCompetitiveContent() == true
 end
 
 -- Called on every lock-state notification; announces once per lift.
