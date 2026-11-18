@@ -258,4 +258,11 @@ return function()
     strip.setLines({})
     assert(state.visible == false, "no tooltip is left for a row that went away")
   end)
+
+  -- test_info_strip_hover_decodes_player_link
+  run(function(state)
+    local _, row = newStrip({ "A" })
+    row:GetScript("OnHyperlinkEnter")(row, "addon:WhisperMessenger:player:Name-Realm:12")
+    assert(state.link == "player:Name-Realm:12", "the tooltip gets the plain player link, got " .. tostring(state.link))
+  end)
 end
