@@ -215,6 +215,7 @@ UI/Shared/CloseGlyphButton.lua
 UI/Shared/RelationshipMark.lua
 UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks/CombatItemRef.lua
+UI/Hyperlinks/PlayerLinkCodec.lua
 UI/ChatBubble/ReactionAssets.lua
 UI/Hyperlinks.lua
 UI/ScrollView/Metrics.lua
