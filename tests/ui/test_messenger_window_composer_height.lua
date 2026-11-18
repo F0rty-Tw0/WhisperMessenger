@@ -106,4 +106,32 @@ return function()
       error(err, 0)
     end
   end
+
+  -- test_draft_at_build_grows_the_composer_pane
+  do
+    Fonts.Initialize("default")
+    local factory = FakeUI.NewFactory({ wrap = true })
+    local savedUIParent = _G.UIParent
+    _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
+    _G.UIParent:SetSize(1280, 720)
+    local ok, err = pcall(function()
+      local contact = { conversationKey = "me::WOW::bob-realm", displayName = "Bob", channel = "WOW" }
+      local window = MessengerWindow.Create(factory, {
+        contacts = { contact },
+        selectedContact = contact,
+        conversation = { messages = {} },
+        getDraft = function()
+          return ("a"):rep(150)
+        end,
+      })
+
+      local barH = window.composer.getHeight()
+      assert(barH > Theme.COMPOSER_HEIGHT, "expected two rows, got bar height " .. tostring(barH))
+      assert(window.composerPane.height == barH, "expected composer height " .. barH .. ", got " .. tostring(window.composerPane.height))
+    end)
+    _G.UIParent = savedUIParent
+    if not ok then
+      error(err, 0)
+    end
+  end
 end
