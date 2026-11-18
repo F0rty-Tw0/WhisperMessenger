@@ -256,6 +256,8 @@ function MessengerWindow.Create(factory, options)
     onPositionChanged = onPositionChanged,
     buildState = windowGeometry.buildState,
   })
+  -- One relayout at build, so a bar height reported before the first resize moves the panes.
+  windowSizing.relayoutCurrentSize()
 
   local refreshLanguage = LanguageRefresh.Create({
     layout = layout,
