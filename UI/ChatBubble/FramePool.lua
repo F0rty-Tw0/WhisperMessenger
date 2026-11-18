@@ -28,9 +28,12 @@ end
 -- poolKey (optional) keeps a role's frames to itself: an icon frame handed to
 -- a label would lose its masked texture and have to build a new one.
 -- template (optional) is passed to CreateFrame and keeps templated frames apart
--- from plain frames of the same type.
+-- from plain frames of the same type or pool key.
 function FramePool.acquireFrame(realFactory, contentFrame, frameType, parent, poolKey, template)
-  local key = poolKey or (template and frameType .. "|" .. template) or frameType
+  local key = poolKey or frameType
+  if template then
+    key = key .. "|" .. template
+  end
   local free = contentFrame._freeFrames
   local frame
   for index = #free, 1, -1 do
