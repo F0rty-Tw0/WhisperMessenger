@@ -173,7 +173,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   end
 
   -- Button is required for WoW's native OnDoubleClick script.
-  local frame = factory.CreateFrame("Button", nil, parent)
+  local frame = Hyperlinks.CreateLinkFrame(factory, "Button", nil, parent)
   if frame.RegisterForClicks then
     frame:RegisterForClicks("AnyUp", "AnyDown")
   end

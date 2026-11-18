@@ -27,8 +27,10 @@ end
 
 -- poolKey (optional) keeps a role's frames to itself: an icon frame handed to
 -- a label would lose its masked texture and have to build a new one.
-function FramePool.acquireFrame(realFactory, contentFrame, frameType, parent, poolKey)
-  local key = poolKey or frameType
+-- template (optional) is passed to CreateFrame and keeps templated frames apart
+-- from plain frames of the same type.
+function FramePool.acquireFrame(realFactory, contentFrame, frameType, parent, poolKey, template)
+  local key = poolKey or (template and frameType .. "|" .. template) or frameType
   local free = contentFrame._freeFrames
   local frame
   for index = #free, 1, -1 do
@@ -47,9 +49,9 @@ function FramePool.acquireFrame(realFactory, contentFrame, frameType, parent, po
       frame:ClearAllPoints()
     end
   else
-    frame = realFactory.CreateFrame(frameType, nil, parent)
+    frame = realFactory.CreateFrame(frameType, nil, parent, template)
     frame._wmPoolFrameType = frameType
-    frame._wmPoolKey = poolKey
+    frame._wmPoolKey = key
   end
   table.insert(contentFrame._activeFrames, frame)
   return frame
@@ -71,8 +73,8 @@ function FramePool.getFactory(realFactory, contentFrame, poolKey)
   local factory = state.factories[factoryKey]
   if factory == nil then
     factory = {
-      CreateFrame = function(frameType, _name, parent)
-        return FramePool.acquireFrame(state.realFactory, state.contentFrame, frameType, parent, poolKey)
+      CreateFrame = function(frameType, _name, parent, template)
+        return FramePool.acquireFrame(state.realFactory, state.contentFrame, frameType, parent, poolKey, template)
       end,
     }
     state.factories[factoryKey] = factory

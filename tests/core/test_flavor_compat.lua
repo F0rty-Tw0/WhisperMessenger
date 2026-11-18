@@ -67,8 +67,52 @@ local function testRegionAndSeasonLookups()
   assert(ok, err)
 end
 
+-- Runs one HasTemplate check with C_XMLUtil stubbed, restoring the real global even when it fails.
+local function withXmlUtil(xmlUtil, check)
+  local saved = rawget(_G, "C_XMLUtil")
+  rawset(_G, "C_XMLUtil", xmlUtil)
+  local ok, err = pcall(check, require("WhisperMessenger.Core.FlavorCompat"))
+  rawset(_G, "C_XMLUtil", saved)
+  assert(ok, err)
+end
+
+local function testHasTemplate()
+  -- test_has_template_true_when_template_info_returned
+  withXmlUtil({
+    GetTemplateInfo = function()
+      return { type = "Frame" }
+    end,
+  }, function(FlavorCompat)
+    assert(FlavorCompat.HasTemplate("InlineHyperlinkFrameTemplate") == true, "template info means the template exists")
+  end)
+
+  -- test_has_template_false_when_template_info_nil
+  withXmlUtil({
+    GetTemplateInfo = function()
+      return nil
+    end,
+  }, function(FlavorCompat)
+    assert(FlavorCompat.HasTemplate("InlineHyperlinkFrameTemplate") == false, "no template info means missing")
+  end)
+
+  -- test_has_template_false_without_xml_util
+  withXmlUtil(nil, function(FlavorCompat)
+    assert(FlavorCompat.HasTemplate("InlineHyperlinkFrameTemplate") == false, "no C_XMLUtil counts as missing")
+  end)
+
+  -- test_has_template_false_when_lookup_throws
+  withXmlUtil({
+    GetTemplateInfo = function()
+      error("lookup failed")
+    end,
+  }, function(FlavorCompat)
+    assert(FlavorCompat.HasTemplate("InlineHyperlinkFrameTemplate") == false, "a lookup error counts as missing")
+  end)
+end
+
 return function()
   testRegionAndSeasonLookups()
+  testHasTemplate()
 
   -- Forever: retail engine (project 1) + toc 16001
   local forever = loadFlavorCompat(1, 16001)
