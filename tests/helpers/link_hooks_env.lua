@@ -132,6 +132,7 @@ function LinkHooksEnv.New(opts)
   rawset(_G, "GetTime", function()
     return env.frameTime
   end)
+  env.savedSuspended = RestrictionState.Suspended()
   RestrictionState.SetSuspended(false)
   rawset(_G, "IsModifiedClick", function(action)
     return action == "CHATLINK"
@@ -182,6 +183,7 @@ function LinkHooksEnv.New(opts)
     for _, key in ipairs(GLOBALS) do
       rawset(_G, key, env.saved[key])
     end
+    RestrictionState.SetSuspended(env.savedSuspended)
     unloadModule()
   end
 

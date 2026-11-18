@@ -123,6 +123,7 @@ function WhoLookupEnv.New(opts)
       return env.chatLockdown == true
     end,
   })
+  env.savedSuspended = RestrictionState.Suspended()
   RestrictionState.SetSuspended(false)
   installRuntime(env)
   DisplayName.Configure({ showPlayerLevels = true })
@@ -137,6 +138,7 @@ function WhoLookupEnv.Restore(env)
   for _, key in ipairs(GLOBALS) do
     rawset(_G, key, env.saved[key])
   end
+  RestrictionState.SetSuspended(env.savedSuspended)
   DisplayName.Configure({ showPlayerLevels = false })
   SeenLevel._reset()
   SeenZone._reset()
