@@ -42,6 +42,20 @@ local function factoryWithoutTooltipTemplate()
   return factory
 end
 
+-- A client that skips a missing tooltip border without an error: any template
+-- list naming it yields a plain frame, so the link template is lost too.
+local function factorySkippingTooltipTemplate()
+  local factory = FakeUI.NewFactory()
+  local createFrame = factory.CreateFrame
+  factory.CreateFrame = function(frameType, name, parent, template)
+    if template and string.find(template, TOOLTIP_TEMPLATE, 1, true) then
+      template = nil
+    end
+    return createFrame(frameType, name, parent, template)
+  end
+  return factory
+end
+
 -- Clicks a link the way the live client does: the template's own script, then each post-hook.
 local function clickLink(frame, link)
   frame.templateHyperlinkClick(frame, link, "[Signet]", "LeftButton")
@@ -73,6 +87,15 @@ return function()
       local frame = build(factoryWithoutTooltipTemplate()).frame
       assert(frame.template == LINK_TEMPLATE, "fallback preview keeps the link template, got " .. tostring(frame.template))
       assert(frame._wmSecureLinks == true, "fallback preview is marked as a secure link frame")
+    end)
+  end
+
+  local function test_preview_skipped_template_is_not_marked_secure()
+    RetailHud.With(function()
+      local frame = build(factorySkippingTooltipTemplate()).frame
+      assert(frame.templateHyperlinkClick == nil, "the plain frame has no template click handler")
+      assert(frame._wmSecureLinks == false, "a frame without the link template is not a secure link frame")
+      assert(frame:GetScript("OnHyperlinkClick") ~= nil, "link clicks still have a handler")
     end)
   end
 
@@ -110,5 +133,6 @@ return function()
   test_preview_hud_off_uses_link_template()
   test_preview_hud_on_combines_templates()
   test_preview_hud_template_error_falls_back_to_link_template()
+  test_preview_skipped_template_is_not_marked_secure()
   test_preview_link_click_still_swallows_mouse_up()
 end

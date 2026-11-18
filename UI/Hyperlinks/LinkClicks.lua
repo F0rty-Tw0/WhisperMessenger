@@ -26,11 +26,13 @@ function LinkClicks.LinkFrameTemplate(extraTemplate)
 end
 
 -- Builds a link frame with LinkFrameTemplate and marks it _wmSecureLinks
--- when it got the secure template.
+-- when it asked for the secure template and the frame has the template's
+-- click script. A frame marked secure gets no click script of its own (see
+-- BindClick), so one that lost the template would have dead links.
 function LinkClicks.CreateLinkFrame(factory, frameType, name, parent, extraTemplate)
   local template, usedSecure = LinkClicks.LinkFrameTemplate(extraTemplate)
   local frame = factory.CreateFrame(frameType, name, parent, template)
-  frame._wmSecureLinks = usedSecure
+  frame._wmSecureLinks = usedSecure and frame.GetScript ~= nil and frame:GetScript("OnHyperlinkClick") ~= nil
   return frame
 end
 

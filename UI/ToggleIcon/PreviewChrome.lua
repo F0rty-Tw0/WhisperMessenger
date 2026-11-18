@@ -48,10 +48,8 @@ end
 function PreviewChrome.Create(factory, parent)
   local frame
   if Hud.IsOn() then
-    local template, usedSecure = Hyperlinks.LinkFrameTemplate(TOOLTIP_TEMPLATE)
-    local ok, created = pcall(factory.CreateFrame, "Frame", nil, parent, template)
+    local ok, created = pcall(Hyperlinks.CreateLinkFrame, factory, "Frame", nil, parent, TOOLTIP_TEMPLATE)
     if ok and created then
-      created._wmSecureLinks = usedSecure
       if hasTooltipParts(created) then
         return created, tooltipFill(created)
       end

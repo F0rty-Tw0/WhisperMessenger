@@ -80,6 +80,17 @@ return function()
     eq(frame._wmSecureLinks, false, "absent frame secure flag")
   end)
 
+  -- test_create_link_frame_without_template_click_is_not_secure
+  withTemplate(true, function()
+    local factory = FakeUI.NewFactory()
+    local createFrame = factory.CreateFrame
+    factory.CreateFrame = function(frameType, name, parent)
+      return createFrame(frameType, name, parent)
+    end
+    local frame = LinkClicks.CreateLinkFrame(factory, "Frame", nil, nil)
+    eq(frame._wmSecureLinks, false, "frame that lost the template secure flag")
+  end)
+
   -- test_hyperlinks_re_exports_same_functions
   eq(Hyperlinks.LinkFrameTemplate, LinkClicks.LinkFrameTemplate, "LinkFrameTemplate re-export")
   eq(Hyperlinks.CreateLinkFrame, LinkClicks.CreateLinkFrame, "CreateLinkFrame re-export")
