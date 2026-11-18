@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Hyperlinks = require("WhisperMessenger.UI.Hyperlinks")
+local LinkClicks = require("WhisperMessenger.UI.Hyperlinks.LinkClicks")
 local IncomingPreview = require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 
 local ITEM_LINK = "item:12345::"
@@ -51,8 +52,8 @@ return function()
   end
 
   local function test_item_link_click_does_not_open_the_chat()
-    local saved = { enter = Hyperlinks.HandleEnter, click = Hyperlinks.HandleClick }
-    rawset(Hyperlinks, "HandleClick", function() end)
+    local saved = { enter = Hyperlinks.HandleEnter, click = LinkClicks.HandleClick }
+    rawset(LinkClicks, "HandleClick", function() end)
     local state = build(true)
     state.preview.setIncomingPreview("Jaina", "Look |Hitem:12345::|h[Signet]|h", "MAGE")
     local ok, err = pcall(function()
@@ -60,7 +61,7 @@ return function()
       fire(state.preview.frame, "OnMouseUp", "LeftButton")
     end)
     rawset(Hyperlinks, "HandleEnter", saved.enter)
-    rawset(Hyperlinks, "HandleClick", saved.click)
+    rawset(LinkClicks, "HandleClick", saved.click)
     assert(ok, err)
     assert(state.opened == 0, "a link click opens the item, not the chat")
   end

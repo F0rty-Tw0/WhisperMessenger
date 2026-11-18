@@ -1,7 +1,8 @@
--- A link click in our frames goes to Blizzard's own chat-frame click handler,
--- so links open the way they do in Blizzard chat. Our extras (URL copy, the
--- caller's callback) run after it. The click script itself is addon code; see
--- test_click_combat_item_ref for the combat click that skips the handler.
+-- Frames without the secure link template: a link click goes to Blizzard's own
+-- chat-frame click handler, so links open the way they do in Blizzard chat.
+-- Our extras (URL copy, the caller's callback) run after it. The click script
+-- itself is addon code; see test_click_combat_item_ref for the combat click
+-- that skips the handler, and test_click_template_hook for templated frames.
 local FakeUI = require("tests.helpers.fake_ui")
 local ManualCopyCapture = require("tests.helpers.manual_copy_capture")
 local WriteWatch = require("tests.helpers.write_watch")

@@ -11,6 +11,7 @@ local LinkHooks = {}
 local registeredLinkHooks = false
 local linkedInputs = {}
 local lastInsertFrameTime = nil
+local OWN_LINK_PREFIX = "addon:WhisperMessenger:"
 
 local function isInputShown(input)
   if type(input.IsVisible) == "function" then
@@ -115,6 +116,11 @@ local function insertFromBlizzard(link)
   if _G._wmSuspended or type(link) ~= "string" or link == "" or blizzardChatBoxActive() then
     return
   end
+  -- Defensive: Blizzard routes our addon: links away from InsertLink, but
+  -- another addon's hook could still pass one here.
+  if string.find(link, "|H" .. OWN_LINK_PREFIX, 1, true) then
+    return
+  end
   tryInsertLink(link, { allowVisibleWithoutFocus = false })
 end
 
@@ -189,12 +195,16 @@ local function registerLinkHooks()
     if link == nil or UrlFormatter.ExtractExternalUrlFromLink(link) ~= nil then
       return
     end
-    -- A shift-clicked player name inserts the plain name, as Blizzard does
-    -- for its own open chat box (Blizzard also sends a /who when none is
-    -- open). This hook only sees clicks outside our window, or in it while
-    -- the composer had no focus: with focus, our window's click script puts
-    -- the name in through InsertClickedPlayerName and never calls SetItemRef.
-    -- Blizzard ignores shift-clicked Battle.net names so the encoded account
+    -- Links in our own window are encoded as addon:WhisperMessenger:..., and
+    -- Blizzard's click handler on those frames calls SetItemRef with that
+    -- encoded link. Our own click post-hook inserts the decoded player name,
+    -- so the encoded text must not land here or take this frame's insert slot.
+    if type(link) == "string" and string.sub(link, 1, #OWN_LINK_PREFIX) == OWN_LINK_PREFIX then
+      return
+    end
+    -- A shift-clicked Blizzard player name inserts the plain name, as Blizzard
+    -- does for its own open chat box (Blizzard also sends a /who when none is
+    -- open). Blizzard ignores shift-clicked Battle.net names so the encoded account
     -- name never reaches chat; so do we. Any other click on a player name
     -- (right-click menu, plain click) inserts nothing: the server refuses a
     -- sent |Hplayer link ("Invalid escape code in chat message").

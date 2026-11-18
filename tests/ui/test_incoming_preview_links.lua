@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Hyperlinks = require("WhisperMessenger.UI.Hyperlinks")
+local LinkClicks = require("WhisperMessenger.UI.Hyperlinks.LinkClicks")
 local IncomingPreview = require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 
 local ITEM_LINK = "item:12345::"
@@ -32,14 +33,14 @@ local function fire(frame, script, ...)
   handler(frame, ...)
 end
 
--- Swaps Hyperlinks' handlers and _G.GetTime for the test, restoring them after.
+-- Swaps the hover and click handlers (click routing lives in LinkClicks) and _G.GetTime for the test, restoring them after.
 local function withSpies(clock, run)
-  local saved = { enter = Hyperlinks.HandleEnter, click = Hyperlinks.HandleClick, getTime = rawget(_G, "GetTime") }
+  local saved = { enter = Hyperlinks.HandleEnter, click = LinkClicks.HandleClick, getTime = rawget(_G, "GetTime") }
   local calls = {}
   rawset(Hyperlinks, "HandleEnter", function(owner, link)
     calls[#calls + 1] = { name = "enter", owner = owner, link = link }
   end)
-  rawset(Hyperlinks, "HandleClick", function(link, _text, button)
+  rawset(LinkClicks, "HandleClick", function(link, _text, button)
     calls[#calls + 1] = { name = "click", link = link, button = button }
   end)
   rawset(_G, "GetTime", clock and function()
@@ -47,7 +48,7 @@ local function withSpies(clock, run)
   end or nil)
   local ok, err = pcall(run, calls)
   rawset(Hyperlinks, "HandleEnter", saved.enter)
-  rawset(Hyperlinks, "HandleClick", saved.click)
+  rawset(LinkClicks, "HandleClick", saved.click)
   rawset(_G, "GetTime", saved.getTime)
   if not ok then
     error(err, 0)
@@ -179,6 +180,15 @@ return function()
     assert(opened, "a plain click still opens")
   end
 
+  local function test_preview_message_label_encodes_player_links()
+    local preview = build()
+    preview.setIncomingPreview("Arthas", "hi |Hplayer:Name-Realm:12|h[Name]|h", "PALADIN", { sentAt = 1 })
+    local shown = preview.messageLabel:GetText()
+    local encoded = "|Haddon:WhisperMessenger:player:Name-Realm:12|h[Name]|h"
+    assert(string.find(shown, encoded, 1, true) ~= nil, "preview shows the player link encoded, got " .. tostring(shown))
+  end
+
+  test_preview_message_label_encodes_player_links()
   test_preview_link_hover_shows_tooltip()
   test_ignored_mouse_up_neither_opens_nor_dismisses()
   test_unguarded_mouse_up_still_opens()

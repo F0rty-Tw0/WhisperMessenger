@@ -117,4 +117,23 @@ return function()
 
     _G.GameTooltip = savedTooltip
   end
+
+  ----------------------------------------------------------------------------
+  -- test_hover_encoded_player_link_sets_decoded_hyperlink: an addon-encoded
+  -- player link must show the normal player tooltip.
+  ----------------------------------------------------------------------------
+  do
+    local savedTooltip = _G.GameTooltip
+    local tooltip, calls = newTooltipStub()
+    _G.GameTooltip = tooltip
+
+    Hyperlinks.HandleEnter({}, "addon:WhisperMessenger:player:Name-Realm:12")
+
+    assert(
+      calls.setHyperlink == "player:Name-Realm:12",
+      "encoded player link should reach SetHyperlink decoded, got " .. tostring(calls.setHyperlink)
+    )
+
+    _G.GameTooltip = savedTooltip
+  end
 end
