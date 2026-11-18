@@ -42,16 +42,16 @@ local function textureCount(frame, hiddenToo)
   return count
 end
 
--- The scroll frame is `rows` lines plus 3px slack above and below, 5px below
--- the box top, so the text itself still starts 8px down.
+-- The scroll frame is `rows` lines plus 3px slack below them, 8px below the
+-- box top, where the text starts.
 local function assertViewport(composer, rows, label)
   local scroll = composer.scroll
-  local expected = rows * 12 + 6
+  local expected = rows * 12 + 3
   assert(scroll.height == expected, label .. ": viewport is " .. expected .. " tall, got " .. tostring(scroll.height))
   local top = lastPoint(scroll, "TOPLEFT")
-  assert(top and top[2] == composer.box and top[4] == 0 and top[5] == -5, label .. ": viewport starts 5px into the box")
+  assert(top and top[2] == composer.box and top[4] == 0 and top[5] == -8, label .. ": viewport starts 8px into the box")
   local right = lastPoint(scroll, "TOPRIGHT")
-  assert(right and right[2] == composer.box and right[4] == 0 and right[5] == -5, label .. ": viewport spans the box width")
+  assert(right and right[2] == composer.box and right[4] == 0 and right[5] == -8, label .. ": viewport spans the box width")
 end
 
 return function()
@@ -113,7 +113,7 @@ return function()
     assert(point and point[4] == 8 and point[5] == 8, "the box sits in the 8px gutter")
     -- The text line starts 8px below the box top, as the old 8px text inset put it.
     assertViewport(composer, 1, "one row")
-    assertInsets(input, { 8, 8, 3, 3 }, "template")
+    assertInsets(input, { 8, 8, 0, 3 }, "template")
   end
 
   -- test_text_viewport_stops_at_the_row_cap
@@ -124,7 +124,7 @@ return function()
     assert(composer.box.height == 40, "two rows is 40 tall, got " .. tostring(composer.box.height))
     -- Past the cap the template scrolls the text; the padding must not scroll with it.
     assertViewport(composer, 2, "row cap")
-    assertInsets(composer.input, { 8, 8, 3, 3 }, "row cap")
+    assertInsets(composer.input, { 8, 8, 0, 3 }, "row cap")
   end
 
   -- test_typing_does_not_reset_the_text_insets
@@ -147,7 +147,7 @@ return function()
     composer.remeasure()
     Fonts.SetFontSize(12)
     assert(#insetCalls == 1, "a font size that shrinks the slack resets the insets once, got " .. #insetCalls)
-    assertInsets(input, { 8, 8, 2, 2 }, "24px font")
+    assertInsets(input, { 8, 8, 0, 2 }, "24px font")
   end
 
   -- test_surfaces_draw_on_the_box_not_the_scrolling_frame

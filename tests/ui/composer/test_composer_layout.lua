@@ -22,6 +22,34 @@ local function build()
   return Composer.Create(factory, parent, { conversationKey = "me::WOW::a", displayName = "A", channel = "WOW" }, function() end)
 end
 
+local function layoutParts()
+  local factory = FakeUI.NewFactory()
+  local pane = factory.CreateFrame("Frame", "pane", nil)
+  local function mk()
+    return factory.CreateFrame("Frame", nil, pane)
+  end
+  local parts = {
+    pane = pane,
+    box = mk(),
+    scroll = mk(),
+    input = mk(),
+    sendButton = mk(),
+    emojiButton = mk(),
+    emojiIcon = mk(),
+    quickReplyButton = mk(),
+  }
+  parts.quickReplyButton.icon = mk()
+  return parts
+end
+
+-- Blizzard's ScrollingEdit_OnUpdate: steps half the viewport toward the cursor, clamped to the range.
+local function scrollToCursor(viewport, range, cursorBottom, scroll)
+  while cursorBottom > scroll + viewport and scroll < range do
+    scroll = math.min(range, scroll + viewport / 2)
+  end
+  return scroll
+end
+
 return function()
   local previousPreset = Theme.GetPreset()
 
@@ -87,7 +115,7 @@ return function()
     assert(ComposerLayout.TextWidth(PANE_WIDTH) == 478, "text width is box minus both insets")
   end
 
-  -- test_compute_gives_the_viewport_slack_above_and_below_the_rows
+  -- test_compute_gives_the_viewport_slack_below_the_rows_only
   do
     Theme.SetPreset("wow_default")
     local ComposerLayout = require("WhisperMessenger.UI.Composer.ComposerLayout")
@@ -95,8 +123,8 @@ return function()
     assert(slack == 3, "viewport slack is 3px, got " .. tostring(slack))
     local three = ComposerLayout.Compute(PANE_WIDTH, 3, 12)
     assert(three.textSlackY == slack, "slack is the constant when the inset has room, got " .. tostring(three.textSlackY))
-    assert(three.viewportY == three.textInsetY - slack, "viewport starts slack above the text, got " .. tostring(three.viewportY))
-    assert(three.viewportH == three.textH + 2 * slack, "viewport is the rows plus slack on both sides, got " .. tostring(three.viewportH))
+    assert(three.viewportY == three.textInsetY, "viewport starts at the text top, got " .. tostring(three.viewportY))
+    assert(three.viewportH == three.textH + slack, "viewport is the rows plus slack below them, got " .. tostring(three.viewportH))
   end
 
   -- test_compute_caps_the_slack_at_the_inset_so_the_viewport_stays_in_the_box
@@ -105,40 +133,48 @@ return function()
     local ComposerLayout = require("WhisperMessenger.UI.Composer.ComposerLayout")
     local tall = ComposerLayout.Compute(PANE_WIDTH, 1, 24)
     assert(tall.textInsetY == 2, "a 24px line leaves a 2px inset, got " .. tostring(tall.textInsetY))
-    assert(tall.textSlackY == 2 and tall.viewportY == 0, "slack shrinks to the inset, got " .. tostring(tall.textSlackY))
-    assert(tall.viewportH == 28, "viewport fills the 1-row box, got " .. tostring(tall.viewportH))
+    assert(tall.textSlackY == 2 and tall.viewportY == 2, "slack shrinks to the inset, got " .. tostring(tall.textSlackY))
+    assert(tall.viewportH == 26, "viewport reaches the 1-row box bottom, got " .. tostring(tall.viewportH))
   end
 
   -- test_apply_sizes_box_and_insets_the_scroll_frame
   do
     Theme.SetPreset("wow_default")
     local ComposerLayout = require("WhisperMessenger.UI.Composer.ComposerLayout")
-    local factory = FakeUI.NewFactory()
-    local pane = factory.CreateFrame("Frame", "pane", nil)
-    local function mk()
-      return factory.CreateFrame("Frame", nil, pane)
-    end
-    local parts = {
-      pane = pane,
-      box = mk(),
-      scroll = mk(),
-      input = mk(),
-      sendButton = mk(),
-      emojiButton = mk(),
-      emojiIcon = mk(),
-      quickReplyButton = mk(),
-    }
-    parts.quickReplyButton.icon = mk()
+    local parts = layoutParts()
     ComposerLayout.Apply(parts, PANE_WIDTH, 3, 12)
     assert(lastPoint(parts.box, "BOTTOMLEFT"), "box is positioned")
     assert(parts.box.width == 494 and parts.box.height == 52, "box sized 494x52")
     local top = lastPoint(parts.scroll, "TOPLEFT")
-    assert(top and top[2] == parts.box and top[5] == -5, "scroll frame starts 5px into the box, got " .. tostring(top and top[5]))
-    assert(parts.scroll.height == 42, "scroll frame is 3 rows of 12 plus 3px slack each side, got " .. tostring(parts.scroll.height))
+    assert(top and top[2] == parts.box and top[5] == -8, "scroll frame starts 8px into the box, got " .. tostring(top and top[5]))
+    assert(parts.scroll.height == 39, "scroll frame is 3 rows of 12 plus 3px slack below, got " .. tostring(parts.scroll.height))
     assert(parts.input.width == 494, "input takes the box width")
     local ins = parts.input.textInsets
-    assert(ins and ins[1] == 8 and ins[2] == 8 and ins[3] == 3 and ins[4] == 3, "input insets 8,8,3,3")
+    assert(ins and ins[1] == 8 and ins[2] == 8 and ins[3] == 0 and ins[4] == 3, "input insets 8,8,0,3")
     assert(-top[5] + ins[3] == 8, "text top stays 8px below the box top")
+  end
+
+  -- test_scrolled_text_shows_whole_lines_at_the_row_cap
+  do
+    Theme.SetPreset("wow_default")
+    local ComposerLayout = require("WhisperMessenger.UI.Composer.ComposerLayout")
+    local cap, cursorH = 2, 11
+    for _, pitch in ipairs({ 12, 32 / 3 }) do
+      local parts = layoutParts()
+      ComposerLayout.Apply(parts, PANE_WIDTH, cap, pitch)
+      local viewport, top, bottom = parts.scroll.height, parts.input.textInsets[3], parts.input.textInsets[4]
+      assert(cap * pitch + top + bottom <= viewport + 1e-9, "pitch " .. pitch .. ": nothing scrolls at the row cap")
+      local scroll = 0
+      for lines = cap + 1, 6 do
+        local range = lines * pitch + top + bottom - viewport
+        scroll = scrollToCursor(viewport, range, top + (lines - 1) * pitch + cursorH, scroll)
+        local sliver = (top + (lines - cap) * pitch) - scroll
+        assert(
+          math.abs(sliver) < 1e-6,
+          "pitch " .. pitch .. ", " .. lines .. " lines: " .. sliver .. "px of the scrolled-out line shows along the top edge"
+        )
+      end
+    end
   end
 
   Theme.SetPreset(previousPreset)

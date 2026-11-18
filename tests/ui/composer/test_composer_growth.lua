@@ -159,8 +159,8 @@ return function()
       return self:GetNumLines() * pitch
     end
     typeChars(composer, 300)
-    local height = composer.scroll.height - 6
-    assert(height > 20 and height <= 2 * pitch + 1e-9, "two rows of 10.67 px make a 21.33 viewport plus slack, got " .. tostring(height))
+    local height = composer.scroll.height - 3
+    assert(height > 20 and height <= 2 * pitch + 1e-9, "two rows of 10.67 px make a 21.33 viewport plus slack below, got " .. tostring(height))
   end
 
   -- test_fallback_box_never_grows
