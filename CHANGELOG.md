@@ -9,6 +9,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: clicking links in the messenger could later break Blizzard windows (errors when opening your character panel, toys that wouldn't use).
 - Fixed: the message box no longer shows a thin slice of the previous line along its top edge once a long message scrolls.
 - Fixed: when the message box grows to two lines right after a reload, the window now makes room for it instead of letting the box cover the line above it.
+- Fixed: party, raid and instance chats now clear out after your Message Retention time like whispers do. Before, leaving the group or logging back in counted as new activity, so an old group chat could stay in your list for days.
 
 ## [2.1.8] - 2026-11-16
 

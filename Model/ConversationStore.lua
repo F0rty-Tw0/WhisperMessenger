@@ -174,6 +174,21 @@ function Store.AppendOutgoing(state, key, message)
   StoreRetention.AfterAppend(state, key, conversation, message)
 end
 
+-- A status line such as "Left party": shown as the row preview and kept and
+-- aged like any line, but it is not chat, so the conversation's last activity
+-- (list order and the retention clock) stays on its last real message.
+function Store.AppendNotice(state, key, message)
+  local conversation = state.conversations[key]
+  if conversation == nil then
+    return nil
+  end
+  conversation.messages = conversation.messages or {}
+  table.insert(conversation.messages, message)
+  conversation.lastPreview = message.text
+  StoreRetention.AfterAppend(state, key, conversation, message)
+  return conversation
+end
+
 function Store.SetActiveStatus(state, key, status)
   local conversation = Store.EnsureConversation(state, key)
   conversation.activeStatus = status
