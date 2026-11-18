@@ -180,6 +180,15 @@ return function()
     assert(opened, "a plain click still opens")
   end
 
+  local function test_preview_message_label_encodes_player_links()
+    local preview = build()
+    preview.setIncomingPreview("Arthas", "hi |Hplayer:Name-Realm:12|h[Name]|h", "PALADIN", { sentAt = 1 })
+    local shown = preview.messageLabel:GetText()
+    local encoded = "|Haddon:WhisperMessenger:player:Name-Realm:12|h[Name]|h"
+    assert(string.find(shown, encoded, 1, true) ~= nil, "preview shows the player link encoded, got " .. tostring(shown))
+  end
+
+  test_preview_message_label_encodes_player_links()
   test_preview_link_hover_shows_tooltip()
   test_ignored_mouse_up_neither_opens_nor_dismisses()
   test_unguarded_mouse_up_still_opens()
