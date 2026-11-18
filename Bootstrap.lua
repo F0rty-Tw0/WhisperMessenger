@@ -232,7 +232,7 @@ function Bootstrap.Initialize(factory, options)
       return accountState.settings
     end,
     isMythic = function()
-      return runtime.isMythicLockdown and runtime.isMythicLockdown() or false
+      return runtime.isMythicLockdown()
     end,
   })
   runtime.syncReplyKey = replyKeyBinder.sync
