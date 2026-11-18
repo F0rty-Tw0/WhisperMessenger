@@ -174,7 +174,7 @@ function InfoStrip.Create(factory, pane, headerFrame)
         strip.rowFrames[index] = rowFrame
         strip.rows[index] = createRow(rowFrame)
       end
-      strip.rows[index]:SetText(lines[index])
+      strip.rows[index]:SetText(Hyperlinks.EncodePlayerLinks(lines[index]))
       local before = rowFrame.tooltipLines
       rowFrame.tooltipLines = tooltips and tooltips[index] or nil
       rowFrame:Show()

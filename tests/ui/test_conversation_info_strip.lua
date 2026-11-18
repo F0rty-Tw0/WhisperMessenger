@@ -173,4 +173,12 @@ return function()
     assert(pane.infoStrip.frame:IsShown() == false, "hidden without the option")
     assert(pane.infoStrip.height() == 0)
   end
+
+  -- test_info_strip_row_encodes_player_links
+  do
+    local strip = newPane(factory, nil).infoStrip
+    strip.setLines({ "|Hplayer:Name-Realm:12|h[Name]|h" })
+    local shown = strip.rows[1]:GetText()
+    assert(shown == "|Haddon:WhisperMessenger:player:Name-Realm:12|h[Name]|h", "row shows the player link encoded, got " .. tostring(shown))
+  end
 end
