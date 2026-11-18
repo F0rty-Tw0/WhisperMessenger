@@ -18,7 +18,7 @@ local function hasConversationKey(conversation)
 end
 
 local function isCompetitive(runtime)
-  return type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent()
+  return runtime.isCompetitiveContent()
 end
 
 local function isSupportedGroupChannel(channel)
