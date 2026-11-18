@@ -165,7 +165,9 @@ local function onSecureLinkClick(self, link, text, button)
 end
 
 -- Link clicks on frame. onLinkClick runs once after every click, even when
--- routing throws (the error is rethrown after it, so it still surfaces).
+-- our routing throws (the error is rethrown after it, so it still surfaces).
+-- On a secure frame it runs from a post-hook, so it may not run at all when
+-- the template's own handler (Blizzard's SetItemRef) throws first.
 --
 -- A frame with the secure template (_wmSecureLinks) keeps the template's own
 -- click script, so a click opens Blizzard windows untainted. BindClick only

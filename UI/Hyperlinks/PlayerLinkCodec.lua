@@ -3,9 +3,11 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
--- Player links shown in our frames are rewritten as addon links, so a click
--- on one arrives as an addon link and never runs Blizzard's player-link
--- handler from addon code. The encoded form keeps the whole original body:
+-- Player links shown in our frames are rewritten as addon links, so the
+-- secure link template's SetItemRef ignores them (no /who on a shift-click)
+-- and our click hook decodes and routes them instead, which then runs
+-- Blizzard's player-link handler from addon code. The encoded form keeps the
+-- whole original body:
 -- player:Name-Realm:12 -> addon:WhisperMessenger:player:Name-Realm:12.
 -- BNplayer and other link types, URL links included, are left alone.
 local PlayerLinkCodec = {}
