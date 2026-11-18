@@ -1,8 +1,9 @@
 -- Applies Blizzard frame template wiring to a frame.
--- Templates.Apply(frame, template, createFrame) handles all known templates.
+-- Templates.Apply(frame, template, createFrame) handles all known templates,
+-- applying each name of a comma-separated list in order like the live client.
 local Templates = {}
 
-function Templates.Apply(frame, template, createFrame)
+local function applyOne(frame, template, createFrame)
   if template == "BasicFrameTemplateWithInset" then
     frame.Bg = createFrame("Texture", nil, frame, nil)
     frame.Inset = createFrame("Frame", nil, frame, nil)
@@ -83,6 +84,22 @@ function Templates.Apply(frame, template, createFrame)
     function frame:UnlockHighlight()
       self.highlightLocked = false
     end
+  elseif template == "InlineHyperlinkFrameTemplate" then
+    -- The template's own OnHyperlinkClick runs Blizzard code that calls
+    -- SetItemRef; frame.templateHyperlinkClick keeps that handler.
+    frame.templateHyperlinkClick = function(_self, link, text, button)
+      _G.SetItemRef(link, text, button)
+    end
+    frame:SetScript("OnHyperlinkClick", frame.templateHyperlinkClick)
+  end
+end
+
+function Templates.Apply(frame, template, createFrame)
+  if type(template) ~= "string" then
+    return
+  end
+  for name in string.gmatch(template, "[^,]+") do
+    applyOne(frame, (string.gsub(name, "^%s*(.-)%s*$", "%1")), createFrame)
   end
 end
 
