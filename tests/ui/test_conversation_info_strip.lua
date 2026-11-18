@@ -181,4 +181,22 @@ return function()
     local shown = strip.rows[1]:GetText()
     assert(shown == "|Haddon:WhisperMessenger:player:Name-Realm:12|h[Name]|h", "row shows the player link encoded, got " .. tostring(shown))
   end
+
+  -- test_info_strip_row_uses_link_template
+  do
+    local previous = rawget(_G, "C_XMLUtil")
+    rawset(_G, "C_XMLUtil", {
+      GetTemplateInfo = function()
+        return { type = "Frame" }
+      end,
+    })
+    local ok, err = pcall(function()
+      lines = { "A" }
+      local row = newPane(factory, getter).infoStrip.rowFrames[1]
+      assert(row.templateHyperlinkClick ~= nil, "the row is built from the link template")
+      assert(row:GetScript("OnHyperlinkClick") == row.templateHyperlinkClick, "the template handles the click")
+    end)
+    rawset(_G, "C_XMLUtil", previous)
+    assert(ok, err)
+  end
 end

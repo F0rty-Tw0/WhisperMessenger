@@ -103,7 +103,7 @@ end
 -- The row's mouse frame: its tooltip on hover, links as in the transcript.
 -- Leaving a link while still on the row brings the row's tooltip back.
 local function createRowFrame(factory, strip, index)
-  local rowFrame = factory.CreateFrame("Frame", nil, strip.frame)
+  local rowFrame = Hyperlinks.CreateLinkFrame(factory, "Frame", nil, strip.frame)
   local top = -(index - 1) * ROW_HEIGHT
   rowFrame:SetPoint("TOPLEFT", strip.frame, "TOPLEFT", 0, top)
   rowFrame:SetPoint("TOPRIGHT", strip.frame, "TOPRIGHT", 0, top)
