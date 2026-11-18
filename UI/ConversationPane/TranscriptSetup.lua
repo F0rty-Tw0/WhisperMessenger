@@ -94,8 +94,13 @@ function TranscriptSetup.BindPlayerMenu(transcript, view, rowActions)
 end
 
 function TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth)
-  transcript.text = factory.CreateFrame("EditBox", nil, transcript.content)
+  transcript.text = Hyperlinks.CreateLinkFrame(factory, "EditBox", nil, transcript.content)
   transcript.text:SetPoint("TOPLEFT", transcript.content, "TOPLEFT", 0, 0)
+  if transcript.text._wmSecureLinks then
+    -- The template's hover scripts show raw links; the transcript has no hover tooltip.
+    transcript.text:SetScript("OnHyperlinkEnter", nil)
+    transcript.text:SetScript("OnHyperlinkLeave", nil)
+  end
   if transcript.text.SetMultiLine then
     transcript.text:SetMultiLine(true)
   end
