@@ -63,7 +63,7 @@ function AutoOpenCoordinator.Attach(options)
       return type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown()
     end,
     isCompetitive = function()
-      return runtime.isCompetitiveContent and runtime.isCompetitiveContent()
+      return runtime.isCompetitiveContent()
     end,
     ensureWindow = runtime.ensureWindow,
     setWindowVisible = runtime.setWindowVisible,
