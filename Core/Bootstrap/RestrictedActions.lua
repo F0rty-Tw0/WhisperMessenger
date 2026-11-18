@@ -33,6 +33,10 @@ local function fieldOf(name)
   return field
 end
 
+-- The mythic suspend is one state for the whole addon, not per instance:
+-- files with no Bootstrap handle read it through RestrictedActions.IsSuspended.
+local suspended = false
+
 -- Mirrors Enum.AddOnRestrictionType
 RestrictedActions.TYPES = {
   Combat = 0,
@@ -65,6 +69,11 @@ function RestrictedActions.ChatApiLocked()
     return false
   end
   return locked == true
+end
+
+-- True while the mythic suspend controller has the addon suspended.
+function RestrictedActions.IsSuspended()
+  return suspended
 end
 
 -- flagStore: the table that holds the detection flags under FLAG_FIELDS.
@@ -138,6 +147,15 @@ function RestrictedActions.New(flagStore)
 
   function self.isRestricted()
     return self.isCompetitive() or self.isMythic()
+  end
+
+  -- Writes the addon-wide suspend: every instance and IsSuspended see it.
+  function self.setSuspended(value)
+    suspended = value and true or false
+  end
+
+  function self.isSuspended()
+    return suspended
   end
 
   return self

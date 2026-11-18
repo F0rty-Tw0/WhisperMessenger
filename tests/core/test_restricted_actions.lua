@@ -92,4 +92,38 @@ return function()
 
     _G.C_RestrictedActions = savedApi
   end
+
+  -- test_suspended_defaults_false
+
+  do
+    assert(RestrictedActions.New().isSuspended() == false, "a fresh instance is not suspended")
+    assert(RestrictedActions.IsSuspended() == false, "nothing suspended yet")
+  end
+
+  -- test_set_suspended_reads_back_on_every_instance_and_statically
+
+  -- One suspend for the whole addon: files without a Bootstrap handle ask
+  -- the module, and every instance gives the same answer.
+  do
+    local writer = RestrictedActions.New()
+    local other = RestrictedActions.New()
+    writer.setSuspended(true)
+    assert(writer.isSuspended() == true, "the writer reads its own suspend")
+    assert(other.isSuspended() == true, "another instance sees the suspend")
+    assert(RestrictedActions.IsSuspended() == true, "the static reader sees the suspend")
+
+    writer.setSuspended(false)
+    assert(other.isSuspended() == false, "clearing reaches every instance")
+    assert(RestrictedActions.IsSuspended() == false, "clearing reaches the static reader")
+  end
+
+  -- test_set_suspended_stores_a_boolean
+
+  do
+    local instance = RestrictedActions.New()
+    instance.setSuspended(1)
+    assert(RestrictedActions.IsSuspended() == true, "a truthy value suspends")
+    instance.setSuspended(nil)
+    assert(RestrictedActions.IsSuspended() == false, "nil clears to false, not nil")
+  end
 end
