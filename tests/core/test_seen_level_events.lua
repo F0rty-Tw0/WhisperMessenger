@@ -2,6 +2,7 @@ require("tests.helpers.fake_ui")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
 local RestrictionState = require("tests.helpers.restriction_state")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local STUBBED = { "UnitIsPlayer", "UnitGUID", "UnitLevel", "UnitFullName", "IsInRaid", "GetNumGroupMembers", "Ambiguate", "UNKNOWNOBJECT" }
 
@@ -35,12 +36,12 @@ local function stubUnits(units, calls)
 end
 
 local function makeRuntime()
-  return {
+  return RestrictionPredicates.Add({
     localProfileId = "me",
     store = { conversations = {} },
     friendListApi = {},
     scheduleIncomingRefresh = function() end,
-  }
+  })
 end
 
 return function()

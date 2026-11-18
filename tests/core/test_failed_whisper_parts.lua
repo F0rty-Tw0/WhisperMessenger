@@ -2,6 +2,7 @@ local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local QueuedSends = require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 local Router = require("WhisperMessenger.Core.EventRouter")
 local Store = require("WhisperMessenger.Model.ConversationStore")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- A long whisper to an offline player: the game rejects every part with
 -- its own "No player named" line, but the player sees one failed bubble
@@ -20,7 +21,7 @@ local function longText()
 end
 
 local function newRuntime(sent)
-  return {
+  return RestrictionPredicates.Add({
     sendStatusByConversation = {},
     pendingOutgoing = {},
     now = function()
@@ -34,7 +35,7 @@ local function newRuntime(sent)
     },
     bnetApi = {},
     store = Store.New({ maxMessagesPerConversation = 20, maxConversations = 10, messageMaxAge = 86400, conversationMaxAge = 86400 }),
-  }
+  })
 end
 
 local function sendLong(runtime)

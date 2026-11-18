@@ -1,6 +1,7 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local ReactionHandler = require("WhisperMessenger.Core.Bootstrap.ReactionHandler")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local function newStore()
   return Store.New({ maxMessagesPerConversation = 20, maxConversations = 10 })
@@ -24,7 +25,7 @@ return function()
   -- Retail character path rewrites plain quest refs before dispatch but must remain capped.
   do
     local dispatched
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -41,7 +42,7 @@ return function()
         SendAddonMessage = function() end,
       },
       bnetApi = {},
-    }
+    })
     local key = "wow::WOW::arthas-area52"
     local target = { kind = "user", direction = "in", text = expandingSource, wireId = "retailtarget", sentAt = 90 }
     runtime.store.conversations[key] = { conversationKey = key, messages = { target }, unreadCount = 0 }
@@ -63,7 +64,7 @@ return function()
       battleTag = "Jaina#1234",
       gameAccountInfo = { characterName = "Jaina", realmName = "Proudmoore" },
     }
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -88,7 +89,7 @@ return function()
           return accountInfo
         end,
       },
-    }
+    })
     local key = "bnet::BN::jaina#1234"
     local target = { kind = "user", direction = "in", text = expandingSource, wireId = "bntarget", sentAt = 190 }
     runtime.store.conversations[key] = {

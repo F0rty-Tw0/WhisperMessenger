@@ -2,6 +2,7 @@ local Store = require("WhisperMessenger.Model.ConversationStore")
 local MessageReactions = require("WhisperMessenger.Model.MessageReactions")
 local ReactionHandler = require("WhisperMessenger.Core.Bootstrap.ReactionHandler")
 local Router = require("WhisperMessenger.Core.EventRouter")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local function newStore()
   return Store.New({ maxMessagesPerConversation = 20, maxConversations = 10 })
@@ -61,7 +62,7 @@ local function newRuntime(nowRef, timers)
   local function refresh()
     refreshes = refreshes + 1
   end
-  return runtime, contact, target, sent, addons, refresh, function()
+  return RestrictionPredicates.Add(runtime), contact, target, sent, addons, refresh, function()
     return refreshes
   end
 end

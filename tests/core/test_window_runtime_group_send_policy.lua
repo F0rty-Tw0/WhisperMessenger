@@ -1,11 +1,12 @@
 local ChannelType = require("WhisperMessenger.Model.Identity.ChannelType")
 local GroupSendPolicy = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPolicy")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 return function()
   -- Whisper conversations never show group send notices.
   do
     local policy = GroupSendPolicy.Create({
-      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      runtime = RestrictionPredicates.Add({ localProfileId = "jaina-area52", chatApi = {} }),
       chatGateway = {
         CanSend = function()
           error("legacy whisper should not ask group gateway")
@@ -21,7 +22,7 @@ return function()
   -- Foreign-character group histories are read-only.
   do
     local policy = GroupSendPolicy.Create({
-      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      runtime = RestrictionPredicates.Add({ localProfileId = "jaina-area52", chatApi = {} }),
       chatGateway = {
         CanSend = function()
           return true
@@ -43,7 +44,7 @@ return function()
   -- than parsing the suffixed key as a foreign profile.
   do
     local policy = GroupSendPolicy.Create({
-      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      runtime = RestrictionPredicates.Add({ localProfileId = "jaina-area52", chatApi = {} }),
       chatGateway = {
         CanSend = function()
           return true
@@ -66,7 +67,7 @@ return function()
   -- Guild histories are account-wide and compare against the current live guild.
   do
     local policy = GroupSendPolicy.Create({
-      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      runtime = RestrictionPredicates.Add({ localProfileId = "jaina-area52", chatApi = {} }),
       getPlayerGuildName = function()
         return "Knights of Ni"
       end,
@@ -92,7 +93,7 @@ return function()
   -- Current-character group without membership shows the group send notice.
   do
     local policy = GroupSendPolicy.Create({
-      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      runtime = RestrictionPredicates.Add({ localProfileId = "jaina-area52", chatApi = {} }),
       chatGateway = {
         CanSend = function()
           return false
@@ -110,7 +111,7 @@ return function()
   -- channel is currently true because a different group was joined.
   do
     local policy = GroupSendPolicy.Create({
-      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      runtime = RestrictionPredicates.Add({ localProfileId = "jaina-area52", chatApi = {} }),
       chatGateway = {
         CanSend = function()
           return true
@@ -130,7 +131,7 @@ return function()
   do
     local sendCalls = 0
     local policy = GroupSendPolicy.Create({
-      runtime = { localProfileId = "jaina-area52", chatApi = { tag = "api" } },
+      runtime = RestrictionPredicates.Add({ localProfileId = "jaina-area52", chatApi = { tag = "api" } }),
       chatGateway = {
         CanSend = function(_api, payload)
           return payload.channel == ChannelType.PARTY
@@ -159,7 +160,7 @@ return function()
   do
     local falseReturnCalls = 0
     local policy = GroupSendPolicy.Create({
-      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      runtime = RestrictionPredicates.Add({ localProfileId = "jaina-area52", chatApi = {} }),
       chatGateway = {
         CanSend = function()
           return true
@@ -177,7 +178,7 @@ return function()
     assert(falseReturnCalls == 1, "group API false return must dispatch exactly once")
 
     local errorPolicy = GroupSendPolicy.Create({
-      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      runtime = RestrictionPredicates.Add({ localProfileId = "jaina-area52", chatApi = {} }),
       chatGateway = {
         CanSend = function()
           return true
@@ -207,7 +208,7 @@ return function()
         end,
       }
       local policy = GroupSendPolicy.Create({
-        runtime = runtime,
+        runtime = RestrictionPredicates.Add(runtime),
         chatGateway = {
           CanSend = function(_, payload)
             return payload.channel == channel
@@ -284,7 +285,7 @@ return function()
       end,
     }
     local policy = GroupSendPolicy.Create({
-      runtime = runtime,
+      runtime = RestrictionPredicates.Add(runtime),
       chatGateway = {
         CanSend = function()
           return true
@@ -340,7 +341,7 @@ return function()
       },
     }
     local policy = GroupSendPolicy.Create({
-      runtime = runtime,
+      runtime = RestrictionPredicates.Add(runtime),
       chatGateway = {
         CanSend = function()
           return true
@@ -373,7 +374,7 @@ return function()
     local addonCalls = 0
     local runtime = { chatApi = {} }
     local policy = GroupSendPolicy.Create({
-      runtime = runtime,
+      runtime = RestrictionPredicates.Add(runtime),
       chatGateway = {
         CanSend = function()
           return true
@@ -414,7 +415,7 @@ return function()
       end,
     }
     local policy = GroupSendPolicy.Create({
-      runtime = runtime,
+      runtime = RestrictionPredicates.Add(runtime),
       chatGateway = {
         CanSend = function()
           return true
@@ -451,7 +452,7 @@ return function()
   do
     local normalChannels = {}
     local policy = GroupSendPolicy.Create({
-      runtime = { chatApi = {} },
+      runtime = RestrictionPredicates.Add({ chatApi = {} }),
       chatGateway = {
         CanSend = function()
           return true

@@ -6,10 +6,11 @@ local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHand
 local ContentDetector = require("WhisperMessenger.Core.ContentDetector")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local function newBootstrap(runtimeFields)
   local calls = { suspend = 0, resume = 0 }
-  local runtime = runtimeFields or {}
+  local runtime = RestrictionPredicates.Add(runtimeFields or {})
   runtime.suspend = function()
     calls.suspend = calls.suspend + 1
   end

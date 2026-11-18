@@ -1,5 +1,6 @@
 local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local Store = require("WhisperMessenger.Model.ConversationStore")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- A send during chat lockdown is queued (kept with its target so it can be
 -- sent later with a click); a send the game rejects is kept as failed.
@@ -7,7 +8,7 @@ local Store = require("WhisperMessenger.Model.ConversationStore")
 local KEY = "me::WOW::thrall-nagrand"
 
 local function newRuntime(sent)
-  return {
+  return RestrictionPredicates.Add({
     sendStatusByConversation = {},
     pendingOutgoing = {},
     now = function()
@@ -21,7 +22,7 @@ local function newRuntime(sent)
     },
     bnetApi = {},
     store = Store.New({ maxMessagesPerConversation = 20, maxConversations = 10, messageMaxAge = 86400, conversationMaxAge = 86400 }),
-  }
+  })
 end
 
 local function payload()

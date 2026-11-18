@@ -2,6 +2,7 @@ local Store = require("WhisperMessenger.Model.ConversationStore")
 local Protocol = require("WhisperMessenger.Model.MessageReactionProtocol")
 local Router = require("WhisperMessenger.Core.EventRouter")
 local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 local reactionHandlerLoaded, ReactionHandler = pcall(require, "WhisperMessenger.Core.Bootstrap.ReactionHandler")
 local GroupSendPolicy = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPolicy")
 
@@ -30,7 +31,7 @@ return function()
   -- Ordinary WOW whispers synchronously send normal text, then identity metadata.
   do
     local dispatches = {}
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -49,7 +50,7 @@ return function()
         end,
       },
       bnetApi = {},
-    }
+    })
     local conversationKey = "wow::WOW::arthas-area52"
     local accepted = SendHandler.HandleSend(runtime, {
       conversationKey = conversationKey,
@@ -83,7 +84,7 @@ return function()
   -- Reaction fallback and metadata send from one callback; inform confirms state.
   do
     local dispatches = {}
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -102,7 +103,7 @@ return function()
         end,
       },
       bnetApi = {},
-    }
+    })
     local conversationKey = "wow::WOW::arthas-area52"
     local targetMessage = {
       kind = "user",
@@ -179,7 +180,7 @@ return function()
   end
 
   local function newHintRuntime(now, dispatches)
-    return {
+    return RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -198,7 +199,7 @@ return function()
         end,
       },
       bnetApi = {},
-    }
+    })
   end
 
   -- The first reaction fallback sent to a whisper contact who isn't known to
@@ -291,7 +292,7 @@ return function()
     local addonCalls = 0
     local refreshes = 0
     local conversationKey = "party::artio-area52"
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       localProfileId = "artio-area52",
       store = newStore(),
       pendingOutgoing = {},
@@ -315,7 +316,7 @@ return function()
           error("group reaction must not use BNet addon API")
         end,
       },
-    }
+    })
     local targetMessage = {
       kind = "user",
       direction = "in",
@@ -338,7 +339,7 @@ return function()
       conversation = groupConversation,
     }
     local policy = GroupSendPolicy.Create({
-      runtime = runtime,
+      runtime = RestrictionPredicates.Add(runtime),
       chatGateway = {
         CanSend = function()
           return true
@@ -366,7 +367,7 @@ return function()
     assert(targetMessage._pendingReaction and targetMessage._pendingReaction.operation == "set", "accepted group reaction should begin pending badge")
 
     local rejected = GroupSendPolicy.Create({
-      runtime = runtime,
+      runtime = RestrictionPredicates.Add(runtime),
       chatGateway = {
         CanSend = function()
           return false
@@ -390,7 +391,7 @@ return function()
   do
     local dispatches = {}
     local conversationKey = "party::PARTY::Arthas"
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -409,7 +410,7 @@ return function()
         end,
       },
       bnetApi = {},
-    }
+    })
     local targetMessage = {
       kind = "user",
       direction = "in",
@@ -442,7 +443,7 @@ return function()
   do
     local dispatches = {}
     local conversationKey = "wow::WOW::Arthas"
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -461,7 +462,7 @@ return function()
         end,
       },
       bnetApi = {},
-    }
+    })
     local targetMessage = {
       kind = "user",
       direction = "in",
@@ -504,7 +505,7 @@ return function()
         realmName = "Proudmoore",
       },
     }
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -536,7 +537,7 @@ return function()
           return accountInfo
         end,
       },
-    }
+    })
     local conversationKey = "bnet::BN::jaina#1234"
     local targetMessage = {
       kind = "user",
@@ -604,12 +605,12 @@ return function()
   -- must not install a badge after that confirmation.
   do
     local refreshes = 0
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       localPlayerName = "Artio",
       now = function()
         return 500
       end,
-    }
+    })
     local message = {
       kind = "user",
       direction = "in",
@@ -640,7 +641,7 @@ return function()
   -- local pending state, or either transport can be touched.
   do
     local groupCalls = 0
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       localPlayerName = "Artio",
       isCompetitiveContent = function()
         return true
@@ -661,7 +662,7 @@ return function()
           error("competitive BN must not send metadata")
         end,
       },
-    }
+    })
     local policy = {
       sendReaction = function()
         groupCalls = groupCalls + 1

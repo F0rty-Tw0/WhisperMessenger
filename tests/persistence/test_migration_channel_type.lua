@@ -7,6 +7,7 @@ local GroupSendPolicy = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.G
 local WindowCallbacks = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
 local Composer = require("WhisperMessenger.UI.Composer")
 local FakeUI = require("tests.helpers.fake_ui")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 return function()
   -- test_v4_wow_conversation_gets_canonical_WOW_channel
@@ -217,7 +218,7 @@ return function()
     }
     local callbacks = WindowCallbacks.Create({
       runtime = runtime,
-      groupSendPolicy = GroupSendPolicy.Create({ runtime = runtime }),
+      groupSendPolicy = GroupSendPolicy.Create({ runtime = RestrictionPredicates.Add(runtime) }),
       sendHandler = SendHandler,
       refreshWindow = function() end,
     })

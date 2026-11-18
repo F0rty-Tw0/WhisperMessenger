@@ -2,6 +2,7 @@ local RestrictionState = require("tests.helpers.restriction_state")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local ContentDetector = require("WhisperMessenger.Core.ContentDetector")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 return function()
   local savedGetInstanceInfo = _G.GetInstanceInfo
@@ -35,7 +36,7 @@ return function()
       return "Warsong Gulch", "pvp", 1
     end)
 
-    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
+    local Bootstrap = { runtime = RestrictionPredicates.Add({ suspend = function() end, resume = function() end }) }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
     assert(RestrictionState.Flag(Bootstrap, "competitive") == true, "should set the competitive flag when entering battleground")
@@ -48,7 +49,7 @@ return function()
       return "Nagrand Arena", "arena", 1
     end)
 
-    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
+    local Bootstrap = { runtime = RestrictionPredicates.Add({ suspend = function() end, resume = function() end }) }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
     assert(RestrictionState.Flag(Bootstrap, "competitive") == true, "should set the competitive flag when entering arena")
@@ -61,7 +62,10 @@ return function()
       return "Eastern Kingdoms", "none", 0
     end)
 
-    local Bootstrap = RestrictionState.Set({ runtime = { suspend = function() end, resume = function() end } }, { competitive = true })
+    local Bootstrap = RestrictionState.Set(
+      { runtime = RestrictionPredicates.Add({ suspend = function() end, resume = function() end }) },
+      { competitive = true }
+    )
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
     assert(RestrictionState.Flag(Bootstrap, "competitive") == false, "should clear the competitive flag when entering open world")
@@ -79,7 +83,7 @@ return function()
       return "Dungeon", "party", 8
     end)
 
-    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
+    local Bootstrap = { runtime = RestrictionPredicates.Add({ suspend = function() end, resume = function() end }) }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
     assert(RestrictionState.Flag(Bootstrap, "mythic") == true, "should set the mythic flag for mythic keystone")
@@ -94,12 +98,12 @@ return function()
 
     local calls = { suspend = 0 }
     local Bootstrap = {
-      runtime = {
+      runtime = RestrictionPredicates.Add({
         suspend = function()
           calls.suspend = calls.suspend + 1
         end,
         resume = function() end,
-      },
+      }),
     }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
@@ -125,10 +129,10 @@ return function()
   do
     local callbackCalled = false
     local syncCalled = false
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       suspend = function() end,
       resume = function() end,
-    }
+    })
     local Bootstrap = {
       runtime = runtime,
       onCompetitiveStateChanged = function()
@@ -152,11 +156,11 @@ return function()
   do
     local callbackCalled = false
     local syncCalled = false
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       suspend = function() end,
       resume = function() end,
       messagingNotice = "authoritative restriction state",
-    }
+    })
     local Bootstrap = RestrictionState.Set({
       runtime = runtime,
       onCompetitiveStateChanged = function()
@@ -198,7 +202,7 @@ return function()
       end,
     }
     local Bootstrap = {
-      runtime = {
+      runtime = RestrictionPredicates.Add({
         localProfileId = "me",
         store = { conversations = {} },
         now = function()
@@ -206,7 +210,7 @@ return function()
         end,
         suspend = function() end,
         resume = function() end,
-      },
+      }),
     }
 
     LifecycleHandlers.Handle(
@@ -261,7 +265,7 @@ return function()
     }
     local resumeCalls = 0
     local Bootstrap = {
-      runtime = {
+      runtime = RestrictionPredicates.Add({
         localProfileId = "me",
         store = { conversations = {} },
         now = function()
@@ -271,7 +275,7 @@ return function()
         resume = function()
           resumeCalls = resumeCalls + 1
         end,
-      },
+      }),
     }
 
     LifecycleHandlers.Handle(
@@ -304,7 +308,7 @@ return function()
   do
     local callbackValue = nil
     local Bootstrap = {
-      runtime = { suspend = function() end, resume = function() end },
+      runtime = RestrictionPredicates.Add({ suspend = function() end, resume = function() end }),
       onCompetitiveStateChanged = function(active)
         callbackValue = active
       end,
@@ -322,7 +326,7 @@ return function()
   -- test_player_entering_world_sets_messaging_notice_in_bg
 
   do
-    local runtime = { suspend = function() end, resume = function() end }
+    local runtime = RestrictionPredicates.Add({ suspend = function() end, resume = function() end })
     local Bootstrap = { runtime = runtime }
 
     rawset(_G, "GetInstanceInfo", function()
@@ -337,7 +341,7 @@ return function()
   -- test_player_entering_world_clears_messaging_notice_in_open_world
 
   do
-    local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
+    local runtime = RestrictionPredicates.Add({ suspend = function() end, resume = function() end, messagingNotice = "paused" })
     local Bootstrap = { runtime = runtime }
 
     rawset(_G, "GetInstanceInfo", function()
@@ -369,7 +373,7 @@ return function()
       end,
     }
     local Bootstrap = {
-      runtime = {
+      runtime = RestrictionPredicates.Add({
         localProfileId = "me",
         store = { conversations = {} },
         now = function()
@@ -377,7 +381,7 @@ return function()
         end,
         suspend = function() end,
         resume = function() end,
-      },
+      }),
     }
 
     LifecycleHandlers.Handle(
@@ -421,12 +425,12 @@ return function()
       end,
     }
     local Bootstrap = {
-      runtime = {
+      runtime = RestrictionPredicates.Add({
         localProfileId = "me",
         store = { conversations = {} },
         suspend = function() end,
         resume = function() end,
-      },
+      }),
     }
 
     LifecycleHandlers.Handle(
@@ -465,7 +469,7 @@ return function()
       Rebuild = function() end,
     }
 
-    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
+    local Bootstrap = { runtime = RestrictionPredicates.Add({ suspend = function() end, resume = function() end }) }
     local deps = {
       getContentDetector = function()
         return ContentDetector

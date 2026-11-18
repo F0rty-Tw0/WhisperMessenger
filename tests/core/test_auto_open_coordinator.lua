@@ -4,6 +4,7 @@ local Store = require("WhisperMessenger.Model.ConversationStore")
 local ConversationOps = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 local EditBoxInterop = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
 local RestrictionState = require("tests.helpers.restriction_state")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 return function()
   local savedGlobals = {
@@ -124,7 +125,7 @@ return function()
   }
 
   local coordinator = AutoOpenCoordinator.Attach({
-    runtime = runtime,
+    runtime = RestrictionPredicates.Add(runtime),
     accountState = runtime.accountState,
     windowRuntime = {
       selectConversation = function(conversationKey)

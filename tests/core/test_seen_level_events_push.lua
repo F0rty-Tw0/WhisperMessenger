@@ -2,6 +2,7 @@ require("tests.helpers.fake_ui")
 local Identity = require("WhisperMessenger.Model.Identity")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local STUBBED = { "UnitIsPlayer", "UnitGUID", "UnitLevel", "UnitFullName", "IsInRaid", "GetNumGroupMembers", "Ambiguate" }
 
@@ -44,7 +45,7 @@ local function makeRuntime()
   runtime.refreshWindow = function()
     runtime.windowRefreshes = runtime.windowRefreshes + 1
   end
-  return runtime
+  return RestrictionPredicates.Add(runtime)
 end
 
 local function saveChat(runtime, nameKey, channel)

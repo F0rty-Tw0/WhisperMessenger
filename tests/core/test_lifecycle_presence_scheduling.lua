@@ -1,5 +1,6 @@
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local ContentDetector = require("WhisperMessenger.Core.ContentDetector")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 return function()
   local savedGetInstanceInfo = _G.GetInstanceInfo
@@ -22,7 +23,7 @@ return function()
 
   -- The zone-watch check only runs while a guild contact is armed.
   local function armedRuntime()
-    return { store = { conversations = { ["wow::a"] = { channel = "WOW", guid = "Player-A", notifyZone = true } } } }
+    return RestrictionPredicates.Add({ store = { conversations = { ["wow::a"] = { channel = "WOW", guid = "Player-A", notifyZone = true } } } })
   end
 
   local function captureTimers()
@@ -101,7 +102,7 @@ return function()
 
     local scheduled = captureTimers()
     local calls, presenceCache = makeSpyCache()
-    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
+    local Bootstrap = { runtime = RestrictionPredicates.Add({ suspend = function() end, resume = function() end }) }
     local deps = {
       getContentDetector = function()
         return ContentDetector
@@ -129,7 +130,7 @@ return function()
 
     local scheduled = captureTimers()
     local calls, presenceCache = makeSpyCache()
-    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
+    local Bootstrap = { runtime = RestrictionPredicates.Add({ suspend = function() end, resume = function() end }) }
     local deps = {
       getContentDetector = function()
         return ContentDetector

@@ -4,6 +4,7 @@
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local ContentDetector = require("WhisperMessenger.Core.ContentDetector")
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local ENCOUNTER, CHALLENGE_MODE = 1, 2
 local ACTIVATING, ACTIVE = 1, 2
@@ -21,7 +22,7 @@ local apiActive = {}
 local deferred = {}
 
 local function newBootstrap()
-  return { runtime = { suspend = function() end, resume = function() end } }
+  return { runtime = RestrictionPredicates.Add({ suspend = function() end, resume = function() end }) }
 end
 
 local function event(Bootstrap, restrictionType, state)
