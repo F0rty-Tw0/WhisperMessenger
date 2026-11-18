@@ -15,7 +15,7 @@ function WhoBlock.IsBlocked(rt)
   if chatInfo and chatInfo.InChatMessagingLockdown and chatInfo.InChatMessagingLockdown() then
     return true
   end
-  if rt.isMythicLockdown and rt.isMythicLockdown() then
+  if rt.isMythicLockdown() then
     return true
   end
   -- Without NewTimer the window never closes and cleanup never runs.
@@ -23,7 +23,7 @@ function WhoBlock.IsBlocked(rt)
   if not (timers and timers.NewTimer) then
     return true
   end
-  return (rt.isCompetitiveContent and rt.isCompetitiveContent()) == true
+  return rt.isCompetitiveContent() == true
 end
 
 ns.WhoBlock = WhoBlock
