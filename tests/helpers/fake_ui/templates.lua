@@ -91,6 +91,22 @@ local function applyOne(frame, template, createFrame)
       _G.SetItemRef(link, text, button)
     end
     frame:SetScript("OnHyperlinkClick", frame.templateHyperlinkClick)
+    -- Its hover scripts show the raw link in GameTooltip, with no decode
+    -- of our encoded links and no trade-link block.
+    frame.templateHyperlinkEnter = function(_self, link)
+      local tooltip = _G.GameTooltip
+      if tooltip and tooltip.SetHyperlink then
+        tooltip:SetHyperlink(link)
+      end
+    end
+    frame.templateHyperlinkLeave = function()
+      local tooltip = _G.GameTooltip
+      if tooltip and tooltip.Hide then
+        tooltip:Hide()
+      end
+    end
+    frame:SetScript("OnHyperlinkEnter", frame.templateHyperlinkEnter)
+    frame:SetScript("OnHyperlinkLeave", frame.templateHyperlinkLeave)
   end
 end
 
