@@ -28,7 +28,7 @@ function ReactionHandler.HandleReact(runtime, selectedContact, message, reaction
     return false
   end
 
-  if type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent() then
+  if runtime.isCompetitiveContent() then
     return false
   end
 
