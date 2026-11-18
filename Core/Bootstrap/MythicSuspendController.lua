@@ -48,7 +48,7 @@ function MythicSuspendController.Attach(runtime, deps)
       EventBridge.UnregisterSuspendableLifecycleEvents(Bootstrap._loadFrame)
     end
 
-    -- Signal hooksecurefunc hooks (LinkHooks) to bail with zero addon code.
+    -- Signal hooksecurefunc hooks (LinkHooks) to bail at their first line.
     -- Set before SetEnabled(false), which keeps an open /who window's events
     -- unless suspended.
     RestrictedActions.For(Bootstrap).setSuspended(true)
