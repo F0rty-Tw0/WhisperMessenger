@@ -5,8 +5,9 @@ end
 
 local UrlFormatter = ns.UIHyperlinksUrlFormatter or require("WhisperMessenger.UI.Hyperlinks.UrlFormatter")
 local QuestLinkText = ns.QuestLinkText or require("WhisperMessenger.Model.QuestLinkText")
-local CombatItemRef = ns.UIHyperlinksCombatItemRef or require("WhisperMessenger.UI.Hyperlinks.CombatItemRef")
+local LinkClicks = ns.UIHyperlinksLinkClicks or require("WhisperMessenger.UI.Hyperlinks.LinkClicks")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
+local PlayerLinkCodec = ns.UIHyperlinksPlayerLinkCodec or require("WhisperMessenger.UI.Hyperlinks.PlayerLinkCodec")
 
 local function restoreTrailingEmojiToken(hyperlink)
   local link, display = string.match(hyperlink, "^|H(.-)|h(.-)|h$")
@@ -62,47 +63,6 @@ local NO_HOVER_TOOLTIP_TYPES = { trade = true }
 
 local Hyperlinks = {}
 
-local function resolveManualCopy()
-  if type(ns.ChatBubbleContextMenuManualCopy) == "table" then
-    return ns.ChatBubbleContextMenuManualCopy
-  end
-
-  if type(require) == "function" then
-    local ok, loaded = pcall(require, "WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
-    if ok and type(loaded) == "table" then
-      return loaded
-    end
-  end
-
-  return nil
-end
-
-local function resolveLinkHooks()
-  if type(ns.ComposerLinkHooks) == "table" then
-    return ns.ComposerLinkHooks
-  end
-
-  if type(require) == "function" then
-    local ok, loaded = pcall(require, "WhisperMessenger.UI.Composer.LinkHooks")
-    if ok and type(loaded) == "table" then
-      return loaded
-    end
-  end
-
-  return nil
-end
-
-local function copyExternalUrl(url)
-  -- LaunchURL APIs are protected in addon context and trigger
-  -- ADDON_ACTION_FORBIDDEN. Safe fallback is copy-to-clipboard.
-  local manualCopy = resolveManualCopy()
-  if type(manualCopy) == "table" and type(manualCopy.CopyText) == "function" then
-    return manualCopy.CopyText(url) == true
-  end
-
-  return false
-end
-
 function Hyperlinks.FormatTextForDisplay(text)
   local value = QuestLinkText.Rewrite(tostring(text or ""))
   if value == "" then
@@ -123,41 +83,22 @@ function Hyperlinks.FormatTextForDisplay(text)
       table.insert(output, formatPlainSegment(string.sub(value, cursor, hyperlinkStart - 1)))
     end
 
-    table.insert(output, string.sub(value, hyperlinkStart, hyperlinkEnd))
+    table.insert(output, PlayerLinkCodec.Encode(string.sub(value, hyperlinkStart, hyperlinkEnd)))
     cursor = hyperlinkEnd + 1
   end
 
   return table.concat(output)
 end
 
-function Hyperlinks.HandleClick(link, text, button, sourceFrame)
-  local externalUrl = UrlFormatter.ExtractExternalUrlFromLink(link)
-  if externalUrl ~= nil then
-    if copyExternalUrl(externalUrl) then
-      return true
-    end
+-- Player links in text shown in our frames go through this, so a click on
+-- one never runs Blizzard's player-link handler from addon code.
+Hyperlinks.EncodePlayerLinks = PlayerLinkCodec.Encode
 
-    return false
-  end
-
-  -- A shift-clicked player name goes straight into the focused composer.
-  -- Blizzard's SetItemRef would also send a /who for it, because none of
-  -- Blizzard's chat boxes is open while our composer has focus.
-  local linkHooks = resolveLinkHooks()
-  if linkHooks ~= nil and linkHooks.InsertClickedPlayerName(link) then
-    return true
-  end
-
-  if type(_G.SetItemRef) == "function" then
-    _G.SetItemRef(link, text, button, sourceFrame)
-    return true
-  end
-
-  return false
-end
+Hyperlinks.HandleClick = LinkClicks.HandleClick
 
 function Hyperlinks.HandleEnter(owner, link)
   if type(link) == "string" then
+    link = PlayerLinkCodec.DecodeLink(link)
     local linkType = string.match(link, "^|H([^:|]+):") or string.match(link, "^([^:|]+):")
     if linkType and NO_HOVER_TOOLTIP_TYPES[string.lower(linkType)] then
       return
@@ -206,58 +147,10 @@ function Hyperlinks.HandleLeave()
   end
 end
 
-local function blizzardChatClickHandler()
-  local mixin = _G.ChatFrameMixin
-  if type(mixin) ~= "table" or type(mixin.OnHyperlinkClick) ~= "function" then
-    return nil
-  end
-  return mixin.OnHyperlinkClick
-end
-
-local function routeClick(frame, link, text, button)
-  -- Our composer has focus: a shift-clicked player name only goes into it.
-  -- Blizzard's handler would also send a /who (none of its chat boxes is open).
-  local linkHooks = resolveLinkHooks()
-  if linkHooks ~= nil and linkHooks.InsertClickedPlayerName(link) then
-    return
-  end
-
-  if CombatItemRef.TryPin(link) then
-    return
-  end
-
-  local chatClickHandler = blizzardChatClickHandler()
-  if chatClickHandler == nil then
-    Hyperlinks.HandleClick(link, text, button, frame)
-    return
-  end
-
-  chatClickHandler(frame, link, text, button)
-  local externalUrl = UrlFormatter.ExtractExternalUrlFromLink(link)
-  if externalUrl ~= nil then
-    copyExternalUrl(externalUrl)
-  end
-end
-
--- Link clicks on frame. The script is addon code, so the click runs tainted
--- whatever it calls, even Blizzard's own chat-frame click handler (a plain
--- item click in combat then made ShowUIPanel print "Interface action
--- failed"). Clicks go to that handler, except a shift-clicked player name for
--- the focused composer and a plain tooltip-link click in combat
--- (CombatItemRef). Without the handler, the click goes through HandleClick.
--- onLinkClick runs once after every click, even when a handler throws (the
--- error is rethrown after it, so it still surfaces).
-function Hyperlinks.BindClick(frame, onLinkClick)
-  frame:SetScript("OnHyperlinkClick", function(self, link, text, button)
-    local routed, err = pcall(routeClick, self, link, text, button)
-    if onLinkClick then
-      onLinkClick()
-    end
-    if not routed then
-      error(err, 0)
-    end
-  end)
-end
+-- Link click routing lives in Hyperlinks/LinkClicks.lua.
+Hyperlinks.BindClick = LinkClicks.BindClick
+Hyperlinks.LinkFrameTemplate = LinkClicks.LinkFrameTemplate
+Hyperlinks.CreateLinkFrame = LinkClicks.CreateLinkFrame
 
 -- Links in a frame's text: hover shows the tooltip, click (and shift-click
 -- into chat) works as in the transcript. onLinkClick, when given, runs after
@@ -273,7 +166,7 @@ function Hyperlinks.EnableOn(frame, onLinkClick)
   frame:SetScript("OnHyperlinkLeave", function()
     Hyperlinks.HandleLeave()
   end)
-  Hyperlinks.BindClick(frame, onLinkClick)
+  LinkClicks.BindClick(frame, onLinkClick)
 end
 
 ns.UIHyperlinks = Hyperlinks

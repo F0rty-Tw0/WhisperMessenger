@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Hyperlinks = require("WhisperMessenger.UI.Hyperlinks")
+local LinkClicks = require("WhisperMessenger.UI.Hyperlinks.LinkClicks")
 local IncomingPreview = require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 
 local ITEM_LINK = "item:12345::"
@@ -32,14 +33,14 @@ local function fire(frame, script, ...)
   handler(frame, ...)
 end
 
--- Swaps Hyperlinks' handlers and _G.GetTime for the test, restoring them after.
+-- Swaps the hover and click handlers (click routing lives in LinkClicks) and _G.GetTime for the test, restoring them after.
 local function withSpies(clock, run)
-  local saved = { enter = Hyperlinks.HandleEnter, click = Hyperlinks.HandleClick, getTime = rawget(_G, "GetTime") }
+  local saved = { enter = Hyperlinks.HandleEnter, click = LinkClicks.HandleClick, getTime = rawget(_G, "GetTime") }
   local calls = {}
   rawset(Hyperlinks, "HandleEnter", function(owner, link)
     calls[#calls + 1] = { name = "enter", owner = owner, link = link }
   end)
-  rawset(Hyperlinks, "HandleClick", function(link, _text, button)
+  rawset(LinkClicks, "HandleClick", function(link, _text, button)
     calls[#calls + 1] = { name = "click", link = link, button = button }
   end)
   rawset(_G, "GetTime", clock and function()
@@ -47,7 +48,7 @@ local function withSpies(clock, run)
   end or nil)
   local ok, err = pcall(run, calls)
   rawset(Hyperlinks, "HandleEnter", saved.enter)
-  rawset(Hyperlinks, "HandleClick", saved.click)
+  rawset(LinkClicks, "HandleClick", saved.click)
   rawset(_G, "GetTime", saved.getTime)
   if not ok then
     error(err, 0)
