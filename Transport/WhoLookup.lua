@@ -10,6 +10,12 @@ local WhoAsked = ns.WhoAsked or require("WhisperMessenger.Transport.WhoAsked")
 local WhoBlock = ns.WhoBlock or require("WhisperMessenger.Transport.WhoBlock")
 local WhoPanels = ns.WhoPanels or require("WhisperMessenger.Transport.WhoPanels")
 
+-- Looked up at call time: RestrictedActions loads later in the TOC.
+local function isSuspended()
+  local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
+  return RestrictedActions.IsSuspended()
+end
+
 -- A quiet /who for a whisper contact whose level, zone and guild are older
 -- than STALE_SECONDS (or never fetched). SendWho is protected: it works only
 -- synchronously inside a hardware event (a click or a key press), never from
@@ -128,7 +134,7 @@ end
 -- A foreign one ends ours at once so the player's query behaves normally;
 -- ours then never gets its answer, so the name counts as not asked.
 local function onSendWho()
-  if _G._wmSuspended then
+  if isSuspended() then
     return
   end
   lastSentAt = now(runtime)

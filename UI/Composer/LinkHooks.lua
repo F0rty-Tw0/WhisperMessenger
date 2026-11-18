@@ -7,6 +7,12 @@ local ChatLinkSources = ns.ComposerChatLinkSources or require("WhisperMessenger.
 local QuestLinkText = ns.QuestLinkText or require("WhisperMessenger.Model.QuestLinkText")
 local UrlFormatter = ns.UIHyperlinksUrlFormatter or require("WhisperMessenger.UI.Hyperlinks.UrlFormatter")
 
+-- Looked up at call time: RestrictedActions loads later in the TOC.
+local function isSuspended()
+  local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
+  return RestrictedActions.IsSuspended()
+end
+
 local LinkHooks = {}
 local registeredLinkHooks = false
 local linkedInputs = {}
@@ -113,7 +119,7 @@ local function blizzardChatBoxActive()
 end
 
 local function insertFromBlizzard(link)
-  if _G._wmSuspended or type(link) ~= "string" or link == "" or blizzardChatBoxActive() then
+  if isSuspended() or type(link) ~= "string" or link == "" or blizzardChatBoxActive() then
     return
   end
   -- Defensive: Blizzard routes our addon: links away from InsertLink, but
@@ -145,7 +151,7 @@ end
 -- /who for the name). Returns false when the composer did not take it.
 function LinkHooks.InsertClickedPlayerName(link)
   local playerName = playerNameFromLink(link)
-  if playerName == nil or _G._wmSuspended or not ChatLinkSources.IsChatLinkClick() then
+  if playerName == nil or isSuspended() or not ChatLinkSources.IsChatLinkClick() then
     return false
   end
   return tryInsertLink(playerName, { allowVisibleWithoutFocus = false })
@@ -166,7 +172,7 @@ end
 -- typing in (shown and focused). Returns true only when the input's text really
 -- changed, so a deduped, capped or refused insert reports false.
 function LinkHooks.InsertText(text)
-  if _G._wmSuspended then
+  if isSuspended() then
     return false
   end
   local input = findInputForInsertion(false)
@@ -188,7 +194,7 @@ local function registerLinkHooks()
 
   -- SetItemRef: handles clicking hyperlinks inside chat bubbles / transcript.
   safeHookGlobal("SetItemRef", function(link, text)
-    if _G._wmSuspended then
+    if isSuspended() then
       return
     end
     -- Our URL links only copy their address; they are never inserted.

@@ -7,7 +7,7 @@ local RaceTags = require("WhisperMessenger.Model.Identity.RaceTags")
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
 
-local STUBBED = { "issecretvalue", "_wmSuspended", "C_CreatureInfo" }
+local STUBBED = { "issecretvalue", "C_CreatureInfo" }
 
 local RACES = {
   [1] = { raceName = "Human", clientFileString = "Human" },

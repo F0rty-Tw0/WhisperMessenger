@@ -123,14 +123,14 @@ return function()
 
     assert(Bootstrap._filtersRegistered == true, "filters should be registered before suspend test")
 
-    _G._wmSuspended = true
+    RestrictionState.SetSuspended(true)
     Bootstrap.syncChatFilters()
     assert(Bootstrap._filtersRegistered == false, "syncChatFilters should unregister when suspended")
     assert(removedEvents["CHAT_MSG_WHISPER"] == true, "whisper filter should be removed when suspended")
     assert(removedEvents["CHAT_MSG_WHISPER_INFORM"] == true, "whisper inform filter should be removed when suspended")
     assert(removedEvents["CHAT_MSG_BN_WHISPER"] == true, "BN whisper filter should be removed when suspended")
     assert(removedEvents["CHAT_MSG_BN_WHISPER_INFORM"] == true, "BN whisper inform filter should be removed when suspended")
-    _G._wmSuspended = nil
+    RestrictionState.SetSuspended(false)
   end
 
   -- test_sync_unregisters_during_competitive_content

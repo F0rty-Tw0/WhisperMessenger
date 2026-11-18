@@ -7,6 +7,7 @@ local ChatReplyState = ns.ChatReplyState or require("WhisperMessenger.Util.ChatR
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local function L(key)
   return Localization.Text(key)
 end
@@ -50,7 +51,7 @@ function MythicSuspendController.Attach(runtime, deps)
     -- Signal hooksecurefunc hooks (LinkHooks) to bail with zero addon code.
     -- Set before SetEnabled(false), which keeps an open /who window's events
     -- unless suspended.
-    _G._wmSuspended = true
+    RestrictedActions.For(Bootstrap).setSuspended(true)
 
     local seenLevelEvents = runtime.seenLevelEvents
     if seenLevelEvents and seenLevelEvents.SetEnabled then
@@ -70,7 +71,7 @@ function MythicSuspendController.Attach(runtime, deps)
 
   runtime.resume = function()
     runtime.messagingNotice = nil
-    _G._wmSuspended = nil
+    RestrictedActions.For(Bootstrap).setSuspended(false)
 
     local seenLevelEvents = runtime.seenLevelEvents
     if seenLevelEvents and seenLevelEvents.SetEnabled then

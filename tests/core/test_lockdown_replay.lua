@@ -2,6 +2,7 @@ local FakeChatLines = require("tests.helpers.fake_chat_lines")
 local ReplayRuntime = require("tests.helpers.lockdown_replay_runtime")
 local LockdownReplay = require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local Store = require("WhisperMessenger.Model.ConversationStore")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 local KEY = "wow::WOW::arthas-area52"
 
@@ -84,10 +85,10 @@ return function()
   do
     local runtime, restore = holdOne()
     LockdownReplay.Kick(runtime)
-    local savedSuspended = rawget(_G, "_wmSuspended")
-    rawset(_G, "_wmSuspended", true)
+    local savedSuspended = RestrictionState.Suspended()
+    RestrictionState.SetSuspended(true)
     FakeChatLines.Fire()
-    rawset(_G, "_wmSuspended", savedSuspended)
+    RestrictionState.SetSuspended(savedSuspended)
     assert(#FakeChatLines.ticks == 0, "a tick while suspended must cancel the ticker")
     assert(LockdownReplay.IsPending(runtime), "the held line must stay pending")
     restore()

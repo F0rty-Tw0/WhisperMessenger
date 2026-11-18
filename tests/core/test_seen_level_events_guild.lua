@@ -11,7 +11,6 @@ local STUBBED = {
   "UnitFullName",
   "GetGuildInfo",
   "issecretvalue",
-  "_wmSuspended",
   "UNKNOWNOBJECT",
 }
 

@@ -1,9 +1,9 @@
 require("tests.helpers.fake_ui")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
+local RestrictionState = require("tests.helpers.restriction_state")
 
-local STUBBED =
-  { "UnitIsPlayer", "UnitGUID", "UnitLevel", "UnitFullName", "IsInRaid", "GetNumGroupMembers", "Ambiguate", "_wmSuspended", "UNKNOWNOBJECT" }
+local STUBBED = { "UnitIsPlayer", "UnitGUID", "UnitLevel", "UnitFullName", "IsInRaid", "GetNumGroupMembers", "Ambiguate", "UNKNOWNOBJECT" }
 
 local function fire(event, ...)
   local frame = SeenLevelEvents._frame
@@ -52,6 +52,7 @@ return function()
     for _, name in ipairs(STUBBED) do
       rawset(_G, name, nil)
     end
+    RestrictionState.SetSuspended(false)
     SeenLevelEvents._reset()
     SeenLevel._reset()
   end
@@ -84,7 +85,7 @@ return function()
   -- test_set_enabled_true_registers_nothing_while_suspended
   do
     reset()
-    rawset(_G, "_wmSuspended", true)
+    RestrictionState.SetSuspended(true)
     SeenLevelEvents.Init(makeRuntime())
     SeenLevelEvents.SetEnabled(true)
     for _, event in ipairs(SeenLevelEvents.UNIT_EVENTS) do

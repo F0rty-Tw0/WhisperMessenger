@@ -3,7 +3,7 @@ local Identity = require("WhisperMessenger.Model.Identity")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
 
-local STUBBED = { "UnitIsPlayer", "UnitGUID", "UnitLevel", "UnitFullName", "IsInRaid", "GetNumGroupMembers", "Ambiguate", "_wmSuspended" }
+local STUBBED = { "UnitIsPlayer", "UnitGUID", "UnitLevel", "UnitFullName", "IsInRaid", "GetNumGroupMembers", "Ambiguate" }
 
 local function fire(event, ...)
   local frame = SeenLevelEvents._frame
