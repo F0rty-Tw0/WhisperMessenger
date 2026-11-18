@@ -6,6 +6,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+- Fixed: clicking links in the messenger could later break Blizzard windows (errors when opening your character panel, toys that wouldn't use).
+
 ## [2.1.8] - 2026-11-16
 
 - "Clear on logout" now also deletes the channel messages Whisper Messenger keeps to show above a new whisper. Before, they stayed saved until your next login.
