@@ -155,4 +155,36 @@ return function()
     assert(frame._wmPlayerMenuMessage == nil, "released player-menu state must not retain message")
     assert(frame._wmPlayerMenuOpener == nil, "released player-menu state must not retain callback")
   end
+
+  -- test_pooled_factory_forwards_template
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(contentFrame)
+    local pooled = FramePool.getFactory(FakeUI.NewFactory(), contentFrame)
+    local frame = pooled.CreateFrame("Button", nil, contentFrame, "InlineHyperlinkFrameTemplate")
+    assert(frame.template == "InlineHyperlinkFrameTemplate", "expected pooled factory to forward template, got " .. tostring(frame.template))
+  end
+
+  -- test_template_and_plain_buttons_pool_apart
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(contentFrame)
+    local pooled = FramePool.getFactory(FakeUI.NewFactory(), contentFrame)
+    local templated = pooled.CreateFrame("Button", nil, contentFrame, "InlineHyperlinkFrameTemplate")
+    local plain = pooled.CreateFrame("Button", nil, contentFrame)
+    FramePool.releaseAll(contentFrame)
+
+    assert(pooled.CreateFrame("Button", nil, contentFrame) == plain, "plain request must get the plain Button")
+    local again = pooled.CreateFrame("Button", nil, contentFrame, "InlineHyperlinkFrameTemplate")
+    assert(again == templated, "templated request must get the templated Button")
+  end
+
+  -- test_pool_key_wins_over_template
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(contentFrame)
+    local pooled = FramePool.getFactory(FakeUI.NewFactory(), contentFrame, "icon")
+    local frame = pooled.CreateFrame("Button", nil, contentFrame, "InlineHyperlinkFrameTemplate")
+    assert(frame._wmPoolKey == "icon", "expected poolKey to win over template, got " .. tostring(frame._wmPoolKey))
+  end
 end
