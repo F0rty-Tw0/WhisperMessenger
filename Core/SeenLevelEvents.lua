@@ -184,7 +184,7 @@ local function recordWho(api, systemText)
 end
 
 local function captureBlocked(rt)
-  return (rt.isCompetitiveContent and rt.isCompetitiveContent()) or (rt.isMythicLockdown and rt.isMythicLockdown())
+  return rt.isCompetitiveContent() or rt.isMythicLockdown()
 end
 
 local function dispatch(rt, event, unit)
