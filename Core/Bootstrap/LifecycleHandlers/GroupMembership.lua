@@ -5,6 +5,7 @@ end
 
 local Common = ns.BootstrapLifecycleHandlersCommon or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
 
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local function L(key)
@@ -27,14 +28,16 @@ local function currentTime()
   return 0
 end
 
-local function appendLeftMessage(conversation, channel, now)
-  conversation.messages = conversation.messages or {}
+-- Leaving is not chat: the line goes through the store's retention
+-- bookkeeping but leaves the chat's last activity alone, so a group you keep
+-- leaving and rejoining still ages out from its last real message.
+local function appendLeftMessage(store, key, channel, now)
   local text = L(LEFT_LABEL[channel] or "Left group")
   local timeStr = TimeFormat.MessageTime(now)
   if timeStr ~= "" then
     text = text .. ", " .. timeStr
   end
-  table.insert(conversation.messages, {
+  Store.AppendNotice(store, key, {
     id = tostring(now) .. "-left-" .. channel,
     kind = "system",
     direction = "in",
@@ -42,8 +45,6 @@ local function appendLeftMessage(conversation, channel, now)
     sentAt = now,
     channel = channel,
   })
-  conversation.lastActivityAt = now
-  conversation.lastPreview = text
 end
 
 -- Legacy group histories use "<prefix><profileId>". GUID-scoped histories
@@ -78,9 +79,9 @@ end
 
 local function closeGroupSession(Bootstrap, category, partyGUID)
   local runtime = Bootstrap and Bootstrap.runtime
-  local state = runtime and (runtime.accountState or runtime.store)
+  local store = runtime and runtime.store
   local localProfileId = runtime and runtime.localProfileId
-  if state == nil or state.conversations == nil or type(localProfileId) ~= "string" or localProfileId == "" then
+  if store == nil or store.conversations == nil or type(localProfileId) ~= "string" or localProfileId == "" then
     return true
   end
 
@@ -88,9 +89,9 @@ local function closeGroupSession(Bootstrap, category, partyGUID)
   local changed = false
   for channel, prefix in pairs(CHANNEL_KEY_PREFIX) do
     local key = prefix .. localProfileId .. "::" .. category .. "::" .. partyGUID
-    local conversation = state.conversations[key]
+    local conversation = store.conversations[key]
     if conversation and not conversation.leftGroup then
-      appendLeftMessage(conversation, channel, now)
+      appendLeftMessage(store, key, channel, now)
       conversation.leftGroup = true
       changed = true
     end
@@ -107,15 +108,15 @@ end
 -- that is the same group, so its thread becomes writable again.
 local function reopenGroupSession(Bootstrap, category, partyGUID)
   local runtime = Bootstrap.runtime
-  local state = runtime.accountState or runtime.store
+  local store = runtime.store
   local localProfileId = runtime.localProfileId
-  if state == nil or state.conversations == nil or type(localProfileId) ~= "string" or localProfileId == "" then
+  if store == nil or store.conversations == nil or type(localProfileId) ~= "string" or localProfileId == "" then
     return
   end
 
   local changed = false
   for _, prefix in pairs(CHANNEL_KEY_PREFIX) do
-    local conversation = state.conversations[prefix .. localProfileId .. "::" .. category .. "::" .. partyGUID]
+    local conversation = store.conversations[prefix .. localProfileId .. "::" .. category .. "::" .. partyGUID]
     if conversation and conversation.leftGroup then
       conversation.leftGroup = nil
       changed = true
@@ -165,8 +166,8 @@ function GroupMembership.handleGroupRosterUpdate(Bootstrap)
   end
 
   local runtime = Bootstrap.runtime
-  local state = runtime and (runtime.accountState or runtime.store)
-  if state == nil or state.conversations == nil then
+  local store = runtime and runtime.store
+  if store == nil or store.conversations == nil then
     return true
   end
 
@@ -193,7 +194,7 @@ function GroupMembership.handleGroupRosterUpdate(Bootstrap)
     if not validPartyGUID(partyGUID) then
       local prefix = CHANNEL_KEY_PREFIX[channel]
       local key = prefix .. localProfileId
-      local conversation = state.conversations[key]
+      local conversation = store.conversations[key]
       if conversation ~= nil then
         if membership then
           if conversation.leftGroup then
@@ -201,7 +202,7 @@ function GroupMembership.handleGroupRosterUpdate(Bootstrap)
             changed = true
           end
         elseif not conversation.leftGroup then
-          appendLeftMessage(conversation, channel, now)
+          appendLeftMessage(store, key, channel, now)
           conversation.leftGroup = true
           changed = true
         end
