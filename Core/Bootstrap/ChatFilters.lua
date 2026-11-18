@@ -76,7 +76,8 @@ function ChatFilters.Configure(Bootstrap, accountState, runtime)
   -- API, chat lock) and while the Mythic+ suspend is in force. The instance is
   -- looked up per call: Bootstrap.Initialize installs a new one per runtime.
   Bootstrap.syncChatFilters = function()
-    local allowed = not RestrictedActions.For(Bootstrap).isRestricted() and not _G._wmSuspended
+    local restrictions = RestrictedActions.For(Bootstrap)
+    local allowed = not restrictions.isRestricted() and not restrictions.isSuspended()
     local shouldFilter = accountState.settings.hideFromDefaultChat == true and allowed and not Bootstrap._whisperFiltersDisabled
 
     if shouldFilter and not Bootstrap._filtersRegistered then

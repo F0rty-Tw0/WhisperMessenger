@@ -4,6 +4,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 local PublicApi = require("WhisperMessenger.Core.PublicApi")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 local PublicApiEnv = {}
 
@@ -12,13 +13,13 @@ local saved = nil
 function PublicApiEnv.Initialize(settings)
   local factory = FakeUI.NewFactory()
   if saved == nil then
-    saved = { uiParent = _G.UIParent, suspended = _G._wmSuspended }
+    saved = { uiParent = _G.UIParent, suspended = RestrictionState.Suspended() }
   end
   local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
   uiParent:SetSize(1920, 1080)
   uiParent:Show()
   _G.UIParent = uiParent
-  _G._wmSuspended = nil
+  RestrictionState.SetSuspended(false)
   SeenLevelEvents._reset()
 
   local ok, runtime = pcall(Bootstrap.Initialize, factory, {
@@ -40,7 +41,7 @@ function PublicApiEnv.Reset()
   _G.WhisperMessengerAPI = nil
   if saved ~= nil then
     _G.UIParent = saved.uiParent
-    _G._wmSuspended = saved.suspended
+    RestrictionState.SetSuspended(saved.suspended)
     saved = nil
   end
 end

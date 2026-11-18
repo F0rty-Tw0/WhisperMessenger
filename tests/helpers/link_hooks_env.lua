@@ -1,3 +1,5 @@
+local RestrictionState = require("tests.helpers.restriction_state")
+
 -- Fakes for LinkHooks tests: Blizzard's insert-link functions, a ChatFrameUtil
 -- proxy that records every assignment made to it, and a hooksecurefunc that
 -- post-hooks like the real one.
@@ -21,7 +23,6 @@ end
 local GLOBALS = {
   "hooksecurefunc",
   "GetTime",
-  "_wmSuspended",
   "IsModifiedClick",
   "EventUtil",
 }
@@ -131,7 +132,8 @@ function LinkHooksEnv.New(opts)
   rawset(_G, "GetTime", function()
     return env.frameTime
   end)
-  rawset(_G, "_wmSuspended", nil)
+  env.savedSuspended = RestrictionState.Suspended()
+  RestrictionState.SetSuspended(false)
   rawset(_G, "IsModifiedClick", function(action)
     return action == "CHATLINK"
   end)
@@ -181,6 +183,7 @@ function LinkHooksEnv.New(opts)
     for _, key in ipairs(GLOBALS) do
       rawset(_G, key, env.saved[key])
     end
+    RestrictionState.SetSuspended(env.savedSuspended)
     unloadModule()
   end
 

@@ -1,6 +1,7 @@
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local WhoAsked = require("WhisperMessenger.Transport.WhoAsked")
 local Env = require("tests.helpers.who_lookup_env")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 local KEY = "me::WOW::firstmoon"
 
@@ -168,7 +169,7 @@ end
 
 local function test_typed_who_ignored_when_suspended_or_off()
   Env.Case("suspended", nil, function(env)
-    rawset(_G, "_wmSuspended", true)
+    RestrictionState.SetSuspended(true)
     findHook(env)("n-Someone")
     assert(WhoLookup.IsWindowOpen() == false)
   end)

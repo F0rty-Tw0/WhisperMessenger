@@ -1,4 +1,5 @@
 local GameChatRead = require("WhisperMessenger.Core.Bootstrap.GameChatRead")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local SAVED_GLOBALS = { "hooksecurefunc", "FCF_Tab_OnClick", "ChatFrame3", "ChatFrame4" }
 local saved = {}
@@ -20,7 +21,7 @@ local function newRuntime(unreadCount)
       refreshes = refreshes + 1
     end,
   }
-  return runtime, function()
+  return RestrictionPredicates.Add(runtime), function()
     return refreshes
   end
 end

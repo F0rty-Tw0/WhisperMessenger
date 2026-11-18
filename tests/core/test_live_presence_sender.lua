@@ -1,9 +1,10 @@
 local Sender = require("WhisperMessenger.Core.Bootstrap.LivePresenceSender")
 local LivePresence = require("WhisperMessenger.Model.LivePresence")
 local Store = require("WhisperMessenger.Model.ConversationStore")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local function newRuntime(nowRef, sent, bnSent)
-  return {
+  return RestrictionPredicates.Add({
     now = function()
       return nowRef.value
     end,
@@ -38,7 +39,7 @@ local function newRuntime(nowRef, sent, bnSent)
         return nil
       end,
     },
-  }
+  })
 end
 
 local function countingRuntime(nowRef, sent, bnSent)
@@ -115,11 +116,12 @@ return function()
     assert(Sender.OnComposerText(runtime, contact, "x") == false, "setting off: nothing sent")
     runtime.accountState.settings.shareTypingStatus = nil
 
+    local competitive = true
     runtime.isCompetitiveContent = function()
-      return true
+      return competitive
     end
     assert(Sender.OnComposerText(runtime, contact, "x") == false, "competitive: nothing sent")
-    runtime.isCompetitiveContent = nil
+    competitive = false
 
     runtime.isMythicLockdown = function()
       return true

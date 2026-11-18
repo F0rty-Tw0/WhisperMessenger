@@ -98,7 +98,7 @@ local function processEditBox(runtime, hooks, deps, interceptDeps, editBox)
   if deps.isSuspended() then
     return
   end
-  if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
+  if runtime.isCompetitiveContent() then
     return
   end
   local inCombat = deps.isInCombat and deps.isInCombat()
@@ -191,7 +191,7 @@ function Poller.Install(runtime, hooks, deps)
       if deps.isSuspended() then
         return
       end
-      if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
+      if runtime.isCompetitiveContent() then
         return
       end
 

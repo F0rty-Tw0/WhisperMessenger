@@ -1,5 +1,6 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local ReactionHandler = require("WhisperMessenger.Core.Bootstrap.ReactionHandler")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- Reacting to a message request is answering it, the same as replying: the
 -- conversation leaves the Requests inbox.
@@ -9,7 +10,7 @@ local KEY = "me::WOW::stranger-area52"
 return function()
   -- test_sent_reaction_accepts_the_request
   do
-    local runtime = {
+    local runtime = RestrictionPredicates.Add({
       localProfileId = "me",
       localPlayerName = "Artio",
       store = Store.New({ maxMessagesPerConversation = 20, maxConversations = 10 }),
@@ -25,7 +26,7 @@ return function()
         SendAddonMessage = function() end,
       },
       bnetApi = {},
-    }
+    })
     local target = { kind = "user", direction = "in", text = "hi", wireId = "t1", sentAt = 190, playerName = "Stranger-Area52" }
     local conversation = Store.EnsureConversation(runtime.store, KEY)
     conversation.messages = { target }

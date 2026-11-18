@@ -40,10 +40,10 @@ end
 
 -- The lock that keeps a whisper from going out now, as its status reason.
 local function lockReason(runtime)
-  if runtime.isMythicLockdown and runtime.isMythicLockdown() then
+  if runtime.isMythicLockdown() then
     return "Mythic Lockdown"
   end
-  if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
+  if runtime.isCompetitiveContent() then
     return "Competitive Content"
   end
   return nil

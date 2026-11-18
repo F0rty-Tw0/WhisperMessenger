@@ -3,13 +3,14 @@ local Bootstrap = require("WhisperMessenger.Bootstrap")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 local function initialize(settings)
   local factory = FakeUI.NewFactory()
   local savedUIParent = _G.UIParent
-  local savedSuspended = _G._wmSuspended
+  local savedSuspended = RestrictionState.Suspended()
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
-  _G._wmSuspended = nil
+  RestrictionState.SetSuspended(false)
   SeenLevelEvents._reset()
 
   local ok, runtime = pcall(Bootstrap.Initialize, factory, {
@@ -25,7 +26,7 @@ local function initialize(settings)
   })
 
   _G.UIParent = savedUIParent
-  _G._wmSuspended = savedSuspended
+  RestrictionState.SetSuspended(savedSuspended)
   assert(ok, runtime)
   return runtime
 end
@@ -94,7 +95,7 @@ return function()
   -- test_suspend_inside_who_window_drops_who_events
 
   do
-    local savedSuspended = rawget(_G, "_wmSuspended")
+    local savedSuspended = RestrictionState.Suspended()
     local realIsWindowOpen = WhoLookup.IsWindowOpen
     local runtime = initialize({ showPlayerLevels = true })
     rawset(WhoLookup, "IsWindowOpen", function()
@@ -103,7 +104,7 @@ return function()
     SeenLevelEvents.OpenWhoWindow()
     local ok, err = pcall(runtime.suspend)
     rawset(WhoLookup, "IsWindowOpen", realIsWindowOpen)
-    rawset(_G, "_wmSuspended", savedSuspended)
+    RestrictionState.SetSuspended(savedSuspended)
     assert(ok, err)
     assert(SeenLevelEvents._frame:IsEventRegistered("WHO_LIST_UPDATE") == false, "WHO_LIST_UPDATE dropped on suspend")
     assert(SeenLevelEvents._frame:IsEventRegistered("CHAT_MSG_SYSTEM") == false, "CHAT_MSG_SYSTEM dropped on suspend")

@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 local AutoOpenCoordinator = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- Auto-open hooks wired by the real coordinator onto a real messenger window:
 -- a whisper the user starts must land on screen, not under an addon panel.
@@ -27,7 +28,7 @@ return function()
       setWindowVisible = function() end,
     }
     AutoOpenCoordinator.Attach({
-      runtime = runtime,
+      runtime = RestrictionPredicates.Add(runtime),
       accountState = runtime.accountState,
       isInCombat = function()
         return false

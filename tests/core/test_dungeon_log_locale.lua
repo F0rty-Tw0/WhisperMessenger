@@ -2,16 +2,17 @@
 -- are routed through Localization and produce Russian strings in ruRU mode.
 local RestrictionState = require("tests.helpers.restriction_state")
 local Localization = require("WhisperMessenger.Locale.Localization")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- Stubs shared across sub-tests
 local function makeRuntime()
-  return {
+  return RestrictionPredicates.Add({
     messagingNotice = nil,
     accountState = { settings = {} },
     syncReplyKey = nil,
     suspend = nil,
     resume = nil,
-  }
+  })
 end
 
 return function()

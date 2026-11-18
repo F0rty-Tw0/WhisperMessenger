@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local AutoOpenCoordinator = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 return function()
   -- test_deferred_close_bails_when_competitive_content_activates
@@ -18,11 +19,11 @@ return function()
   local savedNumChatWindows = _G.NUM_CHAT_WINDOWS
   local savedHooksecurefunc = _G.hooksecurefunc
   local savedSendTell = _G.ChatFrame_SendTell
-  local savedWmSuspended = _G._wmSuspended
+  local savedSuspended = RestrictionState.Suspended()
 
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
   _G.NUM_CHAT_WINDOWS = 1
-  _G._wmSuspended = false
+  RestrictionState.SetSuspended(false)
   rawset(_G, "InCombatLockdown", function()
     return false
   end)
@@ -140,6 +141,6 @@ return function()
   _G.NUM_CHAT_WINDOWS = savedNumChatWindows
   rawset(_G, "hooksecurefunc", savedHooksecurefunc)
   rawset(_G, "ChatFrame_SendTell", savedSendTell)
-  _G._wmSuspended = savedWmSuspended
+  RestrictionState.SetSuspended(savedSuspended)
   _G.ChatFrame1EditBox = nil
 end

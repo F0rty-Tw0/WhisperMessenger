@@ -1,4 +1,5 @@
 local LinkHooksEnv = require("tests.helpers.link_hooks_env")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 -- LinkHooks.InsertText puts text into the composer the player is typing in and
 -- reports whether the text really landed.
@@ -28,7 +29,7 @@ return function()
     input.text = ""
     input.maxBytes = nil
     keepOldText = false
-    rawset(_G, "_wmSuspended", nil)
+    RestrictionState.SetSuspended(false)
   end
 
   -- test_inserts_into_the_focused_input_and_returns_true
@@ -50,9 +51,9 @@ return function()
   -- test_refuses_when_suspended
   do
     reset(true)
-    rawset(_G, "_wmSuspended", true)
+    RestrictionState.SetSuspended(true)
     local took = env.LinkHooks.InsertText(itemLink)
-    rawset(_G, "_wmSuspended", nil)
+    RestrictionState.SetSuspended(false)
     assert(took == false, "a suspended addon must refuse")
     assert(#env.inserts == 0, "a suspended addon must not insert, got " .. #env.inserts)
   end

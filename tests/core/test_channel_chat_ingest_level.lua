@@ -5,6 +5,7 @@ local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
 local Identity = require("WhisperMessenger.Model.Identity")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local STUBBED = { "UnitTokenFromGUID", "UnitLevel" }
 
@@ -91,7 +92,7 @@ return function()
     local whisperKey = Identity.BuildConversationKey(state.localProfileId, "WOW::" .. SeenLevel.NameKey("Nergrom"))
     local whisper = { conversationKey = whisperKey, channel = "WOW" }
     state.store.conversations[whisperKey] = whisper
-    SeenLevelEvents.Init(state)
+    SeenLevelEvents.Init(RestrictionPredicates.Add(state))
     ChannelChatIngest.HandleEvent(state, tradeLine("LF tank Deadmines", "Nergrom", 9303))
     SeenLevelEvents._reset()
     SeenLevel._reset()

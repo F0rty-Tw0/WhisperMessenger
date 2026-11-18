@@ -1,13 +1,14 @@
 local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local Availability = require("WhisperMessenger.Transport.Availability")
 local Store = require("WhisperMessenger.Model.ConversationStore")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 return function()
   local sentMessages = {}
   local refreshCalls = 0
   local savedBNSendWhisper = _G.BNSendWhisper
 
-  local runtime = {
+  local runtime = RestrictionPredicates.Add({
     sendStatusByConversation = {},
     pendingOutgoing = {},
     now = function()
@@ -46,7 +47,7 @@ return function()
       conversationMaxAge = 86400,
     }),
     activeConversationKey = nil,
-  }
+  })
 
   local function refreshWindow()
     refreshCalls = refreshCalls + 1
@@ -296,7 +297,7 @@ return function()
       return nil
     end
 
-    local regressionRuntime = {
+    local regressionRuntime = RestrictionPredicates.Add({
       sendStatusByConversation = {},
       pendingOutgoing = {},
       now = function()
@@ -312,7 +313,7 @@ return function()
         conversationMaxAge = 86400,
       }),
       activeConversationKey = conversationKey,
-    }
+    })
     regressionRuntime.store.conversations[conversationKey] = {
       conversationKey = conversationKey,
       channel = "BN",
@@ -447,8 +448,6 @@ return function()
   local notCompResult = SendHandler.HandleSend(runtime, payload, refreshWindow)
   assert(notCompResult == true, "expected send to succeed when not in competitive content")
   assert(#sentMessages == 1, "should send when not in competitive content")
-
-  runtime.isCompetitiveContent = nil
 
   -- Battle.net channel still routes through SendHandler when nothing blocks.
 

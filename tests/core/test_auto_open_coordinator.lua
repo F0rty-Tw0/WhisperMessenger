@@ -3,6 +3,8 @@ local AutoOpenCoordinator = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoo
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local ConversationOps = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 local EditBoxInterop = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
+local RestrictionState = require("tests.helpers.restriction_state")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 return function()
   local savedGlobals = {
@@ -15,7 +17,7 @@ return function()
     UIParent = _G.UIParent,
     C_BattleNet = _G.C_BattleNet,
     BNGetNumFriends = _G.BNGetNumFriends,
-    _wmSuspended = _G._wmSuspended,
+    suspended = RestrictionState.Suspended(),
     hooksecurefunc = _G.hooksecurefunc,
     ChatFrameUtil = _G.ChatFrameUtil,
     ChatFrame_SendBNetTell = _G.ChatFrame_SendBNetTell,
@@ -48,7 +50,7 @@ return function()
 
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
   _G.NUM_CHAT_WINDOWS = 1
-  _G._wmSuspended = false
+  RestrictionState.SetSuspended(false)
   rawset(_G, "InCombatLockdown", function()
     return inCombat
   end)
@@ -123,7 +125,7 @@ return function()
   }
 
   local coordinator = AutoOpenCoordinator.Attach({
-    runtime = runtime,
+    runtime = RestrictionPredicates.Add(runtime),
     accountState = runtime.accountState,
     windowRuntime = {
       selectConversation = function(conversationKey)
@@ -796,7 +798,7 @@ return function()
     local prevDeactivatedCount = #deactivated
 
     -- Given auto-open interception is suspended in restricted content.
-    _G._wmSuspended = true
+    RestrictionState.SetSuspended(true)
 
     -- When Blizzard reports a user text change.
     local suspendedOk, suspendedError = pcall(textChangedHook, taintedBox, true)
@@ -804,7 +806,7 @@ return function()
     -- Then the hard bail happens before reading focus state.
     assert(suspendedOk, "expected suspended text hook to return safely, got: " .. tostring(suspendedError))
     assert(hasFocusCallCount == 0, "expected suspended text hook not to read HasFocus")
-    _G._wmSuspended = false
+    RestrictionState.SetSuspended(false)
 
     -- Combat path: the text-change hook should gracefully ignore tainted focus.
     inCombat = true
@@ -966,7 +968,7 @@ return function()
   _G.UIParent = savedGlobals.UIParent
   _G.C_BattleNet = savedGlobals.C_BattleNet
   _G.BNGetNumFriends = savedGlobals.BNGetNumFriends
-  _G._wmSuspended = savedGlobals._wmSuspended
+  RestrictionState.SetSuspended(savedGlobals.suspended)
   rawset(_G, "hooksecurefunc", savedGlobals.hooksecurefunc)
   _G.ChatFrameUtil = savedGlobals.ChatFrameUtil
   _G.ChatFrame_SendBNetTell = savedGlobals.ChatFrame_SendBNetTell

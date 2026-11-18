@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 return function()
   local savedSetLastTell = _G.ChatEdit_SetLastTellTarget
@@ -131,7 +132,7 @@ return function()
       setLastTellCalled = true
     end)
 
-    _G._wmSuspended = true
+    RestrictionState.SetSuspended(true)
 
     local runtime = {
       store = { conversations = {}, config = {} },
@@ -146,7 +147,7 @@ return function()
     EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", "hello", "Arthas", "", "", "", "", "", "", "", "", 1, "Player-1-ABC")
 
     assert(setLastTellCalled == false, "test_no_reply_target_when_suspended: should not call SetLastTellTarget when addon is suspended")
-    _G._wmSuspended = nil
+    RestrictionState.SetSuspended(false)
   end
 
   rawset(_G, "ChatEdit_SetLastTellTarget", savedSetLastTell)

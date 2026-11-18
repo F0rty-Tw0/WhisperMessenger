@@ -18,6 +18,15 @@ return function()
     assert(type(runtime.contactInfo) == "table", "the contact notes must exist before the window runtime is built")
   end
 
+  -- test_factory_creates_both_restriction_predicates
+  -- Production code calls them without a nil check.
+  do
+    local runtime = newRuntime()
+    assert(type(runtime.isCompetitiveContent) == "function", "isCompetitiveContent must exist before Bootstrap points it at the instance")
+    assert(type(runtime.isMythicLockdown) == "function", "isMythicLockdown must exist before Bootstrap points it at the instance")
+    assert(runtime.isCompetitiveContent() == false, "the default is never competitive")
+  end
+
   -- test_binding_the_window_runtime_keeps_the_factory_registries
   do
     local runtime = newRuntime()

@@ -6,6 +6,7 @@ local RestrictionState = require("tests.helpers.restriction_state")
 local Common = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local Localization = require("WhisperMessenger.Locale.Localization")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local TYPES, STATES = RestrictedActions.TYPES, RestrictedActions.STATES
 local KEPT = "left alone"
@@ -16,7 +17,7 @@ local apiActive = {}
 local function newBootstrap()
   local told = {}
   local Bootstrap = {
-    runtime = { messagingNotice = KEPT, store = { conversations = {} } },
+    runtime = RestrictionPredicates.Add({ messagingNotice = KEPT, store = { conversations = {} } }),
     onCompetitiveStateChanged = function(isActive)
       told[#told + 1] = isActive
     end,

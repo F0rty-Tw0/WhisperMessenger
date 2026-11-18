@@ -58,7 +58,7 @@ local function enterWorld(Bootstrap, isMythic)
 end
 
 return function()
-  local savedSuspended = rawget(_G, "_wmSuspended")
+  local savedSuspended = Flags.Suspended()
   local savedRestricted = rawget(_G, "C_RestrictedActions")
   rawset(_G, "C_RestrictedActions", nil)
 
@@ -105,14 +105,14 @@ return function()
     local Bootstrap, restore = holdOne()
     MythicSuspendController.Attach(Bootstrap.runtime, { Bootstrap = Bootstrap })
     lockChat(Bootstrap)
-    rawset(_G, "_wmSuspended", true)
+    Flags.SetSuspended(true)
     setRestriction(Bootstrap, TYPES.Chat, STATES.Inactive)
     assert(#FakeChatLines.ticks == 0, "a lift while still suspended must start no ticker")
     Bootstrap.runtime.resume()
     assert(#FakeChatLines.ticks == 1, "resume after the lift must start the replay ticker")
     FakeChatLines.Fire()
     assert(Bootstrap.runtime.lockdownReplay.lastSummary.filed == 1, "the held whisper must file after resume")
-    rawset(_G, "_wmSuspended", savedSuspended)
+    Flags.SetSuspended(savedSuspended)
     restore()
   end
 
@@ -122,12 +122,12 @@ return function()
     local Bootstrap, restore = holdOne()
     MythicSuspendController.Attach(Bootstrap.runtime, { Bootstrap = Bootstrap })
     lockChat(Bootstrap)
-    rawset(_G, "_wmSuspended", true)
+    Flags.SetSuspended(true)
     Bootstrap.runtime.resume()
     assert(#FakeChatLines.ticks == 0, "resume while chat is still locked must start no ticker")
     setRestriction(Bootstrap, TYPES.Chat, STATES.Inactive)
     assert(#FakeChatLines.ticks == 1, "the chat lock lifting after resume must start the replay ticker")
-    rawset(_G, "_wmSuspended", savedSuspended)
+    Flags.SetSuspended(savedSuspended)
     restore()
   end
 
@@ -185,6 +185,6 @@ return function()
     restore()
   end
 
-  rawset(_G, "_wmSuspended", savedSuspended)
+  Flags.SetSuspended(savedSuspended)
   rawset(_G, "C_RestrictedActions", savedRestricted)
 end

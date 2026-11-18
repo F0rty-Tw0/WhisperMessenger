@@ -4,6 +4,7 @@ local Router = require("WhisperMessenger.Core.EventRouter")
 local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local QuestLinkClassic = require("WhisperMessenger.Model.QuestLinkText")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local function newStore()
   return Store.New({ maxMessagesPerConversation = 20, maxConversations = 10 })
@@ -38,7 +39,7 @@ return function()
   -- Classic character whisper: sender metadata pairs with stripped raw event text in both orders.
   do
     local addonPayload
-    local sender = {
+    local sender = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -57,7 +58,7 @@ return function()
         end,
       },
       bnetApi = {},
-    }
+    })
     assert(SendHandler.HandleSend(sender, {
       conversationKey = "wow::WOW::arthas-area52",
       target = "Arthas-Area52",
@@ -107,7 +108,7 @@ return function()
       battleTag = "Jaina#1234",
       gameAccountInfo = { gameAccountID = 9001, characterName = "Jaina", realmName = "Proudmoore" },
     }
-    local sender = {
+    local sender = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -134,7 +135,7 @@ return function()
           return accountInfo
         end,
       },
-    }
+    })
     sender.store.conversations["bnet::BN::jaina#1234"] = {
       conversationKey = "bnet::BN::jaina#1234",
       channel = "BN",
@@ -191,7 +192,7 @@ return function()
   do
     local normalFallback
     local operationPayload
-    local sender = {
+    local sender = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -212,7 +213,7 @@ return function()
         end,
       },
       bnetApi = {},
-    }
+    })
     local initialFallback = Protocol.BuildFallback("heart", "set", rich)
     SendHandler.HandleSend(sender, {
       conversationKey = "wow::WOW::arthas-area52",
@@ -277,7 +278,7 @@ return function()
       battleTag = "Jaina#1234",
       gameAccountInfo = { gameAccountID = 9001, characterName = "Jaina", realmName = "Proudmoore" },
     }
-    local sender = {
+    local sender = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -306,7 +307,7 @@ return function()
           return accountInfo
         end,
       },
-    }
+    })
     local key = "bnet::BN::jaina#1234"
     sender.store.conversations[key] = {
       conversationKey = key,
@@ -381,7 +382,7 @@ return function()
     local newerSource = "|cffffff00|Hquest:999:0|h[Shared Quest Name]|h|r"
     local normalFallback
     local operationPayload
-    local sender = {
+    local sender = RestrictionPredicates.Add({
       localProfileId = "me",
       store = newStore(),
       pendingOutgoing = {},
@@ -402,7 +403,7 @@ return function()
         end,
       },
       bnetApi = {},
-    }
+    })
     SendHandler.HandleSend(sender, {
       conversationKey = "wow::WOW::arthas-area52",
       target = "Arthas-Area52",

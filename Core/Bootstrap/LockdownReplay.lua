@@ -9,6 +9,7 @@ local AlertPolicy = ns.AlertPolicy or require("WhisperMessenger.Model.AlertPolic
 local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 -- stylua: ignore
 local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 
@@ -228,7 +229,7 @@ function LockdownReplay.IsReady(runtime)
   if runtime == nil or type(runtime.isChatLocked) ~= "function" then
     return false
   end
-  return not runtime.isChatLocked() and _G._wmSuspended ~= true
+  return not runtime.isChatLocked() and not RestrictedActions.IsSuspended()
 end
 
 function LockdownReplay.IsPending(runtime)

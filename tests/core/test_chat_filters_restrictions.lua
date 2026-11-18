@@ -7,7 +7,7 @@ local ChatFilters = require("WhisperMessenger.Core.Bootstrap.ChatFilters")
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 local TYPES, STATES = RestrictedActions.TYPES, RestrictedActions.STATES
-local SAVED_GLOBALS = { "ChatFrameUtil", "C_RestrictedActions", "C_ChatInfo", "_wmSuspended" }
+local SAVED_GLOBALS = { "ChatFrameUtil", "C_RestrictedActions", "C_ChatInfo" }
 
 -- apiActive[restrictionType] is what C_RestrictedActions answers.
 local apiActive = {}
@@ -38,7 +38,7 @@ return function()
   for _, name in ipairs(SAVED_GLOBALS) do
     saved[name] = rawget(_G, name)
   end
-  rawset(_G, "_wmSuspended", nil)
+  RestrictionState.SetSuspended(false)
   rawset(_G, "C_ChatInfo", nil)
   rawset(_G, "C_RestrictedActions", {
     IsAddOnRestrictionActive = function(restrictionType)
@@ -97,9 +97,9 @@ return function()
       apiActive = {}
       local active = {}
       local Bootstrap = configure(active)
-      rawset(_G, "_wmSuspended", true)
+      RestrictionState.SetSuspended(true)
       Bootstrap.syncChatFilters()
-      rawset(_G, "_wmSuspended", nil)
+      RestrictionState.SetSuspended(false)
       assert(next(active) == nil, "the Mythic+ suspend keeps every filter off on its own")
     end
   end)

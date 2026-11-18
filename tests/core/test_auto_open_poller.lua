@@ -1,5 +1,6 @@
 local Poller = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.Poller")
 local Flavor = require("tests.helpers.flavor")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local function makeEditBox()
   local box = { text = "", scripts = {}, attributes = { chatType = "SAY", stickyType = "SAY" } }
@@ -30,11 +31,11 @@ local function installPoller(replyOpens)
   local sendTellCalls = {}
   local composerTexts = {}
   local replyCalls = {}
-  local runtime = {
+  local runtime = RestrictionPredicates.Add({
     setComposerText = function(text)
       table.insert(composerTexts, text)
     end,
-  }
+  })
   local hooks = {
     onSendTell = function(target)
       table.insert(sendTellCalls, target)

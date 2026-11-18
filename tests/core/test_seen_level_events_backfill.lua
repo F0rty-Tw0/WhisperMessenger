@@ -3,6 +3,7 @@ local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
 local SenderLevelBackfill = require("WhisperMessenger.Model.SenderLevelBackfill")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local TRADE_KEY = "me::CHANNEL::trade"
 
@@ -39,7 +40,7 @@ local function makeRuntime(results)
   runtime.scheduleIncomingRefresh = function(key)
     runtime.refreshed[#runtime.refreshed + 1] = key
   end
-  return runtime, line
+  return RestrictionPredicates.Add(runtime), line
 end
 
 return function()

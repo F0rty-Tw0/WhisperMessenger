@@ -9,7 +9,7 @@ local WindowCoordinator = require("WhisperMessenger.Core.Bootstrap.WindowCoordin
 
 local RestrictionWorld = {}
 
-local SAVED_GLOBALS = { "UIParent", "C_RestrictedActions", "C_ChatInfo", "ChatFrameUtil", "issecretvalue", "_wmSuspended" }
+local SAVED_GLOBALS = { "UIParent", "C_RestrictedActions", "C_ChatInfo", "ChatFrameUtil", "issecretvalue" }
 local SAVED_FIELDS = {
   "runtime",
   "onCompetitiveStateChanged",
@@ -105,6 +105,7 @@ function RestrictionWorld.Install()
   for _, name in ipairs(RestrictionState.NAMES) do
     world.savedFlags[name] = RestrictionState.Flag(Bootstrap, name)
   end
+  world.savedSuspended = RestrictionState.Suspended()
   world.createCoordinator = WindowCoordinator.Create
   -- WindowRuntime keeps isMythicRestricted to itself and hands it only to
   -- its coordinator, so take the real closure from there.
@@ -129,6 +130,7 @@ end
 function RestrictionWorld.Restore(world)
   WindowCoordinator.Create = world.createCoordinator
   RestrictionState.Set(Bootstrap, world.savedFlags)
+  RestrictionState.SetSuspended(world.savedSuspended)
   for _, name in ipairs(SAVED_FIELDS) do
     Bootstrap[name] = world.saved[name]
   end

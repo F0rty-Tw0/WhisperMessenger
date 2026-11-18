@@ -16,7 +16,7 @@ local ZoneRosterPoll = {}
 ZoneRosterPoll.INTERVAL_SECONDS = 60
 
 local function inMythicContent(runtime)
-  return type(runtime.isMythicLockdown) == "function" and runtime.isMythicLockdown() == true
+  return runtime.isMythicLockdown() == true
 end
 
 -- Safe to call on every arm and every PLAYER_ENTERING_WORLD: a running poll

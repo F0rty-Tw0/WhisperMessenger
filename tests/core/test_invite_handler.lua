@@ -1,6 +1,7 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local InviteHandler = require("WhisperMessenger.Core.Bootstrap.InviteHandler")
 local WindowCallbacks = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local CONVERSATION_KEY = "wow::WOW::arthas-area52"
 
@@ -29,7 +30,7 @@ local function newRuntime(whispers)
     channel = "WOW",
     messages = {},
   }
-  return runtime
+  return RestrictionPredicates.Add(runtime)
 end
 
 local function newContact()

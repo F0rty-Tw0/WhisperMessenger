@@ -2,6 +2,7 @@ local ZoneRosterPoll = require("WhisperMessenger.Core.Bootstrap.LifecycleHandler
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local ContentDetector = require("WhisperMessenger.Core.ContentDetector")
 local WindowCallbacks = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- Guild zones only arrive with GUILD_ROSTER_UPDATE, which the game sends
 -- after a roster request. While a guild/community contact has "Notify when
@@ -26,7 +27,7 @@ return function()
   }
 
   local jaina = { channel = "WOW", guid = "Player-JAINA" }
-  local runtime = { store = { conversations = { ["wow::jaina"] = jaina } } }
+  local runtime = RestrictionPredicates.Add({ store = { conversations = { ["wow::jaina"] = jaina } } })
 
   -- test_nothing_armed_asks_nothing
   ZoneRosterPoll.Start(runtime)
@@ -53,12 +54,13 @@ return function()
   assert(requests == 2 and #scheduled == 2, "tick asks again and schedules the next one")
 
   -- test_no_request_in_mythic_content
+  local mythic = true
   runtime.isMythicLockdown = function()
-    return true
+    return mythic
   end
   scheduled[2].fn()
   assert(requests == 2 and #scheduled == 3, "mythic content: no request, the poll keeps waiting")
-  runtime.isMythicLockdown = nil
+  mythic = false
 
   -- test_stops_once_nothing_is_armed
   jaina.notifyZone = nil
@@ -72,7 +74,7 @@ return function()
 
   -- test_without_timers_asks_once_per_start
   _G.C_Timer = nil
-  local bare = { store = { conversations = { k = { channel = "WOW", guid = "Player-X", notifyZone = true } } } }
+  local bare = RestrictionPredicates.Add({ store = { conversations = { k = { channel = "WOW", guid = "Player-X", notifyZone = true } } } })
   ZoneRosterPoll.Start(bare)
   assert(requests == 4 and bare.zoneRosterPollPending ~= true, "no timers: one request, nothing left pending")
 
@@ -92,7 +94,7 @@ return function()
       end,
     }
     local saved = { channel = "WOW", guid = "Player-SAVED", notifyZone = true }
-    local Bootstrap = { runtime = { store = { conversations = { k = saved } } } }
+    local Bootstrap = { runtime = RestrictionPredicates.Add({ store = { conversations = { k = saved } } }) }
     local before = requests
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", {
       getContentDetector = function()
@@ -110,7 +112,7 @@ return function()
   -- test_arming_from_the_contact_menu_starts_the_poll
   do
     local member = { channel = "WOW", guid = "Player-MENU" }
-    local menuRuntime = { store = { conversations = { k = member } } }
+    local menuRuntime = RestrictionPredicates.Add({ store = { conversations = { k = member } } })
     local callbacks = WindowCallbacks.Create({ runtime = menuRuntime, characterState = {} })
     local before = requests
     callbacks.onUpdatePrefs({ conversationKey = "k" }, { notifyZone = true })
