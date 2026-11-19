@@ -197,4 +197,49 @@ return function()
       direction .. ": an older line must not overwrite contact data, got " .. tostring(jaina.gameAccountName)
     )
   end
+
+  -- test_older_real_line_takes_over_activity_from_a_status_line_that_opened_the_chat
+  local arrivals = {
+    {
+      "insertIn",
+      function(store, message)
+        Store.InsertIncomingChronological(store, JAINA_KEY, message, false)
+      end,
+    },
+    {
+      "insertOut",
+      function(store, message)
+        message.direction = "out"
+        Store.InsertOutgoingChronological(store, JAINA_KEY, message)
+      end,
+    },
+    {
+      "record",
+      function(store, message)
+        Store.RecordIncomingActivity(store, JAINA_KEY, message, false)
+      end,
+    },
+  }
+  for _, arrival in ipairs(arrivals) do
+    local name, arrive = arrival[1], arrival[2]
+    local clock = { now = 9000000 }
+    local state = makeState(clock)
+    local noticeAt = clock.now
+    Store.AppendIncoming(
+      state.store,
+      JAINA_KEY,
+      { id = "s1", kind = "system", direction = "in", text = "Jaina is offline.", sentAt = noticeAt },
+      false
+    )
+    local jaina = state.store.conversations[JAINA_KEY]
+    jaina.gameAccountName = "Current"
+    clock.now = noticeAt + HOUR
+    local older = { id = "m1", kind = "user", direction = "in", text = "older", sentAt = noticeAt - 2 * HOUR, lineID = 7, gameAccountName = "Stale" }
+    arrive(state.store, older)
+
+    assert(jaina.lastActivityAt == noticeAt - 2 * HOUR, name .. ": the real line is the activity, got " .. tostring(jaina.lastActivityAt))
+    assert(jaina.lastActivityLineID == 7, name .. ": activity takes the real line's ID, got " .. tostring(jaina.lastActivityLineID))
+    assert(jaina.lastPreview == "Jaina is offline.", name .. ": the newer status line keeps the preview, got " .. tostring(jaina.lastPreview))
+    assert(jaina.gameAccountName == "Current", name .. ": an older line must not overwrite contact data, got " .. tostring(jaina.gameAccountName))
+  end
 end
