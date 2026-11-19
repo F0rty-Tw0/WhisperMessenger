@@ -205,7 +205,7 @@ return function()
       convKey = k
     end
     assert(convKey, "BNet incoming whisper should create a conversation")
-    assert(state.store.conversations[convKey].messages[1].battleTag == "Giannis#2964", "message should record battleTag from accountInfo")
+    assert(state.store.conversations[convKey].battleTag == "Giannis#2964", "conversation should record battleTag from accountInfo")
   end
 
   -- Outgoing whisper stamps senderClassTag with the local player's class so
