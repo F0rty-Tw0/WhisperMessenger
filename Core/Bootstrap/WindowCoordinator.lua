@@ -298,16 +298,24 @@ function WindowCoordinator.Create(options)
   end
   coordinator.scheduleAvailabilityRefresh =
     IncomingRefresh.Debounce(cTimer, AVAILABILITY_REFRESH_DEBOUNCE, isWindowVisible, refreshAvailabilitySurfaces)
+  local function getSelectedKey()
+    return runtime.activeConversationKey
+  end
   coordinator.scheduleIncomingRefresh = IncomingRefresh.Create({
     cTimer = cTimer,
     isWindowVisible = isWindowVisible,
     refreshWindow = function(focusKey, dirtyKeys)
       return coordinator.refreshWindow(focusKey, dirtyKeys)
     end,
-    getSelectedKey = function()
-      return runtime.activeConversationKey
-    end,
+    getSelectedKey = getSelectedKey,
   }).schedule
+  coordinator.scheduleWhisperRefresh = IncomingRefresh.NextFrame({
+    cTimer = cTimer,
+    refreshWindow = function(focusKey)
+      return coordinator.refreshWindow(focusKey)
+    end,
+    getSelectedKey = getSelectedKey,
+  })
 
   -- accept(key), when given, limits the search (e.g. to the open tab).
   function coordinator.findLatestUnreadKey(accept)
