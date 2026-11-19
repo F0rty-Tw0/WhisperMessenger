@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local CharacterMergeMap = ns.CharacterMergeMap or require("WhisperMessenger.Model.CharacterMergeMap")
 local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
 
 -- Moves Battle.net conversations stored under a numeric account ID to their
@@ -80,6 +81,9 @@ function BNetRekey.ApplyMappings(runtime, mappings)
       end
       onlineWatch[oldKey] = nil
     end
+  end
+  for oldKey, newKey in pairs(mappings) do
+    CharacterMergeMap.RewriteBnetKey(runtime.characterMerges, oldKey, newKey)
   end
 end
 
