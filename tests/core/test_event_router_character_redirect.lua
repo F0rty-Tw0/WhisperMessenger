@@ -111,13 +111,28 @@ local function test_merged_key_reads_the_map_only()
   assert(CharacterRedirect.MergedKey({ localProfileId = "me" }, K) == nil, "a bare state is nil-safe")
 end
 
-local function test_stamp_marks_a_character_line()
+local function test_stamp_sets_the_maps_name()
   local message = { channel = "WOW", playerName = "Arthas", text = "hi" }
   CharacterRedirect.Stamp(message, { bnetKey = B, name = NAME })
-  assert(message.channel == "WOW" and message.playerName == NAME, "stamp sets channel and the map's name")
-  local untouched = { channel = "BN", playerName = "Jaina" }
-  CharacterRedirect.Stamp(untouched, nil)
-  assert(untouched.channel == "BN" and untouched.playerName == "Jaina", "no entry: no change")
+  assert(message.playerName == NAME, "stamp sets the map's name, got " .. tostring(message.playerName))
+end
+
+local function test_stamp_without_an_entry_changes_nothing()
+  local message = { channel = "BN", playerName = "Jaina" }
+  CharacterRedirect.Stamp(message, nil)
+  assert(message.channel == "BN" and message.playerName == "Jaina", "no entry: no change")
+end
+
+local function test_a_merged_whisper_line_keeps_the_character_channel()
+  local state = newState(nil)
+  seedB(state)
+  CharacterMergeMap.Record(state.characterMerges, K, B, NAME)
+  local payload = { playerName = NAME, guid = "Player-1", text = "hi", lineID = 1 }
+  local contact = WhisperMessage.BuildConversationContact(state, payload)
+  local _, entry = resolve(state, payload)
+  local message = WhisperMessage.BuildMessage(state, payload, contact, "in", "user", 10)
+  CharacterRedirect.Stamp(message, entry)
+  assert(message.channel == "WOW", "a line routed into B still reads as a character line, got " .. tostring(message.channel))
 end
 
 return function()
@@ -128,5 +143,7 @@ return function()
   test_merged_with_k_record_folds_again()
   test_battle_net_and_unwired_states_pass_through()
   test_merged_key_reads_the_map_only()
-  test_stamp_marks_a_character_line()
+  test_stamp_sets_the_maps_name()
+  test_stamp_without_an_entry_changes_nothing()
+  test_a_merged_whisper_line_keeps_the_character_channel()
 end

@@ -134,11 +134,12 @@ function CharacterRedirect.MergedKey(state, characterKey)
   return entry.bnetKey
 end
 
+-- Resolve returns an entry only for a character whisper, so the line already
+-- carries the WOW channel that marks it as a character line inside B.
 function CharacterRedirect.Stamp(message, entry)
   if entry == nil then
     return
   end
-  message.channel = "WOW"
   message.playerName = entry.name
 end
 
