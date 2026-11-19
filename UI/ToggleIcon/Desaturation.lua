@@ -5,8 +5,7 @@ end
 
 local Desaturation = {}
 
-Desaturation.DESAT_GREY = { 0.45, 0.45, 0.45, 0.6 }
--- The back bubble's idle gray on the circle: opaque, so it reads over the dark circle.
+-- The back bubble's idle gray on both shapes: opaque, so it reads over the dark circle.
 Desaturation.DESAT_BACK = { 0.55, 0.55, 0.55, 1 }
 
 -- Tracks the unread count: the look is idle (isActive) while the setting is on

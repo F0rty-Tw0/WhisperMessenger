@@ -52,18 +52,17 @@ local function setShown(region, shown)
 end
 
 -- The accent back bubble, drawn just under `glyph` and sized with it.
--- apply(desaturated, hovered) shows it in the accent color, or gray while the
--- button is desaturated and not hovered: DESAT_GREY when isSquare() is true,
--- else DESAT_BACK. isSquare is optional.
-function SquareLook.CreateAccentGlyph(frame, glyph, isSquare)
+-- apply(desaturated, hovered) shows it in the accent color, or the circle's
+-- gray (DESAT_BACK, on every shape) while the button is desaturated and not
+-- hovered.
+function SquareLook.CreateAccentGlyph(frame, glyph)
   local texture = frame:CreateTexture(nil, "ARTWORK", nil, -1)
   texture:SetAllPoints(glyph)
   texture:SetTexture(SquareLook.ACCENT_GLYPH_TEXTURE)
 
   local function apply(desaturated, hovered)
     setShown(texture, true)
-    local grey = isSquare and isSquare() and Desaturation.DESAT_GREY or Desaturation.DESAT_BACK
-    local color = desaturated and not hovered and grey or Theme.COLORS.accent
+    local color = desaturated and not hovered and Desaturation.DESAT_BACK or Theme.COLORS.accent
     applyVertexColor(texture, color)
   end
 
@@ -100,7 +99,8 @@ local function addMask(texture, mask)
   return true
 end
 
--- Rounds the square's corners: one mask over the frame, added once to the
+-- Rounds the square's corners: one mask (moved onto the square's box by
+-- apply), added once to the
 -- square's textures (kept on the circle, where they are hidden or a circle
 -- that fits inside it), and the gold frame swapped for its rounded art once
 -- the frame itself took the mask.
@@ -141,7 +141,9 @@ end
 -- A missing getter means on.
 -- The square is drawn like EllesmereUI's action buttons (EllesmereButtonLook):
 -- the slot background and its hover and pushed effects; the square frame from
--- IconBorder (theme accent, or gold) replaces EllesmereUI's border.
+-- IconBorder (theme accent, or gold) replaces EllesmereUI's border. With the
+-- border on, the frame, fill, backdrop, mask and effects sit on IconBorder's
+-- box (RIM_SCALE times the button, like the circle's ring).
 -- The unread pulse (a PulseGlow) glows along the square's edge on the square look.
 -- When the client has mask textures, the square's corners are rounded (the
 -- returned mask is nil without them).
@@ -152,7 +154,7 @@ function SquareLook.Create(frame, parts)
 
   local hoverEffect = SquareEffects.Create(frame, "OVERLAY", 1)
   local pushEffect = SquareEffects.Create(frame, "OVERLAY", 2)
-  local accent = SquareLook.CreateAccentGlyph(frame, parts.glyph, isSquare)
+  local accent = SquareLook.CreateAccentGlyph(frame, parts.glyph)
   local outline = frame:CreateTexture(nil, "ARTWORK", nil, -2)
   outline:SetAllPoints(parts.glyph)
   outline:SetTexture(SquareLook.OUTLINE_TEXTURE)
@@ -170,6 +172,8 @@ function SquareLook.Create(frame, parts)
   local pushed = false
   local lastDesaturated = false
   local look = ButtonLook.Read()
+  -- How far the square's box reaches past the button (IconBorder.BoxOutset), set by apply.
+  local boxOutset = 0
 
   local function backgroundShown()
     return isOn(parts.getShowBackground)
@@ -224,9 +228,17 @@ function SquareLook.Create(frame, parts)
     local borderLook = IconBorder.LookFor(square, backgroundShown(), isOn(parts.getShowBorder))
     local themed = isOn(parts.getBorderThemed)
     parts.border.paint(borderLook, themed)
+    -- The square grows to the ring's size with its frame; outset 0 (circle,
+    -- or no border) puts everything back on the button.
+    boxOutset = IconBorder.BoxOutset(frame:GetWidth(), borderLook)
+    IconBorder.PlaceOnBox(parts.background, frame, boxOutset)
+    IconBorder.PlaceOnBox(backdrop, frame, boxOutset)
+    if mask then
+      IconBorder.PlaceOnBox(mask, frame, boxOutset)
+    end
     look = ButtonLook.Read()
-    hoverEffect.paint(look.hover, look.borderPx)
-    pushEffect.paint(look.push, look.borderPx)
+    hoverEffect.paint(look.hover, look.borderPx, boxOutset)
+    pushEffect.paint(look.push, look.borderPx, boxOutset)
     parts.background:SetTexture(square and SquareLook.SQUARE_TEXTURE or parts.roundBackground)
     setShown(parts.background, backgroundShown())
     setShown(backdrop, squareBackgroundShown())
