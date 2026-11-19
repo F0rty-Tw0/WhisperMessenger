@@ -119,6 +119,13 @@ function SettingsTabs.Wire(options)
     end
   end
 
+  -- The gamepad nav (set later, read at call time) re-scans the page.
+  local function notifyNavTargets()
+    if type(settingsPanels.onNavTargetsChanged) == "function" then
+      settingsPanels.onNavTargetsChanged()
+    end
+  end
+
   local wiredPanels = {}
 
   local function wirePanel(panel)
@@ -130,6 +137,7 @@ function SettingsTabs.Wire(options)
     -- call this; the frame size itself does not change, so no OnSizeChanged.
     panel._wmRemeasure = function()
       scheduleVisibleTabRemeasure(panel)
+      notifyNavTargets()
     end
     if type(panel.HookScript) ~= "function" then
       return
@@ -229,6 +237,7 @@ function SettingsTabs.Wire(options)
         end)
       end
     end
+    notifyNavTargets()
   end
 
   for i, tab in ipairs(settingsTabs) do

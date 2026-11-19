@@ -161,9 +161,12 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
   state.options = options
   local fallbackClassTag = options and options.fallbackClassTag or nil
   local senderFallbackClassTag = options and options.senderFallbackClassTag or nil
+  local conversationChannel = options and options.conversationChannel or nil
+  local conversationDisplayName = options and options.conversationDisplayName or nil
   local displayNameRevision = DisplayName.Revision()
-  -- Bubble geometry is keyed off the row diff, but the fallback class tags and
-  -- the display-name rules only change sender names, so they are tracked separately.
+  -- Bubble geometry is keyed off the row diff, but the fallback class tags, the
+  -- open chat (character tags) and the display-name rules only change sender
+  -- labels, so they are tracked separately.
   -- Those reach every row, so they rebuild all bubbles; a row diff (new,
   -- dropped or edited messages) rebuilds only the rows it marked stale.
   local rebuild = (renderOptions and renderOptions.force == true)
@@ -171,11 +174,15 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
     or forceSnapToEnd
     or state.fallbackClassTag ~= fallbackClassTag
     or state.senderFallbackClassTag ~= senderFallbackClassTag
+    or state.conversationChannel ~= conversationChannel
+    or state.conversationDisplayName ~= conversationDisplayName
     or state.displayNameRevision ~= displayNameRevision
     or state.chatLocked ~= (options and options.chatLocked)
   local force = rebuild or anyChanged
   state.fallbackClassTag = fallbackClassTag
   state.senderFallbackClassTag = senderFallbackClassTag
+  state.conversationChannel = conversationChannel
+  state.conversationDisplayName = conversationDisplayName
   state.displayNameRevision = displayNameRevision
   state.chatLocked = options and options.chatLocked
 

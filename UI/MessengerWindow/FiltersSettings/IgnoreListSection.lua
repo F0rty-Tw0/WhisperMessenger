@@ -105,7 +105,39 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
     changed()
   end
 
-  local function bindRows()
+  local bindRows
+
+  -- Moves the list by steps rows; false when it is already at that end.
+  local function scrollBy(steps)
+    local maxOffset = math.max(0, #entries - IgnoreListSection.VISIBLE_ROWS)
+    local nextOffset = math.min(maxOffset, math.max(0, offset + steps))
+    if nextOffset == offset then
+      return false
+    end
+    offset = nextOffset
+    bindRows()
+    return true
+  end
+
+  -- The D-pad on the top or bottom row's button scrolls the list first;
+  -- focus stays on that button, which now shows the next name.
+  local function tagPadEdges(row, index)
+    if index == 1 then
+      row.removeButton._wmPadEdges = {
+        UP = function()
+          return scrollBy(-1)
+        end,
+      }
+    elseif index == IgnoreListSection.VISIBLE_ROWS then
+      row.removeButton._wmPadEdges = {
+        DOWN = function()
+          return scrollBy(1)
+        end,
+      }
+    end
+  end
+
+  bindRows = function()
     local rowHeight = Theme.FilterRowHeight()
     for index = 1, IgnoreListSection.VISIBLE_ROWS do
       local entry = entries[offset + index]
@@ -114,6 +146,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
         if row == nil then
           row = IgnoreRow.Create(factory, list, remove)
           section.rows[index] = row
+          tagPadEdges(row, index)
         end
         row:SetPoint("TOPLEFT", list, "TOPLEFT", 0, -(index - 1) * rowHeight)
         row:SetSize(width, rowHeight)
@@ -126,9 +159,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   end
 
   list:SetScript("OnMouseWheel", function(_self, delta)
-    local maxOffset = math.max(0, #entries - IgnoreListSection.VISIBLE_ROWS)
-    offset = math.min(maxOffset, math.max(0, offset - delta))
-    bindRows()
+    scrollBy(-delta)
   end)
 
   local durationSelector = options.panel:bind(

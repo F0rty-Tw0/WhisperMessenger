@@ -218,6 +218,12 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
   updateVisual()
 
   dot:SetScript("OnClick", function()
+    -- Greyed out (DisabledState): a controller or scripted click gets past
+    -- the cover; repaint to undo a native checkbox's own toggle.
+    if row._wmDisabled then
+      updateVisual()
+      return
+    end
     enabled = not enabled
     updateVisual()
     if onChange then
