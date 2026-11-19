@@ -22,15 +22,23 @@ function ComposerHistory.Create(input, parts)
   end
 
   -- In game SetText fires OnTextChanged before shown is read; isPutting
-  -- marks that change as the recall's own.
-  local function put(text)
-    isPutting = true
+  -- marks that change as the recall's own. A failing put still clears it,
+  -- or every later change would pass for the recall's own.
+  local function write(text)
     input:SetText(text)
     if input.SetCursorPosition then
       input:SetCursorPosition(#text)
     end
     parts.refresh()
+  end
+
+  local function put(text)
+    isPutting = true
+    local ok, err = pcall(write, text)
     isPutting = false
+    if not ok then
+      error(err, 0)
+    end
     shown = input:GetText() or ""
   end
 

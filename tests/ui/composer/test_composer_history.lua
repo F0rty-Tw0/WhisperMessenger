@@ -28,6 +28,9 @@ local function build(entries, options)
   parts.refresh = function()
     got.refreshed = got.refreshed + 1
     got.putting = history.putting()
+    if options.failRefresh and got.refreshed == 1 then
+      error("refresh failed")
+    end
     if options.echo then
       history.textChanged(input:GetText())
     end
@@ -67,6 +70,20 @@ return function()
     local _, history, press = build()
     press("UP")
     assert(history.putting() == false, "putting ends after the recall")
+  end
+
+  -- test_refresh_error_reaches_the_caller
+  do
+    local _, _, press = build(nil, { failRefresh = true })
+    local ok = pcall(press, "UP")
+    assert(ok == false, "an error in refresh is raised from the key press")
+  end
+
+  -- test_refresh_error_clears_putting
+  do
+    local _, history, press = build(nil, { failRefresh = true })
+    pcall(press, "UP")
+    assert(history.putting() == false, "putting ends even when refresh fails")
   end
 
   -- test_recall_asks_with_the_fits_predicate
