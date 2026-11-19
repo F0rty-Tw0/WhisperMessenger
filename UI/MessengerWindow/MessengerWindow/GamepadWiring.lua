@@ -72,6 +72,21 @@ local function attachSettings(nav, shell, transcript)
   })
 end
 
+-- Our ESC-registered popups take pad focus while open; B hides the
+-- focused one (as ESC does, so its own OnHide cleanup runs).
+local function attachPopups(nav)
+  if not (nav.isActive and nav.isActive()) then
+    return
+  end
+  PickerPopup.SetGamepadPopupHooks(function(popup)
+    nav.setPopupCloseHandler(popup, function()
+      popup:Hide()
+      return true
+    end)
+    nav.popupShown(popup)
+  end, nav.popupHidden)
+end
+
 -- shell: WindowShell.Build's result. nav: for tests; defaults to the game's.
 -- refresh may run before attach: an unregistered nav ignores it.
 -- attach must run after LifecycleWiring.Setup: its SetScript on OnShow and
@@ -97,6 +112,7 @@ function GamepadWiring.Create(shell, nav)
     -- No register here even if the frame is shown: the build hides it right
     -- after Create, and every real show arrives through the OnShow hook.
     nav.setCloseHandler(buildCloseHandler(frame, refs))
+    attachPopups(nav)
     local transcript = refs.conversation and refs.conversation.transcript
     if transcript then
       nav.setScrollFrame(transcript.scrollFrame)
