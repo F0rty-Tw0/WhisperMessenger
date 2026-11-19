@@ -69,7 +69,7 @@ function GameChatRead.InstallTabHook(runtime, isSuspended)
       return
     end
     local conversations = runtime.store and runtime.store.conversations
-    GameChatRead.Mark(runtime, GameWhisperTab.ConversationKeyFor(chatFrameOf(tab), conversations))
+    GameChatRead.Mark(runtime, GameWhisperTab.ConversationKeyFor(chatFrameOf(tab), conversations, runtime.characterMerges))
   end
   return pcall(_G.hooksecurefunc, "FCF_Tab_OnClick", onTabClick)
 end

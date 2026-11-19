@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+local CharacterMergeMap = ns.CharacterMergeMap or require("WhisperMessenger.Model.CharacterMergeMap")
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
 -- Closes the game's own temporary whisper tab for a conversation. The game
@@ -95,8 +96,10 @@ end
 
 -- The key of the conversation a game whisper tab belongs to, or nil. The tab's
 -- chat type must match the conversation's channel, so a character tab "X"
--- never matches a Battle.net conversation whose account is called X.
-function GameWhisperTab.ConversationKeyFor(frame, conversations)
+-- never matches a Battle.net conversation whose account is called X. With
+-- merges (optional), a character tab whose chat was merged gives the
+-- Battle.net chat's key.
+function GameWhisperTab.ConversationKeyFor(frame, conversations, merges)
   if type(frame) ~= "table" or type(conversations) ~= "table" then
     return nil
   end
@@ -109,6 +112,9 @@ function GameWhisperTab.ConversationKeyFor(frame, conversations)
     if chatType ~= nil and isOpenWhisperTab(frame, chatType) and targetsFor(conversationKey, conversation)[target] then
       return conversationKey
     end
+  end
+  if merges ~= nil and isOpenWhisperTab(frame, CHAT_TYPE_BY_CHANNEL.WOW) then
+    return CharacterMergeMap.BnetKeyForName(merges, conversations, target)
   end
   return nil
 end

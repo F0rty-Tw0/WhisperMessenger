@@ -1,4 +1,5 @@
 local PendingOutgoing = require("WhisperMessenger.Core.EventRouter.PendingOutgoing")
+local World = require("tests.helpers.character_merge_world")
 
 return function()
   -- Record creates a pending outgoing entry under the canonical conversation key.
@@ -176,5 +177,12 @@ return function()
     assert(ok, "secret BNet ID equality must not abort outgoing event routing")
     assert(matched == false, "failed BNet ID comparison must be a non-match")
     assert(#state.pendingOutgoing[key] == 1, "non-matching pending entry must remain queued")
+  end
+
+  -- A send to a merged character queues under the Battle.net chat.
+  do
+    local state = World.MergedState()
+    local key = PendingOutgoing.Record(state, { channel = "WOW", displayName = World.NAME, guid = "Player-1" }, "hello")
+    assert(key == World.B and #state.pendingOutgoing[World.B] == 1, "a send to a merged character must queue under B, got " .. tostring(key))
   end
 end

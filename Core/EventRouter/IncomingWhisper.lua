@@ -12,6 +12,7 @@ local PartMerge = ns.EventRouterPartMerge or require("WhisperMessenger.Core.Even
 local AddonGreetingIngest = ns.EventRouterAddonGreetingIngest or require("WhisperMessenger.Core.EventRouter.AddonGreetingIngest")
 local WhisperMessage = ns.EventRouterWhisperMessage or require("WhisperMessenger.Core.EventRouter.WhisperMessage")
 local AddonMessage = ns.EventRouterAddonMessage or require("WhisperMessenger.Core.EventRouter.AddonMessage")
+local CharacterRedirect = ns.EventRouterCharacterRedirect or require("WhisperMessenger.Core.EventRouter.CharacterRedirect")
 
 local buildMessage = WhisperMessage.BuildMessage
 local confirmWhisperAvailability = WhisperMessage.ConfirmWhisperAvailability
@@ -88,7 +89,7 @@ local function storeIncoming(state, eventName, payload, contact, conversationKey
   end
 end
 
-function IncomingWhisper.Handle(state, eventName, payload, contact, conversationKey, isActive, sentAt)
+function IncomingWhisper.Handle(state, eventName, payload, contact, conversationKey, isActive, sentAt, mergeEntry)
   local addonGreeting, hideGreeting
   if eventName == "CHAT_MSG_WHISPER" then
     addonGreeting, hideGreeting = AddonGreetingIngest.ClaimForWhisper(state, contact, payload, sentAt)
@@ -97,6 +98,7 @@ function IncomingWhisper.Handle(state, eventName, payload, contact, conversation
     end
   end
   local incomingMessage = buildMessage(state, payload, contact, "in", "user", sentAt)
+  CharacterRedirect.Stamp(incomingMessage, mergeEntry)
   incomingMessage.addonGreeting = addonGreeting
   local correlationText = QuestLinkText.CanonicalizeForTransport(incomingMessage.text)
   local senderKey, reactionSenderKey, reactionConversationKey, reactionActorName = reactionRoute(state, eventName, payload, contact, conversationKey)

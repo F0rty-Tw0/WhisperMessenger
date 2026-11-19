@@ -6,11 +6,13 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
+local CharacterMergeMap = ns.CharacterMergeMap or require("WhisperMessenger.Model.CharacterMergeMap")
 
 local StartConversation = {}
 
+-- A merged character's chat is the friend's Battle.net chat.
 local function findExistingConversationKeyByName(runtime, playerName)
-  return Identity.ResolveWhisperConversation(runtime, playerName, "WOW")
+  return CharacterMergeMap.ResolveWhisperName(runtime, playerName)
 end
 
 local function ensureWhisperConversation(runtime, conversationKey, displayName)

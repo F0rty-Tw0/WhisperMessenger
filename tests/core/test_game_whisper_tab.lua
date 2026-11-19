@@ -156,6 +156,25 @@ return function()
     assert(key == "bnet::BN::friend#1234", "BN tab resolves its conversation key, got " .. tostring(key))
   end)
 
+  local MERGED_BNET_KEY = "bnet::BN::friend#1234"
+  local function mergedThrall()
+    local merges = { merged = { ["wow::WOW::thrall"] = { bnetKey = MERGED_BNET_KEY, name = "Thrall" } }, separated = {} }
+    return merges, { [MERGED_BNET_KEY] = { channel = "BN", bnetAccountID = 42 } }
+  end
+
+  check("test_conversation_key_for_merged_character_tab", function()
+    local merges, conversations = mergedThrall()
+    local frame = { isTemporary = true, chatType = "WHISPER", chatTarget = "Thrall" }
+    local key = GameWhisperTab.ConversationKeyFor(frame, conversations, merges)
+    assert(key == MERGED_BNET_KEY, "a merged character's tab resolves to B, got " .. tostring(key))
+  end)
+
+  check("test_battle_net_tab_ignores_the_merge_map", function()
+    local merges, conversations = mergedThrall()
+    local bnetTab = { isTemporary = true, chatType = "BN_WHISPER", chatTarget = "Thrall" }
+    assert(GameWhisperTab.ConversationKeyFor(bnetTab, conversations, merges) == nil, "only a character tab uses the merge map")
+  end)
+
   check("test_conversation_key_for_non_whisper_frame_is_nil", function()
     local conversations = { ["wow::WOW::thrall"] = { channel = "WOW" } }
     local notTemporary = { isTemporary = false, chatType = "WHISPER", chatTarget = "Thrall" }

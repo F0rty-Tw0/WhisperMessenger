@@ -5,7 +5,7 @@ end
 
 local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Guards")
 local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
-local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+local CharacterMergeMap = ns.CharacterMergeMap or require("WhisperMessenger.Model.CharacterMergeMap")
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
@@ -57,7 +57,7 @@ local function readUnreadCount(runtime, name)
   if SecretValue.Is(name) or not Guards.IsNonEmptyString(name) then
     return 0
   end
-  local key = Identity.ResolveWhisperConversation(runtime, name, "WOW")
+  local key = CharacterMergeMap.ResolveWhisperName(runtime, name)
   local conversation = key and runtime.store.conversations[key]
   if not conversation then
     return 0
@@ -66,7 +66,8 @@ local function readUnreadCount(runtime, name)
 end
 
 -- GetUnreadCount(name): the number of unread whispers in the WoW chat with
--- that player, the same number the contact row shows. name is "Name-Realm",
+-- that player (or the Battle.net chat the character was merged into), the
+-- same number the contact row shows. name is "Name-Realm",
 -- or a bare "Name" when only one stored chat has that name. Muted chats and
 -- message requests report their real count. A bad name (not a string, blank,
 -- or secret), a name with no chat or more than one, or an internal error

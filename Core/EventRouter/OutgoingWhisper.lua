@@ -10,6 +10,7 @@ local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.
 local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
 local PartMerge = ns.EventRouterPartMerge or require("WhisperMessenger.Core.EventRouter.PartMerge")
 local WhisperMessage = ns.EventRouterWhisperMessage or require("WhisperMessenger.Core.EventRouter.WhisperMessage")
+local CharacterRedirect = ns.EventRouterCharacterRedirect or require("WhisperMessenger.Core.EventRouter.CharacterRedirect")
 
 local buildMessage = WhisperMessage.BuildMessage
 local confirmWhisperAvailability = WhisperMessage.ConfirmWhisperAvailability
@@ -48,7 +49,7 @@ local function pendingReactionOutcome(state, conversationKey, pendingEntry, sent
   return false
 end
 
-function OutgoingWhisper.Handle(state, payload, contact, conversationKey, sentAt)
+function OutgoingWhisper.Handle(state, payload, contact, conversationKey, sentAt, mergeEntry)
   confirmWhisperAvailability(state, payload, contact)
   local fromPending, pendingText, pendingEntry = PendingOutgoing.Resolve(state, conversationKey, payload, sentAt)
   local informPayload = payload
@@ -66,6 +67,7 @@ function OutgoingWhisper.Handle(state, payload, contact, conversationKey, sentAt
   end
 
   local outgoingMessage = buildMessage(state, informPayload, contact, "out", "user", sentAt)
+  CharacterRedirect.Stamp(outgoingMessage, mergeEntry)
   outgoingMessage.wireId = pendingEntry and pendingEntry.wireId or nil
   outgoingMessage.replyTo = pendingEntry and pendingEntry.replyTo or nil
   MessageParts.ApplyMetadata(outgoingMessage, pendingEntry)
