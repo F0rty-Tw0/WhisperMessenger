@@ -31,6 +31,8 @@ local Composer = {}
 -- options.onReplyChanged(replyTo | nil): the open conversation's reply target.
 -- options.getDeselectOnSend(): the "deselect after sending" setting.
 -- options.onHeightChanged(height): the bar's new height, when it changes.
+-- options.showEmojiButton: false builds without the emoji button.
+-- options.onNavTargetsChanged(): a button was shown or hidden (gamepad rescan).
 function Composer.Create(factory, parent, selectedContact, onSend, onEscape, getDoubleEscapeToClose, onTyping, options)
   options = type(options) == "table" and options or {}
   local nativeChrome = options.nativeChrome == true
@@ -72,6 +74,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     enabled = not sendDisabled,
     getMaxBytes = limit.messageMaxBytes,
     getQuickReplies = options.getQuickReplies,
+    showEmoji = options.showEmojiButton ~= false,
   })
   local relayout = ComposerRelayout.Create({
     parent = parent,
@@ -90,6 +93,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     input = input,
     multiLine = inputBox.multiLine,
     onHeightChanged = options.onHeightChanged,
+    getButtonCount = launchers.buttonCount,
   })
 
   local surface
@@ -241,6 +245,15 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     remeasure = relayout.refresh,
     -- maxBarHeight caps the rows (nil = up to two).
     relayout = relayout.resize,
+    setEmojiButtonShown = function(shown)
+      if not launchers.setEmojiShown(shown == true) then
+        return
+      end
+      relayout.refresh()
+      if options.onNavTargetsChanged then
+        options.onNavTargetsChanged()
+      end
+    end,
   }
 end
 
