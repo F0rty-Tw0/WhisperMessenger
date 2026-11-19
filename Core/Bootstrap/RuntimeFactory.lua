@@ -234,6 +234,8 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     onAutoOpenOutgoing = noop,
     ---@type fun(conversationKey: string)
     onConversationRemoved = noop,
+    ---@type fun(characterKey: string, bnetKey: string)
+    onCharacterMerged = noop,
     onReactionFallbackDegraded = noop,
     onGroupReactionFallbackDegraded = noop,
   }

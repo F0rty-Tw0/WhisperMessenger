@@ -112,4 +112,22 @@ return function()
     MessageReplies.ApplyLink(state, "k", MessageReplies.DecodeLink("1|Q|new1|old1|M"), 10)
     assert(MessageReplies.ClaimStaged(state, "k", { direction = "in", wireId = "new1" }, 500) == false, "expired")
   end
+
+  -- test_staged_link_follows_a_merged_chat
+  do
+    local state =
+      { store = { conversations = { b = { messages = { { id = "1", direction = "in", wireId = "old1", text = "ping", playerName = "Jaina" } } } } } }
+    MessageReplies.ApplyLink(state, "k", MessageReplies.DecodeLink("1|Q|new1|old1|M"), 10)
+    MessageReplies.RemapStaged(state, "k", "b")
+    local arriving = { id = "2", direction = "in", wireId = "new1", text = "pong" }
+    assert(MessageReplies.ClaimStaged(state, "b", arriving, 12) == true, "the merged chat claims the waiting quote")
+  end
+
+  -- test_remap_staged_leaves_other_chats
+  do
+    local state = { store = { conversations = {} } }
+    MessageReplies.ApplyLink(state, "other", MessageReplies.DecodeLink("1|Q|new1|old1|M"), 10)
+    MessageReplies.RemapStaged(state, "k", "b")
+    assert(state.replyLinksStaged[1].conversationKey == "other", "another chat's waiting quote is untouched")
+  end
 end
