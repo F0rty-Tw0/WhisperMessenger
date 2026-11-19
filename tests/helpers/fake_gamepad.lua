@@ -4,7 +4,10 @@
 -- and fires the frame's panel-info-added callback (#L826-L845, #L839);
 -- the callback setter only stores it on the frame (#L1982-L1984).
 -- env.press mirrors how SmartNav runs a jump override (#L1503-L1520,
--- Utility.lua#L513-L524).
+-- Utility.lua#L513-L524). Prompted bindings (the X button) come from
+-- fake_gamepad_bindings.
+local FakeGamepadBindings = require("tests.helpers.fake_gamepad_bindings")
+
 local FakeGamepad = {}
 
 local GLOBALS = {
@@ -16,6 +19,9 @@ local GLOBALS = {
   "SMART_NAV_INPUT_DIRECTION",
   "InCombatLockdown",
   "C_RestrictedActions",
+  "GamepadSharedUtility",
+  "GAMEPAD_FACE_LEFT",
+  "PromptedBindingMixin",
 }
 
 function FakeGamepad.New()
@@ -91,6 +97,7 @@ function FakeGamepad.New()
     return env.panelInfo[frame]
   end
   env.smartNavigation = smartNav
+  FakeGamepadBindings.Install(env, log, smartNav)
 
   function env.markIgnored(widget, dontPropagate)
     log("MarkFrameIgnored", widget, dontPropagate)
@@ -162,16 +169,25 @@ function FakeGamepad.New()
     return frame
   end
 
-  -- Fires PLAYER_REGEN_ENABLED; leaves env.combat as the test set it.
-  function env.regen()
+  local function fire(event)
     local fired = false
     for _, frame in ipairs(eventFrames) do
-      if frame.events.PLAYER_REGEN_ENABLED and frame.scripts.OnEvent then
+      if frame.events[event] and frame.scripts.OnEvent then
         fired = true
-        frame.scripts.OnEvent(frame, "PLAYER_REGEN_ENABLED")
+        frame.scripts.OnEvent(frame, event)
       end
     end
-    assert(fired, "no frame registered PLAYER_REGEN_ENABLED")
+    assert(fired, "no frame registered " .. event)
+  end
+
+  -- Fires PLAYER_REGEN_ENABLED; leaves env.combat as the test set it.
+  function env.regen()
+    fire("PLAYER_REGEN_ENABLED")
+  end
+
+  -- Fires PLAYER_REGEN_DISABLED (combat about to start); leaves env.combat.
+  function env.regenDisabled()
+    fire("PLAYER_REGEN_DISABLED")
   end
 
   function env.scrollFrameFor(frame)
@@ -190,6 +206,9 @@ function FakeGamepad.New()
       inCombat = env.inCombat,
       after = env.after,
       createFrame = env.createFrame,
+      gamepadSharedUtility = env.sharedUtility,
+      rightClickKey = env.FACE_LEFT,
+      promptedBindingMixin = env.promptedBindingMixin,
     }
     for key, value in pairs(overrides or {}) do
       deps[key] = value
@@ -210,6 +229,9 @@ function FakeGamepad.New()
     rawset(_G, "SMART_NAV_INPUT_DIRECTION", env.directions)
     rawset(_G, "InCombatLockdown", env.inCombat)
     rawset(_G, "C_RestrictedActions", nil)
+    rawset(_G, "GamepadSharedUtility", env.sharedUtility)
+    rawset(_G, "GAMEPAD_FACE_LEFT", env.FACE_LEFT)
+    rawset(_G, "PromptedBindingMixin", env.promptedBindingMixin)
   end
 
   function env.uninstall()
