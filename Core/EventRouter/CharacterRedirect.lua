@@ -17,6 +17,17 @@ local function maxMessagesOf(store)
   return store.config and store.config.maxMessagesPerConversation
 end
 
+-- Every fold tells the runtime before the line is stored, so state that
+-- follows the chat (the open chat above all) moves to the friend's chat first.
+local function fold(state, characterKey, bnetKey, bnetContact, name)
+  local store = state.store
+  CharacterMergeFold.Fold(store, state.characterMerges, characterKey, bnetKey, bnetContact, name, maxMessagesOf(store))
+  if type(state.onCharacterMerged) == "function" then
+    state.onCharacterMerged(characterKey, bnetKey)
+  end
+  return bnetKey, CharacterMergeMap.Get(state.characterMerges, characterKey)
+end
+
 local function cacheMiss(state, characterKey)
   state.characterMergeMisses = state.characterMergeMisses or {}
   state.characterMergeMisses[characterKey] = true
@@ -74,12 +85,10 @@ local function resolveUnmerged(state, contact, characterKey, payload)
     end
     return characterKey, nil
   end
-  local store = state.store
   local bnetKey = Identity.BuildConversationKey(state.localProfileId, bnetContact.contactKey)
-  local characterChat = store.conversations[characterKey]
+  local characterChat = state.store.conversations[characterKey]
   local name = (characterChat and characterChat.displayName) or contact.displayName
-  CharacterMergeFold.Fold(store, state.characterMerges, characterKey, bnetKey, bnetContact, name, maxMessagesOf(store))
-  return bnetKey, CharacterMergeMap.Get(state.characterMerges, characterKey)
+  return fold(state, characterKey, bnetKey, bnetContact, name)
 end
 
 function CharacterRedirect.Resolve(state, contact, characterKey, payload)
@@ -100,8 +109,7 @@ function CharacterRedirect.Resolve(state, contact, characterKey, payload)
     return resolveUnmerged(state, contact, characterKey, payload)
   end
   if store.conversations[characterKey] ~= nil then
-    CharacterMergeFold.Fold(store, merges, characterKey, entry.bnetKey, nil, entry.name, maxMessagesOf(store))
-    return entry.bnetKey, CharacterMergeMap.Get(merges, characterKey)
+    return fold(state, characterKey, entry.bnetKey, nil, entry.name)
   end
   return entry.bnetKey, entry
 end
