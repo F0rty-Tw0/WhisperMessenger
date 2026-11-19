@@ -9,6 +9,7 @@ local PanelRegistry = ns.SettingsControlsPanelRegistry or require("WhisperMessen
 local Header = ns.SettingsControlsHeader or require("WhisperMessenger.UI.Shared.SettingsControls.Header")
 local SectionLabel = ns.SettingsControlsSectionLabel or require("WhisperMessenger.UI.Shared.SettingsControls.SectionLabel")
 local SliderSkin = ns.SettingsControlsSliderSkin or require("WhisperMessenger.UI.Shared.SettingsControls.SliderSkin")
+local SliderPadStep = ns.SettingsControlsSliderPadStep or require("WhisperMessenger.UI.Shared.SettingsControls.SliderPadStep")
 local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
@@ -110,6 +111,7 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   end
 
   slider:SetValue(initial)
+  SliderPadStep.Attach(slider, min, max, step)
   valueFs:SetText(formatFn and formatFn(initial) or tostring(initial))
   SliderSkin.Apply(skin, Theme)
   paintLabels(Theme)
