@@ -358,6 +358,7 @@ UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/IconClick.lua
 UI/ToggleIcon/SquareEffects.lua
 UI/ToggleIcon/IconBorder.lua
+UI/ToggleIcon/AccentGlyph.lua
 UI/ToggleIcon/SquareLook.lua
 UI/ToggleIcon/IconArt.lua
 UI/ToggleIcon/IconInteraction.lua

@@ -12,6 +12,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - In a Battle.net friend's chat, messages they sent from one of their characters show the friend's name with the character's name next to it, like "Jaina - via Arthas".
 - Right-click a Battle.net friend's chat and pick "Separate <character>" to move that character's messages back into a chat of their own. Whispers with that character then stay in their own chat for good.
 - The "Icons" settings page is now called "Widget".
+- The square widget now matches the round one: same size, same idle grey, and with the background on the same hover. With the background off, hovering lights up the square's edge. With EllesmereUI installed, the square still follows your EllesmereUI action-bar look.
 - Fixed: clicking links in the messenger could later break Blizzard windows (errors when opening your character panel, toys that wouldn't use).
 - Fixed: the message box no longer shows a thin slice of the previous line along its top edge once a long message scrolls.
 - Fixed: when the message box grows to two lines right after a reload, the window now makes room for it instead of letting the box cover the line above it.

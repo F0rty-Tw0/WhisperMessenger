@@ -1,5 +1,7 @@
 -- The square shape draws the widget as a flat square under the square frame
--- (theme accent, or gold); the circle keeps the round look. Both show the two bubbles.
+-- (theme accent, or gold); the circle keeps the round look. Both show the two
+-- bubbles. Tests of the EllesmereUI slot look run under a faked Action Bars
+-- profile; the square's circle path is in test_toggle_icon_square_circle_path.
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
@@ -19,20 +21,13 @@ local fillsButton = Shape.fillsButton
 local fillsWithSquareGlow = Shape.fillsWithSquareGlow
 local iconWithShape = Shape.iconWithShape
 
-local SLOT_BG = ButtonLook.Read().bg -- EllesmereUI's defaults: the fake has no action bars module
-
--- The bubble-shaped glow, centred on the glyph and BUBBLE_GLOW_SCALE times its size.
-local function onBubbles(texture, glyph)
-  local point = texture.point or {}
-  return texture.texturePath == SquareLook.BUBBLE_GLOW_TEXTURE
-    and point[1] == "CENTER"
-    and point[2] == glyph
-    and texture.width == glyph.width * SquareLook.BUBBLE_GLOW_SCALE
-end
+-- EllesmereUI's default slot background: the same with no profile and with
+-- the empty profile the EllesmereUI-path tests below run under.
+local SLOT_BG = ButtonLook.Read().bg
 
 return function()
   -- test_ellesmere_preset_draws_a_square_widget
-  do
+  withProfile({}, function()
     local icon = iconWithShape("square", {})
     assert(icon.background.texturePath == SquareLook.SQUARE_TEXTURE, "square fill, got " .. tostring(icon.background.texturePath))
     assert(icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "ring-free glyph, got " .. tostring(icon.label.texturePath))
@@ -41,7 +36,7 @@ return function()
     assert(icon.accentGlyph.shown == true, "accent back bubble shown")
     assert(icon.accentGlyph.texturePath == SquareLook.ACCENT_GLYPH_TEXTURE, "back bubble art")
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "back bubble in the accent color")
-  end
+  end)
 
   -- test_accent_bubble_grays_out_with_the_icon
   do
@@ -57,7 +52,7 @@ return function()
   end
 
   -- test_desaturating_leaves_the_white_bubble_and_background_alone
-  do
+  withProfile({}, function()
     local icon = iconWithShape("square", {
       getIconDesaturated = function()
         return true
@@ -70,7 +65,7 @@ return function()
     icon.frame:GetScript("OnEnter")(icon.frame)
     icon.frame:GetScript("OnLeave")(icon.frame)
     assert(sameColor(icon.background.vertexColor, SLOT_BG), "background keeps its color after a hover")
-  end
+  end)
 
   -- test_round_look_grays_only_the_back_bubble
   do
@@ -103,7 +98,7 @@ return function()
   end
 
   -- test_hover_fills_only_the_back_bubble_with_the_accent
-  do
+  withProfile({}, function()
     local icon = iconWithShape("square", {
       getIconDesaturated = function()
         return true
@@ -118,10 +113,10 @@ return function()
     icon.frame:GetScript("OnLeave")(icon.frame)
     assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "the circle's gray again after hover")
     assert(sameColor(icon.background.vertexColor, SLOT_BG), "slot background back after hover")
-  end
+  end)
 
   -- test_square_shows_the_action_bar_hover_and_pushed_effects
-  do
+  withProfile({}, function()
     local showBackground = true
     local icon = iconWithShape("square", {
       getIconBackground = function()
@@ -143,7 +138,7 @@ return function()
     icon.frame:GetScript("OnEnter")(icon.frame)
     icon.frame:GetScript("OnMouseDown")(icon.frame)
     assert(icon.squareHover.shown ~= true and icon.squarePushed.shown ~= true, "no square effects without the square")
-  end
+  end)
 
   -- test_hover_glows_in_the_accent_without_the_square
   do
@@ -158,7 +153,7 @@ return function()
     local accent = Theme.COLORS.accent
     local glow = icon.hoverGlow.vertexColor
     assert(glow[1] == accent[1] and glow[2] == accent[2] and glow[3] == accent[3], "glow in the accent color")
-    assert(onBubbles(icon.hoverGlow, icon.label), "hover glow follows the bubbles")
+    assert(icon.hoverGlow.texturePath == SquareLook.SQUARE_GLOW_TEXTURE, "hover glow follows the square's edge")
     icon.frame:GetScript("OnLeave")(icon.frame)
     assert(icon.hoverGlow.shown == false, "glow gone after hover")
   end
