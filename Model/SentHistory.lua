@@ -36,13 +36,15 @@ end
 
 -- The chat's length as ipairs sees it, and whether sentAt never goes down
 -- along it. Nothing in the store keeps lines in time order (plain appends
--- take the time they are given), so this is checked on every Build.
+-- take the time they are given), so this is checked on every Build. A NaN
+-- time compares false both ways and would hide disorder, so it counts as out
+-- of order.
 local function scan(messages)
   local count, previous, ordered = 0, -math.huge, true
   local message = messages[1]
   while message ~= nil do
     local sentAt = tonumber(message.sentAt) or 0
-    if sentAt < previous then
+    if sentAt < previous or sentAt ~= sentAt then
       ordered = false
     end
     previous = sentAt
@@ -145,8 +147,8 @@ end
 
 -- fits (optional) drops lines the open chat would refuse. It runs before
 -- neighbouring duplicates collapse, so a dropped line never splits a run.
--- Merges the chats' newest-first streams, so only the lines it returns are
--- visited, not every stored one.
+-- Merges the chats' newest-first streams, so nothing is allocated per stored
+-- line; each chat is still scanned once for time order.
 function SentHistory.Build(conversations, fits)
   if type(conversations) ~= "table" then
     return {}

@@ -66,6 +66,17 @@ return function()
     same(list, { "a3", "b2", "a1" }, "newest first across chats")
   end
 
+  -- test_nan_time_does_not_hide_out_of_order_lines
+  do
+    local list = SentHistory.Build({
+      ["me::WOW::k"] = {
+        messages = { out("five", 5), { kind = "user", direction = "in", text = "x", sentAt = 0 / 0 }, out("three", 3) },
+      },
+      ["me::WOW::j"] = { messages = { out("four", 4) } },
+    })
+    same(list, { "five", "four", "three" }, "NaN time between out-of-order lines")
+  end
+
   -- test_same_second_lines_keep_send_order
   do
     local list = SentHistory.Build(chat({ out("first", 5), out("second", 5) }))
