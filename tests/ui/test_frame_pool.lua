@@ -161,13 +161,27 @@ return function()
     local contentFrame = factory.CreateFrame("Frame", nil, nil)
     FramePool.initPool(contentFrame)
     local frame = FramePool.acquireFrame(FakeUI.NewFactory(), contentFrame, "Button", contentFrame)
-    frame._wmBubbleResult = { frame = frame }
+    local result = { frame = frame }
+    frame._wmBubbleResult = result
     frame.buttonContext = "WhisperMessengerRightClick"
 
     FramePool.releaseAll(contentFrame)
 
-    assert(frame._wmBubbleResult == nil, "a released frame is no longer a bubble")
+    assert(result.frame == nil, "a released frame is no longer a bubble")
     assert(frame.buttonContext == nil, "a released frame drops its X right-click tag")
+  end
+
+  -- test_release_all_keeps_the_bubble_result_table_for_reuse
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(contentFrame)
+    local frame = FramePool.acquireFrame(FakeUI.NewFactory(), contentFrame, "Button", contentFrame)
+    local result = { frame = frame }
+    frame._wmBubbleResult = result
+
+    FramePool.releaseAll(contentFrame)
+
+    assert(frame._wmBubbleResult == result, "the next render reuses the same result table")
   end
 
   -- test_pooled_factory_forwards_template
