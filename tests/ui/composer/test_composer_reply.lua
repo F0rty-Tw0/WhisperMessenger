@@ -86,4 +86,15 @@ return function()
     composer.clearReply()
     assert(changes[#changes] == false, "close button clears it")
   end
+
+  -- test_moved_reply_goes_out_from_the_new_conversation
+  do
+    local composer, target, sent = build()
+    composer.setReply("a", replyTo)
+    composer.moveReply("a", "b")
+    target.conversationKey = "b"
+    composer.loadDraft(nil)
+    send(composer, "to b")
+    assert(sent[1].replyTo == replyTo, "the reply moved with its conversation")
+  end
 end
