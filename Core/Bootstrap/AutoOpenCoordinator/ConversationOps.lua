@@ -5,6 +5,7 @@ end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+local CharacterRedirect = ns.EventRouterCharacterRedirect or require("WhisperMessenger.Core.EventRouter.CharacterRedirect")
 local ConversationOps = {}
 
 function ConversationOps.findConversationKeyByName(runtime, name)
@@ -17,7 +18,8 @@ function ConversationOps.buildConversationKeyFromName(runtime, identity, name)
     return nil
   end
 
-  return identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
+  local key = identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
+  return CharacterRedirect.MergedKey(runtime, key) or key
 end
 
 function ConversationOps.ensureConversation(runtime, conversationKey, displayName)
