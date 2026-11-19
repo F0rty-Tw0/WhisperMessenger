@@ -30,15 +30,36 @@ function MessageMetadata.MovesActivity(conversation, message)
   return message.kind ~= "system" or (tonumber(conversation.lastActivityAt) or 0) == 0
 end
 
+-- Whether the chat's activity is only the time a status line set when it
+-- opened the chat: the transcript lines at that time and ID are all status
+-- lines. Activity taken from a line kept outside the transcript matches none.
+local function activityFromStatusLine(conversation)
+  local activityAt = tonumber(conversation.lastActivityAt)
+  local activityLineID = tonumber(conversation.lastActivityLineID)
+  local found = false
+  for _, line in ipairs(conversation.messages or {}) do
+    if tonumber(line.sentAt) == activityAt and tonumber(line.lineID) == activityLineID then
+      if line.kind ~= "system" then
+        return false
+      end
+      found = true
+    end
+  end
+  return found
+end
+
 -- What a line that is not simply appended moves, as (movesPreview,
 -- movesActivity). The preview shows the newest line of any kind: isNewestLine
 -- says it is the newest in the transcript, and it must also be newer than the
 -- last activity, which can come from a line kept outside the transcript.
 -- Activity follows the newest real line wherever it sits in the transcript,
--- so a real line arriving behind a newer status line still moves it.
+-- so a real line arriving behind a newer status line still moves it, and the
+-- first real line takes over from a status line that opened the chat even
+-- when it is older than that line.
 function MessageMetadata.Moves(conversation, message, isNewestLine)
   local newerThanActivity = MessageMetadata.IsLatest(message, conversation.lastActivityAt, conversation.lastActivityLineID)
-  return isNewestLine and newerThanActivity, newerThanActivity and MessageMetadata.MovesActivity(conversation, message)
+  local movesActivity = MessageMetadata.MovesActivity(conversation, message) and (newerThanActivity or activityFromStatusLine(conversation))
+  return isNewestLine and newerThanActivity, movesActivity
 end
 
 function MessageMetadata.ApplyMoves(conversation, message, movesPreview, movesActivity)
