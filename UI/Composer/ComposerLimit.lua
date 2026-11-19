@@ -19,13 +19,19 @@ function ComposerLimit.InputMaxBytes(channel)
 end
 
 function ComposerLimit.Create(input)
+  local channel
   local whisper = false
   local lastText, lastCursor = "", 0
   -- True while the limit itself changes the text; that change is not the player's.
   local busy = false
   local limit = {}
 
-  function limit.setChannel(channel)
+  local function tooManyParts(text)
+    return whisper and MessageSplit.Count(text, TextLimits.MESSAGE_MAX_BYTES) > TextLimits.MAX_PARTS
+  end
+
+  function limit.setChannel(newChannel)
+    channel = newChannel
     whisper = isWhisperChannel(channel)
     if input.SetMaxBytes then
       busy = true
@@ -51,7 +57,7 @@ function ComposerLimit.Create(input)
     if busy then
       return false
     end
-    if whisper and not trusted and MessageSplit.Count(text, TextLimits.MESSAGE_MAX_BYTES) > TextLimits.MAX_PARTS then
+    if not trusted and tooManyParts(text) then
       busy = true
       input:SetText(lastText)
       busy = false
@@ -62,6 +68,12 @@ function ComposerLimit.Create(input)
     end
     limit.remember()
     return true
+  end
+
+  -- True when the open chat takes text whole: under the input cap (which
+  -- counts the null terminator) and, in a whisper, within MAX_PARTS parts.
+  function limit.fits(text)
+    return #text < ComposerLimit.InputMaxBytes(channel) and not tooManyParts(text)
   end
 
   limit.setChannel(nil)
