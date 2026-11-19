@@ -14,6 +14,8 @@ local escapeFrameShownHandler = nil
 -- Opening order of the registered frames, for HideShownEscapeFrame.
 local shownSerial = setmetatable({}, { __mode = "k" })
 local shownCounter = 0
+-- Second listener, for the WoW: Forever gamepad UI (GamepadWiring).
+local gamepadShown, gamepadHidden = nil, nil
 
 local function reportEscapeFrameShown(popup)
   shownCounter = shownCounter + 1
@@ -21,6 +23,22 @@ local function reportEscapeFrameShown(popup)
   if escapeFrameShownHandler then
     escapeFrameShownHandler(popup)
   end
+  if gamepadShown then
+    gamepadShown(popup)
+  end
+end
+
+local function reportEscapeFrameHidden(popup)
+  if gamepadHidden then
+    gamepadHidden(popup)
+  end
+end
+
+-- onShown(popup) / onHidden(popup) run when a popup registered with its
+-- frame opens or closes, beside the ESC handler. Game menus never reach
+-- them. nil, nil clears both.
+function PopupEscape.SetGamepadPopupHooks(onShown, onHidden)
+  gamepadShown, gamepadHidden = onShown, onHidden
 end
 
 -- `handler(popup)` runs whenever a popup registered with its frame opens,
@@ -30,11 +48,13 @@ function PopupEscape.SetEscapeFrameShownHandler(handler)
 end
 
 -- Escape closes the named frame. Pass `frame` to report its opening to the
--- handler set with SetEscapeFrameShownHandler.
+-- handler set with SetEscapeFrameShownHandler (and its opening and closing
+-- to the gamepad hooks).
 function PopupEscape.RegisterEscape(frameName, frame)
   if frame and not hookedEscapeFrames[frame] and type(frame.HookScript) == "function" then
     hookedEscapeFrames[frame] = true
     frame:HookScript("OnShow", reportEscapeFrameShown)
+    frame:HookScript("OnHide", reportEscapeFrameHidden)
   end
   local known = false
   for _, name in ipairs(escapeFrameNames) do

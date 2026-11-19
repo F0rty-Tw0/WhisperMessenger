@@ -43,6 +43,7 @@ PickerPopup.RegisterEscape = PopupEscape.RegisterEscape
 PickerPopup.HideShownEscapeFrame = PopupEscape.HideShownEscapeFrame
 PickerPopup.ReportMenuShown = PopupEscape.ReportMenuShown
 PickerPopup.IsEscapeFrame = PopupEscape.IsEscapeFrame
+PickerPopup.SetGamepadPopupHooks = PopupEscape.SetGamepadPopupHooks
 
 local function isMouseOver(frame)
   if type(frame.IsMouseOver) ~= "function" then
