@@ -161,7 +161,7 @@ end
 local function earliestDeadline(runtime)
   local earliest
   for _, field in ipairs(PENDING_QUEUE_FIELDS) do
-    for _, queue in pairs(runtime[field] or {}) do
+    for _, queue in pairs(runtime[field]) do
       for _, entry in ipairs(queue) do
         local deadline = entry.recordedAt + TTL_SECONDS
         if earliest == nil or deadline < earliest then
