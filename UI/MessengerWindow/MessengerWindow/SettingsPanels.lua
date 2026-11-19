@@ -119,6 +119,7 @@ function SettingsPanels.Create(factory, options)
       settingsKey = "notificationSettings",
       create = options.notificationCreate,
       config = {
+        muteAllSounds = settingsConfig.muteAllSounds,
         playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
         notificationSound = settingsConfig.notificationSound,
         flashTaskbarOnWhisper = settingsConfig.flashTaskbarOnWhisper,
