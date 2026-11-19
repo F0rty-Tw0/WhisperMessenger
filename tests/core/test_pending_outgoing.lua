@@ -1,4 +1,14 @@
 local PendingOutgoing = require("WhisperMessenger.Core.EventRouter.PendingOutgoing")
+local Store = require("WhisperMessenger.Model.ConversationStore")
+local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
+
+local K = "wow::WOW::arthas-area52"
+local B = "bnet::BN::jaina#1234"
+local NAME = "Arthas-Area52"
+
+local function seedB(state)
+  Store.EnsureConversation(state.store, B, { channel = "BN", battleTag = "Jaina#1234", bnetAccountID = 77 })
+end
 
 return function()
   -- Record creates a pending outgoing entry under the canonical conversation key.
@@ -176,5 +186,22 @@ return function()
     assert(ok, "secret BNet ID equality must not abort outgoing event routing")
     assert(matched == false, "failed BNet ID comparison must be a non-match")
     assert(#state.pendingOutgoing[key] == 1, "non-matching pending entry must remain queued")
+  end
+
+  -- A send to a merged character queues under the Battle.net chat.
+  do
+    local state = {
+      localProfileId = "me",
+      pendingOutgoing = {},
+      store = Store.New({}),
+      characterMerges = CharacterMergeMap.Ensure({}),
+      now = function()
+        return 100
+      end,
+    }
+    seedB(state)
+    CharacterMergeMap.Record(state.characterMerges, K, B, NAME)
+    local key = PendingOutgoing.Record(state, { channel = "WOW", displayName = NAME, guid = "Player-1" }, "hello")
+    assert(key == B and #state.pendingOutgoing[B] == 1, "a send to a merged character must queue under B, got " .. tostring(key))
   end
 end

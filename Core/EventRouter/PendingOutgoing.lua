@@ -5,6 +5,7 @@ end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
+local CharacterRedirect = ns.EventRouterCharacterRedirect or require("WhisperMessenger.Core.EventRouter.CharacterRedirect")
 
 local PendingOutgoing = {}
 
@@ -172,6 +173,10 @@ function PendingOutgoing.Record(state, target, text, metadata)
   end
 
   local conversationKey = Identity.BuildConversationKey(state.localProfileId, contact.contactKey)
+  if target.channel ~= "BN" then
+    -- The echo of a send to a merged character lands in the Battle.net chat.
+    conversationKey = CharacterRedirect.MergedKey(state, conversationKey) or conversationKey
+  end
   local now = state.now()
   pruneExpiredQueues(state, now)
 
