@@ -8,7 +8,8 @@ local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.
 
 -- Composer geometry: one gutter on every side, an input filling the strip
 -- between them, and square quick-reply/emoji/send buttons vertically centered
--- on it with equal gaps.
+-- on it with equal gaps. The emoji button is optional: with `buttonCount` 2
+-- the input takes its space and quick reply sits next to send.
 local ComposerLayout = {}
 
 -- Room around the emoji glyph inside its square button.
@@ -25,9 +26,11 @@ ComposerLayout.TEXT_INSET_X = 8
 ComposerLayout.TEXT_SLACK_Y = 3
 
 -- `rows` text rows of `lineHeight` each: the box grows upward by one line per
--- extra row while the buttons keep their one-row position.
-function ComposerLayout.Compute(width, rows, lineHeight)
+-- extra row while the buttons keep their one-row position. `buttonCount` is 3
+-- (quick reply, emoji, send) unless the emoji button is hidden (2).
+function ComposerLayout.Compute(width, rows, lineHeight, buttonCount)
   rows = rows or 1
+  buttonCount = buttonCount or 3
   lineHeight = lineHeight or 0
   local layout = Theme.LAYOUT
   local gutter, size, gap = layout.COMPOSER_GUTTER, layout.COMPOSER_BUTTON_SIZE, layout.COMPOSER_BUTTON_GAP
@@ -40,7 +43,7 @@ function ComposerLayout.Compute(width, rows, lineHeight)
   return {
     inputX = gutter,
     inputY = gutter,
-    inputW = width - (gutter * 2) - (size * 3) - (gap * 3),
+    inputW = width - (gutter * 2) - (size + gap) * buttonCount,
     inputH = inputH,
     sendW = size,
     sendH = size,
@@ -57,13 +60,13 @@ function ComposerLayout.Compute(width, rows, lineHeight)
   }
 end
 
-function ComposerLayout.TextWidth(width)
-  return ComposerLayout.Compute(width).inputW - 2 * ComposerLayout.TEXT_INSET_X
+function ComposerLayout.TextWidth(width, buttonCount)
+  return ComposerLayout.Compute(width, nil, nil, buttonCount).inputW - 2 * ComposerLayout.TEXT_INSET_X
 end
 
 -- Position every composer part for `width`; safe to call on every relayout.
-function ComposerLayout.Apply(parts, width, rows, lineHeight)
-  local m = ComposerLayout.Compute(width, rows, lineHeight)
+function ComposerLayout.Apply(parts, width, rows, lineHeight, buttonCount)
+  local m = ComposerLayout.Compute(width, rows, lineHeight, buttonCount)
   local pane = parts.pane
   local frame = parts.box
   frame:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", m.inputX, m.inputY)
@@ -87,10 +90,12 @@ function ComposerLayout.Apply(parts, width, rows, lineHeight)
   end
   parts.sendButton:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -m.sendRight, m.sendBottom)
   parts.sendButton:SetSize(m.sendW, m.sendH)
+  -- The emoji button keeps its spot while hidden, so showing it needs no extra step.
   parts.emojiButton:SetPoint("RIGHT", parts.sendButton, "LEFT", -m.gap, 0)
   parts.emojiButton:SetSize(m.emojiSize, m.emojiSize)
   parts.emojiIcon:SetSize(m.emojiIconSize, m.emojiIconSize)
-  parts.quickReplyButton:SetPoint("RIGHT", parts.emojiButton, "LEFT", -m.gap, 0)
+  local quickReplyAnchor = buttonCount == 2 and parts.sendButton or parts.emojiButton
+  parts.quickReplyButton:SetPoint("RIGHT", quickReplyAnchor, "LEFT", -m.gap, 0)
   parts.quickReplyButton:SetSize(m.emojiSize, m.emojiSize)
   parts.quickReplyButton.icon:SetSize(m.emojiIconSize, m.emojiIconSize)
 end
