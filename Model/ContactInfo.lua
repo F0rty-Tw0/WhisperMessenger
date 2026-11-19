@@ -121,7 +121,7 @@ local function namesForChat(runtime, conversationKey)
   local baseName = string.match(fullName, "^([^%-]+)")
   local names = {}
   for _, name in ipairs({ fullName, baseName or fullName }) do
-    if names[1] ~= name and CharacterMergeMap.ResolveWhisperName(runtime, name) == conversationKey then
+    if names[1] ~= name and Identity.ResolveWhisperConversation(runtime, name, "WOW") == conversationKey then
       names[#names + 1] = name
     end
   end
