@@ -342,6 +342,7 @@ UI/Composer/LineBreaks.lua
 UI/Composer/ComposerRows.lua
 UI/Composer/ComposerInputBox.lua
 UI/Composer/ComposerSubmit.lua
+UI/Composer/ComposerHistory.lua
 UI/Composer/ComposerRelayout.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua

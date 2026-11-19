@@ -11,6 +11,7 @@ local IconMode = ns.BootstrapWindowRuntimeIconMode or require("WhisperMessenger.
 local PanelPulse = ns.BootstrapWindowRuntimePanelPulse or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelPulse")
 local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
 local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
+local SentHistory = ns.SentHistory or require("WhisperMessenger.Model.SentHistory")
 local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
 
 -- Builds the messenger window on first need: the settings handler, the window
@@ -78,6 +79,10 @@ local function buildWindowOptions(options, parts)
     onSettingChanged = parts.onSettingChanged,
     getContactInfoLines = function(contact)
       return ContactInfo.LinesFor(runtime, contact)
+    end,
+    -- Read at call time: every recall sees the chats as saved now.
+    getSentHistory = function(fits)
+      return SentHistory.Build(runtime.store.conversations, fits)
     end,
   }
   -- Every window callback passes straight through.
