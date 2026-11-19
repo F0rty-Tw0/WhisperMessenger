@@ -94,7 +94,7 @@ function GamepadNav.New(frame, deps)
   local registered, shown = false, false
   local refreshScheduled = false
   local pendingRegister, pendingHide, pendingRefresh, pendingScroll = false, false, false, false
-  local scrollTarget = nil
+  local scrollTarget, scrollCallbackSet = nil, false
   local marks = GamepadMarks.New({
     inCombat = inCombat,
     markIgnored = markIgnored,
@@ -213,17 +213,26 @@ function GamepadNav.New(frame, deps)
     end
   end
 
-  -- The right stick scrolls scrollFrame once the game knows the window.
+  local function applyScrollTarget()
+    if inCombat() then
+      pendingScroll = true
+      return
+    end
+    pendingScroll = false
+    smartNavigation:SetScrollFrameForFrame(frame, scrollTarget)
+  end
+
+  -- The right stick scrolls the latest scrollFrame: at once when the game
+  -- knows the window, else once it does.
   function nav.setScrollFrame(scrollFrame)
     scrollTarget = scrollFrame
-    smartNavigation:SetSmartNavPanelInfoAddedCallback(frame, function()
-      if inCombat() then
-        pendingScroll = true
-        return
-      end
-      pendingScroll = false
-      smartNavigation:SetScrollFrameForFrame(frame, scrollFrame)
-    end)
+    if not scrollCallbackSet then
+      scrollCallbackSet = true
+      smartNavigation:SetSmartNavPanelInfoAddedCallback(frame, applyScrollTarget)
+    end
+    if registered and smartNavigation:GetPanelInfo(frame, true) ~= nil then
+      applyScrollTarget()
+    end
   end
 
   nav.ignore = marks.ignore
