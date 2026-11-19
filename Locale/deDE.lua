@@ -67,7 +67,6 @@ local German = {
   ["Appearance"] = "Aussehen",
   ["Behavior"] = "Verhalten",
   ["Notifications"] = "Benachrichtigungen",
-  ["Icons"] = "Symbole",
   ["Clear All Chats"] = "Alle Chats löschen",
   ["Reset Icon"] = "Symbol-Reset",
   ["Reset Window"] = "Fenster-Reset",

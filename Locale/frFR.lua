@@ -67,7 +67,6 @@ local French = {
   ["Appearance"] = "Apparence",
   ["Behavior"] = "Comportement",
   ["Notifications"] = "Notifications",
-  ["Icons"] = "Icônes",
   ["Clear All Chats"] = "Effacer tous les chats",
   ["Reset Icon"] = "Réinit. icône",
   ["Reset Window"] = "Réinit. fenêtre",

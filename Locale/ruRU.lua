@@ -67,7 +67,6 @@ local Russian = {
   ["Appearance"] = "Внешний вид",
   ["Behavior"] = "Поведение",
   ["Notifications"] = "Уведомления",
-  ["Icons"] = "Значки",
   ["Clear All Chats"] = "Очистить все чаты",
   ["Reset Icon"] = "Сброс значка",
   ["Reset Window"] = "Сброс окна",

@@ -67,7 +67,6 @@ local SimplifiedChinese = {
   ["Appearance"] = "外观",
   ["Behavior"] = "行为",
   ["Notifications"] = "通知",
-  ["Icons"] = "图标",
   ["Clear All Chats"] = "清除所有对话",
   ["Reset Icon"] = "重置图标",
   ["Reset Window"] = "重置窗口",
