@@ -20,6 +20,7 @@ local PositionSlots = ns.BootstrapWindowRuntimePositionSlots or require("Whisper
 local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
 local AddonAlerts = ns.BootstrapWindowRuntimeAddonAlerts or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.AddonAlerts")
 local GameWhisperTab = ns.BootstrapWindowRuntimeGameWhisperTab or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GameWhisperTab")
+local SeparateCallbacks = ns.BootstrapWindowRuntimeSeparateCallbacks or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SeparateCallbacks")
 
 local WindowCallbacks = {}
 
@@ -54,6 +55,7 @@ function WindowCallbacks.Create(options)
   local setWindowVisible = options.setWindowVisible or function() end
   local dismissWidgetPreview = options.dismissWidgetPreview or function() end
   local whoTriggers = WhoTriggers.Create(runtime)
+  local separate = SeparateCallbacks.Create(runtime, refreshWindow)
 
   local function canReact(selectedContact, message)
     if runtime.isCompetitiveContent() then
@@ -274,6 +276,8 @@ function WindowCallbacks.Create(options)
       local now = type(runtime.now) == "function" and runtime.now() or nil
       return IgnoreList.Lookup(IgnoreList.Ensure(accountState), name, now) ~= nil
     end,
+    onSeparateCharacter = separate.onSeparateCharacter,
+    listMergedCharacters = separate.listMergedCharacters,
 
     onReorder = function(orders)
       for key, order in pairs(orders) do
