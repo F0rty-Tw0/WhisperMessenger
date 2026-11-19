@@ -69,7 +69,9 @@ Model/CharacterMergeMap.lua
 Model/ConversationStore/StoreRetention.lua
 Model/ConversationStore/RepeatCollapse.lua
 Model/ConversationStore/ChronologicalInsert.lua
+Model/ConversationStore/NewRecord.lua
 Model/ConversationStore.lua
+Model/CharacterMergeFold.lua
 Model/Filters/IgnoreList.lua
 Model/Filters/KeywordRules.lua
 Model/Filters/RulePresets.lua
@@ -163,6 +165,7 @@ Core/Ingest/GroupChatIngest/InstanceName.lua
 Core/Ingest/GroupChatIngest.lua
 Core/Ingest/IncomingFilter.lua
 Core/Ingest/ChannelChatIngest.lua
+Core/EventRouter/CharacterRedirect.lua
 Core/EventRouter/PendingOutgoing.lua
 Core/EventRouter/FailedWhisper.lua
 Core/EventRouter/PartMerge.lua

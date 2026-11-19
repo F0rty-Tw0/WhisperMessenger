@@ -65,17 +65,21 @@ local function mergeMessages(canonical, legacy, maxMessages)
   local seenIDs = {}
   local sequence = 0
 
+  -- Line counters restart each session, so an id alone can match two real
+  -- lines; a true copy of one line also shares its time.
   local function append(messages)
     for _, message in ipairs(messages or {}) do
+      local sentAt = type(message) == "table" and numericValue(message.sentAt) or 0
       local messageID = type(message) == "table" and message.id or nil
-      if messageID == nil or not seenIDs[messageID] then
-        if messageID ~= nil then
-          seenIDs[messageID] = true
+      local dedupeKey = messageID ~= nil and (tostring(messageID) .. "@" .. tostring(sentAt)) or nil
+      if dedupeKey == nil or not seenIDs[dedupeKey] then
+        if dedupeKey ~= nil then
+          seenIDs[dedupeKey] = true
         end
         sequence = sequence + 1
         entries[#entries + 1] = {
           message = message,
-          sentAt = type(message) == "table" and numericValue(message.sentAt) or 0,
+          sentAt = sentAt,
           sequence = sequence,
         }
       end

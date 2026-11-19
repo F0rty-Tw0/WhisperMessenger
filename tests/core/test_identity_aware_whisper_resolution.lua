@@ -121,6 +121,23 @@ return function()
     assert(runtime.store.conversations.friend.bnetAccountID == 42, "recovery must preserve the Battle.net identifier")
   end
 
+  -- A stale reply to a merged character recovers the Battle.net chat and never recreates the character chat.
+  do
+    local runtime = {
+      localProfileId = "me",
+      store = { conversations = { friend = { channel = "BN", displayName = "Friend#1234", messages = {} } } },
+      characterMerges = { merged = { ["wow::WOW::arthas"] = { bnetKey = "friend", name = "Arthas" } }, separated = {} },
+    }
+    local attributes = { chatType = "WHISPER", tellTarget = "Arthas" }
+    local key = ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, function()
+      return 1
+    end, function()
+      return makeEditBox(attributes)
+    end)
+    assert(key == "friend" and runtime.lastIncomingWhisperKey == "friend", "a merged character's reply targets B, got " .. tostring(key))
+    assert(runtime.store.conversations["wow::WOW::arthas"] == nil, "no character chat is created")
+  end
+
   -- An unknown Battle.net reply must leave Blizzard's state intact on Mythic resume.
   do
     local savedSuspended = RestrictionState.Suspended()

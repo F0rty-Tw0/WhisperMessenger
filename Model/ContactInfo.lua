@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+local CharacterMergeMap = ns.CharacterMergeMap or require("WhisperMessenger.Model.CharacterMergeMap")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 -- One-line notes other addons attach to a player, shown in the conversation
@@ -133,7 +134,7 @@ function ContactInfo.ResolvesTo(runtime, playerName, conversationKey)
     return false
   end
   local canonicalName = Identity.FromWhisper(playerName).canonicalName
-  return Identity.ResolveWhisperConversation(runtime, canonicalName, "WOW") == conversationKey
+  return CharacterMergeMap.ResolveWhisperName(runtime, canonicalName) == conversationKey
 end
 
 -- text nil, or blank, removes the note and its tooltip; longer text is cut to
@@ -164,7 +165,7 @@ function ContactInfo.Set(state, sourceKey, playerName, text, runtime, tooltipLin
     end
   end
 
-  local chatKey = runtime and Identity.ResolveWhisperConversation(runtime, canonicalName, "WOW")
+  local chatKey = runtime and CharacterMergeMap.ResolveWhisperName(runtime, canonicalName)
   if chatKey then
     for _, name in ipairs(namesForChat(runtime, chatKey)) do
       removeNote(state, name, sourceKey)

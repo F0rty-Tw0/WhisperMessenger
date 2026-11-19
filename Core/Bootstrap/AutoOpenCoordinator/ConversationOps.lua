@@ -5,10 +5,11 @@ end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+local CharacterMergeMap = ns.CharacterMergeMap or require("WhisperMessenger.Model.CharacterMergeMap")
 local ConversationOps = {}
 
 function ConversationOps.findConversationKeyByName(runtime, name)
-  return Identity.ResolveWhisperConversation(runtime, name, "WOW")
+  return CharacterMergeMap.ResolveWhisperName(runtime, name)
 end
 
 function ConversationOps.buildConversationKeyFromName(runtime, identity, name)
@@ -17,7 +18,11 @@ function ConversationOps.buildConversationKeyFromName(runtime, identity, name)
     return nil
   end
 
-  return identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
+  local key = identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
+  local conversations = runtime.store and runtime.store.conversations
+  local bnetKey = CharacterMergeMap.LiveBnetKey(runtime.characterMerges, conversations, key)
+
+  return bnetKey or key
 end
 
 function ConversationOps.ensureConversation(runtime, conversationKey, displayName)
