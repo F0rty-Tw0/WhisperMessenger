@@ -1,4 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local FakeGamepad = require("tests.helpers.fake_gamepad")
+local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
 
 local function fakeNav()
@@ -62,11 +64,11 @@ local function setup(opts)
       end,
     },
   }
-  local nav = fakeNav()
+  local nav = opts.env and GamepadNav.New(frame, opts.env.deps()) or fakeNav()
   local wiring = GamepadWiring.Create(shell, nav)
   wiring.attach(refs)
   local closer
-  for _, s in ipairs(nav.seen) do
+  for _, s in ipairs(nav.seen or {}) do
     if s.name == "setCloseHandler" then
       closer = s.args[1]
     end
@@ -92,10 +94,28 @@ return function()
     assert(t.nav.count("onShow") == 1 and t.nav.count("onHide") == 1, "hooks forward show and hide")
   end
 
-  -- test_attach_registers_a_window_already_shown
+  -- test_attach_does_not_register_a_window_shown_at_create
   do
     local t = setup({ shown = true })
-    assert(t.nav.count("onShow") == 1, "already shown at attach: registered now")
+    assert(t.nav.count("onShow") == 0, "the build hides the window next; the real show registers")
+  end
+
+  -- test_first_real_show_registers_after_scroll_frame_and_ignores
+  do
+    local env = FakeGamepad.New()
+    local t = setup({ shown = true, env = env })
+    assert(env.count("FrameShown") == 0, "attach on a shown frame: no FrameShown")
+    t.frame:Hide()
+    t.frame:Show()
+    local order = {}
+    for _, c in ipairs(env.calls) do
+      if order[#order] ~= c.name then
+        table.insert(order, c.name)
+      end
+    end
+    assert(table.concat(order, ",") == "MarkFrameIgnored,FrameShown,SetScrollFrameForFrame", "ignores, then register, then scroll frame")
+    assert(env.count("FrameShown") == 1, "one registration")
+    assert(env.scrollFrameFor(t.frame) == t.refs.conversation.transcript.scrollFrame, "right stick scrolls the chat")
   end
 
   -- test_b_closes_settings_when_they_are_shown

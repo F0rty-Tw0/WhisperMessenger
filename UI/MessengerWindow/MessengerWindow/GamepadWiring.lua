@@ -73,10 +73,8 @@ function GamepadWiring.Create(shell, nav)
     frame:HookScript("OnHide", function()
       nav.onHide()
     end)
-    -- Frames start shown: register now instead of waiting for a second show.
-    if frame:IsShown() then
-      nav.onShow()
-    end
+    -- No register here even if the frame is shown: the build hides it right
+    -- after Create, and every real show arrives through the OnShow hook.
     nav.setCloseHandler(buildCloseHandler(frame, refs))
     local transcript = refs.conversation and refs.conversation.transcript
     if transcript then
