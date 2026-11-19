@@ -10,13 +10,14 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
 local AddonGreetingText = ns.ChatBubbleAddonGreetingText or require("WhisperMessenger.UI.ChatBubble.AddonGreetingText")
 local RowElements = ns.ContactsListRowElements or require("WhisperMessenger.UI.ContactsList.RowElements")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local sizeValue = UIHelpers.sizeValue
 local pairs = pairs
 local type = type
 
 -- What a contact row was last bound from: every item field plus everything
 -- outside the item the bind reads (list width, options, theme, fonts,
--- language, the shown time label). A row whose signature still matches is
+-- language, name display, the shown time label). A row whose signature still matches is
 -- painted correctly already, so the refresh can skip its bind.
 --
 -- Item fields are compared generically, so a field a future enricher adds is
@@ -28,10 +29,10 @@ local RowSignature = {}
 -- the context below carries instead.
 local SKIPPED_FIELDS = { conversation = true }
 
-local CONTEXT_SIZE = 15
-local SELECTED_SLOT = 13
-local TIME_SLOT = 14
-local PREVIEW_SLOT = 15
+local CONTEXT_SIZE = 16
+local SELECTED_SLOT = 14
+local TIME_SLOT = 15
+local PREVIEW_SLOT = 16
 
 local context = {}
 
@@ -73,6 +74,8 @@ function RowSignature.Context(parent, options)
   context[10] = timeSource
   context[11] = playerClassTag()
   context[12] = playerFaction()
+  -- Shown names follow the "Hide BattleTag numbers" option and name clashes.
+  context[13] = DisplayName.Revision()
   context.selectedConversationKey = options.selectedConversationKey
   return context
 end
