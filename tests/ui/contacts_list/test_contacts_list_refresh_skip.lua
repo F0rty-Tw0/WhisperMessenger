@@ -120,6 +120,23 @@ return function()
     assert(rows[2]:IsShown() == true, "row 2 should be shown again")
   end
 
+  -- test_row_whose_bind_threw_rebinds_on_the_next_refresh
+  do
+    local items, options, rows = setup()
+    local title = rows[2].title
+    local setText = title.SetText
+    title.SetText = function()
+      error("bind failed")
+    end
+    items[2].pinned = true
+    assert(pcall(ContactsList.Refresh, factory, parent, rows, items, options) == false, "the broken bind should throw")
+    title.SetText = setText
+    items[2].pinned = false
+    local counts = countBinds(rows)
+    ContactsList.Refresh(factory, parent, rows, items, options)
+    assert(counts[2] > 0, "a half-painted row must rebind even when its old values come back")
+  end
+
   -- test_offline_battle_net_row_skips_its_bind
   do
     local function bnetItem()

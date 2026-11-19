@@ -88,6 +88,8 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
     if RowSignature.Matches(row, item, signatureContext) then
       row.item = item
     else
+      -- A bind that throws leaves the row half-painted: never skip it later.
+      RowSignature.Clear(row)
       row = bindRow(factory, parent, row, index, item, options)
       RowSignature.Store(row, item, signatureContext)
       rows[index] = row
