@@ -23,10 +23,19 @@ function MessageMetadata.IsOutgoingUser(message)
   return message ~= nil and message.kind == "user" and message.direction == "out"
 end
 
+-- Only real chat is activity. A status line ("player is offline", a zone
+-- divider) leaves list order and the retention clock on the last real
+-- message, except in a chat with no activity yet, which must still age out.
+function MessageMetadata.MovesActivity(conversation, message)
+  return message.kind ~= "system" or (tonumber(conversation.lastActivityAt) or 0) == 0
+end
+
 function MessageMetadata.ApplyActivity(conversation, message)
   conversation.lastPreview = message.text
-  conversation.lastActivityAt = message.sentAt
-  conversation.lastActivityLineID = message.lineID
+  if MessageMetadata.MovesActivity(conversation, message) then
+    conversation.lastActivityAt = message.sentAt
+    conversation.lastActivityLineID = message.lineID
+  end
 end
 
 function MessageMetadata.ApplyIncoming(conversation, message)

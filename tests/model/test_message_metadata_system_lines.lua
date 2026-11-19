@@ -1,0 +1,107 @@
+local Store = require("WhisperMessenger.Model.ConversationStore")
+local Router = require("WhisperMessenger.Core.EventRouter")
+local DataBuilder = require("WhisperMessenger.UI.ContactsList.DataBuilder")
+
+-- Only real chat counts as activity: a status line such as "player is
+-- offline" shows in the thread and the row preview, but it never bumps the
+-- chat up the list or restarts its Message Retention timer.
+return function()
+  local HOUR = 3600
+  local DAY = 24 * HOUR
+  local ARTHAS_KEY = "bnet::BN::arthas#1234"
+  local JAINA_KEY = "wow::WOW::jaina-area52"
+
+  local function makeState(clock)
+    return {
+      localProfileId = "me",
+      store = Store.New({ maxMessagesPerConversation = 10, conversationMaxAge = DAY, messageMaxAge = DAY }, function()
+        return clock.now
+      end),
+      activeConversationKey = nil,
+      availabilityByGUID = {},
+      pendingOutgoing = {},
+      now = function()
+        return clock.now
+      end,
+    }
+  end
+
+  local function arthasPayload(text, lineID)
+    return {
+      text = text,
+      playerName = "Arthas-Area52",
+      lineID = lineID,
+      guid = "Player-3676-0ABCDEF0",
+      channel = "BN",
+      bnetAccountID = 42,
+      accountInfo = { battleTag = "Arthas#1234" },
+    }
+  end
+
+  local function arthasOffline(state, lineID)
+    Router.HandleEvent(state, "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE", arthasPayload("Arthas is offline.", lineID))
+  end
+
+  local function listOrder(state)
+    local keys = {}
+    for _, item in ipairs(DataBuilder.BuildItems(state.store.conversations)) do
+      table.insert(keys, item.conversationKey)
+    end
+    return table.concat(keys, ",")
+  end
+
+  -- test_offline_line_keeps_list_order_and_expires_from_last_real_message
+  do
+    local clock = { now = 1000000 }
+    local state = makeState(clock)
+    local chatAt = clock.now
+    Router.HandleEvent(state, "CHAT_MSG_BN_WHISPER", arthasPayload("brb", 1))
+    clock.now = chatAt + HOUR
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", { text = "hi", playerName = "Jaina-Area52", lineID = 2, guid = "Player-3676-0000BEEF" })
+    local orderBefore = listOrder(state)
+    assert(orderBefore == JAINA_KEY .. "," .. ARTHAS_KEY, "Jaina wrote last, got " .. orderBefore)
+
+    clock.now = chatAt + 2 * HOUR
+    arthasOffline(state, 3)
+
+    local arthas = state.store.conversations[ARTHAS_KEY]
+    assert(arthas.messages[#arthas.messages].kind == "system", "the offline line is in the thread")
+    assert(arthas.lastPreview == "Arthas is offline.", "the row preview shows the offline line, got " .. tostring(arthas.lastPreview))
+    assert(arthas.lastActivityAt == chatAt, "a status line is not activity, got " .. tostring(arthas.lastActivityAt))
+    assert(listOrder(state) == orderBefore, "a status line must not bump the chat up the list, got " .. listOrder(state))
+
+    clock.now = chatAt + DAY + 30 * 60
+    Store.ApplyRetention(state.store, clock.now)
+    assert(state.store.conversations[ARTHAS_KEY] == nil, "idle 24.5h since the last real message, the chat must expire")
+    assert(state.store.conversations[JAINA_KEY] ~= nil, "Jaina wrote 23.5h ago, her chat stays")
+  end
+
+  -- test_status_line_that_opens_a_chat_still_ages_out
+  do
+    local clock = { now = 2000000 }
+    local state = makeState(clock)
+    local lineAt = clock.now
+    arthasOffline(state, 4)
+
+    local arthas = state.store.conversations[ARTHAS_KEY]
+    assert(arthas.lastActivityAt == lineAt, "a chat with no real message yet ages from its first line, got " .. tostring(arthas.lastActivityAt))
+
+    clock.now = lineAt + DAY + 1
+    Store.ApplyRetention(state.store, clock.now)
+    assert(state.store.conversations[ARTHAS_KEY] == nil, "a chat holding only a status line must still expire")
+  end
+
+  -- test_status_line_inserted_by_time_does_not_count_as_activity
+  do
+    local clock = { now = 3000000 }
+    local chatAt = clock.now
+    local state = makeState(clock)
+    Store.AppendIncoming(state.store, JAINA_KEY, { id = "m1", kind = "user", direction = "in", text = "hi", sentAt = chatAt }, false)
+
+    clock.now = chatAt + DAY + 1
+    local notice = { id = "n1", kind = "system", direction = "in", text = "Jaina is offline.", sentAt = clock.now }
+    Store.InsertIncomingChronological(state.store, JAINA_KEY, notice, false)
+
+    assert(state.store.conversations[JAINA_KEY] == nil, "past the limit from the last real message, a status line must not keep the chat")
+  end
+end

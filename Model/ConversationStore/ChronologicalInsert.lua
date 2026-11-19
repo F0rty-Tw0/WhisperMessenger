@@ -45,7 +45,8 @@ end
 -- Inserts message into conversation at its real time and applies retention,
 -- for either direction. Returns the conversation to hand back, whether the
 -- message is the newest, whether it was kept (callers apply their metadata
--- only then) and whether it moves the conversation's last activity.
+-- only then) and whether it is the latest line, which callers hand to
+-- MessageMetadata.ApplyActivity (a status line moves only the preview).
 function ChronologicalInsert.Insert(state, key, conversation, message)
   local messages = conversation.messages
   local insertAt, isNewest = ChronologicalInsert.FindIndex(messages, message.sentAt, message.lineID)
@@ -67,7 +68,7 @@ function ChronologicalInsert.Insert(state, key, conversation, message)
 
   local updatesLatestActivity = isNewest and MessageMetadata.IsLatest(message, conversation.lastActivityAt, conversation.lastActivityLineID)
   local prospectiveLastActivityAt = conversation.lastActivityAt
-  if updatesLatestActivity then
+  if updatesLatestActivity and MessageMetadata.MovesActivity(conversation, message) then
     prospectiveLastActivityAt = message.sentAt
   end
   if StoreRetention.IsExpired(state, conversation, prospectiveLastActivityAt, currentTime(state, message)) then
