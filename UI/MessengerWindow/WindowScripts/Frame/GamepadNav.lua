@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local GamepadMarks = ns.MessengerWindowGamepadMarks or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadMarks")
 
 -- The one place that talks to the WoW: Forever gamepad UI
 -- (GamepadMode.FrameControlsManager and SmartNavigation) for the messenger
@@ -26,6 +27,7 @@ local function inert()
     setCloseHandler = noop,
     setScrollFrame = noop,
     ignore = noop,
+    markFocusable = noop,
     isActive = never,
     isRegistered = never,
   }
@@ -67,8 +69,8 @@ local function defaultCreateFrame()
 end
 
 -- frame: the messenger window. deps (all optional): isForever, gamepadMode,
--- smartNavigation, markIgnored, inCombat, after, createFrame; default to the
--- game's.
+-- smartNavigation, markIgnored, markFocusable, inCombat, after, createFrame;
+-- default to the game's.
 function GamepadNav.New(frame, deps)
   deps = deps or {}
   local isForever = pick(deps, "isForever", FlavorCompat.isForever)
@@ -79,6 +81,7 @@ function GamepadNav.New(frame, deps)
     return inert()
   end
   local markIgnored = pick(deps, "markIgnored", _G.SmartNavigation_MarkFrameIgnored)
+  local markFocusable = pick(deps, "markFocusable", _G.SmartNavigation_MarkFrameFocusable)
   local inCombat = pick(deps, "inCombat", defaultInCombat)
   local after = pick(deps, "after", defaultAfter)
   local createFrame = pick(deps, "createFrame", defaultCreateFrame)
@@ -88,8 +91,7 @@ function GamepadNav.New(frame, deps)
   local refreshScheduled = false
   local pendingRegister, pendingHide, pendingRefresh, pendingScroll = false, false, false, false
   local scrollTarget = nil
-  local ignored = setmetatable({}, { __mode = "k" })
-  local ignoreQueue = {}
+  local marks = GamepadMarks.New({ inCombat = inCombat, markIgnored = markIgnored, markFocusable = markFocusable })
 
   local function register()
     local result = fcm:FrameShown(frame)
@@ -115,7 +117,7 @@ function GamepadNav.New(frame, deps)
     rescan()
   end
 
-  -- Combat over: queued ignores, then the pending hide or re-register,
+  -- Combat over: queued marks, then the pending hide or re-register,
   -- then the scroll frame the game asked for meanwhile, then one re-scan
   -- if one was asked for meanwhile.
   local function settle()
@@ -123,11 +125,7 @@ function GamepadNav.New(frame, deps)
       after(0, settle)
       return
     end
-    local queue = ignoreQueue
-    ignoreQueue = {}
-    for _, entry in ipairs(queue) do
-      markIgnored(entry.widget, entry.dontPropagate)
-    end
+    marks.settle()
     if registered and (pendingHide or pendingRegister) then
       fcm:FrameHidden(frame)
       registered = false
@@ -218,18 +216,8 @@ function GamepadNav.New(frame, deps)
     end)
   end
 
-  -- The D-pad skips widget (and its children unless dontPropagate).
-  function nav.ignore(widget, dontPropagate)
-    if widget == nil or ignored[widget] or not markIgnored then
-      return
-    end
-    ignored[widget] = true
-    if inCombat() then
-      table.insert(ignoreQueue, { widget = widget, dontPropagate = dontPropagate })
-      return
-    end
-    markIgnored(widget, dontPropagate)
-  end
+  nav.ignore = marks.ignore
+  nav.markFocusable = marks.markFocusable
 
   function nav.isActive()
     return true

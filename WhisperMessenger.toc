@@ -407,6 +407,7 @@ UI/MessengerWindow/WindowScripts/Frame/EscapeKey.lua
 UI/MessengerWindow/WindowScripts/Frame/EscapeOrder.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowStrata.lua
 UI/MessengerWindow/WindowScripts/Frame/GamepadCloseOrder.lua
+UI/MessengerWindow/WindowScripts/Frame/GamepadMarks.lua
 UI/MessengerWindow/WindowScripts/Frame/GamepadNav.lua
 UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua

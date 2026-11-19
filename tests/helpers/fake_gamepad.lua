@@ -5,7 +5,14 @@
 -- the callback setter only stores it on the frame (#L1982-L1984).
 local FakeGamepad = {}
 
-local GLOBALS = { "GamepadMode", "SmartNavigation", "SmartNavigation_MarkFrameIgnored", "InCombatLockdown", "C_RestrictedActions" }
+local GLOBALS = {
+  "GamepadMode",
+  "SmartNavigation",
+  "SmartNavigation_MarkFrameIgnored",
+  "SmartNavigation_MarkFrameFocusable",
+  "InCombatLockdown",
+  "C_RestrictedActions",
+}
 
 function FakeGamepad.New()
   local env = { calls = {}, shownResults = {}, panelInfo = {}, combat = false }
@@ -74,6 +81,10 @@ function FakeGamepad.New()
     log("MarkFrameIgnored", widget, dontPropagate)
   end
 
+  function env.markFocusable(widget)
+    log("MarkFrameFocusable", widget)
+  end
+
   function env.inCombat()
     return env.combat
   end
@@ -128,6 +139,7 @@ function FakeGamepad.New()
       gamepadMode = env.gamepadMode,
       smartNavigation = env.smartNavigation,
       markIgnored = env.markIgnored,
+      markFocusable = env.markFocusable,
       inCombat = env.inCombat,
       after = env.after,
       createFrame = env.createFrame,
@@ -146,6 +158,7 @@ function FakeGamepad.New()
     rawset(_G, "GamepadMode", env.gamepadMode)
     rawset(_G, "SmartNavigation", env.smartNavigation)
     rawset(_G, "SmartNavigation_MarkFrameIgnored", env.markIgnored)
+    rawset(_G, "SmartNavigation_MarkFrameFocusable", env.markFocusable)
     rawset(_G, "InCombatLockdown", env.inCombat)
     rawset(_G, "C_RestrictedActions", nil)
   end
