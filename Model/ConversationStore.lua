@@ -115,9 +115,11 @@ function Store.AppendIncoming(state, key, message, isActive)
 end
 function Store.RecordIncomingActivity(state, key, message, isActive)
   local conversation = Store.EnsureConversation(state, key)
-  if MessageMetadata.IsLatest(message, conversation.lastActivityAt, conversation.lastActivityLineID) then
-    MessageMetadata.ApplyActivity(conversation, message)
-  end
+  -- The line is kept outside the transcript, so it is the newest line only
+  -- when it is newer than the transcript's last one.
+  local lastLine = conversation.messages[#conversation.messages]
+  local isNewestLine = lastLine == nil or MessageMetadata.IsLatest(message, lastLine.sentAt, lastLine.lineID)
+  MessageMetadata.ApplyMoves(conversation, message, MessageMetadata.Moves(conversation, message, isNewestLine))
   if MessageMetadata.IsIncomingUser(message) and MessageMetadata.IsLatest(message, conversation.lastIncomingAt, conversation.lastIncomingLineID) then
     MessageMetadata.ApplyIncoming(conversation, message)
   end
@@ -132,15 +134,13 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
   local conversation = Store.EnsureConversation(state, key)
   local sentAt = tonumber(message.sentAt) or 0
   local lineID = tonumber(message.lineID)
-  local result, isNewest, kept, updatesLatestActivity = ChronologicalInsert.Insert(state, key, conversation, message)
+  local result, isNewest, kept, movesPreview, movesActivity = ChronologicalInsert.Insert(state, key, conversation, message)
   if not kept then
     return result
   end
 
-  if isNewest then
-    if updatesLatestActivity then
-      MessageMetadata.ApplyActivity(conversation, message)
-    end
+  MessageMetadata.ApplyMoves(conversation, message, movesPreview, movesActivity)
+  if isNewest or movesActivity then
     if
       MessageMetadata.IsIncomingUser(message) and MessageMetadata.IsLatest(message, conversation.lastIncomingAt, conversation.lastIncomingLineID)
     then

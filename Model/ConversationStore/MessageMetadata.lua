@@ -30,12 +30,30 @@ function MessageMetadata.MovesActivity(conversation, message)
   return message.kind ~= "system" or (tonumber(conversation.lastActivityAt) or 0) == 0
 end
 
-function MessageMetadata.ApplyActivity(conversation, message)
-  conversation.lastPreview = message.text
-  if MessageMetadata.MovesActivity(conversation, message) then
+-- What a line that is not simply appended moves, as (movesPreview,
+-- movesActivity). The preview shows the newest line of any kind: isNewestLine
+-- says it is the newest in the transcript, and it must also be newer than the
+-- last activity, which can come from a line kept outside the transcript.
+-- Activity follows the newest real line wherever it sits in the transcript,
+-- so a real line arriving behind a newer status line still moves it.
+function MessageMetadata.Moves(conversation, message, isNewestLine)
+  local newerThanActivity = MessageMetadata.IsLatest(message, conversation.lastActivityAt, conversation.lastActivityLineID)
+  return isNewestLine and newerThanActivity, newerThanActivity and MessageMetadata.MovesActivity(conversation, message)
+end
+
+function MessageMetadata.ApplyMoves(conversation, message, movesPreview, movesActivity)
+  if movesPreview then
+    conversation.lastPreview = message.text
+  end
+  if movesActivity then
     conversation.lastActivityAt = message.sentAt
     conversation.lastActivityLineID = message.lineID
   end
+end
+
+-- For a line appended to the end of the transcript.
+function MessageMetadata.ApplyActivity(conversation, message)
+  MessageMetadata.ApplyMoves(conversation, message, true, MessageMetadata.MovesActivity(conversation, message))
 end
 
 function MessageMetadata.ApplyIncoming(conversation, message)

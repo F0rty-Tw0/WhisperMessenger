@@ -68,6 +68,7 @@ return function()
     assert(arthas.messages[#arthas.messages].kind == "system", "the offline line is in the thread")
     assert(arthas.lastPreview == "Arthas is offline.", "the row preview shows the offline line, got " .. tostring(arthas.lastPreview))
     assert(arthas.lastActivityAt == chatAt, "a status line is not activity, got " .. tostring(arthas.lastActivityAt))
+    assert(arthas.lastActivityLineID == 1, "activity keeps the real line's ID, got " .. tostring(arthas.lastActivityLineID))
     assert(listOrder(state) == orderBefore, "a status line must not bump the chat up the list, got " .. listOrder(state))
 
     clock.now = chatAt + DAY + 30 * 60
@@ -103,5 +104,78 @@ return function()
     Store.InsertIncomingChronological(state.store, JAINA_KEY, notice, false)
 
     assert(state.store.conversations[JAINA_KEY] == nil, "past the limit from the last real message, a status line must not keep the chat")
+  end
+
+  -- A chat whose real line m1 at chatAt is followed by a status line 20h later.
+  local function jainaWithStatusLine(clock)
+    local state = makeState(clock)
+    local chatAt = clock.now
+    local real = { id = "m1", kind = "user", direction = "in", text = "hi", sentAt = chatAt, lineID = 1 }
+    Store.AppendIncoming(state.store, JAINA_KEY, real, false)
+    clock.now = chatAt + 20 * HOUR
+    local notice = { id = "s1", kind = "system", direction = "in", text = "Jaina is offline.", sentAt = clock.now, lineID = 2 }
+    Store.InsertIncomingChronological(state.store, JAINA_KEY, notice, false)
+    clock.now = chatAt + 21 * HOUR
+    return state, chatAt
+  end
+
+  local function replayed(chatAt, direction)
+    return { id = "m2", kind = "user", direction = direction, text = "replayed", sentAt = chatAt + 10 * HOUR, lineID = 3 }
+  end
+
+  -- test_real_line_arriving_behind_a_status_line_moves_activity
+  do
+    local clock = { now = 4000000 }
+    local state, chatAt = jainaWithStatusLine(clock)
+    Store.InsertIncomingChronological(state.store, JAINA_KEY, replayed(chatAt, "in"), false)
+
+    local jaina = state.store.conversations[JAINA_KEY]
+    assert(jaina.lastActivityAt == chatAt + 10 * HOUR, "the replayed real line is the latest activity, got " .. tostring(jaina.lastActivityAt))
+    assert(jaina.lastPreview == "Jaina is offline.", "the newer status line keeps the preview, got " .. tostring(jaina.lastPreview))
+    clock.now = chatAt + DAY + 60
+    Store.ApplyRetention(state.store, clock.now)
+    assert(state.store.conversations[JAINA_KEY] ~= nil, "the last real line is 14h old, the chat must stay")
+  end
+
+  -- test_real_line_arriving_past_the_limit_of_older_activity_keeps_the_chat
+  do
+    local clock = { now = 4500000 }
+    local state, chatAt = jainaWithStatusLine(clock)
+    clock.now = chatAt + DAY + 60
+    Store.InsertIncomingChronological(state.store, JAINA_KEY, replayed(chatAt, "in"), false)
+
+    assert(state.store.conversations[JAINA_KEY] ~= nil, "the arriving real line is 14h old, the chat must stay")
+  end
+
+  -- test_real_line_arriving_behind_a_status_line_is_the_last_incoming
+  do
+    local clock = { now = 5000000 }
+    local state, chatAt = jainaWithStatusLine(clock)
+    Store.InsertIncomingChronological(state.store, JAINA_KEY, replayed(chatAt, "in"), false)
+
+    local jaina = state.store.conversations[JAINA_KEY]
+    assert(jaina.lastIncomingPreview == "replayed", "the replayed line is the newest incoming, got " .. tostring(jaina.lastIncomingPreview))
+  end
+
+  -- test_own_line_arriving_behind_a_status_line_moves_activity
+  do
+    local clock = { now = 6000000 }
+    local state, chatAt = jainaWithStatusLine(clock)
+    Store.InsertOutgoingChronological(state.store, JAINA_KEY, replayed(chatAt, "out"))
+
+    local jaina = state.store.conversations[JAINA_KEY]
+    assert(jaina.lastActivityAt == chatAt + 10 * HOUR, "the player's line is the latest activity, got " .. tostring(jaina.lastActivityAt))
+    assert(jaina.lastPreview == "Jaina is offline.", "the newer status line keeps the preview, got " .. tostring(jaina.lastPreview))
+  end
+
+  -- test_older_activity_record_keeps_a_newer_status_line_as_preview
+  do
+    local clock = { now = 7000000 }
+    local state, chatAt = jainaWithStatusLine(clock)
+    Store.RecordIncomingActivity(state.store, JAINA_KEY, replayed(chatAt, "in"), false)
+
+    local jaina = state.store.conversations[JAINA_KEY]
+    assert(jaina.lastPreview == "Jaina is offline.", "an older line must not roll the preview back, got " .. tostring(jaina.lastPreview))
+    assert(jaina.lastActivityAt == chatAt + 10 * HOUR, "the older real line is still the latest activity, got " .. tostring(jaina.lastActivityAt))
   end
 end
