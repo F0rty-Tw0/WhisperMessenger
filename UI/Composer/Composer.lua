@@ -175,7 +175,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       onDraftChanged(selectedContact.conversationKey, text)
     end
     if onTyping then
-      onTyping(selectedContact, (loadingDraft or history.putting()) and "" or text)
+      local muted = loadingDraft or history.putting()
+      onTyping(selectedContact, muted and "" or text)
     end
   end
 
