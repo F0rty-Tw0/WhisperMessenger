@@ -14,6 +14,7 @@ local DataBuilder = ns.ContactsListDataBuilder or require("WhisperMessenger.UI.C
 local RowView = ns.ContactsListRowView or require("WhisperMessenger.UI.ContactsList.RowView")
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
 local bindRow = RowView.bindRow
+local RowSignature = ns.ContactsListRowSignature or require("WhisperMessenger.UI.ContactsList.RowSignature")
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
 local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
@@ -79,12 +80,23 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
     visibleCount = #items
   end
 
+  -- A row still showing the same values keeps its paint; only its item
+  -- table is refreshed (click and drag read row.item).
+  local signatureContext = RowSignature.Context(parent, options)
   for index = 1, visibleCount do
-    rows[index] = bindRow(factory, parent, rows[index], index, items[index], options)
+    local row, item = rows[index], items[index]
+    if RowSignature.Matches(row, item, signatureContext) then
+      row.item = item
+    else
+      row = bindRow(factory, parent, row, index, item, options)
+      RowSignature.Store(row, item, signatureContext)
+      rows[index] = row
+    end
   end
 
   for index = visibleCount + 1, #rows do
     local row = rows[index]
+    RowSignature.Clear(row)
     row.item = nil
     row.selected = false
 
