@@ -97,6 +97,21 @@ function CharacterMergeMap.ListForBnet(merges, bnetKey)
   return list
 end
 
+-- The Battle.net chat a character key was merged into while that chat is
+-- stored, else nil. It only reads: an entry whose chat is gone stays in the
+-- map until the next whisper from the character drops it.
+function CharacterMergeMap.LiveBnetKey(merges, conversations, characterKey)
+  if type(merges) ~= "table" or type(conversations) ~= "table" or characterKey == nil then
+    return nil
+  end
+  local entry = CharacterMergeMap.Get(merges, characterKey)
+  if entry == nil or conversations[entry.bnetKey] == nil then
+    return nil
+  end
+
+  return entry.bnetKey
+end
+
 local CHARACTER_KEY_PREFIX = "wow::WOW::"
 
 -- The name part of a character key, without the realm, or nil for any other key.
@@ -148,18 +163,19 @@ local function mergedChatForName(merges, conversations, name)
   if CharacterMergeMap.Get(merges, characterKey) == nil and not hasRealm then
     characterKey = mergedKeyForBareName(merges, conversations, contact.canonicalName)
   end
-  local entry = characterKey and CharacterMergeMap.Get(merges, characterKey)
-  if entry == nil or conversations[entry.bnetKey] == nil then
+  local bnetKey = CharacterMergeMap.LiveBnetKey(merges, conversations, characterKey)
+  if bnetKey == nil then
     return nil
   end
 
-  return entry.bnetKey, characterKey
+  return bnetKey, characterKey
 end
 
 -- The Battle.net chat a character name was merged into, or nil. It only
 -- reads: an entry whose Battle.net chat is gone stays in the map.
 function CharacterMergeMap.BnetKeyForName(merges, conversations, name)
   local bnetKey = mergedChatForName(merges, conversations, name)
+
   return bnetKey
 end
 
@@ -173,6 +189,7 @@ function CharacterMergeMap.ResolveWhisperName(runtime, name)
   if bnetKey ~= nil and conversations[characterKey] == nil then
     return bnetKey
   end
+
   return Identity.ResolveWhisperConversation(runtime, name, "WOW")
 end
 
