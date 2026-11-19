@@ -96,7 +96,7 @@ function ChronologicalInsert.Outgoing(ensureConversation, state, key, message)
   if isNewest and movesActivity then
     MessageMetadata.ApplyContact(state, key, conversation, message)
   end
-  MessageMetadata.Compact(message)
+  MessageMetadata.Compact(message, conversation)
   return conversation, isNewest
 end
 

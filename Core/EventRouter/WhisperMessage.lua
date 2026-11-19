@@ -89,6 +89,12 @@ local function confirmWhisperAvailability(state, payload, contact)
   state.availabilityByGUID[guid] = availability
 end
 
+local function setIfPresent(message, field, value)
+  if value ~= nil then
+    message[field] = value
+  end
+end
+
 local function buildMessage(state, payload, contact, direction, kind, sentAt)
   local senderClassTag
   local senderName
@@ -123,28 +129,32 @@ local function buildMessage(state, payload, contact, direction, kind, sentAt)
       end
     end
   end
-  return {
+  local message = {
     id = tostring(payload.lineID or sentAt),
     direction = direction,
     kind = kind,
     text = messageText,
     sentAt = sentAt,
-    lineID = payload.lineID,
-    guid = payload.guid or (contact and contact.guid or nil),
-    playerName = (contact and contact.displayName) or payload.playerName,
     channel = (contact and contact.channel) or payload.channel or "WOW",
-    bnetAccountID = (contact and contact.bnetAccountID) or payload.bnetAccountID,
-    battleTag = (contact and contact.battleTag) or payload.battleTag,
-    gameAccountName = (contact and contact.gameAccountName) or payload.gameAccountName,
-    className = (contact and contact.className) or payload.className,
-    classTag = (contact and contact.classTag) or payload.classTag,
-    senderClassTag = senderClassTag,
-    senderName = senderName,
-    raceName = (contact and contact.raceName) or payload.raceName,
-    raceTag = (contact and contact.raceTag) or payload.raceTag,
-    factionName = (contact and contact.factionName) or payload.factionName,
-    isCensored = payload.isCensored or checkCensored(payload.lineID),
   }
+  -- The optional fields go on one at a time: a table constructor reserves a
+  -- slot for every field it names, nil or not, which doubled the table of
+  -- every whisper kept in the session.
+  setIfPresent(message, "lineID", payload.lineID)
+  setIfPresent(message, "guid", payload.guid or (contact and contact.guid or nil))
+  setIfPresent(message, "playerName", (contact and contact.displayName) or payload.playerName)
+  setIfPresent(message, "bnetAccountID", (contact and contact.bnetAccountID) or payload.bnetAccountID)
+  setIfPresent(message, "battleTag", (contact and contact.battleTag) or payload.battleTag)
+  setIfPresent(message, "gameAccountName", (contact and contact.gameAccountName) or payload.gameAccountName)
+  setIfPresent(message, "className", (contact and contact.className) or payload.className)
+  setIfPresent(message, "classTag", (contact and contact.classTag) or payload.classTag)
+  setIfPresent(message, "senderClassTag", senderClassTag)
+  setIfPresent(message, "senderName", senderName)
+  setIfPresent(message, "raceName", (contact and contact.raceName) or payload.raceName)
+  setIfPresent(message, "raceTag", (contact and contact.raceTag) or payload.raceTag)
+  setIfPresent(message, "factionName", (contact and contact.factionName) or payload.factionName)
+  setIfPresent(message, "isCensored", payload.isCensored or checkCensored(payload.lineID))
+  return message
 end
 
 local function conversationWithKey(state, conversationKey)

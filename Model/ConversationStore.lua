@@ -99,7 +99,7 @@ function Store.AppendIncoming(state, key, message, isActive)
   local conversation = Store.EnsureConversation(state, key)
   table.insert(conversation.messages, message)
   MessageMetadata.Apply(state, key, conversation, message)
-  MessageMetadata.Compact(message)
+  MessageMetadata.Compact(message, conversation)
   StoreRetention.AfterAppend(state, key, conversation, message)
 
   if message.kind == "user" and message.direction == "in" then
@@ -160,7 +160,7 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
   if supersedesStatus and message.kind == "user" and message.direction == "in" then
     conversation.activeStatus = nil
   end
-  MessageMetadata.Compact(message)
+  MessageMetadata.Compact(message, conversation)
   if not isActive and shouldIncrementUnread(message) then
     conversation.unreadCount = conversation.unreadCount + 1
   end
@@ -173,7 +173,7 @@ function Store.AppendOutgoing(state, key, message)
   conversation.request = nil
   table.insert(conversation.messages, message)
   MessageMetadata.Apply(state, key, conversation, message)
-  MessageMetadata.Compact(message)
+  MessageMetadata.Compact(message, conversation)
   StoreRetention.AfterAppend(state, key, conversation, message)
 end
 
