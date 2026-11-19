@@ -52,18 +52,17 @@ local function setShown(region, shown)
 end
 
 -- The accent back bubble, drawn just under `glyph` and sized with it.
--- apply(desaturated, hovered) shows it in the accent color, or gray while the
--- button is desaturated and not hovered: DESAT_GREY when isSquare() is true,
--- else DESAT_BACK. isSquare is optional.
-function SquareLook.CreateAccentGlyph(frame, glyph, isSquare)
+-- apply(desaturated, hovered) shows it in the accent color, or the circle's
+-- gray (DESAT_BACK, on every shape) while the button is desaturated and not
+-- hovered.
+function SquareLook.CreateAccentGlyph(frame, glyph)
   local texture = frame:CreateTexture(nil, "ARTWORK", nil, -1)
   texture:SetAllPoints(glyph)
   texture:SetTexture(SquareLook.ACCENT_GLYPH_TEXTURE)
 
   local function apply(desaturated, hovered)
     setShown(texture, true)
-    local grey = isSquare and isSquare() and Desaturation.DESAT_GREY or Desaturation.DESAT_BACK
-    local color = desaturated and not hovered and grey or Theme.COLORS.accent
+    local color = desaturated and not hovered and Desaturation.DESAT_BACK or Theme.COLORS.accent
     applyVertexColor(texture, color)
   end
 
@@ -155,7 +154,7 @@ function SquareLook.Create(frame, parts)
 
   local hoverEffect = SquareEffects.Create(frame, "OVERLAY", 1)
   local pushEffect = SquareEffects.Create(frame, "OVERLAY", 2)
-  local accent = SquareLook.CreateAccentGlyph(frame, parts.glyph, isSquare)
+  local accent = SquareLook.CreateAccentGlyph(frame, parts.glyph)
   local outline = frame:CreateTexture(nil, "ARTWORK", nil, -2)
   outline:SetAllPoints(parts.glyph)
   outline:SetTexture(SquareLook.OUTLINE_TEXTURE)
