@@ -49,7 +49,8 @@ end
 
 -- The friend who owns the character, as a contact, or nil. Only the account
 -- id and battle tag are taken from the API answer, both checked for secrets
--- before any other test on them.
+-- before any other test on them. An answer that says the account is not a
+-- friend (or hides whether it is) is no match; one without the flag is.
 local function lookupFriend(state, guid)
   local api = state.bnetApi
   if type(api) ~= "table" or type(api.GetAccountInfoByGUID) ~= "function" then
@@ -57,6 +58,9 @@ local function lookupFriend(state, guid)
   end
   local ok, info = pcall(api.GetAccountInfoByGUID, guid)
   if not ok or SecretValue.Is(info) or type(info) ~= "table" then
+    return nil, true
+  end
+  if SecretValue.Is(info.isFriend) or info.isFriend == false then
     return nil, true
   end
   local battleTag = info.battleTag
