@@ -72,6 +72,7 @@ Model/ConversationStore/ChronologicalInsert.lua
 Model/ConversationStore/NewRecord.lua
 Model/ConversationStore.lua
 Model/CharacterMergeFold.lua
+Model/CharacterSeparate.lua
 Model/Filters/IgnoreList.lua
 Model/Filters/KeywordRules.lua
 Model/Filters/RulePresets.lua
