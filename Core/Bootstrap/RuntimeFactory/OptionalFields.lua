@@ -30,6 +30,7 @@ local OptionalFields = {
   "messageReactionRuntime",
   "messageReactionCleanupDueAt",
   "messageReactionPendingSequence",
+  "characterMergeMisses",
   -- Wired once by Bootstrap.Initialize and PublicApi.Publish.
   "restrictedActions",
   "seenLevelEvents",
