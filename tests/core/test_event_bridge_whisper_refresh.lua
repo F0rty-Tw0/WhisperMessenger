@@ -25,8 +25,10 @@ local function newRuntime()
 end
 
 local function withCoalescer(h)
-  h.runtime.scheduleWhisperRefresh = function(key)
+  h.lines = {}
+  h.runtime.scheduleWhisperRefresh = function(key, line)
     h.scheduled[#h.scheduled + 1] = key
+    h.lines[#h.lines + 1] = line
   end
   return h
 end
@@ -50,6 +52,15 @@ return function()
     assert(result and result.conversationKey, "the whisper is stored")
     assert(#h.direct == 0, "the window must not redraw inside the event, got " .. #h.direct)
     assert(#h.scheduled == 1 and h.scheduled[1] == result.conversationKey, "the next-frame refresh gets the whisper's key")
+  end
+
+  -- test_next_frame_refresh_gets_the_whisper_line
+  do
+    local h = withCoalescer(newRuntime())
+    route(h, "CHAT_MSG_WHISPER", "hello")
+    local line = h.lines[1]
+    assert(line and line.eventName == "CHAT_MSG_WHISPER", "the refresh gets the line's event")
+    assert(line.text == "hello" and line.name == "Arthas", "the refresh gets the line's text and sender")
   end
 
   -- test_parts_of_one_long_whisper_each_ask_the_next_frame_refresh

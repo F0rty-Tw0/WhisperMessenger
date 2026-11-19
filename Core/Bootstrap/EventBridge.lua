@@ -104,6 +104,10 @@ local function applyIncomingEffects(runtime, result)
   end
 end
 
+-- refreshWindow(conversationKey) redraws the window for a stored line. When
+-- the runtime has scheduleWhisperRefresh, the line's own redraw goes there
+-- instead (on the next frame) and refreshWindow only gates whether a redraw
+-- is asked for; typing expiry and reaction fallbacks still call it.
 function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
     return nil
@@ -167,9 +171,14 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     local typingMeta = type(resultMeta) == "table" and resultMeta.presence == "typing" and resultMeta or nil
     if not (typingMeta and typingMeta.typingChanged == false) then
       -- Lines landing in one frame (a long whisper's parts) redraw once, on
-      -- the next frame.
-      local scheduleRefresh = type(runtime.scheduleWhisperRefresh) == "function" and runtime.scheduleWhisperRefresh or refreshWindow
-      scheduleRefresh(result.conversationKey)
+      -- the next frame. The line goes along so the whisper failsafe can
+      -- guard that later redraw.
+      if type(runtime.scheduleWhisperRefresh) == "function" then
+        local text, name = ...
+        runtime.scheduleWhisperRefresh(result.conversationKey, { eventName = eventName, text = text, name = name })
+      else
+        refreshWindow(result.conversationKey)
+      end
     end
     if typingMeta and typingMeta.typingActive == true then
       scheduleTypingExpiry(runtime, refreshWindow, result.conversationKey)
