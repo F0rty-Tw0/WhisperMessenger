@@ -115,4 +115,21 @@ return function()
   assert(whatsNewPanel.shown == true, "selectTab(6) should show the What's New panel")
   assert(iconsPanel.shown == false, "selectTab(6) should hide the previously selected panel")
   assert(scrollContent.height == 600, "selectTab(6) should resize scroll content to the What's New panel")
+
+  -- test_select_tab_and_remeasure_report_nav_targets_changed
+  do
+    local panels = { factory.CreateFrame("Frame", nil, parent), factory.CreateFrame("Frame", nil, parent) }
+    local tabs = { factory.CreateFrame("Button", nil, parent), factory.CreateFrame("Button", nil, parent) }
+    local notified, shownAtNotify = 0, nil
+    panels.onNavTargetsChanged = function()
+      notified = notified + 1
+      shownAtNotify = panels[2]:IsShown()
+    end
+    SettingsTabs.Wire({ settingsTabs = tabs, settingsPanels = panels })
+    assert(notified == 1, "the default tab reports once")
+    tabs[2]:GetScript("OnClick")(tabs[2])
+    assert(notified == 2 and shownAtNotify == true, "after the page is shown")
+    panels[2]._wmRemeasure()
+    assert(notified == 3, "a page re-measure reports")
+  end
 end
