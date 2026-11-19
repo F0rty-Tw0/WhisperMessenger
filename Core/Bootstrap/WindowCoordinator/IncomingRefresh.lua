@@ -46,6 +46,51 @@ function IncomingRefresh.Debounce(cTimer, delay, isWindowVisible, onFlush)
   end
 end
 
+-- A non-selected focus key makes the coordinator refresh contacts only, so
+-- the open conversation wins whenever it is among the changed keys.
+local function pickFocusKey(dirtyKeys, getSelectedKey)
+  local selectedKey = getSelectedKey()
+  if selectedKey ~= nil and dirtyKeys[selectedKey] then
+    return selectedKey
+  end
+  return (next(dirtyKeys))
+end
+
+-- Whispers: every refresh asked for in one frame runs once on the next frame
+-- (zero-delay timer), never later. Unlike Debounce it also runs while the
+-- window is hidden, since that refresh keeps the icon badges current. It
+-- stays a full contact rebuild: an append can expire messages of other
+-- chats. Without a timer API each request refreshes at once.
+-- options: cTimer, refreshWindow(focusKey), getSelectedKey.
+function IncomingRefresh.NextFrame(options)
+  local cTimer = options.cTimer
+  local refreshWindow = options.refreshWindow
+  local getSelectedKey = options.getSelectedKey
+  local pending = {}
+  local armed = false
+
+  local function flush()
+    armed = false
+    local keys = pending
+    pending = {}
+    PerfCounters.Increment("refreshes")
+    refreshWindow(pickFocusKey(keys, getSelectedKey))
+  end
+
+  return function(key)
+    if not (cTimer and type(cTimer.After) == "function") then
+      refreshWindow(key)
+      return
+    end
+    pending[key] = true
+    if armed then
+      return
+    end
+    armed = true
+    cTimer.After(0, flush)
+  end
+end
+
 -- options: cTimer, delay, isWindowVisible, refreshWindow(focusKey, dirtyKeys),
 -- getSelectedKey. A line without a key forces a full rebuild.
 function IncomingRefresh.Create(options)
@@ -60,10 +105,7 @@ function IncomingRefresh.Create(options)
       refreshWindow(nil, nil)
       return
     end
-    -- A non-selected focus key makes the coordinator refresh contacts only.
-    local selectedKey = getSelectedKey()
-    local focusKey = selectedKey ~= nil and dirtyKeys[selectedKey] and selectedKey or next(dirtyKeys)
-    refreshWindow(focusKey, dirtyKeys)
+    refreshWindow(pickFocusKey(dirtyKeys, getSelectedKey), dirtyKeys)
   end)
 
   return {
