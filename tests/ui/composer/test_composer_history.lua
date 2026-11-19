@@ -57,9 +57,15 @@ return function()
 
   -- test_recall_runs_refresh_while_putting
   do
-    local _, history, press, got = build()
+    local _, _, press, got = build()
     press("UP")
     assert(got.refreshed == 1 and got.putting == true, "refresh runs once while putting")
+  end
+
+  -- test_putting_ends_after_the_recall
+  do
+    local _, history, press = build()
+    press("UP")
     assert(history.putting() == false, "putting ends after the recall")
   end
 
@@ -85,11 +91,16 @@ return function()
     assert(input:GetText() == "typed" and got.asked == 0, "Up in a box with text keeps the default")
   end
 
-  -- test_down_when_idle_keeps_the_default
+  -- test_down_on_idle_empty_box_does_nothing
   do
     local input, _, press = build()
     press("DOWN")
     assert(input:GetText() == "", "Down on an empty box does nothing")
+  end
+
+  -- test_down_on_idle_box_with_text_does_nothing
+  do
+    local input, _, press = build()
     input:SetText("typed")
     press("DOWN")
     assert(input:GetText() == "typed", "Down in a box with text does nothing")
@@ -122,16 +133,31 @@ return function()
     assert(input:GetText() == "e1", "Down steps to the newer line")
   end
 
-  -- test_down_at_newest_clears_and_ends
+  -- test_down_at_newest_clears_the_box
+  do
+    local input, _, press = build()
+    press("UP")
+    press("DOWN")
+    assert(input:GetText() == "", "Down at the newest line clears the box")
+  end
+
+  -- test_down_after_clearing_does_nothing
   do
     local input, _, press, got = build()
     press("UP")
     press("DOWN")
-    assert(input:GetText() == "", "Down at the newest line clears the box")
+    local refreshed = got.refreshed
     press("DOWN")
-    assert(input:GetText() == "", "the recall ended")
+    assert(got.refreshed == refreshed, "the recall ended, so Down puts nothing")
+  end
+
+  -- test_up_after_clearing_builds_a_fresh_list
+  do
+    local _, _, press, got = build()
     press("UP")
-    assert(input:GetText() == "e1" and got.asked == 2, "the next Up starts a fresh recall")
+    press("DOWN")
+    press("UP")
+    assert(got.asked == 2, "the next Up starts a fresh recall, got " .. got.asked .. " lists")
   end
 
   -- test_up_after_an_unseen_edit_ends_the_recall
@@ -192,23 +218,36 @@ return function()
     assert(input:GetText() == "e2", "Left/Right keep the recall")
   end
 
-  -- test_other_keys_and_unhandled_presses_reach_the_old_handler
-  do
+  local function withRecorder()
     local calls = {}
     local input, _, press = build(nil, {
       previous = function(self, key)
         calls[#calls + 1] = { self = self, key = key }
       end,
     })
-    input:SetText("typed")
+    return input, press, calls
+  end
+
+  -- test_other_keys_reach_the_old_handler
+  do
+    local input, press, calls = withRecorder()
     press("LEFT")
+    assert(calls[1] and calls[1].self == input and calls[1].key == "LEFT", "LEFT passed on")
+  end
+
+  -- test_unhandled_up_reaches_the_old_handler
+  do
+    local input, press, calls = withRecorder()
+    input:SetText("typed")
     press("UP")
-    assert(#calls == 2, "other keys and unhandled Up reach the old handler")
-    assert(calls[1].self == input and calls[1].key == "LEFT", "LEFT passed on")
-    assert(calls[2].self == input and calls[2].key == "UP", "unhandled UP passed on")
-    input:SetText("")
+    assert(calls[1] and calls[1].self == input and calls[1].key == "UP", "unhandled UP passed on")
+  end
+
+  -- test_handled_up_skips_the_old_handler
+  do
+    local _, press, calls = withRecorder()
     press("UP")
-    assert(#calls == 2, "a handled Up does not reach the old handler")
+    assert(#calls == 0, "a handled Up does not reach the old handler")
   end
 
   -- test_missing_get_sent_history_ignores_up

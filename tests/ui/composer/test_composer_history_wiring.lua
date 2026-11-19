@@ -77,14 +77,36 @@ return function()
     assert(t.typed[#t.typed] == "e1!", "editing the recalled line sends the typing notice")
   end
 
-  -- test_in_game_echo_still_sends_no_notice
-  do
+  local function echoedTwoUps()
     local t = build()
     echoSetText(t.input)
     t.up()
     t.up()
+    return t
+  end
+
+  -- test_in_game_echo_still_sends_no_notice
+  do
+    local t = echoedTwoUps()
     assert(noTypingNotice(t.typed), "the SetText echo sends no typing notice")
+  end
+
+  -- test_in_game_echo_keeps_the_recall
+  do
+    local t = echoedTwoUps()
     assert(t.input:GetText() == "e2", "the echo does not end the recall")
+  end
+
+  -- test_edit_back_to_the_recalled_line_still_ends_the_recall
+  do
+    local t = build()
+    t.up()
+    t.input:SetText("e1x")
+    t.input.scripts.OnTextChanged(t.input)
+    t.input:SetText("e1")
+    t.input.scripts.OnTextChanged(t.input)
+    t.up()
+    assert(t.input:GetText() == "e1", "an edit ends the recall even when the text comes back")
   end
 
   -- test_recall_hides_the_placeholder
@@ -94,13 +116,28 @@ return function()
     assert(t.composer.placeholder.shown == false, "placeholder hidden for a recalled line")
   end
 
-  -- test_down_at_newest_clears_box_and_draft
-  do
+  local function upThenDown()
     local t = build()
     t.up()
     t.down()
+    return t
+  end
+
+  -- test_down_at_newest_clears_the_box
+  do
+    local t = upThenDown()
     assert(t.input:GetText() == "", "Down at the newest clears the box")
+  end
+
+  -- test_down_at_newest_shows_the_placeholder
+  do
+    local t = upThenDown()
     assert(t.composer.placeholder.shown == true, "placeholder back on the empty box")
+  end
+
+  -- test_down_at_newest_clears_the_draft
+  do
+    local t = upThenDown()
     assert(t.saved[#t.saved].text == "", "the draft is cleared too")
   end
 
@@ -134,12 +171,19 @@ return function()
     assert(t.input:GetText() == "e2", "Esc keeps the recall")
   end
 
-  -- test_recall_uses_the_open_chat_cap
+  -- test_recall_uses_the_group_chat_cap
   do
     local t = build()
     t.composer.setMaxBytes("PARTY")
     t.up()
     assert(t.fits(string.rep("a", 256)) == false, "group chat cap applies")
+  end
+
+  -- test_recall_fit_check_follows_a_chat_switch
+  do
+    local t = build()
+    t.composer.setMaxBytes("PARTY")
+    t.up()
     t.composer.setMaxBytes("WOW")
     assert(t.fits(string.rep("a", 256)) == true, "whisper cap applies after a switch")
   end
