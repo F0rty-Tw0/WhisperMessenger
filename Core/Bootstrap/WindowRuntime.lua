@@ -147,6 +147,7 @@ function WindowRuntime.Create(options)
     livePresenceSender = LivePresenceSender,
     buildMessagePreview = buildLatestIncomingPreview,
     externalPreview = externalPreview,
+    guardWhisperRefresh = options.guardWhisperRefresh,
     selectConversation = function(conversationKey)
       return actions.selectConversation(conversationKey)
     end,

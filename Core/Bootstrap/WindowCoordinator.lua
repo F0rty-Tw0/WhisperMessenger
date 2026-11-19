@@ -315,6 +315,7 @@ function WindowCoordinator.Create(options)
       return coordinator.refreshWindow(focusKey)
     end,
     getSelectedKey = getSelectedKey,
+    guard = options.guardWhisperRefresh,
   })
 
   -- accept(key), when given, limits the search (e.g. to the open tab).
