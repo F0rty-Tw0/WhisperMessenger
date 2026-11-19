@@ -31,6 +31,7 @@ function FakeGamepad.New()
   local fcm = {}
   function fcm:FrameShown(frame)
     log("FrameShown", frame)
+    ---@type boolean|string|nil
     local result = true
     if #env.shownResults > 0 then
       result = table.remove(env.shownResults, 1)

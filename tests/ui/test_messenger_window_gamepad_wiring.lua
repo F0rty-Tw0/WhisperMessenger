@@ -2,6 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
 
 local function fakeNav()
+  ---@type table<string, any>
   local nav = { seen = {} }
   for _, name in ipairs({ "onShow", "onHide", "refresh", "setCloseHandler", "setScrollFrame", "ignore" }) do
     nav[name] = function(...)

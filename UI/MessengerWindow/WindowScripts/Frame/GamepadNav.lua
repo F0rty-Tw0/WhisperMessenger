@@ -32,6 +32,11 @@ local function inert()
 end
 
 -- A dep given as false counts as absent: no fallback to the default.
+---@generic T
+---@param deps table
+---@param field string
+---@param default T
+---@return T
 local function pick(deps, field, default)
   local value = deps[field]
   if value == nil then
