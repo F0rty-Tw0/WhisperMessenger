@@ -3,6 +3,8 @@
 -- Mirrors Blizzard's SmartNavigation.lua: FrameShown creates the panel info
 -- and fires the frame's panel-info-added callback (#L826-L845, #L839);
 -- the callback setter only stores it on the frame (#L1982-L1984).
+-- env.press mirrors how SmartNav runs a jump override (#L1503-L1520,
+-- Utility.lua#L513-L524).
 local FakeGamepad = {}
 
 local GLOBALS = {
@@ -10,6 +12,8 @@ local GLOBALS = {
   "SmartNavigation",
   "SmartNavigation_MarkFrameIgnored",
   "SmartNavigation_MarkFrameFocusable",
+  "SmartNavigation_AddJumpNavigationOverride",
+  "SMART_NAV_INPUT_DIRECTION",
   "InCombatLockdown",
   "C_RestrictedActions",
 }
@@ -85,6 +89,36 @@ function FakeGamepad.New()
     log("MarkFrameFocusable", widget)
   end
 
+  -- As Utility.lua#L6-L12.
+  env.directions = {
+    UP = { x = 0, y = 1, dirKey = "up" },
+    DOWN = { x = 0, y = -1, dirKey = "down" },
+    LEFT = { x = -1, y = 0, dirKey = "left" },
+    RIGHT = { x = 1, y = 0, dirKey = "right" },
+  }
+
+  local overrides = setmetatable({}, { __mode = "k" })
+  function env.addJumpOverride(button, direction, override)
+    log("AddJumpNavigationOverride", button, direction, override)
+    overrides[button] = overrides[button] or {}
+    overrides[button][direction.dirKey] = override
+  end
+
+  -- A D-pad press on widget: "stay" when focus stays on it, else "move".
+  -- A function override runs first; then any override in combat is blocked.
+  function env.press(widget, dirName)
+    local stored = overrides[widget] and overrides[widget][env.directions[dirName].dirKey]
+    local result = stored
+    if type(stored) == "function" then
+      result = stored()
+    end
+    if stored ~= nil and env.combat then
+      log("ActionBlocked", widget)
+      return "stay"
+    end
+    return result == true and "stay" or "move"
+  end
+
   function env.inCombat()
     return env.combat
   end
@@ -140,6 +174,8 @@ function FakeGamepad.New()
       smartNavigation = env.smartNavigation,
       markIgnored = env.markIgnored,
       markFocusable = env.markFocusable,
+      addJumpOverride = env.addJumpOverride,
+      directions = env.directions,
       inCombat = env.inCombat,
       after = env.after,
       createFrame = env.createFrame,
@@ -159,6 +195,8 @@ function FakeGamepad.New()
     rawset(_G, "SmartNavigation", env.smartNavigation)
     rawset(_G, "SmartNavigation_MarkFrameIgnored", env.markIgnored)
     rawset(_G, "SmartNavigation_MarkFrameFocusable", env.markFocusable)
+    rawset(_G, "SmartNavigation_AddJumpNavigationOverride", env.addJumpOverride)
+    rawset(_G, "SMART_NAV_INPUT_DIRECTION", env.directions)
     rawset(_G, "InCombatLockdown", env.inCombat)
     rawset(_G, "C_RestrictedActions", nil)
   end

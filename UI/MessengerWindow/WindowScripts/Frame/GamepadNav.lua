@@ -28,6 +28,8 @@ local function inert()
     setScrollFrame = noop,
     ignore = noop,
     markFocusable = noop,
+    setStepper = noop,
+    setEdgeOverride = noop,
     isActive = never,
     isRegistered = never,
   }
@@ -69,8 +71,8 @@ local function defaultCreateFrame()
 end
 
 -- frame: the messenger window. deps (all optional): isForever, gamepadMode,
--- smartNavigation, markIgnored, markFocusable, inCombat, after, createFrame;
--- default to the game's.
+-- smartNavigation, markIgnored, markFocusable, addJumpOverride, directions,
+-- inCombat, after, createFrame; default to the game's.
 function GamepadNav.New(frame, deps)
   deps = deps or {}
   local isForever = pick(deps, "isForever", FlavorCompat.isForever)
@@ -82,6 +84,8 @@ function GamepadNav.New(frame, deps)
   end
   local markIgnored = pick(deps, "markIgnored", _G.SmartNavigation_MarkFrameIgnored)
   local markFocusable = pick(deps, "markFocusable", _G.SmartNavigation_MarkFrameFocusable)
+  local addJumpOverride = pick(deps, "addJumpOverride", _G.SmartNavigation_AddJumpNavigationOverride)
+  local directions = pick(deps, "directions", _G.SMART_NAV_INPUT_DIRECTION)
   local inCombat = pick(deps, "inCombat", defaultInCombat)
   local after = pick(deps, "after", defaultAfter)
   local createFrame = pick(deps, "createFrame", defaultCreateFrame)
@@ -91,7 +95,13 @@ function GamepadNav.New(frame, deps)
   local refreshScheduled = false
   local pendingRegister, pendingHide, pendingRefresh, pendingScroll = false, false, false, false
   local scrollTarget = nil
-  local marks = GamepadMarks.New({ inCombat = inCombat, markIgnored = markIgnored, markFocusable = markFocusable })
+  local marks = GamepadMarks.New({
+    inCombat = inCombat,
+    markIgnored = markIgnored,
+    markFocusable = markFocusable,
+    addJumpOverride = addJumpOverride,
+    directions = directions,
+  })
 
   local function register()
     local result = fcm:FrameShown(frame)
@@ -218,6 +228,8 @@ function GamepadNav.New(frame, deps)
 
   nav.ignore = marks.ignore
   nav.markFocusable = marks.markFocusable
+  nav.setStepper = marks.setStepper
+  nav.setEdgeOverride = marks.setEdgeOverride
 
   function nav.isActive()
     return true
