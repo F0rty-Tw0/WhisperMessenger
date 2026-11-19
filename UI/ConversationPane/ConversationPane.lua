@@ -55,6 +55,7 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   view.transcript.seenReceipts = isWhisper
   -- Group/channel contacts carry the last sender's class, so only whispers lend it to names.
   view.transcript.senderFallbackClassTag = isWhisper and selectedContact.classTag or nil
+  view.transcript.conversationContact = selectedContact
   -- The pause notice shows exactly while chat is locked: queued bubbles
   -- offer Send now only without it.
   view.transcript.chatLocked = (noticeText or "") ~= ""

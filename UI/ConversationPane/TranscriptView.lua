@@ -153,6 +153,9 @@ local function layoutOptions(transcript)
   end
   options.fallbackClassTag = transcript.fallbackClassTag
   options.senderFallbackClassTag = transcript.senderFallbackClassTag
+  local contact = transcript.conversationContact
+  options.conversationChannel = contact and contact.channel or nil
+  options.conversationDisplayName = contact and contact.displayName or nil
   options.unreadDividerMessage = transcript.unreadDividerMessage
   options.onRevealCensored = transcript._onRevealCensored
   options.onReact = transcript.onReact
