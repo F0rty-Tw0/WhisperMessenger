@@ -51,6 +51,7 @@ return function()
     windowAnimation = false,
     iconDock = false,
     openAtSavedSpot = true,
+    showEmojiButton = false,
     -- behavior
     dimWhenMoving = false,
     autoFocusComposer = true,
@@ -195,6 +196,7 @@ return function()
   assert(appearanceCapture.config.windowAnimation == false, "appearance config should carry windowAnimation")
   assert(appearanceCapture.config.iconDock == false, "appearance config should carry iconDock")
   assert(appearanceCapture.config.openAtSavedSpot == true, "appearance config should carry openAtSavedSpot")
+  assert(appearanceCapture.config.showEmojiButton == false, "appearance config should carry showEmojiButton")
 
   -- Notifications owns sound settings only.
   assert(
