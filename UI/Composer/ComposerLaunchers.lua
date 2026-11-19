@@ -19,9 +19,11 @@ local function quickReplyIconColor()
   return Theme.COLORS.action_icon or Theme.COLORS.text_secondary
 end
 
--- options = { enabled, getMaxBytes, getQuickReplies }
+-- options = { enabled, getMaxBytes, getQuickReplies, showEmoji }
+-- showEmoji false hides the emoji button; anything else shows it.
 function ComposerLaunchers.Create(factory, pane, input, options)
   local enabled = options.enabled == true
+  local emojiShown = options.showEmoji ~= false
   local function isEnabled()
     return enabled
   end
@@ -92,6 +94,26 @@ function ComposerLaunchers.Create(factory, pane, input, options)
     quickReplyPicker:refreshTheme()
   end
 
+  -- True only when the shown state changed. Hiding also closes the picker.
+  function launchers.setEmojiShown(shown)
+    shown = shown == true
+    if shown == emojiShown then
+      return false
+    end
+    emojiShown = shown
+    emojiButton:SetShown(shown)
+    if not shown then
+      emojiPicker:close()
+    end
+    return true
+  end
+
+  -- Buttons on the composer row: quick reply, emoji when shown, send.
+  function launchers.buttonCount()
+    return emojiShown and 3 or 2
+  end
+
+  emojiButton:SetShown(emojiShown)
   launchers.setEnabled(enabled)
   return launchers
 end
