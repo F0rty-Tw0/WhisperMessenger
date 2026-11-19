@@ -5,7 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local RowActions = ns.MessengerWindowRowActions or require("WhisperMessenger.UI.MessengerWindow.RowActions")
-local LifecycleWiring = ns.MessengerWindowLifecycleWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
+local LifecycleSetup = ns.MessengerWindowLifecycleSetup or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleSetup")
 local WindowShell = ns.MessengerWindowWindowShell or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowShell")
 local PanelWiring = ns.MessengerWindowPanelWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PanelWiring")
 local ComposerRuntime = ns.MessengerWindowComposerRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ComposerRuntime")
@@ -29,21 +29,12 @@ function MessengerWindow.Create(factory, options)
   local shell = WindowShell.Build(factory, options)
   local settingsConfig, compactLayout = shell.settingsConfig, shell.compactLayout
   local initialState, windowGeometry = shell.initialState, shell.windowGeometry
-  local currentContactsWidth = shell.contactsWidth
   local chrome, frame, layout = shell.chrome, shell.frame, shell.layout
   local gamepadWiring = GamepadWiring.Create(shell)
   local settingsRuntime = shell.settingsRuntime
-  local settingsPanels = settingsRuntime.settingsPanels
   local compactMode = CompactWiring.Hooks()
   local dock = DockWiring.Hooks()
   local rowActions = RowActions.Collect(options)
-
-  local function isShown(target)
-    if target and target.IsShown then
-      return target:IsShown()
-    end
-    return target ~= nil and target.shown == true
-  end
 
   -- Contacts runtime. The selection controller and conversation pane are
   -- built after it, so its callbacks read these locals at call time.
@@ -69,7 +60,6 @@ function MessengerWindow.Create(factory, options)
     getSelectedConversationKey = getSelectedConversationKey,
     onNavTargetsChanged = gamepadWiring.refresh,
   })
-  local contactsController = contactsRuntime.contactsController
   local refreshContacts = contactsRuntime.refreshContacts
   local getCurrentContacts = contactsRuntime.getCurrentContacts
 
@@ -111,7 +101,6 @@ function MessengerWindow.Create(factory, options)
   local panelHost = panelWiring.panelHost
   local windowVisibility = panelWiring.windowVisibility
   local setOptionsVisible = windowVisibility.setOptionsVisible
-  local closeWindow = windowVisibility.closeWindow
 
   local composerRuntime = ComposerRuntime.Create(factory, {
     frame = frame,
@@ -121,7 +110,7 @@ function MessengerWindow.Create(factory, options)
     conversation = conversation,
     messageActions = messageActions,
     settingsRuntime = settingsRuntime,
-    closeWindow = closeWindow,
+    closeWindow = windowVisibility.closeWindow,
     refreshContacts = refreshContacts,
     onSelectionChanged = function(key)
       compactMode.onSelection(key)
@@ -130,71 +119,24 @@ function MessengerWindow.Create(factory, options)
   local composer = composerRuntime.composer
   local composerInput = composer.input
   local windowAlpha = composerRuntime.windowAlpha
-  local refreshWindowAlpha = windowAlpha.refreshWindowAlpha
   selectionController = composerRuntime.selectionController
   local refreshSelection = composerRuntime.refreshSelection
-  local isComposerFocusHeld = composerRuntime.isComposerFocusHeld
 
   local wrappedPosition, onResetWindowPosition = CompactWiring.WrapPosition(compactMode, options)
   local onPositionChanged = DockWiring.WrapPosition(dock, wrappedPosition)
 
-  local relayoutWindow, scriptResult = LifecycleWiring.Setup({
-    layout = layout,
-    setContactsWidth = function(nextContactsWidth)
-      currentContactsWidth = nextContactsWidth or currentContactsWidth
-      windowGeometry.setContactsWidth(currentContactsWidth)
-    end,
-    composer = composer,
-    bindComposerHeight = composerRuntime.bindHeightChanged,
-    contactsController = contactsController,
+  local relayoutWindow, scriptResult = LifecycleSetup.Run(shell, options, {
+    composerRuntime = composerRuntime,
+    contactsRuntime = contactsRuntime,
     conversation = conversation,
-    refreshContacts = refreshContacts,
+    panelWiring = panelWiring,
+    compactMode = compactMode,
+    dock = dock,
     getSelectedConversationKey = getSelectedConversationKey,
-    onContactsWidth = panelWiring.onContactsWidth,
-    getCurrentContacts = getCurrentContacts,
-    selectedContact = options.selectedContact,
-    initialConversation = options.conversation,
-    initialStatus = options.status,
-    refreshSelection = refreshSelection,
-    setOptionsVisible = setOptionsVisible,
-    chrome = chrome,
-    settingsPanels = settingsPanels,
-    closeWindow = closeWindow,
     onResetWindowPosition = onResetWindowPosition,
-    onWindowMoved = function()
-      dock.onWindowMoved()
-    end,
-    onResetIconPosition = options.onResetIconPosition,
-    onClearAllChats = options.onClearAllChats,
-    onStartConversation = options.onStartConversation,
-    isShown = isShown,
-    windowGeometry = windowGeometry,
-    frame = frame,
-    refreshWindowAlpha = refreshWindowAlpha,
     onPositionChanged = onPositionChanged,
-    onBack = function()
-      return compactMode.onBack()
-    end,
-    theme = Theme,
-    composerInput = composerInput,
-    getAutoFocusChatInput = function()
-      return not isComposerFocusHeld() and settingsConfig.autoFocusComposer == true and not compactMode.isListView()
-    end,
-    getEscapeClosesWindow = function()
-      return settingsConfig.escapeClosesWindow ~= false
-    end,
-    onStrataChanged = function(strata)
-      dock.onStrataChanged(strata)
-    end,
-    isWindowPart = function(candidate)
-      return dock.isWindowPart(candidate)
-    end,
-    isContactsCollapsed = windowGeometry.isCollapsed,
-    setContactsCollapsed = function(collapsed, pointerWidth)
-      contactsRail.snap(collapsed, pointerWidth)
-    end,
-    onStateApplied = function(appliedState)
-      contactsRail.setCollapsed(appliedState.contactsCollapsed == true)
+    getContactsRail = function()
+      return contactsRail
     end,
   })
   panelWiring.hookWindowHide()
