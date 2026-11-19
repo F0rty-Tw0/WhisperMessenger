@@ -69,6 +69,7 @@ Model/CharacterMergeMap.lua
 Model/ConversationStore/StoreRetention.lua
 Model/ConversationStore/RepeatCollapse.lua
 Model/ConversationStore/ChronologicalInsert.lua
+Model/ConversationStore/NewRecord.lua
 Model/ConversationStore.lua
 Model/CharacterMergeFold.lua
 Model/Filters/IgnoreList.lua

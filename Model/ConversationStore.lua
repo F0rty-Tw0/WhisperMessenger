@@ -7,6 +7,7 @@ end
 local StoreRetention = ns.ConversationStoreRetention or require("WhisperMessenger.Model.ConversationStore.StoreRetention")
 local MessageMetadata = ns.ConversationStoreMessageMetadata or require("WhisperMessenger.Model.ConversationStore.MessageMetadata")
 local ChronologicalInsert = ns.ConversationStoreChronologicalInsert or require("WhisperMessenger.Model.ConversationStore.ChronologicalInsert")
+local NewRecord = ns.ConversationStoreNewRecord or require("WhisperMessenger.Model.ConversationStore.NewRecord")
 -- stylua: ignore end
 
 local Store = {}
@@ -29,47 +30,9 @@ function Store.Find(state, key)
   return conversations[key]
 end
 
-local function newConversation(key)
-  return {
-    messages = {},
-    unreadCount = 0,
-    unreadActivityCount = 0,
-    lastPreview = nil,
-    lastActivityAt = 0,
-    lastActivityLineID = nil,
-    lastIncomingSender = nil,
-    lastIncomingPreview = nil,
-    lastIncomingAt = nil,
-    lastIncomingLineID = nil,
-    guid = nil,
-    bnetAccountID = nil,
-    battleTag = nil,
-    gameAccountName = nil,
-    className = nil,
-    classTag = nil,
-    raceName = nil,
-    raceTag = nil,
-    factionName = nil,
-    conversationKey = key,
-  }
-end
-
-local CONVERSATION_METADATA_FIELDS = {
-  "channel",
-  "displayName",
-  "contactDisplayName",
-  "guid",
-  "bnetAccountID",
-  "battleTag",
-  "gameAccountName",
-  "className",
-  "classTag",
-  "raceName",
-  "raceTag",
-  "factionName",
-  "conversationID",
-  "lastActivityAt",
-}
+-- A fresh, unstored record; the merge fold stores one directly so retention
+-- cannot evict the chat it folds in.
+Store.NewRecord = NewRecord.New
 
 function Store.EnsureConversation(state, key, metadata)
   state.conversations = state.conversations or {}
@@ -78,14 +41,7 @@ function Store.EnsureConversation(state, key, metadata)
     return conversation, false
   end
 
-  conversation = newConversation(key)
-  if type(metadata) == "table" then
-    for _, field in ipairs(CONVERSATION_METADATA_FIELDS) do
-      if metadata[field] ~= nil then
-        conversation[field] = metadata[field]
-      end
-    end
-  end
+  conversation = Store.NewRecord(key, metadata)
   state.conversations[key] = conversation
   StoreRetention.EvictOldest(state, key)
   return conversation, true
