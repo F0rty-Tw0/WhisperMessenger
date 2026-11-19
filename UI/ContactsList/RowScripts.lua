@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local ContextMenu = ns.ContactsListContextMenu or require("WhisperMessenger.UI.ContactsList.ContextMenu")
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
@@ -176,6 +177,8 @@ end
 --- refresh with fresh callbacks takes effect without rebinding.
 function RowScripts.bindClick(row, _item, options)
   row._wmRowOptions = options
+  -- WoW: Forever gamepad UI: X on the focused row right-clicks it.
+  row.buttonContext = Constants.GAMEPAD_RIGHT_CLICK_CONTEXT
   if row.RegisterForClicks then
     row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
   end

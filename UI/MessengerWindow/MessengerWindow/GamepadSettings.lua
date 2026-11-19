@@ -37,12 +37,16 @@ local function followSettingsPane(nav, settings)
   end
 end
 
+-- True when the widget carried a tag (and so went to the nav).
 local function handOver(nav, widget)
+  local tagged = false
   if type(widget._wmPadStep) == "function" then
+    tagged = true
     nav.markFocusable(widget)
     nav.setStepper(widget, widget._wmPadStep)
   end
   if type(widget._wmPadEdges) == "table" then
+    tagged = true
     for _, direction in ipairs({ "UP", "DOWN" }) do
       local onPress = widget._wmPadEdges[direction]
       if onPress then
@@ -50,19 +54,19 @@ local function handOver(nav, widget)
       end
     end
   end
+  return tagged
 end
 
--- settings (all optional): menuScrollView, contentScrollView,
--- chatScrollFrame, optionsPanel, panels (the settings pages; false = not
--- built yet). Returns onTargetsChanged: hands new tagged widgets over,
--- then re-scans.
+-- settings (all optional): contentScrollView, chatScrollFrame,
+-- optionsPanel, panels (the settings pages; false = not built yet).
+-- Returns onTargetsChanged: hands new tagged widgets over, then re-scans.
 function GamepadSettings.Attach(nav, settings)
   local seen = setmetatable({}, { __mode = "k" })
 
   local function walk(frame)
-    if not seen[frame] then
+    -- Memo only what went over: a widget tagged later is still picked up.
+    if not seen[frame] and handOver(nav, frame) then
       seen[frame] = true
-      handOver(nav, frame)
     end
     if type(frame.GetChildren) ~= "function" then
       return

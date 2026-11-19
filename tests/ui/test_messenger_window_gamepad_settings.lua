@@ -34,7 +34,6 @@ return function()
 
   local function fakeSettings()
     return {
-      menuScrollView = { scrollFrame = factory.CreateFrame("ScrollFrame", nil, parent) },
       contentScrollView = { scrollFrame = factory.CreateFrame("ScrollFrame", nil, parent) },
       chatScrollFrame = factory.CreateFrame("ScrollFrame", nil, parent),
       optionsPanel = factory.CreateFrame("Frame", nil, parent),
@@ -81,6 +80,19 @@ return function()
     assert(nav.count("setStepper") == 2 and nav.last("setStepper")[2] == sliderB._wmPadStep, "stepper is the widget's own step")
   end
 
+  -- test_widget_tagged_after_its_first_scan_is_handed_over
+  do
+    local nav, s = fakeNav(), fakeSettings()
+    local page = factory.CreateFrame("Frame", nil, parent)
+    local slider = factory.CreateFrame("Slider", nil, page)
+    s.panels = { page }
+    local onTargetsChanged = GamepadSettings.Attach(nav, s)
+    assert(nav.count("markFocusable") == 0, "untagged: nothing to hand over yet")
+    slider._wmPadStep = function() end
+    onTargetsChanged()
+    assert(nav.count("markFocusable") == 1 and nav.last("setStepper")[1] == slider, "tagged later: handed over on the next scan")
+  end
+
   -- test_edge_tags_become_edge_overrides
   do
     local nav, s = fakeNav(), fakeSettings()
@@ -91,9 +103,13 @@ return function()
     end
     button._wmPadEdges = { DOWN = down }
     s.panels = { page }
-    GamepadSettings.Attach(nav, s)
+    local onTargetsChanged = GamepadSettings.Attach(nav, s)
+    onTargetsChanged()
     local args = nav.last("setEdgeOverride")
-    assert(nav.count("setEdgeOverride") == 1 and args[1] == button and args[2] == "DOWN" and args[3] == down, "one edge override")
+    assert(
+      nav.count("setEdgeOverride") == 1 and args[1] == button and args[2] == "DOWN" and args[3] == down,
+      "one edge override, not again on re-scan"
+    )
   end
 
   -- test_missing_settings_parts_do_nothing

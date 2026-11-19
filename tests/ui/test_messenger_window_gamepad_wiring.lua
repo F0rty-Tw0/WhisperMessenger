@@ -4,10 +4,14 @@ local FindUI = require("tests.helpers.find_ui")
 local DropdownSelector = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
+local Localization = require("WhisperMessenger.Locale.Localization")
 
-local function fakeNav()
+local function fakeNav(active)
   ---@type table<string, any>
   local nav = { seen = {} }
+  function nav.isActive()
+    return active
+  end
   for _, name in ipairs({
     "onShow",
     "onHide",
@@ -18,6 +22,10 @@ local function fakeNav()
     "markFocusable",
     "setStepper",
     "setEdgeOverride",
+    "popupShown",
+    "popupHidden",
+    "setPopupCloseHandler",
+    "bindRightClick",
   }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
@@ -58,6 +66,7 @@ local function setup(opts)
     composer = { box = box, input = input },
     conversation = {
       transcript = { scrollFrame = factory.CreateFrame("ScrollFrame", nil, frame), content = factory.CreateFrame("Frame", nil, frame) },
+      headerFrame = factory.CreateFrame("Frame", nil, frame),
     },
     compactMode = {
       onBack = function()
@@ -82,7 +91,7 @@ local function setup(opts)
       end,
     },
   }
-  local nav = opts.env and GamepadNav.New(frame, opts.env.deps()) or fakeNav()
+  local nav = opts.env and GamepadNav.New(frame, opts.env.deps()) or fakeNav(not opts.inactive)
   local wiring = GamepadWiring.Create(shell, nav)
   wiring.attach(refs)
   local closer
@@ -104,6 +113,8 @@ local function ignoredWith(nav, widget)
 end
 
 return function()
+  Localization.Configure({ language = "enUS" })
+
   -- test_window_show_and_hide_reach_the_nav
   do
     local t = setup()
@@ -131,7 +142,11 @@ return function()
         table.insert(order, c.name)
       end
     end
-    assert(table.concat(order, ",") == "MarkFrameIgnored,FrameShown,SetScrollFrameForFrame", "ignores, then register, then scroll frame")
+    assert(
+      table.concat(order, ",")
+        == "MarkFrameIgnored,FrameShown,SetScrollFrameForFrame,CreatePromptedBinding,CreatePromptedBindingFooter,ShowAndActivateBindings",
+      "ignores, then register, then scroll frame, then the X footer"
+    )
     assert(env.count("FrameShown") == 1, "one registration")
     assert(env.scrollFrameFor(t.frame) == t.refs.conversation.transcript.scrollFrame, "right stick scrolls the chat")
   end
@@ -176,8 +191,8 @@ return function()
     local t = setup()
     assert(ignoredWith(t.nav, t.shell.chrome.resizeGrip), "window resize grip")
     assert(ignoredWith(t.nav, t.shell.layout.contactsResizeHandle), "contacts resize handle")
-    local content, contentNoProp = ignoredWith(t.nav, t.refs.conversation.transcript.content)
-    assert(content and not contentNoProp, "transcript content and every bubble under it")
+    assert(not ignoredWith(t.nav, t.refs.conversation.transcript.content), "messages stay reachable")
+    assert(type(t.refs.conversation.transcript.onNavTargetsChanged) == "function", "new messages are tagged as they render")
     local holder, holderNoProp = ignoredWith(t.nav, t.refs.composer.box)
     assert(holder and holderNoProp == true, "composer holder alone; the message box under it stays")
   end
@@ -199,6 +214,37 @@ return function()
   do
     local t = setup({ settings = true })
     assert(type(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged) == "function", "tabs can report")
+  end
+
+  -- test_attach_binds_x_to_the_right_click_context
+  do
+    local t = setup()
+    local seen
+    for _, s in ipairs(t.nav.seen) do
+      if s.name == "bindRightClick" then
+        seen = s.args
+      end
+    end
+    assert(t.nav.count("bindRightClick") == 1, "bound once")
+    assert(seen[1] == GamepadNav.RIGHT_CLICK_CONTEXT and seen[2] == "Options", "our context, the existing Options label")
+  end
+
+  -- test_attach_tags_the_chat_header_for_x
+  do
+    local t = setup()
+    assert(t.refs.conversation.headerFrame.buttonContext == GamepadNav.RIGHT_CLICK_CONTEXT, "X opens the header menu")
+  end
+
+  -- test_inactive_nav_skips_the_settings_walk
+  do
+    local t = setup({ settings = true, inactive = true })
+    assert(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged == nil, "Retail and Classic: no settings walk")
+  end
+
+  -- test_inactive_nav_skips_the_transcript_walk
+  do
+    local t = setup({ inactive = true })
+    assert(t.refs.conversation.transcript.onNavTargetsChanged == nil, "Retail and Classic: no walk of the chat on render")
   end
 
   -- test_b_closes_an_open_settings_dropdown_through_the_wiring

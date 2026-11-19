@@ -172,6 +172,13 @@ local function layoutOptions(transcript)
   return options
 end
 
+-- WoW: Forever gamepad UI (GamepadTranscript): bubbles were laid out.
+local function reportNavTargets(transcript)
+  if type(transcript.onNavTargetsChanged) == "function" then
+    transcript.onNavTargetsChanged()
+  end
+end
+
 --- renderOptions may carry { force = true } for callers that change the
 --- viewport size or theme colors, which the per-message row diff cannot see.
 function TranscriptView.RenderTranscript(transcript, messages, renderOptions)
@@ -200,12 +207,14 @@ function TranscriptView.RenderTranscript(transcript, messages, renderOptions)
   transcript.point = pointValue(transcript.scrollFrame, transcript.point)
   transcript.width = sizeValue(transcript.scrollFrame, "GetWidth", "width", transcript.width or 0)
   transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcript.height or 0)
+  reportNavTargets(transcript)
   return lines
 end
 
 function TranscriptView.RefreshViewport(transcript)
   if Virtualization.RefreshViewport(transcript) then
     updateVisibleLegacyText(transcript)
+    reportNavTargets(transcript)
     return true
   end
   return false
