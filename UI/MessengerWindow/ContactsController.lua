@@ -119,7 +119,7 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
     if sizeValue(controller.content, "GetWidth", "width", 0) ~= boundWidth then
       controller.rows = ContactsList.Refresh(factory, controller.content, controller.rows, currentContacts, rowOptions)
     end
-    -- Rows came or went: the gamepad UI re-scans its buttons.
+    -- Contacts refreshed: let the gamepad UI re-scan the rows.
     if type(options.onNavTargetsChanged) == "function" then
       options.onNavTargetsChanged()
     end
