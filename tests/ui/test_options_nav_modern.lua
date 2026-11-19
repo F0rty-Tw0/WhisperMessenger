@@ -88,7 +88,7 @@ return function()
   -- test_settings_tabs_list_every_page_in_order
   do
     local menu = buildMenu(factory)
-    local expected = { "General", "Appearance", "Behavior", "Whispers", "Chats", "Filters", "Notifications", "Icons", "What's New" }
+    local expected = { "General", "Appearance", "Behavior", "Whispers", "Chats", "Filters", "Notifications", "Widget", "What's New" }
     assert(#menu.settingsTabs == #expected, "expected " .. #expected .. " tabs, got " .. #menu.settingsTabs)
     for index, label in ipairs(expected) do
       local tab = menu.settingsTabs[index]
