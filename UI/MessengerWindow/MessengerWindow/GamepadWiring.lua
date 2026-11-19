@@ -31,7 +31,8 @@ local function ignoreDeadStops(nav, shell, refs)
     nav.ignore(composer.box, true)
   end
   local transcript = refs.conversation and refs.conversation.transcript
-  if transcript then
+  -- Off Forever the nav is inert: no walk of the chat on every render.
+  if transcript and nav.isActive() then
     -- Messages are stops; their dead parts are skipped as they render.
     GamepadTranscript.Attach(nav, transcript)
   end

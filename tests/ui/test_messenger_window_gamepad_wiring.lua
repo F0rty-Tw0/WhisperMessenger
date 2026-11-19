@@ -241,6 +241,12 @@ return function()
     assert(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged == nil, "Retail and Classic: no settings walk")
   end
 
+  -- test_inactive_nav_skips_the_transcript_walk
+  do
+    local t = setup({ inactive = true })
+    assert(t.refs.conversation.transcript.onNavTargetsChanged == nil, "Retail and Classic: no walk of the chat on render")
+  end
+
   -- test_b_closes_an_open_settings_dropdown_through_the_wiring
   do
     local t = setup({ shown = true })
