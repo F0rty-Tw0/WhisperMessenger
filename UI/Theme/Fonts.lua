@@ -89,6 +89,7 @@ local currentFontColor = "default"
 local currentLanguage = "auto"
 -- Font the theme preset brings (EllesmereUI's); used under the Default family.
 local themeFontPath = nil
+local revision = 0
 
 local function selectMode(mode)
   local path = FontFamilies.FetchPath(mode)
@@ -203,6 +204,12 @@ local function applyFonts()
     GlyphCoverage.UpdateTwin(wmName, fontObj, size, flags, inheritedSource == nil)
   end
   GlyphCoverage.RefreshInputs()
+  revision = revision + 1
+end
+
+-- Goes up on every font change, so cached text measurements can tell they are stale.
+function Fonts.Revision()
+  return revision
 end
 
 function Fonts.Initialize(mode)
