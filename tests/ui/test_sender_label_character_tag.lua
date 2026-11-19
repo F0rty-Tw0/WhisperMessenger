@@ -70,4 +70,30 @@ return function()
     assert(shownText(frame._wmSenderNameFS) == "Arthas", "no chat name: the name falls back to the line's")
     assert(shownText(frame._wmSenderTagFS) == "- via Arthas", "the tag still shows")
   end
+
+  -- test_other_chat_lines_keep_their_own_sender_name
+  do
+    local line = { direction = "in", kind = "user", text = "hi", sentAt = 1000, playerName = "Jaina" }
+    local frame = render(line, { conversationChannel = "PARTY", conversationDisplayName = "Party" })
+    assert(shownText(frame._wmSenderNameFS) == "Jaina", "a party line shows its sender, got " .. tostring(shownText(frame._wmSenderNameFS)))
+    assert(shownText(frame._wmSenderTagFS) == nil, "a party line has no character tag")
+  end
+
+  -- test_time_sits_right_of_the_character_tag
+  do
+    local frame = render(characterLine("Arthas"), BN_CHAT)
+    assert(frame._wmSenderTimeFS.point[2] == frame._wmSenderTagFS, "the time follows the tag, not the name")
+  end
+
+  -- test_character_line_with_empty_name_has_no_tag
+  do
+    local frame = render(characterLine(""), BN_CHAT)
+    assert(shownText(frame._wmSenderTagFS) == nil, "an empty character name draws no tag")
+  end
+
+  -- test_empty_chat_name_keeps_the_character_name
+  do
+    local frame = render(characterLine("Arthas"), { conversationChannel = "BN", conversationDisplayName = "" })
+    assert(shownText(frame._wmSenderNameFS) == "Arthas", "an empty chat name falls back to the line's name")
+  end
 end

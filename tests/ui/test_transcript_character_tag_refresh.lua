@@ -42,4 +42,14 @@ return function()
   transcript.conversationContact = { channel = "BN", displayName = "Friend#1234" }
   TranscriptView.RenderTranscript(transcript, lines)
   assert(shown(transcript.content, "- via Arthas"), "the tag comes back once the friend's chat is open")
+
+  -- test_same_lines_relabel_when_only_the_chat_name_changes
+  transcript.conversationContact = { channel = "BN", displayName = "Sylvanas#5678" }
+  TranscriptView.RenderTranscript(transcript, lines)
+  assert(shown(transcript.content, "Sylvanas"), "a new chat name alone relabels the line")
+
+  -- test_same_lines_relabel_when_only_the_chat_channel_changes
+  transcript.conversationContact = { channel = "WOW", displayName = "Sylvanas#5678" }
+  TranscriptView.RenderTranscript(transcript, lines)
+  assert(not shown(transcript.content, "- via Arthas"), "a new chat channel alone drops the tag")
 end
