@@ -91,6 +91,18 @@ return function()
     assert(env.count("RefreshButtonGroups") == 1, "one after regen")
   end
 
+  -- test_combat_before_the_deferred_refresh_runs_it_after_regen
+  do
+    local env, _, nav = setup()
+    nav.onShow()
+    nav.refresh()
+    env.combat = true
+    env.flush()
+    assert(env.count("RefreshButtonGroups") == 0, "deferred run blocked in combat")
+    endCombat(env)
+    assert(env.count("RefreshButtonGroups") == 1, "exactly one after regen")
+  end
+
   -- test_ignore_in_combat_is_queued_and_done_once
   do
     local env, _, nav = setup()
