@@ -55,6 +55,15 @@ return function()
     assert(CharacterMergeMap.Get(merges, K_OTHER_REALM) == nil, "an entry that is not a table reads as unmerged")
   end
 
+  -- test_get_ignores_an_entry_without_a_name
+  do
+    local merges = fresh()
+    merges.merged[K] = { bnetKey = B }
+    merges.merged[K_OTHER_REALM] = { bnetKey = B, name = "" }
+    assert(CharacterMergeMap.Get(merges, K) == nil, "an entry without a name reads as unmerged")
+    assert(CharacterMergeMap.Get(merges, K_OTHER_REALM) == nil, "an entry with a blank name reads as unmerged")
+  end
+
   -- test_drop_removes_only_the_merged_entry
   do
     local merges = fresh()

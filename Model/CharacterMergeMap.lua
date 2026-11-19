@@ -30,6 +30,11 @@ function CharacterMergeMap.Get(merges, characterKey)
   if type(entry) ~= "table" or type(entry.bnetKey) ~= "string" then
     return nil
   end
+  -- Every line of a merged character is stamped with this name.
+  if type(entry.name) ~= "string" or entry.name == "" then
+    return nil
+  end
+
   return entry
 end
 
