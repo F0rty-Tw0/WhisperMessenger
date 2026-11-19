@@ -69,13 +69,20 @@ function FakeGamepad.New()
   function fcm:FrameHidden(frame)
     log("FrameHidden", frame)
     env.panelInfo[frame] = nil
+    fcm.isPopupFrame[frame] = nil
     listed[frame] = nil
   end
-  -- FrameControlsManager.lua#L563-L581: lists the popup, returns nothing.
+  -- FrameControlsManager.lua#L563-L581: lists the popup only when its inner
+  -- FrameShown adds it (refused while the gamepad UI is off), returns nothing.
   function fcm:HandlePopupShown(popup)
     log("HandlePopupShown", popup)
+    if env.refusePopups then
+      return
+    end
+    fcm.isPopupFrame[popup] = true
     listed[popup] = true
   end
+  fcm.isPopupFrame = {}
   -- True while FCM holds the popup: shown with HandlePopupShown, not yet hidden.
   function env.isListed(frame)
     return listed[frame] == true
