@@ -1,5 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FakeGamepad = require("tests.helpers.fake_gamepad")
+local FindUI = require("tests.helpers.find_ui")
+local DropdownSelector = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
 
@@ -197,5 +199,18 @@ return function()
   do
     local t = setup({ settings = true })
     assert(type(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged) == "function", "tabs can report")
+  end
+
+  -- test_b_closes_an_open_settings_dropdown_through_the_wiring
+  do
+    local t = setup({ shown = true })
+    local selector = DropdownSelector.Create(FakeUI.NewFactory(), t.frame, {
+      labelText = "Font Family",
+      optionsList = { { key = "a", label = "A" } },
+      initial = "a",
+    })
+    local menu = FindUI.dropdownMenu(selector.row)
+    selector.button:GetScript("OnClick")(selector.button)
+    assert(t.close() == true and not menu:IsShown() and #t.state.calls == 0, "B closes the dropdown, the window stays")
   end
 end

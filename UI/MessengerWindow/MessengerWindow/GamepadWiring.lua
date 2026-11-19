@@ -6,6 +6,7 @@ end
 local GamepadNav = ns.MessengerWindowGamepadNav or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadCloseOrder = ns.MessengerWindowGamepadCloseOrder or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadCloseOrder")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local GamepadSettings = ns.MessengerWindowGamepadSettings or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
 
 -- The messenger window's part of the WoW: Forever gamepad UI: register on
@@ -39,6 +40,7 @@ local function buildCloseHandler(frame, refs)
       return frame:IsShown()
     end,
     hideShownPopup = PickerPopup.HideShownEscapeFrame,
+    closeOpenDropdown = DropdownSelector.HideShownMenu,
     -- Read at press time: compact mode replaces the hook after the build.
     compactBack = function()
       return refs.compactMode.onBack()
