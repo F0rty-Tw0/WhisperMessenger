@@ -1,5 +1,6 @@
 local FakeScanResolver = require("tests.helpers.fake_scan_resolver")
 local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
+local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
 local Identity = require("WhisperMessenger.Model.Identity")
 
 -- A Battle.net chat first keyed by the session account ID moves to its
@@ -16,6 +17,7 @@ return function()
   local Bootstrap = {
     runtime = {
       bnetApi = {},
+      characterMerges = CharacterMergeMap.Ensure({}),
       accountState = { settings = {} },
       store = { conversations = { [oldKey] = { channel = "BN", bnetAccountID = 42, displayName = "42", messages = { divided } } } },
       onlineWatch = { [oldKey] = false },
