@@ -5,7 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
+local AccentGlyph = ns.ToggleIconAccentGlyph or require("WhisperMessenger.UI.ToggleIcon.AccentGlyph")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local SquareEffects = ns.ToggleIconSquareEffects or require("WhisperMessenger.UI.ToggleIcon.SquareEffects")
 local ButtonLook = ns.ThemeEllesmereButtonLook or require("WhisperMessenger.UI.Theme.EllesmereButtonLook")
@@ -22,7 +22,7 @@ local SquareLook = {}
 
 SquareLook.SQUARE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 SquareLook.GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_front.png"
-SquareLook.ACCENT_GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_back.png"
+SquareLook.ACCENT_GLYPH_TEXTURE = AccentGlyph.TEXTURE
 
 -- Halo around the two bubbles' outline (clear inside them), for the glyph
 -- drawn without the background. Its canvas is BUBBLE_GLOW_SCALE times the
@@ -52,23 +52,8 @@ local function setShown(region, shown)
   end
 end
 
--- The accent back bubble, drawn just under `glyph` and sized with it.
--- apply(desaturated, hovered) shows it in the accent color, or the circle's
--- gray (DESAT_BACK, on every shape) while the button is desaturated and not
--- hovered.
-function SquareLook.CreateAccentGlyph(frame, glyph)
-  local texture = frame:CreateTexture(nil, "ARTWORK", nil, -1)
-  texture:SetAllPoints(glyph)
-  texture:SetTexture(SquareLook.ACCENT_GLYPH_TEXTURE)
-
-  local function apply(desaturated, hovered)
-    setShown(texture, true)
-    local color = desaturated and not hovered and Desaturation.DESAT_BACK or Theme.COLORS.accent
-    applyVertexColor(texture, color)
-  end
-
-  return { texture = texture, apply = apply }
-end
+-- The accent back bubble (AccentGlyph), kept here for its callers.
+SquareLook.CreateAccentGlyph = AccentGlyph.Create
 
 -- Puts the bubble halo on `texture`, centred on `glyph` and sized to it.
 local function fitBubbleGlow(texture, glyph)
