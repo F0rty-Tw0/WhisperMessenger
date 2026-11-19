@@ -19,13 +19,16 @@ end
 
 -- Every fold tells the runtime before the line is stored, so state that
 -- follows the chat (the open chat above all) moves to the friend's chat first.
+-- The third result says the fold opened the friend's chat with nothing in
+-- it, so the line about to be stored opens a new chat.
 local function fold(state, characterKey, bnetKey, bnetContact, name)
   local store = state.store
+  local opensNewChat = store.conversations[bnetKey] == nil and store.conversations[characterKey] == nil
   CharacterMergeFold.Fold(store, state.characterMerges, characterKey, bnetKey, bnetContact, name, maxMessagesOf(store))
   if type(state.onCharacterMerged) == "function" then
     state.onCharacterMerged(characterKey, bnetKey)
   end
-  return bnetKey, CharacterMergeMap.Get(state.characterMerges, characterKey)
+  return bnetKey, CharacterMergeMap.Get(state.characterMerges, characterKey), opensNewChat
 end
 
 local function cacheMiss(state, characterKey)
