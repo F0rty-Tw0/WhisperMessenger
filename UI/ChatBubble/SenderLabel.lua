@@ -56,6 +56,36 @@ local function applyGreetingBadge(frame, message, anchor)
   badgeFS:SetPoint("LEFT", anchor, "RIGHT", Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP, 0)
 end
 
+-- A line the friend sent from a character, shown in their Battle.net chat:
+-- returns the character name as stored on the line, else nil.
+local function characterTagName(message, options)
+  if options.conversationChannel ~= "BN" or message.channel ~= "WOW" then
+    return nil
+  end
+  if type(message.playerName) ~= "string" or message.playerName == "" then
+    return nil
+  end
+  return message.playerName
+end
+
+-- Such a line shows the friend's name; every other line shows its own sender.
+local function incomingNameSource(message, options, characterName)
+  local chatName = options.conversationDisplayName
+  if characterName and type(chatName) == "string" and chatName ~= "" then
+    return chatName
+  end
+  return message.playerName or message.senderDisplayName
+end
+
+-- The gold tag right of the name: "- via Trade" or "- via Arthas".
+local function anchoredTag(frame, nameFS)
+  local tagFS = ensureFontString(frame, "_wmSenderTagFS")
+  setFontObject(tagFS, Theme.FONTS.message_time)
+  setTextColor(tagFS, Theme.TAG_GOLD)
+  tagFS:SetPoint("LEFT", nameFS, "RIGHT", 4, 0)
+  return tagFS
+end
+
 -- The label's time: a collapsed repeat shows when it was last seen.
 function SenderLabel.ShownTimestamp(message)
   if (tonumber(message.repeatCount) or 1) > 1 and message.lastSeenAt ~= nil then
@@ -138,7 +168,9 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
   else
     hideCached(frame, "_wmSenderSeenFS")
     DeliveryStatus.Hide(frame)
-    local displayName = GlyphCoverage.Apply(nameFS, DisplayName.Format(message.playerName or message.senderDisplayName) or "")
+    local characterName = characterTagName(message, options)
+    local nameSource = incomingNameSource(message, options, characterName)
+    local displayName = GlyphCoverage.Apply(nameFS, DisplayName.Format(nameSource) or "")
     -- "Name (20)": only "(20)" takes the difficulty colour.
     local level = message.senderLevel
     if DisplayName.ShowPlayerLevels() and type(level) == "number" and displayName ~= "" then
@@ -153,14 +185,15 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
     -- pooled frame previously rendered an outgoing cross-char message.
     hideCached(frame, "_wmSenderCharnameFS")
 
-    -- Channel tag as a separate colored FontString (e.g. "· via Trade")
+    -- Character or channel tag as a separate colored FontString; a line shows at most one.
     local channelAnchor = nameFS
-    if message.channelLabel and message.channelLabel ~= "" then
-      local tagFS = ensureFontString(frame, "_wmSenderTagFS")
-      setFontObject(tagFS, Theme.FONTS.message_time)
-      setTextColor(tagFS, Theme.TAG_GOLD)
+    if characterName then
+      local tagFS = anchoredTag(frame, nameFS)
+      tagFS:SetText(GlyphCoverage.Apply(tagFS, "- " .. Localization.Text("via ") .. characterName))
+      channelAnchor = tagFS
+    elseif message.channelLabel and message.channelLabel ~= "" then
+      local tagFS = anchoredTag(frame, nameFS)
       tagFS:SetText("- " .. Localization.Text("via ") .. Localization.Text(message.channelLabel))
-      tagFS:SetPoint("LEFT", nameFS, "RIGHT", 4, 0)
       channelAnchor = tagFS
     else
       hideCached(frame, "_wmSenderTagFS")
