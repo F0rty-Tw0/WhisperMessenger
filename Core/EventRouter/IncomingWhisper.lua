@@ -95,6 +95,10 @@ function IncomingWhisper.Handle(state, eventName, payload, contact, conversation
   if eventName == "CHAT_MSG_WHISPER" then
     addonGreeting, hideGreeting = AddonGreetingIngest.ClaimForWhisper(state, contact, payload, sentAt)
     if hideGreeting then
+      -- A fold opened this friend's chat for the hidden greeting alone.
+      if opensNewChat == true then
+        Store.Remove(state.store, conversationKey)
+      end
       return nil
     end
   end

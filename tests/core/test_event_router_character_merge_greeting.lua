@@ -20,6 +20,10 @@ local function craftScan(state)
   return Router.HandleEvent(state, "CHAT_MSG_ADDON", { prefix = "CRAFT_SCAN", text = "^1^encoded", channel = "WHISPER", playerName = NAME })
 end
 
+local function announce(state)
+  return Router.HandleEvent(state, "CHAT_MSG_ADDON", { prefix = "robots.txt", text = "Q:CraftScan", channel = "WHISPER", playerName = NAME })
+end
+
 return function()
   local savedTimer = _G.C_Timer
   _G.C_Timer = nil
@@ -62,6 +66,24 @@ return function()
       whisper(state)
       craftScan(state)
       assert(state.store.conversations[B].request ~= true, "a chat with earlier history is not moved to Requests")
+    end
+
+    -- test_hide_removes_the_friend_chat_opened_by_an_announced_greeting
+    do
+      local state = hideState()
+      announce(state)
+      whisper(state)
+      assert(state.store.conversations[B] == nil, "an announced greeting leaves no empty friend's chat")
+    end
+
+    -- test_hide_keeps_a_friend_chat_made_from_an_earlier_character_chat_when_announced
+    do
+      local state = hideState()
+      World.SeedK(state)
+      announce(state)
+      whisper(state)
+      local friend = state.store.conversations[B]
+      assert(friend ~= nil and #friend.messages == 1, "the folded history stays, without the greeting")
     end
 
     -- test_hide_keeps_an_existing_friend_chat
