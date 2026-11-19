@@ -10,6 +10,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - New option at the top of Notifications: "Mute all sounds" silences every Whisper Messenger sound at once. Your sound choices are kept for when you turn it off, and picking a sound still plays a preview.
 - New whispers take up much less memory (about half for whispers with characters) and less room in your saved chat history file. Your chats look the same.
 - Whispers with a character that belongs to one of your Battle.net friends now go into that friend's Battle.net chat, and an earlier chat with that character joins it, so each friend has one chat.
+- Right-click a Battle.net friend's chat and pick "Separate <character>" to move that character's messages back into a chat of their own. Whispers with that character then stay in their own chat for good.
 - Fixed: clicking links in the messenger could later break Blizzard windows (errors when opening your character panel, toys that wouldn't use).
 - Fixed: the message box no longer shows a thin slice of the previous line along its top edge once a long message scrolls.
 - Fixed: when the message box grows to two lines right after a reload, the window now makes room for it instead of letting the box cover the line above it.

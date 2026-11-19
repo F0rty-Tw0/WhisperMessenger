@@ -565,6 +565,8 @@ local Korean = {
   ["Guild invite"] = "길드 초대",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Ctrl+C를 눌러 명령어를 복사한 다음 대화창에 붙여넣으세요.",
   ["Read-only here. Reply in the game's Communities window."] = "여기서는 읽기 전용입니다. 게임의 커뮤니티 창에서 답장하세요.",
+  -- Contact menu: split a character out of a Battle.net chat
+  ["Separate %s"] = "%s 분리",
 }
 
 ns.Locale_koKR = Korean
