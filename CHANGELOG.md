@@ -10,6 +10,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: the message box no longer shows a thin slice of the previous line along its top edge once a long message scrolls.
 - Fixed: when the message box grows to two lines right after a reload, the window now makes room for it instead of letting the box cover the line above it.
 - Fixed: party, raid and instance chats now clear out after your Message Retention time like whispers do. Before, leaving the group or logging back in counted as new activity, so an old group chat could stay in your list for days.
+- Fixed: removing an unsent message no longer lets a status line such as "Left party" bump that chat up your list or restart its Message Retention timer.
 
 ## [2.1.8] - 2026-11-16
 

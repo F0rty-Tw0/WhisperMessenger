@@ -90,6 +90,32 @@ return function()
     assert(conversation.lastActivityAt == 400, "row time is the repeat's, got " .. tostring(conversation.lastActivityAt))
   end
 
+  -- test_remove_takes_activity_time_from_the_last_chat_line_not_a_system_line
+  do
+    local store = newStore()
+    local conversation = store.conversations.a
+    conversation.messages[1].sentAt, conversation.messages[1].lineID = 100, 7
+    local queued = conversation.messages[2]
+    table.insert(conversation.messages, 2, { id = "s", direction = "in", kind = "system", text = "Left party", sentAt = 300 })
+    table.insert(conversation.messages, 1, { id = "o", direction = "in", text = "older", sentAt = 50, lineID = 3 })
+    assert(OutgoingDelivery.Remove(store, "a", queued) == true, "removed")
+    assert(conversation.lastActivityAt == 100, "system line is not activity, got " .. tostring(conversation.lastActivityAt))
+    assert(conversation.lastActivityLineID == 7, "line id pairs with the activity time")
+    assert(conversation.lastPreview == "Left party", "preview still shows the newest line")
+  end
+
+  -- test_remove_with_only_system_lines_left_keeps_the_conversation_age
+  do
+    local store = newStore()
+    local conversation = store.conversations.b
+    local queued = conversation.messages[1]
+    conversation.messages = { { id = "s", direction = "in", kind = "system", text = "Left party", sentAt = 300 }, queued }
+    conversation.lastActivityAt, conversation.lastActivityLineID = 1000, 9
+    assert(OutgoingDelivery.Remove(store, "b", queued) == true, "removed")
+    assert(conversation.lastActivityAt == 1000, "keeps its age, got " .. tostring(conversation.lastActivityAt))
+    assert(conversation.lastActivityLineID == nil, "no chat line left, so no activity line")
+  end
+
   -- test_build_record_keeps_the_send_target
   do
     local record = OutgoingDelivery.BuildRecord({
