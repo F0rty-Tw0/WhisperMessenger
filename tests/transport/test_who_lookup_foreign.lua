@@ -1,5 +1,6 @@
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local Env = require("tests.helpers.who_lookup_env")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 -- A /who that is not ours (the player's typed /who, another addon) reaches
 -- WhoLookup only through the SendWho post-hook. env.api.SendWho is the hooked
@@ -28,9 +29,9 @@ end
 local function test_typed_who_while_suspended_changes_nothing()
   Env.Case("suspended typed who", nil, function(env)
     Env.AddStranger(env, KEY, "Firstmoon")
-    rawset(_G, "_wmSuspended", true)
+    RestrictionState.SetSuspended(true)
     typedWho(env)
-    rawset(_G, "_wmSuspended", nil)
+    RestrictionState.SetSuspended(false)
     env.clock = env.clock + 2
     assert(WhoLookup.TryFor(env.runtime, KEY) == true, "suspended /who must not count toward the gap")
   end)
@@ -40,10 +41,10 @@ local function test_typed_who_while_suspended_keeps_ours_in_flight()
   Env.Case("suspended foreign hook", { whoToUi = false }, function(env)
     Env.AddStranger(env, KEY, "Firstmoon")
     WhoLookup.TryFor(env.runtime, KEY)
-    rawset(_G, "_wmSuspended", true)
+    RestrictionState.SetSuspended(true)
     typedWho(env)
     assert(env.friendsRegistered == false, "suspended hook must not clean up")
-    rawset(_G, "_wmSuspended", nil)
+    RestrictionState.SetSuspended(false)
   end)
 end
 

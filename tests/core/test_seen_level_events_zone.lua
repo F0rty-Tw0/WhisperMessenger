@@ -4,6 +4,7 @@ local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 local SeenZone = require("WhisperMessenger.Model.SeenZone")
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local function fire(event, ...)
   local frame = SeenLevelEvents._frame
@@ -27,7 +28,7 @@ local function makeRuntime(results)
   runtime.scheduleIncomingRefresh = function(key)
     runtime.refreshed[#runtime.refreshed + 1] = key
   end
-  return runtime
+  return RestrictionPredicates.Add(runtime)
 end
 
 local function saveChat(runtime, nameKey, channel)

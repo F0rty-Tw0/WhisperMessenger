@@ -7,10 +7,17 @@ local ChatLinkSources = ns.ComposerChatLinkSources or require("WhisperMessenger.
 local QuestLinkText = ns.QuestLinkText or require("WhisperMessenger.Model.QuestLinkText")
 local UrlFormatter = ns.UIHyperlinksUrlFormatter or require("WhisperMessenger.UI.Hyperlinks.UrlFormatter")
 
+-- Looked up at call time: RestrictedActions loads later in the TOC.
+local function isSuspended()
+  local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
+  return RestrictedActions.IsSuspended()
+end
+
 local LinkHooks = {}
 local registeredLinkHooks = false
 local linkedInputs = {}
 local lastInsertFrameTime = nil
+local OWN_LINK_PREFIX = "addon:WhisperMessenger:"
 
 local function isInputShown(input)
   if type(input.IsVisible) == "function" then
@@ -112,7 +119,12 @@ local function blizzardChatBoxActive()
 end
 
 local function insertFromBlizzard(link)
-  if _G._wmSuspended or type(link) ~= "string" or link == "" or blizzardChatBoxActive() then
+  if isSuspended() or type(link) ~= "string" or link == "" or blizzardChatBoxActive() then
+    return
+  end
+  -- Defensive: Blizzard routes our addon: links away from InsertLink, but
+  -- another addon's hook could still pass one here.
+  if string.find(link, "|H" .. OWN_LINK_PREFIX, 1, true) then
     return
   end
   tryInsertLink(link, { allowVisibleWithoutFocus = false })
@@ -139,7 +151,7 @@ end
 -- /who for the name). Returns false when the composer did not take it.
 function LinkHooks.InsertClickedPlayerName(link)
   local playerName = playerNameFromLink(link)
-  if playerName == nil or _G._wmSuspended or not ChatLinkSources.IsChatLinkClick() then
+  if playerName == nil or isSuspended() or not ChatLinkSources.IsChatLinkClick() then
     return false
   end
   return tryInsertLink(playerName, { allowVisibleWithoutFocus = false })
@@ -160,7 +172,7 @@ end
 -- typing in (shown and focused). Returns true only when the input's text really
 -- changed, so a deduped, capped or refused insert reports false.
 function LinkHooks.InsertText(text)
-  if _G._wmSuspended then
+  if isSuspended() then
     return false
   end
   local input = findInputForInsertion(false)
@@ -182,19 +194,23 @@ local function registerLinkHooks()
 
   -- SetItemRef: handles clicking hyperlinks inside chat bubbles / transcript.
   safeHookGlobal("SetItemRef", function(link, text)
-    if _G._wmSuspended then
+    if isSuspended() then
       return
     end
     -- Our URL links only copy their address; they are never inserted.
     if link == nil or UrlFormatter.ExtractExternalUrlFromLink(link) ~= nil then
       return
     end
-    -- A shift-clicked player name inserts the plain name, as Blizzard does
-    -- for its own open chat box (Blizzard also sends a /who when none is
-    -- open). This hook only sees clicks outside our window, or in it while
-    -- the composer had no focus: with focus, our window's click script puts
-    -- the name in through InsertClickedPlayerName and never calls SetItemRef.
-    -- Blizzard ignores shift-clicked Battle.net names so the encoded account
+    -- Links in our own window are encoded as addon:WhisperMessenger:..., and
+    -- Blizzard's click handler on those frames calls SetItemRef with that
+    -- encoded link. Our own click post-hook inserts the decoded player name,
+    -- so the encoded text must not land here or take this frame's insert slot.
+    if type(link) == "string" and string.sub(link, 1, #OWN_LINK_PREFIX) == OWN_LINK_PREFIX then
+      return
+    end
+    -- A shift-clicked Blizzard player name inserts the plain name, as Blizzard
+    -- does for its own open chat box (Blizzard also sends a /who when none is
+    -- open). Blizzard ignores shift-clicked Battle.net names so the encoded account
     -- name never reaches chat; so do we. Any other click on a player name
     -- (right-click menu, plain click) inserts nothing: the server refuses a
     -- sent |Hplayer link ("Invalid escape code in chat message").

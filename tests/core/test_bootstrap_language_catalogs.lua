@@ -1,13 +1,14 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 local Localization = require("WhisperMessenger.Locale.Localization")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 local function initialize(settings)
   local factory = FakeUI.NewFactory()
   local savedUIParent = _G.UIParent
-  local savedSuspended = _G._wmSuspended
+  local savedSuspended = RestrictionState.Suspended()
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
-  _G._wmSuspended = nil
+  RestrictionState.SetSuspended(false)
 
   local ok, runtime = pcall(Bootstrap.Initialize, factory, {
     accountState = {
@@ -22,7 +23,7 @@ local function initialize(settings)
   })
 
   _G.UIParent = savedUIParent
-  _G._wmSuspended = savedSuspended
+  RestrictionState.SetSuspended(savedSuspended)
   assert(ok, runtime)
   return runtime
 end

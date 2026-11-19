@@ -1,5 +1,6 @@
 local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local Store = require("WhisperMessenger.Model.ConversationStore")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- A whisper sent from the window plays the sent sound once, after it goes
 -- out: short, long (in parts) or a reaction. A failed send plays nothing.
@@ -7,7 +8,7 @@ local Store = require("WhisperMessenger.Model.ConversationStore")
 local DING_ID = 12889
 
 local function newRuntime(sent)
-  return {
+  return RestrictionPredicates.Add({
     sendStatusByConversation = {},
     pendingOutgoing = {},
     now = function()
@@ -22,7 +23,7 @@ local function newRuntime(sent)
     bnetApi = {},
     store = Store.New({ maxMessagesPerConversation = 20, maxConversations = 10, messageMaxAge = 86400, conversationMaxAge = 86400 }),
     accountState = { settings = { playSoundOnSend = true, sentSound = "ding" } },
-  }
+  })
 end
 
 local function payload(text)

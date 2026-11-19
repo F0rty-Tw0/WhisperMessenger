@@ -3,6 +3,8 @@ local Identity = require("WhisperMessenger.Model.Identity")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
+local RestrictionState = require("tests.helpers.restriction_state")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local WHO_EVENTS = { "WHO_LIST_UPDATE", "CHAT_MSG_SYSTEM" }
 
@@ -38,7 +40,7 @@ local function makeRuntime(results)
   runtime.scheduleIncomingRefresh = function(key)
     runtime.refreshed[#runtime.refreshed + 1] = key
   end
-  return runtime
+  return RestrictionPredicates.Add(runtime)
 end
 
 local function saveChat(runtime, nameKey)
@@ -49,11 +51,11 @@ local function saveChat(runtime, nameKey)
 end
 
 return function()
-  local savedSuspended = rawget(_G, "_wmSuspended")
+  local savedSuspended = RestrictionState.Suspended()
   local realOnWhoListUpdate = WhoLookup.OnWhoListUpdate
   local whoUpdates = 0
   local function reset()
-    rawset(_G, "_wmSuspended", nil)
+    RestrictionState.SetSuspended(false)
     SeenLevelEvents._reset()
     SeenLevel._reset()
     whoUpdates = 0
@@ -102,7 +104,7 @@ return function()
   -- test_open_who_window_while_suspended_registers_nothing
   do
     reset()
-    rawset(_G, "_wmSuspended", true)
+    RestrictionState.SetSuspended(true)
     SeenLevelEvents.Init(makeRuntime({}))
     SeenLevelEvents.SetEnabled(true)
     SeenLevelEvents.OpenWhoWindow()
@@ -153,7 +155,7 @@ return function()
     SeenLevelEvents.Init(makeRuntime({}))
     SeenLevelEvents.SetEnabled(true)
     SeenLevelEvents.OpenWhoWindow()
-    rawset(_G, "_wmSuspended", true)
+    RestrictionState.SetSuspended(true)
     SeenLevelEvents.SetEnabled(false)
     rawset(WhoLookup, "IsWindowOpen", realIsWindowOpen)
     assertWhoEvents(false, "a suspended addon reads no /who answer")
@@ -240,7 +242,7 @@ return function()
   end
 
   WhoLookup.OnWhoListUpdate = realOnWhoListUpdate
-  rawset(_G, "_wmSuspended", savedSuspended)
+  RestrictionState.SetSuspended(savedSuspended)
   SeenLevelEvents._reset()
   SeenLevel._reset()
 end

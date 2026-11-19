@@ -5,18 +5,19 @@ local ContentDetector = require("WhisperMessenger.Core.ContentDetector")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local PublicApi = require("WhisperMessenger.Core.PublicApi")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local function makeHarness()
   local calls = { suspend = 0, resume = 0 }
   local Bootstrap = {
-    runtime = {
+    runtime = RestrictionPredicates.Add({
       suspend = function()
         calls.suspend = calls.suspend + 1
       end,
       resume = function()
         calls.resume = calls.resume + 1
       end,
-    },
+    }),
   }
   return Bootstrap, calls
 end

@@ -45,7 +45,8 @@ end
 -- Inserts message into conversation at its real time and applies retention,
 -- for either direction. Returns the conversation to hand back, whether the
 -- message is the newest, whether it was kept (callers apply their metadata
--- only then) and whether it moves the conversation's last activity.
+-- only then) and what it moves, from MessageMetadata.Moves, which callers
+-- hand to MessageMetadata.ApplyMoves.
 function ChronologicalInsert.Insert(state, key, conversation, message)
   local messages = conversation.messages
   local insertAt, isNewest = ChronologicalInsert.FindIndex(messages, message.sentAt, message.lineID)
@@ -54,7 +55,7 @@ function ChronologicalInsert.Insert(state, key, conversation, message)
   StoreRetention.AfterAppend(state, key, conversation, message)
   local storedConversation = state.conversations[key]
   if storedConversation ~= conversation then
-    return storedConversation, isNewest, false, false
+    return storedConversation, isNewest, false, false, false
   end
 
   local messageIndex = indexOf(conversation.messages, message)
@@ -62,20 +63,20 @@ function ChronologicalInsert.Insert(state, key, conversation, message)
     if StoreRetention.IsExpired(state, conversation, conversation.lastActivityAt, currentTime(state, message)) then
       StoreRetention.Remove(state, key, StoreRetention.REASON_RETENTION)
     end
-    return state.conversations[key], isNewest, false, false
+    return state.conversations[key], isNewest, false, false, false
   end
 
-  local updatesLatestActivity = isNewest and MessageMetadata.IsLatest(message, conversation.lastActivityAt, conversation.lastActivityLineID)
+  local movesPreview, movesActivity = MessageMetadata.Moves(conversation, message, isNewest)
   local prospectiveLastActivityAt = conversation.lastActivityAt
-  if updatesLatestActivity then
+  if movesActivity then
     prospectiveLastActivityAt = message.sentAt
   end
   if StoreRetention.IsExpired(state, conversation, prospectiveLastActivityAt, currentTime(state, message)) then
     table.remove(messages, messageIndex)
     StoreRetention.Remove(state, key, StoreRetention.REASON_RETENTION)
-    return nil, isNewest, false, false
+    return nil, isNewest, false, false, false
   end
-  return conversation, isNewest, true, updatesLatestActivity
+  return conversation, isNewest, true, movesPreview, movesActivity
 end
 
 -- The player's own message, inserted at its real time. An older message never
@@ -85,13 +86,14 @@ function ChronologicalInsert.Outgoing(ensureConversation, state, key, message)
   local conversation = ensureConversation(state, key)
   -- Writing to someone accepts their message request.
   conversation.request = nil
-  local result, isNewest, kept, updatesLatestActivity = ChronologicalInsert.Insert(state, key, conversation, message)
+  local result, isNewest, kept, movesPreview, movesActivity = ChronologicalInsert.Insert(state, key, conversation, message)
   if not kept then
     return result, isNewest
   end
 
-  if updatesLatestActivity then
-    MessageMetadata.ApplyActivity(conversation, message)
+  MessageMetadata.ApplyMoves(conversation, message, movesPreview, movesActivity)
+  -- Contact data is current only on the newest line.
+  if isNewest and movesActivity then
     MessageMetadata.ApplyContact(state, key, conversation, message)
   end
   MessageMetadata.Compact(message)

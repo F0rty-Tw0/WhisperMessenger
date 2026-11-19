@@ -6,6 +6,7 @@ local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 local SeenZone = require("WhisperMessenger.Model.SeenZone")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 local WhoLookupEnv = {}
 
@@ -18,7 +19,6 @@ local GLOBALS = {
   "hooksecurefunc",
   "InCombatLockdown",
   "C_ChatInfo",
-  "_wmSuspended",
   "GetTime",
   "time",
 }
@@ -123,7 +123,8 @@ function WhoLookupEnv.New(opts)
       return env.chatLockdown == true
     end,
   })
-  rawset(_G, "_wmSuspended", nil)
+  env.savedSuspended = RestrictionState.Suspended()
+  RestrictionState.SetSuspended(false)
   installRuntime(env)
   DisplayName.Configure({ showPlayerLevels = true })
   SeenLevel._reset()
@@ -137,6 +138,7 @@ function WhoLookupEnv.Restore(env)
   for _, key in ipairs(GLOBALS) do
     rawset(_G, key, env.saved[key])
   end
+  RestrictionState.SetSuspended(env.savedSuspended)
   DisplayName.Configure({ showPlayerLevels = false })
   SeenLevel._reset()
   SeenZone._reset()

@@ -1,6 +1,7 @@
 local ChannelType = require("WhisperMessenger.Model.Identity.ChannelType")
 local GroupSendPolicy = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPolicy")
 local Protocol = require("WhisperMessenger.Model.MessageReactionProtocol")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 return function()
   local suffixConst = Protocol.ADDON_HINT_SUFFIX
@@ -21,7 +22,7 @@ return function()
       end,
     }
     local policy = GroupSendPolicy.Create({
-      runtime = runtime,
+      runtime = RestrictionPredicates.Add(runtime),
       chatGateway = {
         CanSend = function()
           return true
@@ -62,7 +63,7 @@ return function()
       end,
     }
     local policy = GroupSendPolicy.Create({
-      runtime = runtime,
+      runtime = RestrictionPredicates.Add(runtime),
       chatGateway = {
         CanSend = function()
           return true

@@ -23,4 +23,14 @@ function RestrictionState.Flag(Bootstrap, name)
   return RestrictedActions.For(Bootstrap).flag(name)
 end
 
+-- The mythic suspend is one addon-wide state, so no Bootstrap is needed.
+-- Tests that set it restore it with SetSuspended(saved) or SetSuspended(false).
+function RestrictionState.SetSuspended(value)
+  RestrictedActions.New().setSuspended(value)
+end
+
+function RestrictionState.Suspended()
+  return RestrictedActions.IsSuspended()
+end
+
 return RestrictionState

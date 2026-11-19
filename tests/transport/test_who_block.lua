@@ -1,4 +1,5 @@
 local WhoBlock = require("WhisperMessenger.Transport.WhoBlock")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local function withGlobals(overrides, fn)
   local names = { "InCombatLockdown", "C_ChatInfo", "C_Timer" }
@@ -25,7 +26,7 @@ end
 
 local function test_open_world_is_not_blocked()
   withGlobals({}, function()
-    assert(WhoBlock.IsBlocked({}) == false)
+    assert(WhoBlock.IsBlocked(RestrictionPredicates.Add({})) == false)
   end)
 end
 
@@ -35,7 +36,7 @@ local function test_combat_blocks()
       return true
     end,
   }, function()
-    assert(WhoBlock.IsBlocked({}) == true)
+    assert(WhoBlock.IsBlocked(RestrictionPredicates.Add({})) == true)
   end)
 end
 
@@ -47,33 +48,33 @@ local function test_chat_lockdown_blocks()
       end,
     },
   }, function()
-    assert(WhoBlock.IsBlocked({}) == true)
+    assert(WhoBlock.IsBlocked(RestrictionPredicates.Add({})) == true)
   end)
 end
 
 local function test_mythic_lockdown_blocks()
   withGlobals({}, function()
-    assert(WhoBlock.IsBlocked({
+    assert(WhoBlock.IsBlocked(RestrictionPredicates.Add({
       isMythicLockdown = function()
         return true
       end,
-    }) == true)
+    })) == true)
   end)
 end
 
 local function test_missing_new_timer_blocks()
   withGlobals({ C_Timer = {} }, function()
-    assert(WhoBlock.IsBlocked({}) == true)
+    assert(WhoBlock.IsBlocked(RestrictionPredicates.Add({})) == true)
   end)
 end
 
 local function test_competitive_content_blocks()
   withGlobals({}, function()
-    assert(WhoBlock.IsBlocked({
+    assert(WhoBlock.IsBlocked(RestrictionPredicates.Add({
       isCompetitiveContent = function()
         return true
       end,
-    }) == true)
+    })) == true)
   end)
 end
 

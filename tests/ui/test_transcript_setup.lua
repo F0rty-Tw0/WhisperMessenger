@@ -173,4 +173,69 @@ return function()
       "test_scroll_wiring_preserves_original_value_changed_handler: original OnValueChanged handler should receive the scroll value"
     )
   end
+
+  -- test_transcript_uses_link_template
+
+  do
+    local previous = rawget(_G, "C_XMLUtil")
+    rawset(_G, "C_XMLUtil", {
+      GetTemplateInfo = function()
+        return { type = "Frame" }
+      end,
+    })
+    local ok, err = pcall(function()
+      local factory = FakeUI.NewFactory()
+      local transcript = makeTranscript(factory)
+      TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
+      local text = transcript.text
+
+      assert(text.template == "InlineHyperlinkFrameTemplate", "test_transcript_uses_link_template: got template " .. tostring(text.template))
+      assert(text:GetScript("OnHyperlinkClick") == text.templateHyperlinkClick, "test_transcript_uses_link_template: template click script kept")
+      local hooks = (text._hookScripts or {}).OnHyperlinkClick or {}
+      assert(#hooks == 1, "test_transcript_uses_link_template: one click hook, got " .. #hooks)
+    end)
+    rawset(_G, "C_XMLUtil", previous)
+    if not ok then
+      error(err, 0)
+    end
+  end
+
+  -- test_transcript_link_template_has_no_blizzard_hover
+
+  do
+    local previous = rawget(_G, "C_XMLUtil")
+    rawset(_G, "C_XMLUtil", {
+      GetTemplateInfo = function()
+        return { type = "Frame" }
+      end,
+    })
+    local ok, err = pcall(function()
+      local factory = FakeUI.NewFactory()
+      local transcript = makeTranscript(factory)
+      TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
+      local text = transcript.text
+
+      assert(text:GetScript("OnHyperlinkEnter") == nil, "test_transcript_link_template_has_no_blizzard_hover: enter script cleared")
+      assert(text:GetScript("OnHyperlinkLeave") == nil, "test_transcript_link_template_has_no_blizzard_hover: leave script cleared")
+    end)
+    rawset(_G, "C_XMLUtil", previous)
+    if not ok then
+      error(err, 0)
+    end
+  end
+
+  -- test_transcript_without_template_keeps_old_click_script
+
+  do
+    local factory = FakeUI.NewFactory()
+    local transcript = makeTranscript(factory)
+    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
+    local text = transcript.text
+
+    assert(text.template == nil, "test_transcript_without_template_keeps_old_click_script: no template, got " .. tostring(text.template))
+    local script = text:GetScript("OnHyperlinkClick")
+    assert(type(script) == "function", "test_transcript_without_template_keeps_old_click_script: click script set")
+    assert(script ~= text.templateHyperlinkClick, "test_transcript_without_template_keeps_old_click_script: not the template script")
+    assert(((text._hookScripts or {}).OnHyperlinkClick or {})[1] == nil, "test_transcript_without_template_keeps_old_click_script: no click hooks")
+  end
 end

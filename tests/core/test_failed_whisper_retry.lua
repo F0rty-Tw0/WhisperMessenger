@@ -2,6 +2,7 @@ local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local QueuedSends = require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 local Router = require("WhisperMessenger.Core.EventRouter")
 local Store = require("WhisperMessenger.Model.ConversationStore")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- Whisper an offline player, get "(Not sent)", click Retry while they are
 -- still offline: the message goes out again and comes back as "(Not sent)"
@@ -10,7 +11,7 @@ local Store = require("WhisperMessenger.Model.ConversationStore")
 local TEMPLATE = "No player named '%s' is currently playing."
 
 local function newRuntime(sent)
-  return {
+  return RestrictionPredicates.Add({
     sendStatusByConversation = {},
     pendingOutgoing = {},
     now = function()
@@ -24,7 +25,7 @@ local function newRuntime(sent)
     },
     bnetApi = {},
     store = Store.New({ maxMessagesPerConversation = 20, maxConversations = 10, messageMaxAge = 86400, conversationMaxAge = 86400 }),
-  }
+  })
 end
 
 local function failedMessages(runtime)

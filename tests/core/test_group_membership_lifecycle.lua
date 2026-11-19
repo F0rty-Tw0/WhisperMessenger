@@ -31,10 +31,14 @@ return function()
     }
   end
 
+  -- Like the real runtime, the store shares accountState's conversations.
   local function makeBootstrap(state, onRefresh)
+    local store = Store.New({})
+    store.conversations = state.conversations
     return {
       runtime = {
         accountState = state,
+        store = store,
         localProfileId = LOCAL_PROFILE_ID,
         refreshWindow = onRefresh or function() end,
       },

@@ -84,6 +84,17 @@ function FlavorCompat.GetAddOnTitle(name)
   return title
 end
 
+-- True when the client knows the named XML template. A missing C_XMLUtil or a
+-- lookup error counts as missing, so callers fall back on older flavors.
+function FlavorCompat.HasTemplate(name)
+  local xmlUtil = _G["C_XMLUtil"]
+  if type(xmlUtil) ~= "table" or type(xmlUtil.GetTemplateInfo) ~= "function" then
+    return false
+  end
+  local ok, info = pcall(xmlUtil.GetTemplateInfo, name)
+  return ok and info ~= nil
+end
+
 ns.FlavorCompat = FlavorCompat
 
 return FlavorCompat

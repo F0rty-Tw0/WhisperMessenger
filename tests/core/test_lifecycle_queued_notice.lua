@@ -1,6 +1,7 @@
 local RestrictionState = require("tests.helpers.restriction_state")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local Localization = require("WhisperMessenger.Locale.Localization")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- The lock-state machinery announces waiting queued messages once, when a
 -- PvP match / encounter / key restriction lifts.
@@ -13,13 +14,13 @@ return function()
     end,
   })
   local Bootstrap = {}
-  Bootstrap.runtime = {
+  Bootstrap.runtime = RestrictionPredicates.Add({
     store = { conversations = { k = { messages = { { direction = "out", kind = "user", text = "gg", delivery = "queued" } } } } },
     isCompetitiveContent = function()
       return RestrictionState.Flag(Bootstrap, "competitive")
     end,
     refreshWindow = function() end,
-  }
+  })
   local PVP_MATCH, ACTIVE, INACTIVE = 3, 2, 0
 
   -- test_restriction_lift_prints_the_queued_notice_once

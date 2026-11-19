@@ -82,7 +82,7 @@ end
 -- A fresh runtime, because a cached restriction state cannot be emptied.
 local function boot(world, scenario, chatLockState)
   RestrictionState.Set(Bootstrap, {})
-  rawset(_G, "_wmSuspended", nil)
+  RestrictionState.SetSuspended(false)
   rawset(_G, "C_RestrictedActions", scenario.api and world.restrictedApi or nil)
   world.filters = {}
   world.apiSaysYes = {}
@@ -167,7 +167,7 @@ local function visitFlagRows(world, runtime, inputs, visit)
   local rows = 0
   for _, suspended in ipairs(SUSPENDED_VALUES) do
     inputs.suspended = unbox(suspended)
-    rawset(_G, "_wmSuspended", inputs.suspended)
+    RestrictionState.SetSuspended(inputs.suspended)
     for _, mythic in ipairs(FLAG_VALUES) do
       for _, competitive in ipairs(FLAG_VALUES) do
         for _, encounter in ipairs(FLAG_VALUES) do

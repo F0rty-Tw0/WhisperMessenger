@@ -7,6 +7,7 @@ local RestrictionState = require("WhisperMessenger.Core.Bootstrap.LifecycleHandl
 local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
 local ChatFilters = require("WhisperMessenger.Core.Bootstrap.ChatFilters")
 local Localization = require("WhisperMessenger.Locale.Localization")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local CHAT, ACTIVE, ACTIVATING, INACTIVE = 5, 2, 1, 0
 
@@ -49,6 +50,7 @@ local function newBootstrap()
   runtime.restrictedActions = RestrictedActions.For(Bootstrap)
   runtime.isChatLocked = runtime.restrictedActions.isChatLocked
   runtime.isCompetitiveContent = runtime.restrictedActions.isCompetitive
+  RestrictionPredicates.Add(runtime)
   return Bootstrap, spies
 end
 

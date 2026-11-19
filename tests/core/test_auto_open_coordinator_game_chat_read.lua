@@ -1,4 +1,5 @@
 local AutoOpenCoordinator = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- Wires the game-chat "read" signals: the hooks' markRead dep and the game
 -- whisper tab hook that installPoller adds.
@@ -22,7 +23,7 @@ return function()
       refreshWindow = function() end,
     }
     local controller = AutoOpenCoordinator.Attach({
-      runtime = runtime,
+      runtime = RestrictionPredicates.Add(runtime),
       accountState = {},
       windowRuntime = {},
       isSuspended = isSuspended,

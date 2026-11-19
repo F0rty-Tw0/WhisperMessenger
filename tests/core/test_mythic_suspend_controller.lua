@@ -1,6 +1,7 @@
 local MythicSuspendController = require("WhisperMessenger.Core.Bootstrap.MythicSuspendController")
 local ChatReplyState = require("WhisperMessenger.Util.ChatReplyState")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 local function noop() end
 
@@ -8,13 +9,13 @@ local function noop() end
 local function runWithoutReplyState(fn)
   local savedCapture = ChatReplyState.CaptureStaleWhisperReplyTarget
   local savedClear = ChatReplyState.ClearStaleWhisperReplyState
-  local savedSuspended = _G._wmSuspended
+  local savedSuspended = RestrictionState.Suspended()
   ChatReplyState.CaptureStaleWhisperReplyTarget = noop
   ChatReplyState.ClearStaleWhisperReplyState = noop
   local ok, err = pcall(fn)
   ChatReplyState.CaptureStaleWhisperReplyTarget = savedCapture
   ChatReplyState.ClearStaleWhisperReplyState = savedClear
-  _G._wmSuspended = savedSuspended
+  RestrictionState.SetSuspended(savedSuspended)
   assert(ok, err)
 end
 
@@ -48,7 +49,7 @@ return function()
       end,
     }
     local printed = {}
-    local savedSuspended = _G._wmSuspended
+    local savedSuspended = RestrictionState.Suspended()
 
     MythicSuspendController.Attach(runtime, {
       Bootstrap = Bootstrap,
@@ -81,7 +82,7 @@ return function()
       "suspend should set the mythic pause notice"
     )
     assert(Bootstrap._wasVisibleBeforeMythic == true, "suspend should capture previous window visibility")
-    assert(_G._wmSuspended == true, "suspend should set the global suspended flag")
+    assert(RestrictionState.Suspended() == true, "suspend should set the addon-wide suspend")
     assert(
       table.concat(calls, ",")
         == "isWindowVisible,setWindowVisible:false,unregisterChatFilters,UnregisterLiveEvents,UnregisterSuspendableLifecycleEvents",
@@ -95,7 +96,7 @@ return function()
     runtime.resume()
 
     assert(runtime.messagingNotice == nil, "resume should clear the mythic pause notice")
-    assert(_G._wmSuspended == nil, "resume should clear the global suspended flag")
+    assert(not RestrictionState.Suspended(), "resume should clear the addon-wide suspend")
     assert(Bootstrap._wasVisibleBeforeMythic == nil, "resume should clear the remembered visibility flag")
     assert(
       table.concat(calls, ",") == "RegisterLiveEvents,RegisterSuspendableLifecycleEvents,registerChatFilters,setWindowVisible:true,refreshWindow",
@@ -103,7 +104,7 @@ return function()
     )
     assert(#printed == 0, "resume prints nothing to the game's chat")
 
-    _G._wmSuspended = savedSuspended
+    RestrictionState.SetSuspended(savedSuspended)
   end
 
   -- test_resume_does_not_restore_visible_window_when_hide_on_combat_is_enabled
@@ -138,7 +139,7 @@ return function()
     }
     local savedCaptureStaleWhisperReplyTarget = ChatReplyState.CaptureStaleWhisperReplyTarget
     local savedClearStaleWhisperReplyState = ChatReplyState.ClearStaleWhisperReplyState
-    local savedSuspended = _G._wmSuspended
+    local savedSuspended = RestrictionState.Suspended()
     local wasVisibleBeforeResume
 
     ChatReplyState.CaptureStaleWhisperReplyTarget = function()
@@ -175,7 +176,7 @@ return function()
 
     ChatReplyState.CaptureStaleWhisperReplyTarget = savedCaptureStaleWhisperReplyTarget
     ChatReplyState.ClearStaleWhisperReplyState = savedClearStaleWhisperReplyState
-    _G._wmSuspended = savedSuspended
+    RestrictionState.SetSuspended(savedSuspended)
 
     assert(lifecycleOk, lifecycleError)
     assert(#visibilityCalls == 1 and visibilityCalls[1] == false, "suspend should hide a visible window")
@@ -198,7 +199,7 @@ return function()
       seenLevelEvents = {
         SetEnabled = function(on)
           enabledCalls[#enabledCalls + 1] = on
-          suspendedAtCall[#suspendedAtCall + 1] = _G._wmSuspended == nil
+          suspendedAtCall[#suspendedAtCall + 1] = not RestrictionState.Suspended()
         end,
       },
     }

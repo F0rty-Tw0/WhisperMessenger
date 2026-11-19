@@ -1,4 +1,5 @@
 local LinkHooksEnv = require("tests.helpers.link_hooks_env")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 -- Links reach the composer through post-hooks on Blizzard's insert functions
 -- and on SetItemRef, and only while the composer has focus.
@@ -13,7 +14,7 @@ return function()
     input.focused = focused
     input.shown = true
     env.blizzardActiveWindow = nil
-    rawset(_G, "_wmSuspended", nil)
+    RestrictionState.SetSuspended(false)
   end
 
   -- test_insert_link_skips_composer_when_blizzard_chat_box_is_open
@@ -68,7 +69,7 @@ return function()
   -- test_insert_link_does_nothing_while_suspended
   do
     reset(true)
-    rawset(_G, "_wmSuspended", true)
+    RestrictionState.SetSuspended(true)
     _G.ChatFrameUtil.InsertLink(itemLink)
     assert(#env.inserts == 0, "a suspended addon must not insert, got " .. #env.inserts)
   end
@@ -105,7 +106,7 @@ return function()
   -- test_set_item_ref_hook_does_nothing_while_suspended
   do
     reset(true)
-    rawset(_G, "_wmSuspended", true)
+    RestrictionState.SetSuspended(true)
     _G.SetItemRef(itemLink, itemLink)
     assert(#env.inserts == 0, "a suspended addon must not insert from SetItemRef, got " .. #env.inserts)
   end
@@ -163,9 +164,9 @@ return function()
   -- test_insert_clicked_player_name_does_nothing_while_suspended
   do
     reset(true)
-    rawset(_G, "_wmSuspended", true)
+    RestrictionState.SetSuspended(true)
     local took = env.LinkHooks.InsertClickedPlayerName("player:Ambush Rasit:3901:CHANNEL:2")
-    rawset(_G, "_wmSuspended", nil)
+    RestrictionState.SetSuspended(false)
     assert(took == false and #env.inserts == 0, "a suspended addon must not insert the name, got: " .. tostring(env.inserts[1]))
   end
 

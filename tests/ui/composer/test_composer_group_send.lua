@@ -3,6 +3,7 @@
 -- the payload contains the correct channel field so the caller can route it
 -- through ChatGateway.Send, and that the composer clears its input on success.
 -- They also verify the disabled state when CanSend returns false.
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local Composer = require("WhisperMessenger.UI.Composer")
 local ChannelType = require("WhisperMessenger.Model.Identity.ChannelType")
@@ -134,7 +135,7 @@ return function()
   -- Group gateway errors are converted to false so the composer retains a retryable draft.
   do
     local policy = GroupSendPolicy.Create({
-      runtime = { chatApi = {} },
+      runtime = RestrictionPredicates.Add({ chatApi = {} }),
       chatGateway = {
         CanSend = function()
           return true

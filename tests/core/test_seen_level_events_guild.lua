@@ -3,6 +3,7 @@ local SeenGuild = require("WhisperMessenger.Model.SeenGuild")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local STUBBED = {
   "UnitIsPlayer",
@@ -11,7 +12,6 @@ local STUBBED = {
   "UnitFullName",
   "GetGuildInfo",
   "issecretvalue",
-  "_wmSuspended",
   "UNKNOWNOBJECT",
 }
 
@@ -41,7 +41,7 @@ end
 
 local function makeRuntime(results)
   local list = results or {}
-  return {
+  return RestrictionPredicates.Add({
     localProfileId = "me",
     store = { conversations = {} },
     scheduleIncomingRefresh = function() end,
@@ -53,7 +53,7 @@ local function makeRuntime(results)
         return list[i]
       end,
     },
-  }
+  })
 end
 
 return function()

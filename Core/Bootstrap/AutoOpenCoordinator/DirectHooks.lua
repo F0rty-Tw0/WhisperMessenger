@@ -24,7 +24,7 @@ function DirectHooks.shouldInterceptHook(runtime, deps)
   -- don't intercept new whisper intents so the default Blizzard chat handles
   -- them instead. This ensures the user can always communicate even when
   -- the addon is paused.
-  local isCompetitive = runtime.isCompetitiveContent and runtime.isCompetitiveContent()
+  local isCompetitive = runtime.isCompetitiveContent()
   local isVisible = deps.isWindowVisible and deps.isWindowVisible() or false
 
   if isCompetitive then
@@ -125,7 +125,7 @@ function DirectHooks.Install(runtime, hooks, deps)
           -- Re-check at fire time: ENCOUNTER_START may have activated between
           -- schedule and dispatch. Any edit-box cleanup now runs inside
           -- lockdown and taints Blizzard's secure reply path.
-          if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
+          if runtime.isCompetitiveContent() then
             return
           end
           EditBoxInterop.closeEditBox(runtime, editBox, deps.deactivateChat)

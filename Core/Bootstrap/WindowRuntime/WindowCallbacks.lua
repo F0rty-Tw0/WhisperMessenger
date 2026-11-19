@@ -56,7 +56,7 @@ function WindowCallbacks.Create(options)
   local whoTriggers = WhoTriggers.Create(runtime)
 
   local function canReact(selectedContact, message)
-    if type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent() then
+    if runtime.isCompetitiveContent() then
       return false
     end
     if type(selectedContact) ~= "table" or not MessageReactions.IsEligible(message, selectedContact.channel) then

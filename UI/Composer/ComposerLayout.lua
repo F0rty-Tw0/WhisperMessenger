@@ -17,10 +17,11 @@ local EMOJI_PADDING = 8
 -- Horizontal padding between the input box edge and its text.
 ComposerLayout.TEXT_INSET_X = 8
 
--- Extra viewport height above and below the text rows. A viewport exactly
--- one line pitch tall clips glyph descenders and hides the cursor, which is
--- taller than the pitch. Capped at the vertical inset so the viewport never
--- leaves the box.
+-- Extra viewport height below the text rows only. A viewport exactly one
+-- line pitch tall clips glyph descenders and hides the cursor, which is
+-- taller than the pitch. Slack above the rows would show a sliver of the line
+-- scrolled out above them once a long message scrolls. Capped at the vertical
+-- inset so the viewport never leaves the box.
 ComposerLayout.TEXT_SLACK_Y = 3
 
 -- `rows` text rows of `lineHeight` each: the box grows upward by one line per
@@ -47,8 +48,8 @@ function ComposerLayout.Compute(width, rows, lineHeight)
     textInsetY = textInsetY,
     textH = textH,
     textSlackY = slack,
-    viewportY = textInsetY - slack,
-    viewportH = textH + 2 * slack,
+    viewportY = textInsetY,
+    viewportH = textH + slack,
     sendBottom = gutter + (oneRowH - size) / 2,
     gap = gap,
     emojiSize = size,
@@ -67,9 +68,9 @@ function ComposerLayout.Apply(parts, width, rows, lineHeight)
   local frame = parts.box
   frame:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", m.inputX, m.inputY)
   frame:SetSize(m.inputW, m.inputH)
-  -- The scroll frame is the text viewport: the shown rows plus slack on both
-  -- sides, so it clips there and the padding stays put. The edit box insets
-  -- its text by the slack, so the text still starts textInsetY below the top.
+  -- The scroll frame is the text viewport: it starts textInsetY below the box
+  -- top and holds the shown rows plus slack below them, so it clips there and
+  -- the padding stays put. The edit box insets its text bottom by the slack.
   -- The insets are set only when the slack changes: setting them on the
   -- focused box, even to the same values, hides the game's cursor.
   local scroll = parts.scroll
@@ -81,7 +82,7 @@ function ComposerLayout.Apply(parts, width, rows, lineHeight)
     parts.input:SetWidth(m.inputW)
     if parts.textSlackY ~= slack then
       parts.textSlackY = slack
-      parts.input:SetTextInsets(insetX, insetX, slack, slack)
+      parts.input:SetTextInsets(insetX, insetX, 0, slack)
     end
   end
   parts.sendButton:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -m.sendRight, m.sendBottom)

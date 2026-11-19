@@ -1,6 +1,7 @@
 local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local Router = require("WhisperMessenger.Core.EventRouter")
 local Store = require("WhisperMessenger.Model.ConversationStore")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- Sending a reply: the whisper is the plain typed text; an addon peer also
 -- gets the reply link after the identity payload; the stored outgoing
@@ -8,7 +9,7 @@ local Store = require("WhisperMessenger.Model.ConversationStore")
 local KEY = "wow::WOW::thrall-nagrand"
 
 local function newRuntime(whispers, addonMessages)
-  return {
+  return RestrictionPredicates.Add({
     sendStatusByConversation = {},
     pendingOutgoing = {},
     availabilityByGUID = {},
@@ -29,7 +30,7 @@ local function newRuntime(whispers, addonMessages)
     },
     bnetApi = {},
     store = Store.New({ maxMessagesPerConversation = 20, maxConversations = 10 }),
-  }
+  })
 end
 
 local function replyPayload()

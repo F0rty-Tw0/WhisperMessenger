@@ -40,6 +40,26 @@ return function()
     assert(env.inserts[2] == "|Hitem:1|h[Item]|h", "expected the item link to land, got: " .. tostring(env.inserts[2]))
   end
 
+  -- test_set_item_ref_hook_ignores_encoded_player_link
+  -- Blizzard's click handler on our templated frames calls SetItemRef with our
+  -- encoded link. The hook must skip it and leave the frame's insert slot free
+  -- for the decoded name.
+  do
+    env.Reset()
+    _G.SetItemRef("addon:WhisperMessenger:player:Name-Realm:12", "|Haddon:WhisperMessenger:player:Name-Realm:12|h[Name]|h")
+    assert(#env.inserts == 0, "the encoded link must not be inserted, got: " .. tostring(env.inserts[1]))
+    env.LinkHooks.InsertClickedPlayerName("player:Name-Realm:12")
+    assert(#env.inserts == 1, "the decoded name should still land this frame, got " .. #env.inserts)
+    assert(env.inserts[1] == "Name-Realm", "expected the plain name, got: " .. tostring(env.inserts[1]))
+  end
+
+  -- test_insert_link_hook_ignores_encoded_links
+  do
+    env.Reset()
+    _G.ChatEdit_InsertLink("|Haddon:WhisperMessenger:player:Name-Realm:12|h[Name]|h")
+    assert(#env.inserts == 0, "an encoded link from InsertLink must not be inserted, got: " .. tostring(env.inserts[1]))
+  end
+
   -- test_no_gettime_keeps_legacy_behavior
   do
     env.Reset()

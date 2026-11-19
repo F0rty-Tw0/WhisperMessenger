@@ -6,8 +6,9 @@ local SeenGuild = require("WhisperMessenger.Model.SeenGuild")
 local RaceTags = require("WhisperMessenger.Model.Identity.RaceTags")
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
-local STUBBED = { "issecretvalue", "_wmSuspended", "C_CreatureInfo" }
+local STUBBED = { "issecretvalue", "C_CreatureInfo" }
 
 local RACES = {
   [1] = { raceName = "Human", clientFileString = "Human" },
@@ -33,7 +34,7 @@ local function makeRuntime(results)
       return results[i]
     end,
   }
-  return runtime
+  return RestrictionPredicates.Add(runtime)
 end
 
 local function saveChat(runtime, name, fields)

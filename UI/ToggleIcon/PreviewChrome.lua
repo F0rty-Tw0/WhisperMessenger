@@ -4,12 +4,15 @@ if type(ns) ~= "table" then
 end
 
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 
 -- The message preview's frame and border. Under the Native WoW HUD it wears
 -- the game's tooltip border (art only: the colour presets still tint its fill,
 -- opaque as the game's tooltips are); otherwise (or when this client lacks the
--- template) a plain frame with WM's rounded background.
+-- template) a plain frame with WM's rounded background. Either way the frame
+-- also gets the link template where the client has it, so link clicks run
+-- the game's own secure handler.
 local PreviewChrome = {}
 
 local TOOLTIP_TEMPLATE = "TooltipBackdropTemplate"
@@ -45,7 +48,7 @@ end
 function PreviewChrome.Create(factory, parent)
   local frame
   if Hud.IsOn() then
-    local ok, created = pcall(factory.CreateFrame, "Frame", nil, parent, TOOLTIP_TEMPLATE)
+    local ok, created = pcall(Hyperlinks.CreateLinkFrame, factory, "Frame", nil, parent, TOOLTIP_TEMPLATE)
     if ok and created then
       if hasTooltipParts(created) then
         return created, tooltipFill(created)
@@ -53,7 +56,7 @@ function PreviewChrome.Create(factory, parent)
       frame = created
     end
   end
-  frame = frame or factory.CreateFrame("Frame", nil, parent)
+  frame = frame or Hyperlinks.CreateLinkFrame(factory, "Frame", nil, parent)
   return frame, UIHelpers.createRoundedBackground(frame, CORNER_RADIUS)
 end
 

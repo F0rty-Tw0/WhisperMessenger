@@ -31,10 +31,10 @@ local function settingOn(runtime, key)
 end
 
 local function isRestricted(runtime)
-  if type(runtime.isMythicLockdown) == "function" and runtime.isMythicLockdown() then
+  if runtime.isMythicLockdown() then
     return true
   end
-  if type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent() then
+  if runtime.isCompetitiveContent() then
     return true
   end
   return false

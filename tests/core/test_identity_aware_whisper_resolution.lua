@@ -2,6 +2,7 @@ local Identity = require("WhisperMessenger.Model.Identity")
 local ConversationOps = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 local ChatReplyState = require("WhisperMessenger.Util.ChatReplyState")
 local MythicSuspendController = require("WhisperMessenger.Core.Bootstrap.MythicSuspendController")
+local RestrictionState = require("tests.helpers.restriction_state")
 
 local function makeEditBox(attributes)
   return {
@@ -122,7 +123,7 @@ return function()
 
   -- An unknown Battle.net reply must leave Blizzard's state intact on Mythic resume.
   do
-    local savedSuspended = _G._wmSuspended
+    local savedSuspended = RestrictionState.Suspended()
     local attributes = {
       chatType = "BN_WHISPER",
       stickyType = "BN_WHISPER",
@@ -148,6 +149,6 @@ return function()
     assert(attributes.chatType == "BN_WHISPER", "unresolved BN reply state must not be scrubbed")
     assert(attributes.stickyType == "BN_WHISPER", "unresolved BN sticky state must not be changed")
     assert(attributes.tellTarget == 999, "unresolved BN reply target must remain available to Blizzard")
-    _G._wmSuspended = savedSuspended
+    RestrictionState.SetSuspended(savedSuspended)
   end
 end

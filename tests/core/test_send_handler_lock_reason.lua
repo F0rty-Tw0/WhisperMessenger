@@ -24,12 +24,7 @@ return function()
     assert(SendHandler.LockReason(rt(false, false)) == nil, "no lock")
   end
 
-  local function test_runtime_without_checks_is_unlocked()
-    assert(SendHandler.LockReason({}) == nil, "a runtime without the checks is unlocked")
-  end
-
   test_mythic_lockdown_wins_over_competitive()
   test_competitive_content_is_the_reason_without_mythic()
   test_no_lock_has_no_reason()
-  test_runtime_without_checks_is_unlocked()
 end

@@ -2,6 +2,7 @@ local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local Router = require("WhisperMessenger.Core.EventRouter")
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local Protocol = require("WhisperMessenger.Model.MessageReactionProtocol")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- A long whisper end to end: what the sender puts on the wire, replayed into
 -- a receiver in different orders. Both sides show one bubble when the
@@ -20,7 +21,7 @@ local function longText()
 end
 
 local function newState(wire)
-  return {
+  return RestrictionPredicates.Add({
     localProfileId = "me",
     sendStatusByConversation = {},
     pendingOutgoing = {},
@@ -41,7 +42,7 @@ local function newState(wire)
     },
     bnetApi = {},
     store = Store.New({ maxMessagesPerConversation = 20, maxConversations = 10, messageMaxAge = 86400, conversationMaxAge = 86400 }),
-  }
+  })
 end
 
 -- Sends text and plays back the game's echoes; returns sender state and wire.

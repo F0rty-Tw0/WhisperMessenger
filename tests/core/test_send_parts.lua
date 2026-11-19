@@ -2,6 +2,7 @@ local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local QueuedSends = require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local Protocol = require("WhisperMessenger.Model.MessageReactionProtocol")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- A whisper longer than one chat message goes out as several whispers that
 -- share one wire id: one pending entry per part, the identity side message
@@ -20,7 +21,7 @@ local function words(count)
 end
 
 local function newRuntime(whispers, addonMessages)
-  return {
+  return RestrictionPredicates.Add({
     sendStatusByConversation = {},
     pendingOutgoing = {},
     availabilityByGUID = {},
@@ -41,7 +42,7 @@ local function newRuntime(whispers, addonMessages)
     },
     bnetApi = {},
     store = Store.New({ maxMessagesPerConversation = 20, maxConversations = 10, messageMaxAge = 86400, conversationMaxAge = 86400 }),
-  }
+  })
 end
 
 local function payload(text)

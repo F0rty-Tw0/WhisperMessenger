@@ -6,6 +6,7 @@ local LockdownCatcher = require("WhisperMessenger.Core.Bootstrap.LockdownCatcher
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local IncomingAlerts = require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 local ChatPrint = require("WhisperMessenger.Util.ChatPrint")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 local SECRET = FakeChatLines.SECRET
 local HELD_AT_DEFAULT = 500
@@ -15,7 +16,7 @@ local LockdownReplayRuntime = {}
 LockdownReplayRuntime.HELD_AT = HELD_AT_DEFAULT
 
 function LockdownReplayRuntime.New()
-  return {
+  return RestrictionPredicates.Add({
     store = Store.New({ maxMessagesPerConversation = 20, maxConversations = 10 }),
     localProfileId = "me",
     now = function()
@@ -37,7 +38,7 @@ function LockdownReplayRuntime.New()
         return LockdownReplayRuntime.HELD_AT
       end,
     }),
-  }
+  })
 end
 
 -- Holds a whisper the way the catcher sees it during a lock: every arg

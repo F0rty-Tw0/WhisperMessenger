@@ -1,12 +1,14 @@
 local RestrictionState = require("tests.helpers.restriction_state")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
+local RestrictionPredicates = require("tests.helpers.restriction_predicates")
 
 -- A fake Bootstrap wired as Bootstrap.Initialize wires the real one: the
 -- runtime keeps the Bootstrap table's restriction instance.
 local function newBootstrap(fields, flags)
   local Bootstrap = RestrictionState.Set(fields, flags)
   Bootstrap.runtime.restrictedActions = Bootstrap.restrictions
+  RestrictionPredicates.Add(Bootstrap.runtime)
   return Bootstrap
 end
 
@@ -119,7 +121,7 @@ return function()
     local instance = RestrictedActions.New()
     local Bootstrap = {
       restrictions = instance,
-      runtime = {
+      runtime = RestrictionPredicates.Add({
         restrictedActions = instance,
         suspend = function()
           suspendCalls = suspendCalls + 1
@@ -127,7 +129,7 @@ return function()
         resume = function()
           resumeCalls = resumeCalls + 1
         end,
-      },
+      }),
     }
     local function report(restrictionType, state)
       LifecycleHandlers.Handle(Bootstrap, "ADDON_RESTRICTION_STATE_CHANGED", {}, restrictionType, state)
@@ -153,7 +155,7 @@ return function()
   -- test_restriction_event_reaches_the_instance_cache_without_a_runtime_copy
   do
     local instance = RestrictedActions.New()
-    local Bootstrap = { restrictions = instance, runtime = {} }
+    local Bootstrap = { restrictions = instance, runtime = RestrictionPredicates.Add({}) }
     LifecycleHandlers.Handle(Bootstrap, "ADDON_RESTRICTION_STATE_CHANGED", {}, RestrictedActions.TYPES.PvPMatch, RestrictedActions.STATES.Active)
     assert(instance.cachedState(RestrictedActions.TYPES.PvPMatch) == RestrictedActions.STATES.Active, "the event payload is cached on the instance")
   end

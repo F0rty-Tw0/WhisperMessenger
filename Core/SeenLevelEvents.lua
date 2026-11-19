@@ -14,6 +14,12 @@ local WhoLevels = ns.SeenLevelEventsWhoLevels or require("WhisperMessenger.Core.
 local Guild = ns.SeenLevelEventsGuild or require("WhisperMessenger.Core.SeenLevelEvents.Guild")
 local WhoIdentity = ns.SeenLevelEventsWhoIdentity or require("WhisperMessenger.Core.SeenLevelEvents.WhoIdentity")
 
+-- Looked up at call time: RestrictedActions loads later in the TOC.
+local function isSuspended()
+  local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
+  return RestrictedActions.IsSuspended()
+end
+
 -- Records the levels the game shows the player (target, mouseover,
 -- nameplates, group, friends) and pushes them to saved whisper chats.
 -- Owns its frame so these events never pass through the lifecycle router.
@@ -178,7 +184,7 @@ local function recordWho(api, systemText)
 end
 
 local function captureBlocked(rt)
-  return (rt.isCompetitiveContent and rt.isCompetitiveContent()) or (rt.isMythicLockdown and rt.isMythicLockdown())
+  return rt.isCompetitiveContent() or rt.isMythicLockdown()
 end
 
 local function dispatch(rt, event, unit)
@@ -257,7 +263,7 @@ function SeenLevelEvents.SetEnabled(on)
     return
   end
   local frame = SeenLevelEvents._frame
-  if frame == nil or _G._wmSuspended then
+  if frame == nil or isSuspended() then
     return
   end
   for _, event in ipairs(SeenLevelEvents.UNIT_EVENTS) do
@@ -271,7 +277,7 @@ end
 -- No-op while suspended (Mythic+ runs no addon code).
 function SeenLevelEvents.OpenWhoWindow()
   local frame = SeenLevelEvents._frame
-  if frame == nil or _G._wmSuspended then
+  if frame == nil or isSuspended() then
     return
   end
   for _, event in ipairs(SeenLevelEvents.WHO_EVENTS) do
