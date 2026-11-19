@@ -97,7 +97,8 @@ function ComposerLayout.Apply(parts, width, rows, lineHeight, buttonCount)
   parts.emojiButton:SetPoint("RIGHT", parts.sendButton, "LEFT", -m.gap, 0)
   parts.emojiButton:SetSize(m.emojiSize, m.emojiSize)
   parts.emojiIcon:SetSize(m.emojiIconSize, m.emojiIconSize)
-  local quickReplyAnchor = buttonCount == 2 and parts.sendButton or parts.emojiButton
+  local emojiHidden = buttonCount == ComposerLayout.FULL_BUTTON_COUNT - 1
+  local quickReplyAnchor = emojiHidden and parts.sendButton or parts.emojiButton
   parts.quickReplyButton:SetPoint("RIGHT", quickReplyAnchor, "LEFT", -m.gap, 0)
   parts.quickReplyButton:SetSize(m.emojiSize, m.emojiSize)
   parts.quickReplyButton.icon:SetSize(m.emojiIconSize, m.emojiIconSize)
