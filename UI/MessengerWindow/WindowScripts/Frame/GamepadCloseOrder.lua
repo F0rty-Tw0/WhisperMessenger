@@ -7,7 +7,8 @@ end
 -- open layer from the top, the window itself last.
 local GamepadCloseOrder = {}
 
--- deps: isWindowShown, hideShownPopup, compactBack, isOptionsVisible,
+-- deps: isWindowShown, hideShownPopup, closeOpenDropdown (optional: true
+-- when it closed a settings dropdown), compactBack, isOptionsVisible,
 -- setOptionsVisible, getVisiblePanel, setPanelVisible, closeWindow.
 -- The handler always returns true, so the game never falls back to its own
 -- close behavior for the window.
@@ -17,6 +18,9 @@ function GamepadCloseOrder.Build(deps)
       return true
     end
     if deps.hideShownPopup() then
+      return true
+    end
+    if deps.closeOpenDropdown and deps.closeOpenDropdown() then
       return true
     end
     if deps.compactBack() then

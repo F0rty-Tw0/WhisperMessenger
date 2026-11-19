@@ -14,6 +14,7 @@ local function build(state)
       return state.shown ~= false
     end,
     hideShownPopup = record("hideShownPopup", state.popup == true),
+    closeOpenDropdown = state.dropdown ~= nil and record("closeOpenDropdown", state.dropdown) or nil,
     compactBack = record("compactBack", state.compactChat == true),
     isOptionsVisible = function()
       return state.options == true
@@ -67,5 +68,15 @@ return function()
   do
     local close, calls = build({ shown = false, popup = true, options = true })
     assert(close() == true and #calls == 0, "hidden window: no action, still handled")
+  end
+
+  -- test_b_closes_an_open_settings_dropdown_before_settings
+  do
+    local close, calls = build({ dropdown = true, options = true })
+    assert(close() == true and last(calls) == "closeOpenDropdown", "dropdown closes first")
+    local close2, calls2 = build({ dropdown = false, options = true })
+    assert(close2() == true and last(calls2) == "setOptionsVisible", "next B closes settings")
+    local close3, calls3 = build({ popup = true, dropdown = true })
+    assert(close3() == true and #calls3 == 1 and last(calls3) == "hideShownPopup", "our popup still comes first")
   end
 end
