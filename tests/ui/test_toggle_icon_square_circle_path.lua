@@ -112,5 +112,29 @@ return function()
     assert(not icon.squareBackdrop:IsShown(), name .. ": no backdrop")
   end
 
+  -- test_profile_gone_unread_change_returns_to_the_circle_path
+  do
+    local name = "test_profile_gone_unread_change_returns_to_the_circle_path"
+    local icon
+    withProfile({}, function()
+      icon = widget({})
+    end)
+    icon.setUnreadCount(0)
+    assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), name .. ": the icon background color")
+    assert(not icon.squareBackdrop:IsShown(), name .. ": no backdrop")
+  end
+
+  -- test_profile_gone_resize_returns_to_the_circle_path
+  do
+    local name = "test_profile_gone_resize_returns_to_the_circle_path"
+    local icon
+    withProfile({}, function()
+      icon = widget({})
+    end)
+    icon.applyIconSize(48)
+    assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), name .. ": the icon background color")
+    assert(not icon.squareBackdrop:IsShown(), name .. ": no backdrop")
+  end
+
   Theme.SetPreset(Theme.DEFAULT_PRESET)
 end
