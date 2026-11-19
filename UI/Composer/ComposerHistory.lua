@@ -85,13 +85,17 @@ function ComposerHistory.Create(input, parts)
     if key ~= "UP" or text ~= "" then
       return false
     end
+
     return start()
   end
 
   input:SetScript("OnKeyDown", function(self, key, ...)
     local isArrow = key == "UP" or key == "DOWN"
-    if isArrow and not modifierDown() and handled(key) then
-      return
+    if isArrow and not modifierDown() then
+      local tookKey = handled(key)
+      if tookKey then
+        return
+      end
     end
     if previous then
       previous(self, key, ...)
