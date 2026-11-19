@@ -14,6 +14,7 @@ local function build(state)
       return state.shown ~= false
     end,
     hideShownPopup = record("hideShownPopup", state.popup == true),
+    hideComposerPopover = record("hideComposerPopover", state.popover == true),
     closeOpenDropdown = state.dropdown ~= nil and record("closeOpenDropdown", state.dropdown) or nil,
     compactBack = record("compactBack", state.compactChat == true),
     isOptionsVisible = function()
@@ -33,6 +34,15 @@ local function last(calls)
   return calls[#calls] and calls[#calls].name
 end
 
+local function called(calls, name)
+  for _, c in ipairs(calls) do
+    if c.name == name then
+      return true
+    end
+  end
+  return false
+end
+
 return function()
   -- test_b_hides_our_shown_popup_first
   do
@@ -43,7 +53,7 @@ return function()
   -- test_b_backs_out_of_the_compact_open_chat
   do
     local close, calls = build({ compactChat = true, options = true })
-    assert(close() == true and last(calls) == "compactBack" and #calls == 2, "compact chat backs out, settings stay")
+    assert(close() == true and last(calls) == "compactBack" and #calls == 3, "compact chat backs out, settings stay")
   end
 
   -- test_b_closes_the_settings_pane
@@ -78,5 +88,24 @@ return function()
     assert(close2() == true and last(calls2) == "setOptionsVisible", "next B closes settings")
     local close3, calls3 = build({ popup = true, dropdown = true })
     assert(close3() == true and #calls3 == 1 and last(calls3) == "hideShownPopup", "our popup still comes first")
+  end
+
+  -- test_b_closes_the_composer_popover_before_the_compact_chat
+  do
+    local close, calls = build({ popover = true, compactChat = true, options = true })
+    assert(close() == true and last(calls) == "hideComposerPopover", "picker closes, chat and settings stay")
+    assert(not called(calls, "compactBack"), "no second layer closed")
+  end
+
+  -- test_b_hides_our_popup_before_the_composer_popover
+  do
+    local close, calls = build({ popup = true, popover = true })
+    assert(close() == true and last(calls) == "hideShownPopup" and not called(calls, "hideComposerPopover"), "popup first")
+  end
+
+  -- test_b_on_a_hidden_window_leaves_the_popover
+  do
+    local close, calls = build({ shown = false, popover = true })
+    assert(close() == true and not called(calls, "hideComposerPopover"), "hidden window: nothing closed")
   end
 end

@@ -33,6 +33,16 @@ local function ignoreDeadStops(nav, shell, refs)
   end
 end
 
+-- The composer's emoji and quick-reply pickers that exist.
+local function composerPickers(composer)
+  local pickers = {}
+  if composer then
+    pickers[#pickers + 1] = composer.emojiPicker
+    pickers[#pickers + 1] = composer.quickReplyPicker
+  end
+  return pickers
+end
+
 local function buildCloseHandler(frame, refs)
   local visibility = refs.windowVisibility
   return GamepadCloseOrder.Build({
@@ -40,6 +50,15 @@ local function buildCloseHandler(frame, refs)
       return frame:IsShown()
     end,
     hideShownPopup = PickerPopup.HideShownEscapeFrame,
+    hideComposerPopover = function()
+      for _, picker in ipairs(composerPickers(refs.composer)) do
+        if picker.frame:IsShown() then
+          picker:close()
+          return true
+        end
+      end
+      return false
+    end,
     closeOpenDropdown = DropdownSelector.HideShownMenu,
     -- Read at press time: compact mode replaces the hook after the build.
     compactBack = function()
@@ -113,6 +132,12 @@ function GamepadWiring.Create(shell, nav)
     -- after Create, and every real show arrives through the OnShow hook.
     nav.setCloseHandler(buildCloseHandler(frame, refs))
     attachPopups(nav)
+    -- The pickers live inside the window: a re-scan makes their buttons
+    -- D-pad stops. Their own SetScript calls ran at build, before this.
+    for _, picker in ipairs(composerPickers(refs.composer)) do
+      picker.frame:HookScript("OnShow", wiring.refresh)
+      picker.frame:HookScript("OnHide", wiring.refresh)
+    end
     local transcript = refs.conversation and refs.conversation.transcript
     if transcript then
       nav.setScrollFrame(transcript.scrollFrame)

@@ -133,4 +133,36 @@ return function()
     window.setOptionsVisible(false)
     assert(env.scrollFrameFor(window.frame) == window.conversation.transcript.scrollFrame, "chat again after settings close")
   end)
+
+  -- test_b_closes_the_emoji_picker_then_the_next_layer
+  onFlavor(false, true, function(env)
+    local window = build()
+    window.frame:Show()
+    env.flush()
+    local picker = window.composer.emojiPicker
+    local before = env.count("RefreshButtonGroups")
+    -- open() refuses while the composer is disabled (no chat selected); the frame is what B and the re-scan see.
+    picker.frame:Show()
+    env.flush()
+    local afterOpen = env.count("RefreshButtonGroups")
+    assert(afterOpen > before, "opening the picker re-scans: its buttons are reachable")
+    local close = window.frame.SmartNavigationCloseHandler
+    assert(close(window.frame) == true and not picker.frame:IsShown() and window.frame:IsShown(), "B closes the picker only")
+    env.flush()
+    assert(env.count("RefreshButtonGroups") > afterOpen, "closing re-scans too")
+    assert(close(window.frame) == true and not window.frame:IsShown(), "next B goes to the next layer: the window")
+  end)
+
+  -- test_b_closes_the_quick_reply_picker
+  onFlavor(false, true, function(env)
+    local window = build()
+    window.frame:Show()
+    local picker = window.composer.quickReplyPicker
+    picker.frame:Show()
+    env.flush()
+    local afterOpen = env.count("RefreshButtonGroups")
+    assert(window.frame.SmartNavigationCloseHandler(window.frame) == true and not picker.frame:IsShown() and window.frame:IsShown(), "B closes it")
+    env.flush()
+    assert(env.count("RefreshButtonGroups") > afterOpen, "closing re-scans")
+  end)
 end
