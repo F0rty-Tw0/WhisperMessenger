@@ -5,6 +5,7 @@ end
 
 local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
 local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
+local CharacterMergeRemap = ns.BootstrapCharacterMergeRemap or require("WhisperMessenger.Core.Bootstrap.CharacterMergeRemap")
 
 local RuntimeBindings = {}
 
@@ -69,6 +70,14 @@ function RuntimeBindings.Apply(options)
     if window and window.composer and window.composer.forgetReply then
       window.composer.forgetReply(conversationKey)
     end
+  end
+
+  -- A full refresh (no key) rebuilds every card and redraws the selection,
+  -- so the open character chat becomes the friend's chat in place. Not
+  -- selectConversation: that would mark the friend's chat read.
+  runtime.onCharacterMerged = function(characterKey, bnetKey)
+    CharacterMergeRemap.Apply(runtime, characterKey, bnetKey)
+    refreshWindow()
   end
 
   -- A panel or the options pane over the window leaves the chat unseen.

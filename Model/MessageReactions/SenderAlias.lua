@@ -38,6 +38,13 @@ function SenderAlias.Resolve(state, senderKey)
   return type(aliases) == "table" and aliases[senderKey] or senderKey
 end
 
+local function moveQueues(runtime, fromKey, toKey)
+  for _, field in ipairs(PendingQueue.FIELDS) do
+    mergeSenderQueue(runtime[field], fromKey, toKey)
+  end
+  PendingQueue.EnforceSenderCap(runtime, toKey)
+end
+
 function SenderAlias.Associate(state, aliasKey, canonicalKey)
   if type(state) ~= "table" or type(aliasKey) ~= "string" or type(canonicalKey) ~= "string" or aliasKey == canonicalKey then
     return false
@@ -49,11 +56,18 @@ function SenderAlias.Associate(state, aliasKey, canonicalKey)
     return false
   end
   aliases[aliasKey] = canonicalKey
-  for _, field in ipairs(PendingQueue.FIELDS) do
-    mergeSenderQueue(runtime[field], aliasKey, canonicalKey)
-  end
-  PendingQueue.EnforceSenderCap(runtime, canonicalKey)
+  moveQueues(runtime, aliasKey, canonicalKey)
   return true
+end
+
+-- Folds one sender's waiting entries into another's without recording an
+-- alias: a merged character's sender key is gone for good.
+function SenderAlias.MoveQueues(state, fromKey, toKey)
+  local runtime = type(state) == "table" and state.messageReactionRuntime or nil
+  if type(runtime) ~= "table" or fromKey == toKey then
+    return
+  end
+  moveQueues(runtime, fromKey, toKey)
 end
 
 ns.MessageReactionsSenderAlias = SenderAlias

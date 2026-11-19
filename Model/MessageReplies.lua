@@ -149,5 +149,14 @@ function MessageReplies.ClaimStaged(state, conversationKey, message, now)
   return false
 end
 
+-- A character's chat folded into a friend's chat: its waiting quotes follow.
+function MessageReplies.RemapStaged(state, oldKey, newKey)
+  for _, entry in ipairs(type(state) == "table" and state.replyLinksStaged or {}) do
+    if entry.conversationKey == oldKey then
+      entry.conversationKey = newKey
+    end
+  end
+end
+
 ns.MessageReplies = MessageReplies
 return MessageReplies
