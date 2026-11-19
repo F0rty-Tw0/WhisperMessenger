@@ -4,6 +4,7 @@ local FindUI = require("tests.helpers.find_ui")
 local DropdownSelector = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
+local Localization = require("WhisperMessenger.Locale.Localization")
 
 local function fakeNav(active)
   ---@type table<string, any>
@@ -24,6 +25,7 @@ local function fakeNav(active)
     "popupShown",
     "popupHidden",
     "setPopupCloseHandler",
+    "bindRightClick",
   }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
@@ -110,6 +112,8 @@ local function ignoredWith(nav, widget)
 end
 
 return function()
+  Localization.Configure({ language = "enUS" })
+
   -- test_window_show_and_hide_reach_the_nav
   do
     local t = setup()
@@ -137,7 +141,11 @@ return function()
         table.insert(order, c.name)
       end
     end
-    assert(table.concat(order, ",") == "MarkFrameIgnored,FrameShown,SetScrollFrameForFrame", "ignores, then register, then scroll frame")
+    assert(
+      table.concat(order, ",")
+        == "MarkFrameIgnored,FrameShown,SetScrollFrameForFrame,CreatePromptedBinding,CreatePromptedBindingFooter,ShowAndActivateBindings",
+      "ignores, then register, then scroll frame, then the X footer"
+    )
     assert(env.count("FrameShown") == 1, "one registration")
     assert(env.scrollFrameFor(t.frame) == t.refs.conversation.transcript.scrollFrame, "right stick scrolls the chat")
   end
@@ -205,6 +213,19 @@ return function()
   do
     local t = setup({ settings = true })
     assert(type(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged) == "function", "tabs can report")
+  end
+
+  -- test_attach_binds_x_to_the_right_click_context
+  do
+    local t = setup()
+    local seen
+    for _, s in ipairs(t.nav.seen) do
+      if s.name == "bindRightClick" then
+        seen = s.args
+      end
+    end
+    assert(t.nav.count("bindRightClick") == 1, "bound once")
+    assert(seen[1] == GamepadNav.RIGHT_CLICK_CONTEXT and seen[2] == "Options", "our context, the existing Options label")
   end
 
   -- test_inactive_nav_skips_the_settings_walk

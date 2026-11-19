@@ -8,6 +8,7 @@ local GamepadCloseOrder = ns.MessengerWindowGamepadCloseOrder or require("Whispe
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local GamepadSettings = ns.MessengerWindowGamepadSettings or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 -- The messenger window's part of the WoW: Forever gamepad UI: register on
 -- show, B closes the topmost layer, the right stick scrolls the chat (the
@@ -133,6 +134,9 @@ function GamepadWiring.Create(shell, nav)
     -- after Create, and every real show arrives through the OnShow hook.
     nav.setCloseHandler(buildCloseHandler(frame, refs))
     attachPopups(nav)
+    -- X opens the right-click menu of a focused target that carries the
+    -- context (contact rows).
+    nav.bindRightClick(GamepadNav.RIGHT_CLICK_CONTEXT, Localization.Text("Options"))
     -- The pickers live inside the window: a re-scan makes their buttons
     -- D-pad stops. Their own SetScript calls ran at build, before this.
     for _, picker in ipairs(composerPickers(refs.composer)) do
