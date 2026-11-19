@@ -98,6 +98,10 @@ function IncomingWhisper.Handle(state, eventName, payload, contact, conversation
       -- A fold opened this friend's chat for the hidden greeting alone.
       if opensNewChat == true then
         Store.Remove(state.store, conversationKey)
+        -- Nothing is returned, so the router won't redraw: drop the empty row now.
+        if type(state.refreshWindow) == "function" then
+          state.refreshWindow()
+        end
       end
       return nil
     end
