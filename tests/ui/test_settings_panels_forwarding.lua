@@ -87,6 +87,7 @@ return function()
     mentionSound = "orb",
     playSoundOnSend = true,
     sentSound = "ding",
+    muteAllSounds = true,
     iconSize = 56,
     iconDesaturated = false,
     iconBackground = false,
@@ -210,6 +211,7 @@ return function()
   assert(notificationCapture.config.mentionSound == "orb", "Notifications config should forward mentionSound")
   assert(notificationCapture.config.playSoundOnSend == true, "Notifications config should forward playSoundOnSend")
   assert(notificationCapture.config.sentSound == "ding", "Notifications config should forward sentSound")
+  assert(notificationCapture.config.muteAllSounds == true, "Notifications config should forward muteAllSounds")
   assert(notificationCapture.config.iconMode == nil, "Notifications config should not include iconMode")
   assert(notificationCapture.config.iconSize == nil, "Notifications config should not include iconSize")
 
