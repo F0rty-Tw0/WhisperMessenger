@@ -1,12 +1,11 @@
 local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
 local Router = require("WhisperMessenger.Core.EventRouter")
+local World = require("tests.helpers.character_merge_world")
 
 -- A Battle.net chat and a character chat of the same friend, shaped like the
 -- saved records (field names from a live SavedVariables file, values made
 -- up), fold into one chat when the character whispers again.
-local K = "wow::WOW::arthas-area52"
-local B = "bnet::BN::jaina#1234"
-local NAME = "Arthas-Area52"
+local K, B, NAME = World.K, World.B, World.NAME
 
 local function bnetLine(id, direction, text, sentAt)
   local line = {

@@ -1,28 +1,9 @@
-local Store = require("WhisperMessenger.Model.ConversationStore")
-local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
 local WhisperMessage = require("WhisperMessenger.Core.EventRouter.WhisperMessage")
 local CharacterRedirect = require("WhisperMessenger.Core.EventRouter.CharacterRedirect")
+local World = require("tests.helpers.character_merge_world")
 
-local K = "wow::WOW::arthas-area52"
-local B = "bnet::BN::jaina#1234"
-local NAME = "Arthas-Area52"
-local FRIEND = { bnetAccountID = 77, battleTag = "Jaina#1234" }
-
-local function newState(accountInfo)
-  local lookups = { n = 0 }
-  local state = {
-    localProfileId = "me",
-    store = Store.New({ maxMessagesPerConversation = 50 }),
-    characterMerges = CharacterMergeMap.Ensure({}),
-    bnetApi = {
-      GetAccountInfoByGUID = function()
-        lookups.n = lookups.n + 1
-        return accountInfo
-      end,
-    },
-  }
-  return state, lookups
-end
+local K, B, NAME, FRIEND = World.K, World.B, World.NAME, World.FRIEND
+local newState = World.NewState
 
 local function resolve(state, payload)
   payload = payload or { playerName = NAME, guid = "Player-1", text = "hi", lineID = 1 }
@@ -65,10 +46,14 @@ local function test_secret_guid_skips_lookup()
   end)
 end
 
-local function test_missing_api_keeps_k()
+local function test_missing_lookup_function_keeps_k()
   local state = newState(FRIEND)
   state.bnetApi = {}
   assert(resolve(state) == K, "no GetAccountInfoByGUID: K")
+end
+
+local function test_missing_battle_net_api_keeps_k()
+  local state = newState(FRIEND)
   state.bnetApi = nil
   assert(resolve(state) == K, "no Battle.net API at all: K")
 end
@@ -143,7 +128,8 @@ return function()
   test_no_guid_skips_lookup_and_caches_no_miss()
   test_empty_guid_skips_lookup_and_caches_no_miss()
   test_secret_guid_skips_lookup()
-  test_missing_api_keeps_k()
+  test_missing_lookup_function_keeps_k()
+  test_missing_battle_net_api_keeps_k()
   test_api_error_is_a_miss()
   test_api_error_caches_the_miss()
   test_no_match_is_looked_up_once_per_session()

@@ -1,41 +1,10 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
 local Router = require("WhisperMessenger.Core.EventRouter")
+local World = require("tests.helpers.character_merge_world")
 
-local K = "wow::WOW::arthas-area52"
-local B = "bnet::BN::jaina#1234"
-local NAME = "Arthas-Area52"
-local FRIEND = { bnetAccountID = 77, battleTag = "Jaina#1234" }
-
-local function newRuntime(accountInfo)
-  local lookups = { n = 0 }
-  local runtime = {
-    localProfileId = "me",
-    store = Store.New({ maxMessagesPerConversation = 50, maxConversations = 10 }),
-    availabilityByGUID = {},
-    pendingOutgoing = {},
-    now = function()
-      return 1000
-    end,
-    accountState = { settings = {} },
-    characterMerges = CharacterMergeMap.Ensure({}),
-    bnetApi = {
-      GetAccountInfoByGUID = function()
-        lookups.n = lookups.n + 1
-        return accountInfo
-      end,
-    },
-  }
-  return runtime, lookups
-end
-
-local function seedB(runtime)
-  return Store.EnsureConversation(runtime.store, B, { channel = "BN", displayName = "Jaina#1234", battleTag = "Jaina#1234", bnetAccountID = 77 })
-end
-
-local function last(conversation)
-  return conversation.messages[#conversation.messages]
-end
+local K, B, NAME, FRIEND = World.K, World.B, World.NAME, World.FRIEND
+local newRuntime, seedB, last = World.NewState, World.SeedB, World.Last
 
 local function route(runtime, eventName, payload)
   payload.playerName = payload.playerName or NAME

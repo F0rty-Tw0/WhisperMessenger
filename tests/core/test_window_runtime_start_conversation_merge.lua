@@ -1,25 +1,10 @@
 local StartConversation = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.StartConversation")
-local Store = require("WhisperMessenger.Model.ConversationStore")
 local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
+local World = require("tests.helpers.character_merge_world")
 
 -- Starting a chat with a character folded into a friend's Battle.net chat.
-local K = "wow::WOW::arthas-area52"
-local B = "bnet::BN::jaina#1234"
-local NAME = "Arthas-Area52"
-
-local function mergedRuntime()
-  local runtime = {
-    localProfileId = "Player-1234",
-    store = Store.New({}),
-    now = function()
-      return 1000
-    end,
-  }
-  Store.EnsureConversation(runtime.store, B, { channel = "BN", battleTag = "Jaina#1234", bnetAccountID = 77 })
-  runtime.characterMerges = CharacterMergeMap.Ensure({})
-  CharacterMergeMap.Record(runtime.characterMerges, K, B, NAME)
-  return runtime
-end
+local K, B, NAME = World.K, World.B, World.NAME
+local mergedRuntime = World.MergedState
 
 -- The start function plus a reader for the key it last selected.
 local function starter(runtime)

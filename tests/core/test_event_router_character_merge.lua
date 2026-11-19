@@ -1,56 +1,12 @@
-local Store = require("WhisperMessenger.Model.ConversationStore")
 local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
 local Router = require("WhisperMessenger.Core.EventRouter")
+local World = require("tests.helpers.character_merge_world")
 
-local K = "wow::WOW::arthas-area52"
-local B = "bnet::BN::jaina#1234"
-local NAME = "Arthas-Area52"
-local FRIEND = { bnetAccountID = 77, battleTag = "Jaina#1234" }
-
-local function newRuntime(accountInfo)
-  local lookups = { n = 0 }
-  local runtime = {
-    localProfileId = "me",
-    store = Store.New({ maxMessagesPerConversation = 50, maxConversations = 10 }),
-    availabilityByGUID = {},
-    pendingOutgoing = {},
-    now = function()
-      return 1000
-    end,
-    accountState = { settings = {} },
-    characterMerges = CharacterMergeMap.Ensure({}),
-    bnetApi = {
-      GetAccountInfoByGUID = function()
-        lookups.n = lookups.n + 1
-        return accountInfo
-      end,
-    },
-  }
-  return runtime, lookups
-end
-
-local function seedB(runtime)
-  return Store.EnsureConversation(runtime.store, B, { channel = "BN", displayName = "Jaina#1234", battleTag = "Jaina#1234", bnetAccountID = 77 })
-end
-
-local function seedK(runtime)
-  runtime.store.conversations[K] = {
-    conversationKey = K,
-    channel = "WOW",
-    displayName = NAME,
-    unreadCount = 1,
-    unreadActivityCount = 0,
-    lastActivityAt = 500,
-    messages = { { id = "50", lineID = 50, kind = "user", direction = "in", text = "earlier", sentAt = 500, channel = "WOW", playerName = NAME } },
-  }
-end
+local K, B, NAME, FRIEND = World.K, World.B, World.NAME, World.FRIEND
+local newRuntime, seedB, seedK, last = World.NewState, World.SeedB, World.SeedK, World.Last
 
 local function whisper(runtime, text, lineID)
   return Router.HandleEvent(runtime, "CHAT_MSG_WHISPER", { text = text, playerName = NAME, guid = "Player-1", lineID = lineID })
-end
-
-local function last(conversation)
-  return conversation.messages[#conversation.messages]
 end
 
 local function test_friend_character_whisper_lands_in_b_with_no_k_row()
