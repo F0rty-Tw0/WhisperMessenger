@@ -34,7 +34,14 @@ local function test_unmerged_name_builds_the_character_key()
   assert(ConversationOps.buildConversationKeyFromName(runtime, Identity, NAME) == K, "unmerged: K as today")
 end
 
+-- AutoOpenHooks marks this key read when the player replies in the game's chat.
+local function test_merged_name_finds_the_battle_net_chat()
+  local runtime = mergedRuntime()
+  assert(ConversationOps.findConversationKeyByName(runtime, NAME) == B, "a merged character's name finds B")
+end
+
 return function()
+  test_merged_name_finds_the_battle_net_chat()
   test_merged_name_builds_the_battle_net_key()
   test_unmerged_name_builds_the_character_key()
 end

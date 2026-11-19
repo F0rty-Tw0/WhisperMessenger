@@ -6,10 +6,11 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local CharacterRedirect = ns.EventRouterCharacterRedirect or require("WhisperMessenger.Core.EventRouter.CharacterRedirect")
+local CharacterMergeMap = ns.CharacterMergeMap or require("WhisperMessenger.Model.CharacterMergeMap")
 local ConversationOps = {}
 
 function ConversationOps.findConversationKeyByName(runtime, name)
-  return Identity.ResolveWhisperConversation(runtime, name, "WOW")
+  return CharacterMergeMap.ResolveWhisperName(runtime, name)
 end
 
 function ConversationOps.buildConversationKeyFromName(runtime, identity, name)
