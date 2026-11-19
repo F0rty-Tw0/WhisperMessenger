@@ -7,12 +7,53 @@ end
 -- last-incoming fields, contact metadata, and per-message compaction.
 local MessageMetadata = {}
 
-function MessageMetadata.Compact(message)
+local WHISPER_CHANNELS = { WOW = true, BN = true }
+
+-- Drops what the conversation already holds and nothing reads off the line.
+-- Group and channel lines keep each sender's identity, and an unsent record
+-- keeps what a resend needs. Older versions read none of the dropped fields
+-- off a whisper line (they use the selected contact), so they show it the same.
+function MessageMetadata.Compact(message, conversation)
   message.eventName = nil
   message.className = nil
   message.raceName = nil
   message.raceTag = nil
   message.factionName = nil
+  if message.isCensored ~= true then
+    message.isCensored = nil
+  end
+  if not WHISPER_CHANNELS[message.channel] or message.delivery ~= nil then
+    return
+  end
+  message.guid = nil
+  message.bnetAccountID = nil
+  message.battleTag = nil
+  message.gameAccountName = nil
+  if message.direction == "out" then
+    -- The recipient and channel are the conversation's; a sent line shows
+    -- only the character that sent it.
+    message.playerName = nil
+    message.classTag = nil
+    message.channel = nil
+  elseif message.channel == "WOW" and conversation ~= nil and message.classTag == conversation.classTag then
+    -- A character keeps its class; a Battle.net friend switches characters,
+    -- so those lines keep theirs.
+    message.classTag = nil
+  end
+end
+
+-- A character conversation whose class changes (the name now belongs to a
+-- new character) first gives the old class to the lines that left it off.
+local function keepEarlierClass(conversation, newClassTag)
+  local oldClassTag = conversation.classTag
+  if conversation.channel ~= "WOW" or oldClassTag == nil or newClassTag == nil or newClassTag == oldClassTag then
+    return
+  end
+  for _, line in ipairs(conversation.messages or {}) do
+    if line.direction == "in" and line.kind == "user" and line.classTag == nil then
+      line.classTag = oldClassTag
+    end
+  end
 end
 
 function MessageMetadata.IsIncomingUser(message)
@@ -93,6 +134,7 @@ function MessageMetadata.ApplyContact(state, key, conversation, message)
     conversation.displayName = message.playerName or conversation.displayName
     conversation.guid = message.guid or conversation.guid
     conversation.className = message.className or conversation.className
+    keepEarlierClass(conversation, message.classTag)
     conversation.classTag = message.classTag or conversation.classTag
     conversation.raceName = message.raceName or conversation.raceName
     conversation.raceTag = message.raceTag or conversation.raceTag

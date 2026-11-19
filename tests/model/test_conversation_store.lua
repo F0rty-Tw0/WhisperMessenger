@@ -393,7 +393,11 @@ return function()
       "stored messages must omit contact metadata already held by the conversation"
     )
     assert(
-      message.classTag == "MAGE" and message.guid == "Player-compact" and message.playerName == "Friend#1234" and message.battleTag == "Friend#1234",
+      conversation.guid == "Player-compact" and conversation.battleTag == "Friend#1234" and message.guid == nil and message.battleTag == nil,
+      "a whisper line leaves its guid and account to the conversation"
+    )
+    assert(
+      message.classTag == "MAGE" and message.playerName == "Friend#1234" and message.channel == "BN",
       "stored messages must retain fields still read by bubble, reaction, and player-menu flows"
     )
   end
