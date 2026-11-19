@@ -102,6 +102,7 @@ function CharacterRedirect.Resolve(state, contact, characterKey, payload)
     return characterKey, nil
   end
   local entry = CharacterMergeMap.Get(merges, characterKey)
+  -- The only place a stale entry is dropped; every other lookup only reads.
   if entry ~= nil and store.conversations[entry.bnetKey] == nil then
     CharacterMergeMap.Drop(merges, characterKey)
     entry = nil
@@ -112,26 +113,8 @@ function CharacterRedirect.Resolve(state, contact, characterKey, payload)
   if store.conversations[characterKey] ~= nil then
     return fold(state, characterKey, entry.bnetKey, nil, entry.name)
   end
-  return entry.bnetKey, entry
-end
 
--- The Battle.net key of a merged character, from the map alone: no lookup,
--- no fold. An entry whose Battle.net chat is gone is dropped.
-function CharacterRedirect.MergedKey(state, characterKey)
-  local merges = state.characterMerges
-  local store = state.store
-  if merges == nil or store == nil or characterKey == nil then
-    return nil
-  end
-  local entry = CharacterMergeMap.Get(merges, characterKey)
-  if entry == nil then
-    return nil
-  end
-  if store.conversations[entry.bnetKey] == nil then
-    CharacterMergeMap.Drop(merges, characterKey)
-    return nil
-  end
-  return entry.bnetKey
+  return entry.bnetKey, entry
 end
 
 -- Resolve returns an entry only for a character whisper, so the line already
