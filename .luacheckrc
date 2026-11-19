@@ -72,6 +72,7 @@ read_globals = {
   "GetCursorPosition",
   "GetMouseFocus",
   "IsMouseButtonDown",
+  "IsModifierKeyDown",
   "IsMouselooking",
   "IsShiftKeyDown",
   "UISpecialFrames",

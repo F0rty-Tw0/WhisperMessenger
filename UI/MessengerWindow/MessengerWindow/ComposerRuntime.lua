@@ -44,6 +44,7 @@ function ComposerRuntime.Create(factory, options)
     end,
     showEmojiButton = settingsConfig.showEmojiButton,
     onNavTargetsChanged = options.onNavTargetsChanged,
+    getSentHistory = windowOptions.getSentHistory,
   }
   local composer = Composer.Create(factory, layout.composerPane, composerSelectedContact, windowOptions.onSend or function(...)
     local _ = ...
