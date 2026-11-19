@@ -231,9 +231,6 @@ function Bootstrap.Initialize(factory, options)
     getSettings = function()
       return accountState.settings
     end,
-    isMythic = function()
-      return runtime.isMythicLockdown()
-    end,
   })
   runtime.syncReplyKey = replyKeyBinder.sync
   replyKeyBinder.sync()

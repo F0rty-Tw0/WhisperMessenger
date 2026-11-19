@@ -1,5 +1,5 @@
--- Player links in our frames are rewritten into addon links so a click never
--- reaches Blizzard's player-link handler from addon code. The codec encodes
+-- Player links in our frames are rewritten into addon links so the secure link
+-- template's SetItemRef ignores them and our click hook routes them. The codec encodes
 -- and decodes that form; BNplayer, item and URL links stay as they are.
 local Codec = require("WhisperMessenger.UI.Hyperlinks.PlayerLinkCodec")
 

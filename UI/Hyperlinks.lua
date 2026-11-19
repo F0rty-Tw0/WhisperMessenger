@@ -90,8 +90,9 @@ function Hyperlinks.FormatTextForDisplay(text)
   return table.concat(output)
 end
 
--- Player links in text shown in our frames go through this, so a click on
--- one never runs Blizzard's player-link handler from addon code.
+-- Player links in text shown in our frames go through this, so the secure
+-- link template's SetItemRef ignores them (no /who on a shift-click) and our
+-- click hook routes them instead (LinkClicks.BindClick).
 Hyperlinks.EncodePlayerLinks = PlayerLinkCodec.Encode
 
 Hyperlinks.HandleClick = LinkClicks.HandleClick

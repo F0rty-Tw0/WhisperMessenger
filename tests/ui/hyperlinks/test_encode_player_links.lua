@@ -1,5 +1,5 @@
--- Player links shown in our frames come out encoded as addon links, so a
--- click on one never runs Blizzard's player-link handler from addon code.
+-- Player links shown in our frames come out encoded as addon links, so the
+-- secure link template's SetItemRef ignores them and our click hook routes them.
 local Hyperlinks = require("WhisperMessenger.UI.Hyperlinks")
 local PlayerLinkCodec = require("WhisperMessenger.UI.Hyperlinks.PlayerLinkCodec")
 

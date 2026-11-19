@@ -26,11 +26,17 @@ function LinkClicks.LinkFrameTemplate(extraTemplate)
 end
 
 -- Builds a link frame with LinkFrameTemplate and marks it _wmSecureLinks
--- when it got the secure template.
+-- when it asked for the secure template and the frame has the template's
+-- click script. A frame marked secure gets no click script of its own (see
+-- BindClick), so one that lost the template would have dead links. The flag
+-- is decided once per frame: a pooled frame handed out again may carry our
+-- own click script from BindClick, which is not the template's.
 function LinkClicks.CreateLinkFrame(factory, frameType, name, parent, extraTemplate)
   local template, usedSecure = LinkClicks.LinkFrameTemplate(extraTemplate)
   local frame = factory.CreateFrame(frameType, name, parent, template)
-  frame._wmSecureLinks = usedSecure
+  if frame._wmSecureLinks == nil then
+    frame._wmSecureLinks = usedSecure and frame.GetScript ~= nil and frame:GetScript("OnHyperlinkClick") ~= nil
+  end
   return frame
 end
 
@@ -163,7 +169,9 @@ local function onSecureLinkClick(self, link, text, button)
 end
 
 -- Link clicks on frame. onLinkClick runs once after every click, even when
--- routing throws (the error is rethrown after it, so it still surfaces).
+-- our routing throws (the error is rethrown after it, so it still surfaces).
+-- On a secure frame it runs from a post-hook, so it may not run at all when
+-- the template's own handler (Blizzard's SetItemRef) throws first.
 --
 -- A frame with the secure template (_wmSecureLinks) keeps the template's own
 -- click script, so a click opens Blizzard windows untainted. BindClick only
