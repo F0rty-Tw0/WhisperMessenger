@@ -67,7 +67,6 @@ local Korean = {
   ["Appearance"] = "외형",
   ["Behavior"] = "동작",
   ["Notifications"] = "알림",
-  ["Icons"] = "아이콘",
   ["Clear All Chats"] = "모든 대화 삭제",
   ["Reset Icon"] = "아이콘 초기화",
   ["Reset Window"] = "창 초기화",

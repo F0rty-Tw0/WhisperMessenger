@@ -159,7 +159,7 @@ Shift-click items, quests, achievements, spells and professions to link them str
 
 ### Settings
 
-Pages for **General**, **Appearance**, **Behavior**, **Whispers**, **Chats**, **Filters**, **Notifications**, **Icons** and **What's New**. Includes history limits and retention, privacy options, 12 interface languages, a profanity filter toggle, a hide-from-default-chat option and auto-focus control.
+Pages for **General**, **Appearance**, **Behavior**, **Whispers**, **Chats**, **Filters**, **Notifications**, **Widget** and **What's New**. Includes history limits and retention, privacy options, 12 interface languages, a profanity filter toggle, a hide-from-default-chat option and auto-focus control.
 
 <p align="center">
   <img src=".github/assets/settings-general.png" width="49%" alt="General settings: history limits, privacy, time format and interface language">
@@ -168,7 +168,7 @@ Pages for **General**, **Appearance**, **Behavior**, **Whispers**, **Chats**, **
 
 <p align="center">
   <img src=".github/assets/settings-behavior.png" width="49%" alt="Behavior settings: auto-open, combat, requests, typing status and read receipts">
-  <img src=".github/assets/settings-icons.png" width="49%" alt="Icons settings: size, badge, widget preview and icon mode">
+  <img src=".github/assets/settings-icons.png" width="49%" alt="Widget settings: size, badge, widget preview and icon mode">
 </p>
 
 ## Good to know

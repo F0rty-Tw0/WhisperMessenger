@@ -67,7 +67,6 @@ local TraditionalChinese = {
   ["Appearance"] = "外觀",
   ["Behavior"] = "行為",
   ["Notifications"] = "通知",
-  ["Icons"] = "圖示",
   ["Clear All Chats"] = "清除所有對話",
   ["Reset Icon"] = "重設圖示",
   ["Reset Window"] = "重設視窗",

@@ -21,7 +21,7 @@ local SETTINGS_TABS = {
   { name = "chatsTab", label = "Chats", icon = "nav_chats_icon" },
   { name = "filtersTab", label = "Filters", icon = "nav_filters_icon" },
   { name = "notificationsTab", label = "Notifications", icon = "nav_notifications_icon" },
-  { name = "iconsTab", label = "Icons", icon = "nav_icons_icon" },
+  { name = "iconsTab", label = "Widget", icon = "nav_icons_icon" },
   { name = "whatsNewTab", label = "What's New", icon = "title_whats_new_icon" },
 }
 
