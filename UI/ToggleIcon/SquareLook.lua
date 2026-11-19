@@ -24,14 +24,15 @@ SquareLook.SQUARE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 SquareLook.GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_front.png"
 SquareLook.ACCENT_GLYPH_TEXTURE = AccentGlyph.TEXTURE
 
--- Halo around the two bubbles' outline (clear inside them), for the glyph
--- drawn without the background. Its canvas is BUBBLE_GLOW_SCALE times the
+-- Halo around the two bubbles' outline (clear inside them), for the round
+-- widget's glyph hovered without the background. Its canvas is BUBBLE_GLOW_SCALE times the
 -- glyph's, glyph centred, so the halo has room past the glyph's edges.
 SquareLook.BUBBLE_GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_glow.png"
 SquareLook.BUBBLE_GLOW_SCALE = 1.5
 
 -- The unread pulse's art on the square look: a glow fading inward from the
--- square's edge, stretched over the whole button.
+-- square's edge, stretched over the whole button. Also the square's hover
+-- glow without the background, stretched over the square's box.
 SquareLook.SQUARE_GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\inner-glow-square.png"
 
 -- Thin outline around both bubbles (filling the gap between them), so the
@@ -64,8 +65,15 @@ local function fitBubbleGlow(texture, glyph)
   texture:SetSize(size, size)
 end
 
--- Accent halo around the bubbles, shown on hover when there is no background
--- to show the hover.
+-- Puts the square's edge glow (the unread pulse's square art) on `texture`,
+-- over the square's box `outset` past each edge of `frame`.
+local function fitEdgeGlow(texture, frame, outset)
+  texture:SetTexture(SquareLook.SQUARE_GLOW_TEXTURE)
+  IconBorder.PlaceOnBox(texture, frame, outset)
+end
+
+-- Accent glow shown on hover when there is no background to show the hover:
+-- a halo around the bubbles on the circle, the square's edge on the square.
 local function createHoverGlow(frame)
   local glow = frame:CreateTexture(nil, "BACKGROUND", nil, -8)
   if glow.SetBlendMode then
@@ -195,7 +203,11 @@ function SquareLook.Create(frame, parts)
     local glowing = hovered and bubblesOnly()
     setShown(glow, glowing)
     if glowing then
-      fitBubbleGlow(glow, parts.glyph)
+      if isSquare() then
+        fitEdgeGlow(glow, frame, boxOutset)
+      else
+        fitBubbleGlow(glow, parts.glyph)
+      end
       applyVertexColor(glow, Theme.COLORS.accent)
     end
     paintSquare()

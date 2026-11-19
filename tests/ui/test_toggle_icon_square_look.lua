@@ -25,15 +25,6 @@ local iconWithShape = Shape.iconWithShape
 -- the empty profile the EllesmereUI-path tests below run under.
 local SLOT_BG = ButtonLook.Read().bg
 
--- The bubble-shaped glow, centred on the glyph and BUBBLE_GLOW_SCALE times its size.
-local function onBubbles(texture, glyph)
-  local point = texture.point or {}
-  return texture.texturePath == SquareLook.BUBBLE_GLOW_TEXTURE
-    and point[1] == "CENTER"
-    and point[2] == glyph
-    and texture.width == glyph.width * SquareLook.BUBBLE_GLOW_SCALE
-end
-
 return function()
   -- test_ellesmere_preset_draws_a_square_widget
   withProfile({}, function()
@@ -162,7 +153,7 @@ return function()
     local accent = Theme.COLORS.accent
     local glow = icon.hoverGlow.vertexColor
     assert(glow[1] == accent[1] and glow[2] == accent[2] and glow[3] == accent[3], "glow in the accent color")
-    assert(onBubbles(icon.hoverGlow, icon.label), "hover glow follows the bubbles")
+    assert(icon.hoverGlow.texturePath == SquareLook.SQUARE_GLOW_TEXTURE, "hover glow follows the square's edge")
     icon.frame:GetScript("OnLeave")(icon.frame)
     assert(icon.hoverGlow.shown == false, "glow gone after hover")
   end
