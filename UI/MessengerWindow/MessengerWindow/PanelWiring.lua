@@ -61,6 +61,7 @@ function PanelWiring.Create(options)
     end,
     onClose = options.onClose,
     onConversationUncovered = options.onConversationUncovered,
+    onNavTargetsChanged = options.onNavTargetsChanged,
     onOptionsVisibilityChanged = function(visible)
       chrome.setOptionsActive(visible)
       onCoverChanged(visible)

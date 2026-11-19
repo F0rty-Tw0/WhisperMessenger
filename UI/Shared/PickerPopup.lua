@@ -39,8 +39,13 @@ local TOOLTIP_BORDER_COLOR = { 1, 1, 1, 1 }
 local escapeFrameNames = {}
 local hookedEscapeFrames = setmetatable({}, { __mode = "k" })
 local escapeFrameShownHandler = nil
+-- Opening order of the registered frames, for HideShownEscapeFrame.
+local shownSerial = setmetatable({}, { __mode = "k" })
+local shownCounter = 0
 
 local function reportEscapeFrameShown(popup)
+  shownCounter = shownCounter + 1
+  shownSerial[popup] = shownCounter
   if escapeFrameShownHandler then
     escapeFrameShownHandler(popup)
   end
@@ -73,6 +78,23 @@ function PickerPopup.RegisterEscape(frameName, frame)
     end
   end
   table.insert(_G.UISpecialFrames, frameName)
+end
+
+-- Hides the most recently opened popup registered with its frame.
+-- Returns false when none is shown.
+function PickerPopup.HideShownEscapeFrame()
+  local top, topSerial = nil, -1
+  for frame in pairs(hookedEscapeFrames) do
+    local serial = shownSerial[frame] or 0
+    if frame:IsShown() and serial > topSerial then
+      top, topSerial = frame, serial
+    end
+  end
+  if not top then
+    return false
+  end
+  top:Hide()
+  return true
 end
 
 -- The game menu open now: the Menu system's (Retail, Classic, WoW:
