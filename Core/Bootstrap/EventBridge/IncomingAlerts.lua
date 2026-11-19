@@ -22,14 +22,23 @@ function IncomingAlerts.IsAudibleRequest(conversation, settings)
     and settings.playSoundOnRequest == true
 end
 
+-- "Mute all sounds" silences every alert sound; previews in the settings
+-- play through SoundPlayer directly and are not affected.
+local function isMuted(settings)
+  return type(settings) == "table" and settings.muteAllSounds == true
+end
+
 function IncomingAlerts.PlayRequestSound(settings)
+  if isMuted(settings) then
+    return
+  end
   SoundPlayer.PlayKey(settings.requestSound or IncomingAlerts.REQUEST_SOUND_DEFAULT)
 end
 
 -- The notification sound alone, when the player turned it on. A mention
 -- plays its own pick; unset, it plays the whisper pick.
 function IncomingAlerts.PlaySound(settings, kind)
-  if type(settings) ~= "table" or settings.playSoundOnWhisper ~= true then
+  if type(settings) ~= "table" or settings.playSoundOnWhisper ~= true or isMuted(settings) then
     return
   end
   if kind == "mention" then
@@ -41,7 +50,7 @@ end
 
 -- A whisper sent from the window, when the player turned its sound on.
 function IncomingAlerts.PlaySentSound(settings)
-  if type(settings) == "table" and settings.playSoundOnSend == true then
+  if type(settings) == "table" and settings.playSoundOnSend == true and not isMuted(settings) then
     SoundPlayer.PlayKey(settings.sentSound or IncomingAlerts.SENT_SOUND_DEFAULT)
   end
 end
