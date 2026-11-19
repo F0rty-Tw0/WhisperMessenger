@@ -53,9 +53,6 @@ local function setShown(region, shown)
   end
 end
 
--- The accent back bubble (AccentGlyph), kept here for its callers.
-SquareLook.CreateAccentGlyph = AccentGlyph.Create
-
 -- Puts the bubble halo on `texture`, centred on `glyph` and sized to it.
 local function fitBubbleGlow(texture, glyph)
   local size = (glyph.GetWidth and glyph:GetWidth() or 0) * SquareLook.BUBBLE_GLOW_SCALE
@@ -94,10 +91,9 @@ local function addMask(texture, mask)
 end
 
 -- Rounds the square's corners: one mask (moved onto the square's box by
--- apply), added once to the
--- square's textures (kept on the circle, where they are hidden or a circle
--- that fits inside it), and the gold frame swapped for its rounded art once
--- the frame itself took the mask.
+-- apply), added once to the square's textures (kept on the circle, where they
+-- are hidden or a circle that fits inside it), and the gold frame swapped for
+-- its rounded art once the frame itself took the mask.
 -- Returns the mask, or nil on a client without mask textures (sharp square).
 local function roundCorners(frame, textures, squareFrame)
   if not frame.CreateMaskTexture then
@@ -137,10 +133,9 @@ end
 -- Action Bars' profile readable (ButtonLook.IsAvailable) it is drawn like
 -- EllesmereUI's action buttons: the slot background and its hover and pushed
 -- effects. Without it, it fills, hovers and presses like the circle. Either
--- way the square frame from IconBorder (theme accent, or gold) is the
--- border. With the
--- border on, the frame, fill, backdrop, mask and effects sit on IconBorder's
--- box (RIM_SCALE times the button, like the circle's ring).
+-- way the square frame from IconBorder (theme accent, or gold) is the border.
+-- With the border on, the frame, fill, backdrop, mask and effects sit on
+-- IconBorder's box (RIM_SCALE times the button, like the circle's ring).
 -- The unread pulse (a PulseGlow) glows along the square's edge on the square look.
 -- When the client has mask textures, the square's corners are rounded (the
 -- returned mask is nil without them).
@@ -151,7 +146,7 @@ function SquareLook.Create(frame, parts)
 
   local hoverEffect = SquareEffects.Create(frame, "OVERLAY", 1)
   local pushEffect = SquareEffects.Create(frame, "OVERLAY", 2)
-  local accent = SquareLook.CreateAccentGlyph(frame, parts.glyph)
+  local accent = AccentGlyph.Create(frame, parts.glyph)
   local outline = frame:CreateTexture(nil, "ARTWORK", nil, -2)
   outline:SetAllPoints(parts.glyph)
   outline:SetTexture(SquareLook.OUTLINE_TEXTURE)

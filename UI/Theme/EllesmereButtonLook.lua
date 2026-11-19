@@ -110,6 +110,7 @@ end
 -- square uses this look only then; without it the square copies the circle.
 function ButtonLook.IsAvailable()
   local ok, p = pcall(profile)
+
   return ok and p ~= nil
 end
 

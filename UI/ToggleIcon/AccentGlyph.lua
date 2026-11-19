@@ -31,7 +31,9 @@ function AccentGlyph.Create(frame, glyph)
     applyVertexColor(texture, color)
   end
 
-  return { texture = texture, apply = apply }
+  local accentGlyph = { texture = texture, apply = apply }
+
+  return accentGlyph
 end
 
 ns.ToggleIconAccentGlyph = AccentGlyph

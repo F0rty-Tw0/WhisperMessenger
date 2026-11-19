@@ -129,7 +129,8 @@ function IconBorder.Create(frame, parts)
     paintRing(ring, frame, look, side, ringScale)
     tint(ring, themed)
     if squareFrame then
-      IconBorder.PlaceOnBox(squareFrame, frame, IconBorder.BoxOutset(side, look))
+      local outset = IconBorder.BoxOutset(side, look)
+      IconBorder.PlaceOnBox(squareFrame, frame, outset)
       squareFrame:SetShown(look == "square")
       tint(squareFrame, themed)
     end
