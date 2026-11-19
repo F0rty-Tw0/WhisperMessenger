@@ -5,24 +5,7 @@ local ButtonLook = require("WhisperMessenger.UI.Theme.EllesmereButtonLook")
 
 local MEDIA = "Interface\\AddOns\\EllesmereUIActionBars\\Media\\"
 
-local function withProfile(profile, fn)
-  rawset(_G, "EllesmereUI", {
-    Lite = {
-      GetAddon = function(name)
-        assert(name == "EllesmereUIActionBars", "asks for the action bars module")
-        if profile == "error" then
-          error("boom")
-        end
-        return profile and { db = { profile = profile } } or nil
-      end,
-    },
-  })
-  local ok, err = pcall(fn)
-  rawset(_G, "EllesmereUI", nil)
-  if not ok then
-    error(err, 0)
-  end
-end
+local withProfile = require("tests.helpers.ellesmere_profile")
 
 local function near(a, b)
   return math.abs(a - b) < 1e-6
@@ -98,5 +81,52 @@ return function()
   withProfile(exploding, function()
     local look = ButtonLook.Read()
     assert(look.borderPx == 1 and look.hover.kind == "fill", "defaults when reading the profile errors")
+  end)
+
+  -- test_is_available_without_ellesmere
+  rawset(_G, "EllesmereUI", nil)
+  assert(ButtonLook.IsAvailable() == false, "no EllesmereUI: not available")
+
+  -- test_is_available_without_lite
+  rawset(_G, "EllesmereUI", {
+    RegisterSkin = function()
+      return true
+    end,
+  })
+  local withoutLite = ButtonLook.IsAvailable()
+  rawset(_G, "EllesmereUI", nil)
+  assert(withoutLite == false, "EllesmereUI without Lite: not available")
+
+  -- test_is_available_without_the_action_bars_module
+  withProfile(nil, function()
+    assert(ButtonLook.IsAvailable() == false, "no Action Bars module: not available")
+  end)
+
+  -- test_is_available_when_get_addon_errors
+  withProfile("error", function()
+    assert(ButtonLook.IsAvailable() == false, "GetAddon throws: not available")
+  end)
+
+  -- test_is_available_when_reading_the_profile_errors
+  rawset(_G, "EllesmereUI", {
+    Lite = {
+      GetAddon = function()
+        return {
+          db = setmetatable({}, {
+            __index = function()
+              error("boom")
+            end,
+          }),
+        }
+      end,
+    },
+  })
+  local okRead, readErrors = pcall(ButtonLook.IsAvailable)
+  rawset(_G, "EllesmereUI", nil)
+  assert(okRead and readErrors == false, "reading db.profile throws: not available")
+
+  -- test_is_available_with_a_profile
+  withProfile({}, function()
+    assert(ButtonLook.IsAvailable() == true, "a readable profile: available")
   end)
 end
