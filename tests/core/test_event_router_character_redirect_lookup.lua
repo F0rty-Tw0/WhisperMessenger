@@ -44,6 +44,18 @@ local function test_no_guid_skips_lookup_and_caches_no_miss()
   assert(resolve(state) == B and lookups.n == 1, "a later event with a GUID still matches")
 end
 
+local function test_empty_guid_skips_lookup_and_caches_no_miss()
+  local state = newState()
+  local asked = {}
+  state.bnetApi.GetAccountInfoByGUID = function(guid)
+    asked[#asked + 1] = guid
+    return guid == "Player-1" and FRIEND or nil
+  end
+  resolve(state, { playerName = NAME, guid = "", text = "hi" })
+  local key = resolve(state)
+  assert(key == B and #asked == 1, "an empty GUID is never looked up, so a later real GUID still matches, got " .. #asked .. " lookups")
+end
+
 local function test_secret_guid_skips_lookup()
   local state, lookups = newState(FRIEND)
   withSecret(function(value)
@@ -67,6 +79,18 @@ local function test_api_error_is_a_miss()
     error("not available")
   end
   assert(resolve(state) == K, "a failing lookup keeps K and does not raise")
+end
+
+local function test_api_error_caches_the_miss()
+  local state = newState()
+  local lookups = 0
+  state.bnetApi.GetAccountInfoByGUID = function()
+    lookups = lookups + 1
+    error("not available")
+  end
+  resolve(state)
+  resolve(state)
+  assert(lookups == 1, "a failing lookup is a miss, cached for the session, got " .. lookups .. " lookups")
 end
 
 local function test_no_match_is_looked_up_once_per_session()
@@ -117,9 +141,11 @@ end
 
 return function()
   test_no_guid_skips_lookup_and_caches_no_miss()
+  test_empty_guid_skips_lookup_and_caches_no_miss()
   test_secret_guid_skips_lookup()
   test_missing_api_keeps_k()
   test_api_error_is_a_miss()
+  test_api_error_caches_the_miss()
   test_no_match_is_looked_up_once_per_session()
   test_account_without_battle_tag_is_no_match()
   test_empty_battle_tag_is_no_match()

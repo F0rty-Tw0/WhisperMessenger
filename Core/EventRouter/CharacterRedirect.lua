@@ -33,16 +33,17 @@ local function cacheMiss(state, characterKey)
   state.characterMergeMisses[characterKey] = true
 end
 
--- A GUID the client hides is never passed on, and no miss is cached: a later
--- event that carries a readable GUID may still match.
+-- A GUID the client hides or leaves blank is never passed on, and no miss is
+-- cached: a later event that carries a readable GUID may still match.
 local function readableGuid(payload, contact)
   local guid = payload and payload.guid
   if guid == nil then
     guid = contact.guid
   end
-  if SecretValue.Is(guid) or type(guid) ~= "string" then
+  if SecretValue.Is(guid) or type(guid) ~= "string" or guid == "" then
     return nil
   end
+
   return guid
 end
 
