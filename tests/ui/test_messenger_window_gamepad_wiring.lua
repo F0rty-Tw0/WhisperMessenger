@@ -259,4 +259,22 @@ return function()
     selector.button:GetScript("OnClick")(selector.button)
     assert(t.close() == true and not menu:IsShown() and #t.state.calls == 0, "B closes the dropdown, the window stays")
   end
+
+  -- test_opening_a_settings_dropdown_rescans_so_the_d_pad_reaches_its_options
+  do
+    local t = setup({ shown = true, settings = true })
+    local selector = DropdownSelector.Create(FakeUI.NewFactory(), t.frame, {
+      labelText = "Notification Sound",
+      optionsList = { { key = "a", label = "A" } },
+      getOptions = function()
+        return { { key = "a", label = "A" }, { key = "b", label = "B" } }
+      end,
+      initial = "a",
+    })
+    local before = t.nav.count("refresh")
+    selector.button:GetScript("OnClick")(selector.button)
+    assert(t.nav.count("refresh") == before + 1, "the options built on open become D-pad stops")
+    selector.button:GetScript("OnClick")(selector.button)
+    assert(t.nav.count("refresh") == before + 2, "closing drops them again")
+  end
 end

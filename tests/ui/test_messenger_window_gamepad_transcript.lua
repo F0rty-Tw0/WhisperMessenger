@@ -78,8 +78,12 @@ return function()
   -- test_only_bubbles_and_real_buttons_are_stops (Review Focus 5)
   do
     local nav = recordingNav()
-    local content = layout({ incoming("hi", 0), outgoing("sent", 1), outgoing("oops", 2, "failed") }, { onMessageAction = function() end })
+    local reacted = incoming("hi", 0)
+    reacted.reaction = { key = "heart", actorName = "Thrall", updatedAt = 1 }
+    local content = layout({ reacted, outgoing("sent", 1), outgoing("oops", 2, "failed") }, { onMessageAction = function() end })
     GamepadTranscript.Attach(nav, { content = content })
+    local reactionPill = firstBubble(content)._wmBubbleResult.reactionFrame
+    assert(reactionPill ~= nil and reactionPill:IsShown(), "test precondition: the reaction pill is drawn")
     local bubbles, delivery, other = 0, 0, {}
     for _, target in ipairs(navTargets(nav, content)) do
       if target._wmBubbleResult then
@@ -152,6 +156,17 @@ return function()
     rawset(ChatContextMenu, "Open", original)
     assert(ok, err)
     assert(opened == 1, "MouseDown opens the menu, MouseUp does not open it again; got " .. opened)
+  end
+
+  -- test_a_released_bubble_frame_is_not_tagged_for_x
+  do
+    local nav = recordingNav()
+    local factory = FakeUI.NewFactory()
+    local content = factory.CreateFrame("Frame", nil, nil)
+    local released = factory.CreateFrame("Button", nil, content)
+    released._wmBubbleResult = { frame = nil }
+    GamepadTranscript.Attach(nav, { content = content })
+    assert(released.buttonContext == nil, "a frame back in the pool keeps its result table but is no bubble")
   end
 
   _G.UIParent = savedUIParent

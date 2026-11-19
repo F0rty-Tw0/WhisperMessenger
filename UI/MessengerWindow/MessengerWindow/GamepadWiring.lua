@@ -94,6 +94,7 @@ local function attachSettings(nav, shell, transcript)
     optionsPanel = layout.optionsPanel,
     panels = settingsPanels,
   })
+  DropdownSelector.SetMenuToggledHook(nav.refresh)
 end
 
 -- Our ESC-registered popups take pad focus while open; B hides the

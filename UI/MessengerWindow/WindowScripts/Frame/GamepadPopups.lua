@@ -15,6 +15,14 @@ local function weakMap()
   return setmetatable({}, { __mode = "k" })
 end
 
+-- FrameShown marks an added popup in isPopupFrame (FrameControlsManager.lua
+-- #L411-L414) and FrameHidden clears it (#L494-L496). A client without the
+-- field: assume it took the popup.
+local function heldBy(fcm, popup)
+  local popupFrames = fcm.isPopupFrame
+  return type(popupFrames) ~= "table" or popupFrames[popup] == true
+end
+
 -- deps: fcm (GamepadMode.FrameControlsManager), inCombat. A client
 -- without HandlePopupShown gets methods that do nothing.
 function GamepadPopups.New(deps)
@@ -22,7 +30,8 @@ function GamepadPopups.New(deps)
   if type(fcm.HandlePopupShown) ~= "function" then
     return { popupShown = noop, popupHidden = noop, setPopupCloseHandler = noop, settle = noop }
   end
-  -- HandlePopupShown returns nothing: "listed" is our own record of it.
+  -- HandlePopupShown returns nothing and refuses the popup while the gamepad
+  -- UI is off: "listed" is our own record of what it took.
   local listed, pending, handlers = weakMap(), weakMap(), weakMap()
   local order = {}
 
@@ -43,7 +52,7 @@ function GamepadPopups.New(deps)
     -- A stale entry is never refocused: let it go first.
     hide(popup)
     fcm:HandlePopupShown(popup)
-    listed[popup] = true
+    listed[popup] = heldBy(fcm, popup) or nil
   end
 
   local popups = {}

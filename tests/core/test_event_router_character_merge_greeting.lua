@@ -76,6 +76,20 @@ return function()
       assert(state.store.conversations[B] == nil, "an announced greeting leaves no empty friend's chat")
     end
 
+    -- test_hide_of_an_announced_greeting_redraws_the_window_after_removing_the_chat
+    do
+      local state = hideState()
+      announce(state)
+      local refreshes = 0
+      local friendAtLastRefresh = "never refreshed"
+      state.refreshWindow = function()
+        refreshes = refreshes + 1
+        friendAtLastRefresh = state.store.conversations[B]
+      end
+      whisper(state)
+      assert(refreshes > 0 and friendAtLastRefresh == nil, "the empty friend's row leaves the window at once")
+    end
+
     -- test_hide_keeps_a_friend_chat_made_from_an_earlier_character_chat_when_announced
     do
       local state = hideState()

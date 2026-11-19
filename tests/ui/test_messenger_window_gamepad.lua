@@ -108,6 +108,7 @@ return function()
     assert(ignored(env, window.resizeGrip), "window resize grip")
     assert(ignored(env, window.contactsResizeHandle), "contacts resize handle")
     assert(not ignored(env, window.conversation.transcript.content), "chat bubbles are stops")
+    assert(type(window.conversation.transcript.onNavTargetsChanged) == "function", "messages tagged as they render")
   end)
 
   -- test_retail_touches_no_gamepad_api

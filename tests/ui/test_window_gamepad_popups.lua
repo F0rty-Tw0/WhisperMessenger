@@ -63,6 +63,16 @@ return function()
     assert(#env.calls == 0, "never listed: no FrameHidden")
   end
 
+  -- test_popup_refused_by_the_game_is_not_handed_back_on_hide
+  do
+    local env, _, nav, popup = setup()
+    nav.onShow()
+    env.refusePopups = true
+    open(nav, popup)
+    close(nav, popup)
+    assert(env.count("HandlePopupShown") == 1 and env.count("FrameHidden") == 0, "refused popup: no FrameHidden on close")
+  end
+
   -- test_popup_reshown_while_still_listed_is_hidden_first
   do
     local env, _, nav, popup = setup()

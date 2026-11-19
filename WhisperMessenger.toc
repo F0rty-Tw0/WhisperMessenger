@@ -480,6 +480,7 @@ UI/MessengerWindow/MessengerWindow/PanelWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowAlpha.lua
 UI/MessengerWindow/MessengerWindow/RelayoutController.lua
 UI/MessengerWindow/MessengerWindow/LifecycleWiring.lua
+UI/MessengerWindow/MessengerWindow/LifecycleSetup.lua
 UI/MessengerWindow/MessengerWindow/PatchNotesRuntime.lua
 UI/MessengerWindow/MessengerWindow/TabSelectionMemory.lua
 UI/MessengerWindow/MessengerWindow/LanguageRefresh.lua
