@@ -9,6 +9,7 @@ local World = require("tests.helpers.character_merge_world")
 -- character row and a reply goes out over Battle.net.
 local K = World.K
 local B = World.B
+local OTHER = "wow::WOW::thrall-area52"
 
 local function conversations(withCharacterRecord)
   local list = {
@@ -23,6 +24,15 @@ local function conversations(withCharacterRecord)
       lastPreview = "from the app",
       messages = { { id = "b1", direction = "in", kind = "user", text = "from the app", sentAt = 100, playerName = "Jaina#1234" } },
     },
+  }
+  list[OTHER] = {
+    displayName = "Thrall-Area52",
+    channel = "WOW",
+    unreadCount = 0,
+    unreadActivityCount = 0,
+    lastActivityAt = 50,
+    lastPreview = "lok'tar",
+    messages = { { id = "o1", direction = "in", kind = "user", text = "lok'tar", sentAt = 50, playerName = "Thrall-Area52", channel = "WOW" } },
   }
   if withCharacterRecord then
     list[K] = {
@@ -50,6 +60,13 @@ local function boot(withCharacterRecord, openKey)
     characterState = { activeConversationKey = openKey, window = { x = 0, y = 0, width = 900, height = 560 }, icon = {} },
     localProfileId = "me",
   })
+end
+
+-- Opening the window jumps to an unread chat, so the character's line is
+-- read first: the saved open chat is the one that shows.
+local function openWithoutJumping(runtime)
+  runtime.store.conversations[K].unreadCount = 0
+  runtime.toggle()
 end
 
 -- Stands in for the router's fold, then its callback.
@@ -119,13 +136,25 @@ return function()
     )
   end
 
-  -- test_merge_of_a_closed_character_chat_keeps_the_open_chat
+  -- test_merge_while_the_friend_chat_is_open_keeps_it_open
   do
     local runtime = boot(true, B)
-    runtime.toggle()
+    openWithoutJumping(runtime)
+    assert(runtime.activeConversationKey == B, "precondition: the friend's chat is the open chat")
     fold(runtime)
-    assert(runtime.activeConversationKey == B, "the open chat stays open")
-    assert(shownRows(runtime)[K] == nil, "the character row still goes")
+    assert(runtime.activeConversationKey == B, "the friend's chat stays open")
+    assert(shownRows(runtime)[K] == nil, "the character row goes")
+  end
+
+  -- test_merge_while_another_chat_is_open_keeps_that_chat_open
+  do
+    local runtime = boot(true, OTHER)
+    openWithoutJumping(runtime)
+    assert(runtime.activeConversationKey == OTHER, "precondition: another chat is the open chat")
+    fold(runtime)
+    assert(runtime.activeConversationKey == OTHER, "the other chat stays open")
+    local items = shownRows(runtime)
+    assert(items[K] == nil and items[B] ~= nil, "the character row folds into the friend's row")
   end
 
   _G.UIParent = savedUIParent
