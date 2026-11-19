@@ -1,0 +1,66 @@
+local RowScripts = require("WhisperMessenger.UI.ContactsList.RowScripts")
+local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
+local FakeUI = require("tests.helpers.fake_ui")
+local FakeGamepad = require("tests.helpers.fake_gamepad")
+local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
+
+local factory = FakeUI.NewFactory()
+
+-- A bound row plus spies: result.menu = items the contact menu opened for,
+-- result.selected = how often onSelect ran.
+local function boundRow()
+  local row = factory.CreateFrame("Button", nil, nil)
+  local item = { conversationKey = "k", displayName = "Arthas", channel = "WOW" }
+  row.item = item
+  local result = { menu = {}, selected = 0 }
+  RowScripts.bindClick(row, item, {
+    onSelect = function()
+      result.selected = result.selected + 1
+    end,
+  })
+  return row, item, result
+end
+
+local function withMenuSpy(result, fn)
+  local original = ContextMenu.Open
+  rawset(ContextMenu, "Open", function(target)
+    result.menu[#result.menu + 1] = target
+    return true
+  end)
+  local ok, err = pcall(fn)
+  rawset(ContextMenu, "Open", original)
+  assert(ok, err)
+end
+
+return function()
+  -- test_row_carries_the_right_click_context
+  do
+    local row = boundRow()
+    assert(row.buttonContext ~= nil and row.buttonContext == GamepadNav.RIGHT_CLICK_CONTEXT, "X is usable on contact rows")
+  end
+
+  -- test_x_on_a_row_opens_the_contact_menu_and_does_not_select
+  do
+    local env = FakeGamepad.New()
+    local window = factory.CreateFrame("Frame", "WhisperMessengerWindow", nil)
+    local nav = GamepadNav.New(window, env.deps())
+    nav.bindRightClick(GamepadNav.RIGHT_CLICK_CONTEXT, "Options")
+    nav.onShow()
+    local row, item, result = boundRow()
+    withMenuSpy(result, function()
+      assert(env.pressX(row) == true, "X reaches the row")
+    end)
+    assert(#result.menu == 1 and result.menu[1] == item, "same menu as a mouse right-click")
+    assert(result.selected == 0, "X does not select the chat")
+  end
+
+  -- test_a_on_a_row_still_only_selects
+  do
+    local row, _, result = boundRow()
+    withMenuSpy(result, function()
+      row.scripts.OnClick(row, "LeftButton")
+      row.scripts.OnClick(row, nil)
+    end)
+    assert(result.selected == 2 and #result.menu == 0, "A (LeftButton or no button) selects, never opens the menu")
+  end
+end
