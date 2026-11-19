@@ -22,6 +22,7 @@ local ComposerSubmit = ns.ComposerSubmit or require("WhisperMessenger.UI.Compose
 local ComposerRows = ns.ComposerRows or require("WhisperMessenger.UI.Composer.ComposerRows")
 local ComposerInputBox = ns.ComposerInputBox or require("WhisperMessenger.UI.Composer.ComposerInputBox")
 local ComposerRelayout = ns.ComposerRelayout or require("WhisperMessenger.UI.Composer.ComposerRelayout")
+local ComposerHistory = ns.ComposerHistory or require("WhisperMessenger.UI.Composer.ComposerHistory")
 
 local Composer = {}
 
@@ -33,6 +34,7 @@ local Composer = {}
 -- options.onHeightChanged(height): the bar's new height, when it changes.
 -- options.showEmojiButton: false builds without the emoji button.
 -- options.onNavTargetsChanged(): a button was shown or hidden (gamepad rescan).
+-- options.getSentHistory(fits): sent lines for Up/Down recall (nil = no recall).
 function Composer.Create(factory, parent, selectedContact, onSend, onEscape, getDoubleEscapeToClose, onTyping, options)
   options = type(options) == "table" and options or {}
   local nativeChrome = options.nativeChrome == true
@@ -158,23 +160,30 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   -- True while loadDraft swaps in another conversation's text: that text is
   -- already stored, and it is not the player typing.
   local loadingDraft = false
+  local history
 
-  ComposerInputBox.SetTextChanged(input, function()
+  -- A recalled line is saved as the draft but sends no typing notice.
+  local function onTextChanged()
     local text = input.GetText and input:GetText() or input.text or ""
     if not limit.accept(text, loadingDraft) then
       return
     end
+    history.textChanged(text)
     syncPlaceholder(text)
     relayout.refresh()
     if onDraftChanged and not loadingDraft and selectedContact.conversationKey ~= nil then
       onDraftChanged(selectedContact.conversationKey, text)
     end
     if onTyping then
-      onTyping(selectedContact, loadingDraft and "" or text)
+      onTyping(selectedContact, (loadingDraft or history.putting()) and "" or text)
     end
-  end)
+  end
+
+  history = ComposerHistory.Create(input, { getSentHistory = options.getSentHistory, fits = limit.fits, refresh = onTextChanged })
+  ComposerInputBox.SetTextChanged(input, onTextChanged)
 
   local function loadDraft(text)
+    history.stop()
     loadingDraft = true
     input:SetText(text or "")
     loadingDraft = false
