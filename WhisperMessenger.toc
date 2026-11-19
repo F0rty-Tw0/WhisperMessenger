@@ -63,9 +63,9 @@ Model/Identity/ChannelKey.lua
 Model/Identity/Identity.lua
 Model/ProfileLinks.lua
 Model/Retention.lua
+Model/ConversationStore/MessageMetadata.lua
 Model/ConversationMerge.lua
 Model/ConversationStore/StoreRetention.lua
-Model/ConversationStore/MessageMetadata.lua
 Model/ConversationStore/RepeatCollapse.lua
 Model/ConversationStore/ChronologicalInsert.lua
 Model/ConversationStore.lua

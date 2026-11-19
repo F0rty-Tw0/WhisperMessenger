@@ -33,12 +33,12 @@ end
 -- Whether the chat's activity is only the time a status line set when it
 -- opened the chat: the transcript lines at that time and ID are all status
 -- lines. Activity taken from a line kept outside the transcript matches none.
-local function activityFromStatusLine(conversation)
+function MessageMetadata.ActivityFromStatusLine(conversation)
   local activityAt = tonumber(conversation.lastActivityAt)
   local activityLineID = tonumber(conversation.lastActivityLineID)
   local found = false
   for _, line in ipairs(conversation.messages or {}) do
-    if tonumber(line.sentAt) == activityAt and tonumber(line.lineID) == activityLineID then
+    if type(line) == "table" and tonumber(line.sentAt) == activityAt and tonumber(line.lineID) == activityLineID then
       if line.kind ~= "system" then
         return false
       end
@@ -58,7 +58,8 @@ end
 -- when it is older than that line.
 function MessageMetadata.Moves(conversation, message, isNewestLine)
   local newerThanActivity = MessageMetadata.IsLatest(message, conversation.lastActivityAt, conversation.lastActivityLineID)
-  local movesActivity = MessageMetadata.MovesActivity(conversation, message) and (newerThanActivity or activityFromStatusLine(conversation))
+  local movesActivity = MessageMetadata.MovesActivity(conversation, message)
+    and (newerThanActivity or MessageMetadata.ActivityFromStatusLine(conversation))
   return isNewestLine and newerThanActivity, movesActivity
 end
 
