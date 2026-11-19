@@ -112,6 +112,21 @@ local function mergeUnreadCount(canonical, legacy)
   canonical.unreadCount = math.min(messageUnread, maximumUnread) + activityUnread
 end
 
+-- The row preview is the merged thread's last line, which may be a status
+-- line, unless the activity came from a newer line kept outside the thread.
+local function mergedPreview(messages, latestActivity)
+  local lastLine = messages[#messages]
+  if type(lastLine) ~= "table" then
+    return latestActivity.lastPreview
+  end
+  local lineAt = numericValue(lastLine.sentAt)
+  local activityAt = numericValue(latestActivity.lastActivityAt)
+  if activityAt > lineAt or (activityAt == lineAt and numericValue(latestActivity.lastActivityLineID) > numericValue(lastLine.lineID)) then
+    return latestActivity.lastPreview
+  end
+  return lastLine.text
+end
+
 local function mergeMetadata(canonical, legacy)
   canonical.pinned = canonical.pinned == true or legacy.pinned == true
   canonical.sortOrder = deliberateSortOrder(canonical) or deliberateSortOrder(legacy) or 0
@@ -132,7 +147,7 @@ local function mergeMetadata(canonical, legacy)
   local latestActivity = newestConversation(canonical, legacy, "lastActivityAt", "lastActivityLineID")
   canonical.lastActivityAt = latestActivity.lastActivityAt
   canonical.lastActivityLineID = latestActivity.lastActivityLineID
-  canonical.lastPreview = latestActivity.lastPreview
+  canonical.lastPreview = mergedPreview(canonical.messages, latestActivity)
 
   local latestIncoming = newestConversation(canonical, legacy, "lastIncomingAt", "lastIncomingLineID")
   canonical.lastIncomingAt = latestIncoming.lastIncomingAt
