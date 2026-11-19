@@ -1,7 +1,7 @@
 local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
+local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local StoreRetention = require("WhisperMessenger.Model.ConversationStore.StoreRetention")
-local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
 
 -- The runtime holds the saved merge maps. A Battle.net chat that leaves the
 -- store, by any route, takes its character merges with it, so a later
@@ -16,7 +16,6 @@ local function build(accountState)
       return 1000
     end,
   })
-  assert(runtime.characterMerges ~= nil, "the runtime holds the merge maps")
   Store.EnsureConversation(runtime.store, B)
   Store.EnsureConversation(runtime.store, B_OTHER)
   CharacterMergeMap.Record(runtime.characterMerges, K, B, "Arthas")
