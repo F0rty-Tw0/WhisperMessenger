@@ -238,6 +238,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     forgetReply = function(conversationKey)
       replies.set(conversationKey, nil)
     end,
+    moveReply = replies.move,
     setLanguage = function()
       placeholder:SetText(Localization.Text("Enter to send"))
     end,
