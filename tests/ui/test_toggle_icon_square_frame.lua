@@ -3,6 +3,7 @@
 -- or gold when not themed.
 local Theme = require("WhisperMessenger.UI.Theme")
 local borderWidget = require("tests.helpers.border_widget")
+local Shape = require("tests.helpers.toggle_icon_shape")
 local IconBorder = require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 
@@ -44,7 +45,7 @@ return function()
       frame.drawLayer == "OVERLAY" and frame.drawSublevel == -1,
       "frame at OVERLAY -1, got " .. tostring(frame.drawLayer) .. " " .. tostring(frame.drawSublevel)
     )
-    assert(frame.allPoints == icon.frame, "frame covers the button")
+    assert(Shape.onBox(frame, icon.frame, 3.15), "frame on the 1.15x box")
     assert(icon.ring.shown == false, "no ring on the square")
     assert(icon.label.width == 37, "bubbles at 0.9, got " .. tostring(icon.label.width))
     assert(icon.background.texturePath == SquareLook.SQUARE_TEXTURE and icon.background.shown == true, "slot background shown")
@@ -129,7 +130,7 @@ return function()
   do
     local icon = widget({})
     icon.applyIconSize(60)
-    assert(icon.squareFrame.allPoints == icon.frame, "frame still covers the button")
+    assert(Shape.onBox(icon.squareFrame, icon.frame, 4.5), "frame on the 1.15x box of 60")
     assert(icon.label.width == 54, "bubbles at 0.9 of 60, got " .. tostring(icon.label.width))
   end
 

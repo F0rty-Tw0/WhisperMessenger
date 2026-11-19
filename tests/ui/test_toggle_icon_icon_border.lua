@@ -2,6 +2,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local IconBorder = require("WhisperMessenger.UI.ToggleIcon.IconBorder")
+local Shape = require("tests.helpers.toggle_icon_shape")
 
 local WHITE = { 1, 1, 1, 1 }
 
@@ -137,9 +138,9 @@ return function()
     assert(glyph.width == 37, name .. ": glyph at 0.9, got " .. tostring(glyph.width))
   end
 
-  -- test_square_frame_covers_the_button
+  -- test_square_frame_shows_at_overlay_minus_one
   do
-    local name = "test_square_frame_covers_the_button"
+    local name = "test_square_frame_shows_at_overlay_minus_one"
     local border, _frame, glyph = build(true)
     border.paint("square", false)
     assert(border.squareFrame.shown == true, name .. ": square frame shown")
@@ -147,6 +148,30 @@ return function()
     assert(border.squareFrame.drawSublevel == -1, name .. ": sublevel, got " .. tostring(border.squareFrame.drawSublevel))
     assert(border.ring.shown == false, name .. ": ring hidden")
     assert(glyph.width == 37, name .. ": glyph at 0.9, got " .. tostring(glyph.width))
+  end
+
+  -- test_box_outset_is_the_rim_scale_on_the_square
+  do
+    local name = "test_box_outset_is_the_rim_scale_on_the_square"
+    assert(near(IconBorder.BoxOutset(42, "square"), 3.15), name .. ": square, got " .. tostring(IconBorder.BoxOutset(42, "square")))
+    assert(IconBorder.BoxOutset(42, "none") == 0, name .. ": none")
+    assert(IconBorder.BoxOutset(42, "rim") == 0, name .. ": rim")
+    assert(IconBorder.BoxOutset(42, "ring") == 0, name .. ": ring")
+  end
+
+  -- test_square_frame_sits_on_the_box
+  do
+    local border, frame = build(true)
+    border.paint("square", false)
+    assert(Shape.onBox(border.squareFrame, frame, 3.15), "test_square_frame_sits_on_the_box: frame on the 1.15x box")
+  end
+
+  -- test_none_puts_the_square_frame_back_on_the_button
+  do
+    local border, frame = build(true)
+    border.paint("square", false)
+    border.paint("none", false)
+    assert(Shape.coversButton(border.squareFrame, frame), "test_none_puts_the_square_frame_back_on_the_button")
   end
 
   -- test_none_shows_no_border
