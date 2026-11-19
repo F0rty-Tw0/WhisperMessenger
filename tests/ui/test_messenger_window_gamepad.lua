@@ -102,12 +102,12 @@ return function()
     assert(renders >= 1, "a raw SetVerticalScroll still re-renders the virtualized chat")
   end)
 
-  -- test_grips_and_chat_bubbles_are_ignored
+  -- test_grips_are_ignored_and_chat_bubbles_reachable
   onFlavor(false, true, function(env)
     local window = build()
     assert(ignored(env, window.resizeGrip), "window resize grip")
     assert(ignored(env, window.contactsResizeHandle), "contacts resize handle")
-    assert(ignored(env, window.conversation.transcript.content), "chat bubbles")
+    assert(not ignored(env, window.conversation.transcript.content), "chat bubbles are stops")
   end)
 
   -- test_retail_touches_no_gamepad_api

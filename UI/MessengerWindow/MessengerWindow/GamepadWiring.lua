@@ -9,11 +9,13 @@ local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.Picker
 local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local GamepadSettings = ns.MessengerWindowGamepadSettings or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local GamepadTranscript = ns.MessengerWindowGamepadTranscript or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadTranscript")
 
 -- The messenger window's part of the WoW: Forever gamepad UI: register on
 -- show, B closes the topmost layer, the right stick scrolls the chat (the
--- settings page while settings show), the D-pad skips grips, chat bubbles
--- and the composer padding, and reaches every settings control. Our popups
+-- settings page while settings show), the D-pad skips grips and the
+-- composer padding, stops on each message, and reaches every settings
+-- control. Our popups
 -- take pad focus while open; B closes them and the composer pickers first.
 -- Off Forever the nav does nothing, so neither does this.
 local GamepadWiring = {}
@@ -22,16 +24,16 @@ local function ignoreDeadStops(nav, shell, refs)
   local chrome, layout = shell.chrome or {}, shell.layout or {}
   nav.ignore(chrome.resizeGrip)
   nav.ignore(layout.contactsResizeHandle)
-  local transcript = refs.conversation and refs.conversation.transcript
-  if transcript then
-    -- Every bubble, separator and copy button sits under the content frame.
-    nav.ignore(transcript.content)
-  end
   local composer = refs.composer
   -- The holder alone: the message box under it stays reachable. Without the
   -- input-scroll template the holder is the message box itself.
   if composer and composer.box ~= composer.input then
     nav.ignore(composer.box, true)
+  end
+  local transcript = refs.conversation and refs.conversation.transcript
+  if transcript then
+    -- Messages are stops; their dead parts are skipped as they render.
+    GamepadTranscript.Attach(nav, transcript)
   end
 end
 
