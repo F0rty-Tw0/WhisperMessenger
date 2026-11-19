@@ -14,21 +14,26 @@ local sizeValue = UIHelpers.sizeValue
 -- lays every part out for the current width and button count.
 local ComposerRelayout = {}
 
-local function defaultButtonCount()
-  return 3
-end
-
 -- deps: { parent, pane, parts, rows, input, multiLine, onHeightChanged,
--- getButtonCount }. getButtonCount() is read on every layout (nil = 3).
+-- getButtonCount }. getButtonCount() is read on every layout (no getter =
+-- the full row).
 function ComposerRelayout.Create(deps)
   local parent, parts, rows, input = deps.parent, deps.parts, deps.rows, deps.input
-  local getButtonCount = deps.getButtonCount or defaultButtonCount
+
+  local function getButtonCount()
+    if not deps.getButtonCount then
+      return nil
+    end
+
+    return deps.getButtonCount()
+  end
 
   local function currentParentWidth(fallback)
     local width = sizeValue(parent, "GetWidth", "width", fallback)
     if type(width) ~= "number" or width <= 0 then
       return fallback
     end
+
     return width
   end
 
@@ -79,14 +84,18 @@ function ComposerRelayout.Create(deps)
     refresh()
   end
 
-  return {
+  local function getHeight()
+    return reportedHeight
+  end
+
+  local relayout = {
     refresh = refresh,
     resize = resize,
     refreshWidth = refreshWidth,
-    getHeight = function()
-      return reportedHeight
-    end,
+    getHeight = getHeight,
   }
+
+  return relayout
 end
 
 ns.ComposerRelayout = ComposerRelayout

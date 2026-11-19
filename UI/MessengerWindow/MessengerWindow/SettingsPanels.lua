@@ -58,6 +58,7 @@ function SettingsPanels.Create(factory, options)
         windowAnimation = settingsConfig.windowAnimation,
         iconDock = settingsConfig.iconDock,
         openAtSavedSpot = settingsConfig.openAtSavedSpot,
+        showEmojiButton = settingsConfig.showEmojiButton,
       },
     },
     {

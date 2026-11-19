@@ -166,4 +166,15 @@ return function()
     env.flush()
     assert(env.count("RefreshButtonGroups") > afterOpen, "closing re-scans")
   end)
+
+  -- test_emoji_button_toggle_rescans
+  onFlavor(false, true, function(env)
+    local window = build()
+    window.frame:Show()
+    env.flush()
+    local before = env.count("RefreshButtonGroups")
+    window.composer.setEmojiButtonShown(false)
+    env.flush()
+    assert(env.count("RefreshButtonGroups") > before, "hiding the emoji button re-scans")
+  end)
 end

@@ -12,6 +12,9 @@ local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.
 -- the input takes its space and quick reply sits next to send.
 local ComposerLayout = {}
 
+-- Quick reply, emoji and send; one fewer while the emoji button is hidden.
+ComposerLayout.FULL_BUTTON_COUNT = 3
+
 -- Room around the emoji glyph inside its square button.
 local EMOJI_PADDING = 8
 
@@ -30,7 +33,7 @@ ComposerLayout.TEXT_SLACK_Y = 3
 -- (quick reply, emoji, send) unless the emoji button is hidden (2).
 function ComposerLayout.Compute(width, rows, lineHeight, buttonCount)
   rows = rows or 1
-  buttonCount = buttonCount or 3
+  buttonCount = buttonCount or ComposerLayout.FULL_BUTTON_COUNT
   lineHeight = lineHeight or 0
   local layout = Theme.LAYOUT
   local gutter, size, gap = layout.COMPOSER_GUTTER, layout.COMPOSER_BUTTON_SIZE, layout.COMPOSER_BUTTON_GAP
@@ -94,7 +97,8 @@ function ComposerLayout.Apply(parts, width, rows, lineHeight, buttonCount)
   parts.emojiButton:SetPoint("RIGHT", parts.sendButton, "LEFT", -m.gap, 0)
   parts.emojiButton:SetSize(m.emojiSize, m.emojiSize)
   parts.emojiIcon:SetSize(m.emojiIconSize, m.emojiIconSize)
-  local quickReplyAnchor = buttonCount == 2 and parts.sendButton or parts.emojiButton
+  local emojiHidden = buttonCount == ComposerLayout.FULL_BUTTON_COUNT - 1
+  local quickReplyAnchor = emojiHidden and parts.sendButton or parts.emojiButton
   parts.quickReplyButton:SetPoint("RIGHT", quickReplyAnchor, "LEFT", -m.gap, 0)
   parts.quickReplyButton:SetSize(m.emojiSize, m.emojiSize)
   parts.quickReplyButton.icon:SetSize(m.emojiIconSize, m.emojiIconSize)

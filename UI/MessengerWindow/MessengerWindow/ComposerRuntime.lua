@@ -42,6 +42,8 @@ function ComposerRuntime.Create(factory, options)
     getDeselectOnSend = function()
       return settingsConfig.deselectComposerOnSend == true
     end,
+    showEmojiButton = settingsConfig.showEmojiButton,
+    onNavTargetsChanged = options.onNavTargetsChanged,
   }
   local composer = Composer.Create(factory, layout.composerPane, composerSelectedContact, windowOptions.onSend or function(...)
     local _ = ...
