@@ -11,6 +11,7 @@ local ButtonLook = require("WhisperMessenger.UI.Theme.EllesmereButtonLook")
 local SettingsHandler = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
 
 local Shape = require("tests.helpers.toggle_icon_shape")
+local withProfile = require("tests.helpers.ellesmere_profile")
 local ROUND_BG = Shape.ROUND_BG
 local sameColor = Shape.sameColor
 local withEllesmere = Shape.withEllesmere
@@ -50,7 +51,7 @@ return function()
       end,
     })
     icon.setUnreadCount(0)
-    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_GREY), "gray while desaturated")
+    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "the circle's gray while desaturated")
     icon.setUnreadCount(2)
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "accent again with unread whispers")
   end
@@ -115,7 +116,7 @@ return function()
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "back bubble is exactly the accent on hover")
     assert(icon.hoverGlow.shown ~= true, "no glow while the square shows")
     icon.frame:GetScript("OnLeave")(icon.frame)
-    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_GREY), "gray again after hover")
+    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "the circle's gray again after hover")
     assert(sameColor(icon.background.vertexColor, SLOT_BG), "slot background back after hover")
   end
 
@@ -263,7 +264,17 @@ return function()
     minimap.setUnreadCount(0)
     assert(minimap.accentGlyph.shown == true, "minimap back bubble shown")
     assert(sameColor(minimap.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "idle back bubble is the circle's gray")
-    assert(not sameColor(minimap.accentGlyph.vertexColor, Desaturation.DESAT_GREY), "not the square look's gray")
+  end)
+
+  -- test_ellesmere_square_grays_like_the_circle
+  withProfile({}, function()
+    local icon = iconWithShape("square", {
+      getIconDesaturated = function()
+        return true
+      end,
+    })
+    icon.setUnreadCount(0)
+    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "EllesmereUI square grays like the circle")
   end)
 
   Theme.SetPreset(Theme.DEFAULT_PRESET)

@@ -118,7 +118,7 @@ return function()
     assert(sameColor(icon.background.vertexColor, IconArt.ResolveHoverBgColor()), "lift back on the circle")
   end
 
-  -- test_idle_gray_follows_the_shape_not_the_theme (the square keeps DESAT_GREY)
+  -- test_idle_gray_is_the_same_on_both_shapes
   do
     Theme.SetPreset("wow_default")
     local shape = "square"
@@ -130,7 +130,7 @@ return function()
       end,
     })
     icon.setUnreadCount(0)
-    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_GREY), "square grays with DESAT_GREY")
+    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "square grays like the circle")
     shape = "circle"
     icon.refreshTheme()
     assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "circle grays with DESAT_BACK")

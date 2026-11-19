@@ -11,7 +11,8 @@ local applyVertexColor = UIHelpers.applyVertexColor
 -- the square shape, in the theme accent or their gold art (the minimap always
 -- paints gold). Paints one of four looks: "rim" (ring under the opaque circle,
 -- only a rim shows), "ring" (full ring over the button, sized by ringScale),
--- "square" (square frame) and "none".
+-- "square" (square frame on a box RIM_SCALE times the button, like the ring)
+-- and "none".
 local IconBorder = {}
 
 IconBorder.RING_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\ring_gold.png"
@@ -39,6 +40,31 @@ function IconBorder.LookFor(square, background, border)
   end
 
   return "ring"
+end
+
+-- How far the square's box reaches past each edge of a `side` button: the
+-- square look grows to RIM_SCALE, the size of the circle's ring. Other looks
+-- keep the button's own size (0).
+function IconBorder.BoxOutset(side, look)
+  if look ~= "square" then
+    return 0
+  end
+
+  return side * (IconBorder.RIM_SCALE - 1) / 2
+end
+
+-- Anchors `region` on the box `outset` past each edge of `frame`, centred on
+-- it; outset 0 covers the button.
+function IconBorder.PlaceOnBox(region, frame, outset)
+  region:ClearAllPoints()
+  if outset > 0 then
+    region:SetPoint("TOPLEFT", frame, "TOPLEFT", -outset, outset)
+    region:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", outset, -outset)
+
+    return
+  end
+
+  region:SetAllPoints(frame)
 end
 
 local function tint(texture, themed)
@@ -103,6 +129,7 @@ function IconBorder.Create(frame, parts)
     paintRing(ring, frame, look, side, ringScale)
     tint(ring, themed)
     if squareFrame then
+      IconBorder.PlaceOnBox(squareFrame, frame, IconBorder.BoxOutset(side, look))
       squareFrame:SetShown(look == "square")
       tint(squareFrame, themed)
     end

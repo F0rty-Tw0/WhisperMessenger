@@ -6,6 +6,7 @@ local Theme = require("WhisperMessenger.UI.Theme")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
 local IconBorder = require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
+local Shape = require("tests.helpers.toggle_icon_shape")
 
 local function widget(state, factoryOptions)
   return ToggleIcon.Create(FakeUI.NewFactory(factoryOptions), {
@@ -66,7 +67,7 @@ return function()
     assert(mask ~= nil, "mask created")
     assert(mask.texturePath == SquareLook.MASK_TEXTURE, "rounded mask art, got " .. tostring(mask.texturePath))
     assert(mask.wrapH == "CLAMPTOBLACKADDITIVE" and mask.wrapV == "CLAMPTOBLACKADDITIVE", "mask clamps to black")
-    assert(mask.allPoints == icon.frame, "mask covers the button")
+    assert(Shape.onBox(mask, icon.frame, 3.15), "mask on the 1.15x box")
     assertMasked(icon)
   end
 
