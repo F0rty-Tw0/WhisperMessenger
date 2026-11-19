@@ -5,10 +5,12 @@ end
 
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local GamepadMarks = ns.MessengerWindowGamepadMarks or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadMarks")
+local GamepadPopups = ns.MessengerWindowGamepadPopups or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadPopups")
 
 -- The one place that talks to the WoW: Forever gamepad UI
 -- (GamepadMode.FrameControlsManager and SmartNavigation) for the messenger
--- window. Off Forever, or without that UI, every method does nothing.
+-- window and its popups. Off Forever, or without that UI, every method does
+-- nothing.
 -- Nothing calls into that UI in combat: what was asked for then is done
 -- when combat ends.
 local GamepadNav = {}
@@ -30,6 +32,9 @@ local function inert()
     markFocusable = noop,
     setStepper = noop,
     setEdgeOverride = noop,
+    popupShown = noop,
+    popupHidden = noop,
+    setPopupCloseHandler = noop,
     isActive = never,
     isRegistered = never,
   }
@@ -102,6 +107,7 @@ function GamepadNav.New(frame, deps)
     addJumpOverride = addJumpOverride,
     directions = directions,
   })
+  local popups = GamepadPopups.New({ fcm = fcm, inCombat = inCombat })
 
   local function register()
     local result = fcm:FrameShown(frame)
@@ -128,8 +134,9 @@ function GamepadNav.New(frame, deps)
   end
 
   -- Combat over: queued marks, then the pending hide or re-register,
-  -- then the scroll frame the game asked for meanwhile, then one re-scan
-  -- if one was asked for meanwhile.
+  -- then the scroll frame the game asked for meanwhile, then our popups
+  -- (after the window: it is their return frame), then one re-scan if one
+  -- was asked for meanwhile.
   local function settle()
     if inCombat() then
       after(0, settle)
@@ -153,6 +160,7 @@ function GamepadNav.New(frame, deps)
         smartNavigation:SetScrollFrameForFrame(frame, scrollTarget)
       end
     end
+    popups.settle()
     if pendingRefresh then
       pendingRefresh = false
       rescan()
@@ -239,6 +247,9 @@ function GamepadNav.New(frame, deps)
   nav.markFocusable = marks.markFocusable
   nav.setStepper = marks.setStepper
   nav.setEdgeOverride = marks.setEdgeOverride
+  nav.popupShown = popups.popupShown
+  nav.popupHidden = popups.popupHidden
+  nav.setPopupCloseHandler = popups.setPopupCloseHandler
 
   function nav.isActive()
     return true

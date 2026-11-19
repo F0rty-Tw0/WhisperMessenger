@@ -20,6 +20,7 @@ local GLOBALS = {
 
 function FakeGamepad.New()
   local env = { calls = {}, shownResults = {}, panelInfo = {}, combat = false }
+  local listed = {}
   local queue = {}
   local eventFrames = {}
   local scrollFrames = {}
@@ -62,6 +63,16 @@ function FakeGamepad.New()
   function fcm:FrameHidden(frame)
     log("FrameHidden", frame)
     env.panelInfo[frame] = nil
+    listed[frame] = nil
+  end
+  -- FrameControlsManager.lua#L563-L581: lists the popup, returns nothing.
+  function fcm:HandlePopupShown(popup)
+    log("HandlePopupShown", popup)
+    listed[popup] = true
+  end
+  -- True while FCM holds the popup: shown with HandlePopupShown, not yet hidden.
+  function env.isListed(frame)
+    return listed[frame] == true
   end
   env.gamepadMode = { FrameControlsManager = fcm }
 
