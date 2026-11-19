@@ -173,10 +173,8 @@ function PendingOutgoing.Record(state, target, text, metadata)
   end
 
   local conversationKey = Identity.BuildConversationKey(state.localProfileId, contact.contactKey)
-  if target.channel ~= "BN" then
-    -- The echo of a send to a merged character lands in the Battle.net chat.
-    conversationKey = CharacterRedirect.MergedKey(state, conversationKey) or conversationKey
-  end
+  -- The echo of a send to a merged character lands in the Battle.net chat.
+  conversationKey = CharacterRedirect.MergedKey(state, conversationKey) or conversationKey
   local now = state.now()
   pruneExpiredQueues(state, now)
 
