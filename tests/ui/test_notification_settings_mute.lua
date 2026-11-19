@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
+local Localization = require("WhisperMessenger.Locale.Localization")
 local NotificationSettings = require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
 
 -- "Mute all sounds" at the top of Notifications greys out the three sound
@@ -37,6 +38,31 @@ local function optionByLabel(row, label)
     end
   end
   error("no sound option labelled " .. label)
+end
+
+local function whisperCover(result)
+  return FindUI.disabledCover(FindUI.byLabel(result.frame, WHISPER_TOGGLE))
+end
+
+-- Hovers a grey cover and returns the tooltip text it shows.
+local function hover(cover)
+  local savedTooltip = rawget(_G, "GameTooltip")
+  local tip = {}
+  rawset(_G, "GameTooltip", {
+    SetOwner = function() end,
+    SetText = function(_, value)
+      tip.text = value
+    end,
+    Show = function() end,
+    Hide = function() end,
+  })
+  local ok, err = pcall(function()
+    assert(cover, "muted, the whisper toggle has a cover")
+    cover:GetScript("OnEnter")(cover)
+  end)
+  rawset(_G, "GameTooltip", savedTooltip)
+  assert(ok, err)
+  return tip.text
 end
 
 return function()
@@ -117,24 +143,24 @@ return function()
 
   -- test_greyed_toggle_hover_reason
   do
-    local savedTooltip = rawget(_G, "GameTooltip")
-    local tip = {}
-    rawset(_G, "GameTooltip", {
-      SetOwner = function() end,
-      SetText = function(_, value)
-        tip.text = value
-      end,
-      Show = function() end,
-      Hide = function() end,
-    })
     local result = build({ muteAllSounds = true })
-    local cover = FindUI.disabledCover(FindUI.byLabel(result.frame, WHISPER_TOGGLE))
-    local ok, err = pcall(function()
-      assert(cover, "opened muted, the whisper toggle has a cover")
-      cover:GetScript("OnEnter")(cover)
+    local shown = hover(whisperCover(result))
+    assert(shown == REASON, "hover explains why, got " .. tostring(shown))
+  end
+
+  -- test_hover_reason_follows_language_change
+  do
+    local result = build({ muteAllSounds = true })
+    local cover = whisperCover(result)
+    Localization.Configure({ language = "deDE" })
+    local ok, shown = pcall(function()
+      result.setLanguage()
+      return hover(cover)
     end)
-    rawset(_G, "GameTooltip", savedTooltip)
-    assert(ok, err)
-    assert(tip.text == REASON, "hover explains why, got " .. tostring(tip.text))
+    Localization.Configure({ language = "enUS" })
+    assert(ok, shown)
+    local expected = Localization.Text(REASON, "deDE")
+    assert(expected ~= REASON, "deDE has its own reason text")
+    assert(shown == expected, "hover reason follows the new language, got " .. tostring(shown))
   end
 end
