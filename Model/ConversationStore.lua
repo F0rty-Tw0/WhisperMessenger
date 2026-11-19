@@ -146,6 +146,9 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
     then
       MessageMetadata.ApplyIncoming(conversation, message)
     end
+  end
+  -- Contact data (names, realm, account) is current only on the newest line.
+  if isNewest then
     MessageMetadata.ApplyContact(state, key, conversation, message)
   end
   local activeStatus = conversation.activeStatus

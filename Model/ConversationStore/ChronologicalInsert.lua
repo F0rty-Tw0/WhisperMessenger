@@ -92,7 +92,8 @@ function ChronologicalInsert.Outgoing(ensureConversation, state, key, message)
   end
 
   MessageMetadata.ApplyMoves(conversation, message, movesPreview, movesActivity)
-  if movesActivity then
+  -- Contact data is current only on the newest line.
+  if isNewest and movesActivity then
     MessageMetadata.ApplyContact(state, key, conversation, message)
   end
   MessageMetadata.Compact(message)

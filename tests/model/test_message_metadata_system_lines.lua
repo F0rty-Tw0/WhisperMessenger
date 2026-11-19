@@ -178,4 +178,23 @@ return function()
     assert(jaina.lastPreview == "Jaina is offline.", "an older line must not roll the preview back, got " .. tostring(jaina.lastPreview))
     assert(jaina.lastActivityAt == chatAt + 10 * HOUR, "the older real line is still the latest activity, got " .. tostring(jaina.lastActivityAt))
   end
+
+  -- test_line_arriving_behind_a_newer_line_keeps_the_newer_contact_data
+  for _, direction in ipairs({ "in", "out" }) do
+    local clock = { now = 8000000 }
+    local state, chatAt = jainaWithStatusLine(clock)
+    local jaina = state.store.conversations[JAINA_KEY]
+    jaina.gameAccountName = "Current"
+    local message = replayed(chatAt, direction)
+    message.gameAccountName = "Stale"
+    if direction == "in" then
+      Store.InsertIncomingChronological(state.store, JAINA_KEY, message, false)
+    else
+      Store.InsertOutgoingChronological(state.store, JAINA_KEY, message)
+    end
+    assert(
+      jaina.gameAccountName == "Current",
+      direction .. ": an older line must not overwrite contact data, got " .. tostring(jaina.gameAccountName)
+    )
+  end
 end
