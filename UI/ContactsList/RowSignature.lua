@@ -59,7 +59,8 @@ local function playerFaction()
 end
 
 -- The values every row of one refresh shares. Returns a table reused by
--- every refresh.
+-- every refresh. A row's position is fixed by its pool slot, so it is not
+-- part of the signature.
 function RowSignature.Context(parent, options)
   options = options or {}
   local timeFormat, timeSource = TimeFormat.GetConfig()
@@ -91,6 +92,8 @@ local function fillItemSlots(ctx, item)
 end
 
 -- A list inside a table field (relationship.ties) against its snapshot.
+-- Entries are compared by identity: a nested table changed in place would
+-- not be seen, so a new nested field needs a deeper snapshot.
 local function sameEntries(snapshot, value)
   for key, entry in pairs(value) do
     if snapshot[key] ~= entry then
