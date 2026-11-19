@@ -156,6 +156,20 @@ return function()
     assert(frame._wmPlayerMenuOpener == nil, "released player-menu state must not retain callback")
   end
 
+  -- test_release_all_drops_the_bubble_role_and_its_gamepad_tag
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(contentFrame)
+    local frame = FramePool.acquireFrame(FakeUI.NewFactory(), contentFrame, "Button", contentFrame)
+    frame._wmBubbleResult = { frame = frame }
+    frame.buttonContext = "WhisperMessengerRightClick"
+
+    FramePool.releaseAll(contentFrame)
+
+    assert(frame._wmBubbleResult == nil, "a released frame is no longer a bubble")
+    assert(frame.buttonContext == nil, "a released frame drops its X right-click tag")
+  end
+
   -- test_pooled_factory_forwards_template
   do
     local contentFrame = factory.CreateFrame("Frame", nil, nil)

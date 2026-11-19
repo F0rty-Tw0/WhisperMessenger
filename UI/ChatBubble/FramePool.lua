@@ -175,6 +175,10 @@ local function clearBindingState(frame)
   frame._wmOpenedOnMouseDown = nil
   frame._wmPlayerMenuMessage = nil
   frame._wmPlayerMenuOpener = nil
+  -- Frames of one type may come back in another role; the transcript's
+  -- gamepad tagging keys off the bubble result and sets buttonContext.
+  frame._wmBubbleResult = nil
+  frame.buttonContext = nil
 
   local menuOptions = frame._wmContextMenuOptions
   if menuOptions then
