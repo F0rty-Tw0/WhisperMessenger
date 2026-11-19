@@ -166,7 +166,10 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if refreshWindow and result and result.conversationKey then
     local typingMeta = type(resultMeta) == "table" and resultMeta.presence == "typing" and resultMeta or nil
     if not (typingMeta and typingMeta.typingChanged == false) then
-      refreshWindow(result.conversationKey)
+      -- Lines landing in one frame (a long whisper's parts) redraw once, on
+      -- the next frame.
+      local scheduleRefresh = type(runtime.scheduleWhisperRefresh) == "function" and runtime.scheduleWhisperRefresh or refreshWindow
+      scheduleRefresh(result.conversationKey)
     end
     if typingMeta and typingMeta.typingActive == true then
       scheduleTypingExpiry(runtime, refreshWindow, result.conversationKey)
