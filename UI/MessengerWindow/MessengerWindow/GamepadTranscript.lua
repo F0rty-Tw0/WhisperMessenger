@@ -16,7 +16,9 @@ local GamepadTranscript = {}
 local function tagChildren(nav, ...)
   for i = 1, select("#", ...) do
     local child = select(i, ...)
-    if child._wmBubbleResult then
+    local bubbleResult = child._wmBubbleResult
+    -- A pooled frame keeps its result table; only a live bubble's points back.
+    if bubbleResult and bubbleResult.frame == child then
       child.buttonContext = GamepadNav.RIGHT_CLICK_CONTEXT
     elseif child._wmPlayerMenuOpener then
       nav.ignore(child, true)

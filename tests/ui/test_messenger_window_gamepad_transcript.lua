@@ -158,5 +158,16 @@ return function()
     assert(opened == 1, "MouseDown opens the menu, MouseUp does not open it again; got " .. opened)
   end
 
+  -- test_a_released_bubble_frame_is_not_tagged_for_x
+  do
+    local nav = recordingNav()
+    local factory = FakeUI.NewFactory()
+    local content = factory.CreateFrame("Frame", nil, nil)
+    local released = factory.CreateFrame("Button", nil, content)
+    released._wmBubbleResult = { frame = nil }
+    GamepadTranscript.Attach(nav, { content = content })
+    assert(released.buttonContext == nil, "a frame back in the pool keeps its result table but is no bubble")
+  end
+
   _G.UIParent = savedUIParent
 end
