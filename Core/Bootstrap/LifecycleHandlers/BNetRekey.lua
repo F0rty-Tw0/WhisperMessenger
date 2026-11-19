@@ -3,8 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
 local CharacterMergeMap = ns.CharacterMergeMap or require("WhisperMessenger.Model.CharacterMergeMap")
+local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
 
 -- Moves Battle.net conversations stored under a numeric account ID to their
 -- battleTag key once a friend scan can name them, and points the session
@@ -82,13 +82,8 @@ function BNetRekey.ApplyMappings(runtime, mappings)
       onlineWatch[oldKey] = nil
     end
   end
-  -- Characters merged into a moved chat follow it. Hand-built runtimes in
-  -- tests have no merge maps.
-  local merges = runtime.characterMerges
-  if merges ~= nil then
-    for oldKey, newKey in pairs(mappings) do
-      CharacterMergeMap.RewriteBnetKey(merges, oldKey, newKey)
-    end
+  for oldKey, newKey in pairs(mappings) do
+    CharacterMergeMap.RewriteBnetKey(runtime.characterMerges, oldKey, newKey)
   end
 end
 

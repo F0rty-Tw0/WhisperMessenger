@@ -1,5 +1,6 @@
 local FakeScanResolver = require("tests.helpers.fake_scan_resolver")
 local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
+local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
 local Identity = require("WhisperMessenger.Model.Identity")
 
 local function makeDeps(friendMap)
@@ -24,6 +25,7 @@ local function makeHarness(gameAccountInfo)
   local Bootstrap = {
     runtime = {
       bnetApi = {},
+      characterMerges = CharacterMergeMap.Ensure({}),
       store = { conversations = { ["bn::friend"] = conversation } },
     },
   }
@@ -46,6 +48,7 @@ local function mergeNumericBNetCollision(accountID, battleTag, legacy, canonical
   local Bootstrap = {
     runtime = {
       bnetApi = {},
+      characterMerges = CharacterMergeMap.Ensure({}),
       store = { conversations = conversations },
     },
   }
@@ -163,6 +166,7 @@ return function()
     local Bootstrap = {
       runtime = {
         bnetApi = {},
+        characterMerges = CharacterMergeMap.Ensure({}),
         store = { conversations = conversations, config = { maxMessagesPerConversation = 3 } },
         activeConversationKey = numericKey,
         characterState = characterState,
@@ -225,6 +229,7 @@ return function()
     local Bootstrap = {
       runtime = {
         bnetApi = {},
+        characterMerges = CharacterMergeMap.Ensure({}),
         store = store,
       },
     }
@@ -361,7 +366,9 @@ return function()
         lastActivityAt = 7,
       },
     }
-    local Bootstrap = { runtime = { bnetApi = {}, store = { conversations = conversations } } }
+    local Bootstrap = {
+      runtime = { bnetApi = {}, characterMerges = CharacterMergeMap.Ensure({}), store = { conversations = conversations } },
+    }
     local deps = makeDeps({
       ["Solo#5678"] = { bnetAccountID = 913, accountInfo = { battleTag = "Solo#5678" } },
     })

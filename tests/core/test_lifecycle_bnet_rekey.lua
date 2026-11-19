@@ -14,9 +14,9 @@ return function()
     assert(CharacterMergeMap.Get(merges, "wow::WOW::jaina").bnetKey == "bnet::BN::other#5678", "an unmapped chat's merge is untouched")
   end
 
-  -- test_apply_mappings_without_merges_does_not_error
+  -- test_apply_mappings_also_moves_the_active_chat
   do
-    local runtime = { activeConversationKey = "bnet::BN::42" }
+    local runtime = { activeConversationKey = "bnet::BN::42", characterMerges = CharacterMergeMap.Ensure({}) }
     BNetRekey.ApplyMappings(runtime, { ["bnet::BN::42"] = "bnet::BN::friend#1234" })
     assert(runtime.activeConversationKey == "bnet::BN::friend#1234", "the other mappings still apply")
   end
