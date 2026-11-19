@@ -153,4 +153,18 @@ return function()
     ContactsList.Refresh(factory, parent, rows, { bnetItem() }, options)
     assert(counts[1] == 0, "an unchanged Battle.net row should not rebind, got " .. counts[1] .. " name writes")
   end
+
+  -- test_skipped_row_drops_hover_left_over_from_a_hidden_window
+  do
+    local items, options, rows = setup()
+    local row = rows[2]
+    row.mouseOver = true
+    row:GetScript("OnEnter")(row)
+    assert(row.pinButton:IsShown() == true, "hovering should show the pin button")
+    -- The window hides under the pointer: no OnLeave arrives.
+    row.mouseOver = false
+    ContactsList.Refresh(factory, parent, rows, items, options)
+    assert(row.pinButton:IsShown() == false, "pin button should hide once the pointer is gone")
+    assert(row.removeButton:IsShown() == false, "remove button should hide once the pointer is gone")
+  end
 end

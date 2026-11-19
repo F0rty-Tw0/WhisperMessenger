@@ -15,6 +15,7 @@ local RowView = ns.ContactsListRowView or require("WhisperMessenger.UI.ContactsL
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
 local bindRow = RowView.bindRow
 local RowSignature = ns.ContactsListRowSignature or require("WhisperMessenger.UI.ContactsList.RowSignature")
+local RowScripts = ns.ContactsListRowScripts or require("WhisperMessenger.UI.ContactsList.RowScripts")
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
 local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
@@ -81,12 +82,15 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
   end
 
   -- A row still showing the same values keeps its paint; only its item
-  -- table is refreshed (click and drag read row.item).
+  -- table is refreshed (click and drag read row.item) and its hover state
+  -- reset, as a bind would (a window hidden under the pointer gets no
+  -- OnLeave). SetSelected below repaints the hover from the real pointer.
   local signatureContext = RowSignature.Context(parent, options)
   for index = 1, visibleCount do
     local row, item = rows[index], items[index]
     if RowSignature.Matches(row, item, signatureContext) then
       row.item = item
+      RowScripts.resetHover(row)
     else
       -- A bind that throws leaves the row half-painted: never skip it later.
       RowSignature.Clear(row)
