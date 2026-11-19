@@ -13,6 +13,7 @@ local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local RulePresets = ns.RulePresets or require("WhisperMessenger.Model.Filters.RulePresets")
 local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
+local CharacterMergeMap = ns.CharacterMergeMap or require("WhisperMessenger.Model.CharacterMergeMap")
 local PanelRegistry = ns.BootstrapWindowRuntimePanelRegistry or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelRegistry")
 local OptionalFields = ns.BootstrapRuntimeFactoryOptionalFields or require("WhisperMessenger.Core.Bootstrap.RuntimeFactory.OptionalFields")
 local RuntimeFactory = {}
@@ -168,6 +169,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     -- Stores
     store = store,
     channelMessageStore = channelMessageStore,
+    characterMerges = CharacterMergeMap.Ensure(accountState),
     activeConversationKey = characterState.activeConversationKey,
     groupPartyGUIDsByCategory = characterState.groupPartyGUIDs,
     contactInfo = ContactInfo.New(),
@@ -250,6 +252,9 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     if reason == "explicit" then
       MessageReactions.ClearConversation(runtime, key)
     end
+    -- Characters merged into a removed Battle.net chat unmerge, whatever
+    -- removed it; separations stay.
+    CharacterMergeMap.ClearForBnet(runtime.characterMerges, key)
     runtime.sendStatusByConversation[key] = nil
     runtime.collapseIndex[key] = nil
     for _, field in ipairs(SESSION_MAPS_BY_CONVERSATION) do
