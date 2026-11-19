@@ -565,6 +565,8 @@ local Portuguese = {
   ["Guild invite"] = "Convidar para a guilda",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Pressione Ctrl+C para copiar o comando e cole-o no chat.",
   ["Read-only here. Reply in the game's Communities window."] = "Somente leitura. Responda na janela de Comunidades do jogo.",
+  -- Contact menu: split a character out of a Battle.net chat
+  ["Separate %s"] = "Separar %s",
 }
 
 ns.Locale_ptBR = Portuguese

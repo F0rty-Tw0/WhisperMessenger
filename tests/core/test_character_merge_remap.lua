@@ -125,7 +125,9 @@ return function()
     runtime.typingByConversation[K] = 1010
     CharacterMergeRemap.Apply(runtime, K, B)
     -- No expiry timer runs for the friend's chat, so a moved indicator would
-    -- stay up; the whisper that merged the chat ends the typing anyway.
+    -- stay up; an incoming whisper that merges the chat ends the typing
+    -- anyway. A merge made by my own outgoing whisper can hide a peer who is
+    -- still typing for up to ~3 s, until their next typing packet.
     assert(runtime.typingByConversation[K] == nil, "no typing indicator is left on the character key")
     assert(runtime.typingByConversation[B] == nil, "the friend's chat shows no typing without a timer behind it")
   end

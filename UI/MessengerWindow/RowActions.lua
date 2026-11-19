@@ -18,6 +18,8 @@ local ROW_ACTION_NAMES = {
   "whoPlayer",
   "onInviteContact",
   "canInviteContact",
+  "onSeparateCharacter",
+  "listMergedCharacters",
 }
 
 -- Gathers the row actions from the window's flat options into one table.

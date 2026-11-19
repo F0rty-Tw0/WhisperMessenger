@@ -28,6 +28,12 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
   end
 
   if event == "BN_FRIEND_LIST_SIZE_CHANGED" or event == "BN_FRIEND_INFO_CHANGED" then
+    -- The friend list may now know a character it did not know before (a
+    -- friend added, the list loading late, a friend logging on to it), so
+    -- characters it missed are looked up again.
+    if Bootstrap.runtime then
+      Bootstrap.runtime.characterMergeMisses = nil
+    end
     return Presence.handleBNetFriendEvent(Bootstrap, deps)
   end
 

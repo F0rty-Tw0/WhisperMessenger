@@ -115,6 +115,25 @@ local function test_secret_battle_tag_is_no_match()
   end)
 end
 
+local function test_account_that_is_not_a_friend_is_no_match()
+  local state = newState({ bnetAccountID = 77, battleTag = "Jaina#1234", isFriend = false })
+  assert(resolve(state) == K and state.store.conversations[B] == nil, "an account that is not a friend: no merge")
+end
+
+local function test_account_marked_as_friend_matches()
+  local state = newState({ bnetAccountID = 77, battleTag = "Jaina#1234", isFriend = true })
+  assert(resolve(state) == B, "a friend's account merges")
+end
+
+local function test_secret_friend_flag_is_no_match()
+  local state = newState({ bnetAccountID = 77, battleTag = "Jaina#1234", isFriend = true })
+  withSecret(function(value)
+    return value == true
+  end, function()
+    assert(resolve(state) == K and state.store.conversations[B] == nil, "a friend flag the client hides is no match")
+  end)
+end
+
 local function test_secret_name_skips_lookup()
   local state, lookups = newState(FRIEND)
   withSecret(function(value)
@@ -137,5 +156,8 @@ return function()
   test_empty_battle_tag_is_no_match()
   test_secret_account_id_is_not_kept()
   test_secret_battle_tag_is_no_match()
+  test_account_that_is_not_a_friend_is_no_match()
+  test_account_marked_as_friend_matches()
+  test_secret_friend_flag_is_no_match()
   test_secret_name_skips_lookup()
 end
