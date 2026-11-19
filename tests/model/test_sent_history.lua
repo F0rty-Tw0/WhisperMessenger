@@ -103,8 +103,9 @@ return function()
       end
       return true
     end
-    SentHistory.Build(chat({ out("SECRET", 2), out("ok", 1) }), recordingFits)
+    local ok, err = pcall(SentHistory.Build, chat({ out("SECRET", 2), out("ok", 1) }), recordingFits)
     rawset(_G, "issecretvalue", saved)
+    assert(ok, err)
     assert(fitsSawSecret == false, "fits must never be called with a secret line")
   end
 
