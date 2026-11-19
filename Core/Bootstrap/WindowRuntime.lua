@@ -147,6 +147,7 @@ function WindowRuntime.Create(options)
     livePresenceSender = LivePresenceSender,
     buildMessagePreview = buildLatestIncomingPreview,
     externalPreview = externalPreview,
+    guardWhisperRefresh = options.guardWhisperRefresh,
     selectConversation = function(conversationKey)
       return actions.selectConversation(conversationKey)
     end,
@@ -154,6 +155,7 @@ function WindowRuntime.Create(options)
 
   runtime.onAvailabilityChanged = coordinator.scheduleAvailabilityRefresh
   runtime.scheduleIncomingRefresh = coordinator.scheduleIncomingRefresh
+  runtime.scheduleWhisperRefresh = coordinator.scheduleWhisperRefresh
 
   local groupSendPolicy = GroupSendPolicy.Create({
     runtime = runtime,
