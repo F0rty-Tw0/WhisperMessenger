@@ -12,8 +12,9 @@ local GamepadSettings = ns.MessengerWindowGamepadSettings or require("WhisperMes
 -- The messenger window's part of the WoW: Forever gamepad UI: register on
 -- show, B closes the topmost layer, the right stick scrolls the chat (the
 -- settings page while settings show), the D-pad skips grips, chat bubbles
--- and the composer padding, and reaches every settings control. Off
--- Forever the nav does nothing, so neither does this.
+-- and the composer padding, and reaches every settings control. Our popups
+-- take pad focus while open; B closes them and the composer pickers first.
+-- Off Forever the nav does nothing, so neither does this.
 local GamepadWiring = {}
 
 local function ignoreDeadStops(nav, shell, refs)
@@ -75,15 +76,15 @@ local function buildCloseHandler(frame, refs)
 end
 
 -- Pages built before attach (General) are scanned now; later ones when
--- SettingsTabs reports through onNavTargetsChanged.
+-- SettingsTabs reports through onNavTargetsChanged. An inactive nav
+-- (Retail, Classic) gets no walk: every mark would be a no-op.
 local function attachSettings(nav, shell, transcript)
   local settingsPanels = shell.settingsRuntime and shell.settingsRuntime.settingsPanels
-  if not settingsPanels then
+  if not settingsPanels or not nav.isActive() then
     return
   end
   local layout = shell.layout or {}
   settingsPanels.onNavTargetsChanged = GamepadSettings.Attach(nav, {
-    menuScrollView = layout.optionsMenuScrollView,
     contentScrollView = layout.optionsScrollView,
     chatScrollFrame = transcript and transcript.scrollFrame,
     optionsPanel = layout.optionsPanel,
@@ -94,7 +95,7 @@ end
 -- Our ESC-registered popups take pad focus while open; B hides the
 -- focused one (as ESC does, so its own OnHide cleanup runs).
 local function attachPopups(nav)
-  if not (nav.isActive and nav.isActive()) then
+  if not nav.isActive() then
     return
   end
   PickerPopup.SetGamepadPopupHooks(function(popup)

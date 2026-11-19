@@ -5,9 +5,12 @@ local DropdownSelector = require("WhisperMessenger.UI.MessengerWindow.Appearance
 local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
 
-local function fakeNav()
+local function fakeNav(active)
   ---@type table<string, any>
   local nav = { seen = {} }
+  function nav.isActive()
+    return active
+  end
   for _, name in ipairs({
     "onShow",
     "onHide",
@@ -18,6 +21,9 @@ local function fakeNav()
     "markFocusable",
     "setStepper",
     "setEdgeOverride",
+    "popupShown",
+    "popupHidden",
+    "setPopupCloseHandler",
   }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
@@ -82,7 +88,7 @@ local function setup(opts)
       end,
     },
   }
-  local nav = opts.env and GamepadNav.New(frame, opts.env.deps()) or fakeNav()
+  local nav = opts.env and GamepadNav.New(frame, opts.env.deps()) or fakeNav(not opts.inactive)
   local wiring = GamepadWiring.Create(shell, nav)
   wiring.attach(refs)
   local closer
@@ -199,6 +205,12 @@ return function()
   do
     local t = setup({ settings = true })
     assert(type(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged) == "function", "tabs can report")
+  end
+
+  -- test_inactive_nav_skips_the_settings_walk
+  do
+    local t = setup({ settings = true, inactive = true })
+    assert(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged == nil, "Retail and Classic: no settings walk")
   end
 
   -- test_b_closes_an_open_settings_dropdown_through_the_wiring
