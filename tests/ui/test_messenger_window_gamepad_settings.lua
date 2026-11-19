@@ -67,13 +67,15 @@ return function()
     local pageA = factory.CreateFrame("Frame", nil, parent)
     local sliderA = factory.CreateFrame("Slider", nil, factory.CreateFrame("Frame", nil, pageA))
     sliderA._wmPadStep = function() end
-    s.panels = { pageA, false }
+    ---@type any[]
+    local panels = { pageA, false }
+    s.panels = panels
     local onTargetsChanged = GamepadSettings.Attach(nav, s)
     assert(nav.count("markFocusable") == 1 and nav.last("setStepper")[1] == sliderA, "built page scanned at attach")
     local pageB = factory.CreateFrame("Frame", nil, parent)
     local sliderB = factory.CreateFrame("Slider", nil, pageB)
     sliderB._wmPadStep = function() end
-    s.panels[2] = pageB
+    panels[2] = pageB
     onTargetsChanged()
     assert(nav.count("markFocusable") == 2 and nav.last("markFocusable")[1] == sliderB, "lazy page marked, page A not again")
     assert(nav.count("setStepper") == 2 and nav.last("setStepper")[2] == sliderB._wmPadStep, "stepper is the widget's own step")
