@@ -175,6 +175,17 @@ return function()
     assert(built.captured.windowOptions.settingsConfig == accountState.settings, "the window edits the same table")
   end
 
+  -- Set after the build: the window reads the saved chats when asked.
+  local function test_the_window_reads_sent_history_from_the_saved_chats()
+    local built = build()
+    built.runtime.store.conversations = {
+      ["wow::WOW::jaina"] = { messages = { { kind = "user", direction = "out", text = "sent", sentAt = 5 } } },
+    }
+
+    local history = built.captured.windowOptions.getSentHistory()
+    assert(history[1] == "sent", "the window recalls the saved sent line, got " .. tostring(history[1]))
+  end
+
   test_build_hands_out_the_settings_handler_then_the_window_then_binds_panels()
   test_runtime_window_is_still_unset_while_the_panel_registry_binds()
   test_the_window_gets_the_settings_handler_handed_to_the_caller()
@@ -184,4 +195,5 @@ return function()
   test_window_callbacks_pass_straight_through()
   test_the_window_style_picks_the_position_slot()
   test_missing_settings_are_created_and_shared_with_the_window()
+  test_the_window_reads_sent_history_from_the_saved_chats()
 end
