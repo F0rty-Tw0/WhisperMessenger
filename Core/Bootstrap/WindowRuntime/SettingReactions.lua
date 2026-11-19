@@ -156,11 +156,25 @@ function TabVisibilitySetting.Apply(runtime, accountSettings, key, value)
   end
 end
 
+-- The composer's own settings, applied to the open window's composer.
+local ComposerSetting = {}
+
+function ComposerSetting.Apply(runtime, key, value)
+  if key ~= "showEmojiButton" then
+    return
+  end
+  local composer = runtime.window and runtime.window.composer
+  if composer and composer.setEmojiButtonShown then
+    composer.setEmojiButtonShown(value ~= false)
+  end
+end
+
 SettingReactions.EscapeSetting = EscapeSetting
 SettingReactions.DisplayNameSetting = DisplayNameSetting
 SettingReactions.RefreshingSettings = RefreshingSettings
 SettingReactions.IconSettingReactions = IconSettingReactions
 SettingReactions.TabVisibilitySetting = TabVisibilitySetting
+SettingReactions.ComposerSetting = ComposerSetting
 
 ns.BootstrapWindowRuntimeSettingReactions = SettingReactions
 return SettingReactions

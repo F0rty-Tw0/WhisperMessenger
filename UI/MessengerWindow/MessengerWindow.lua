@@ -115,6 +115,7 @@ function MessengerWindow.Create(factory, options)
     onSelectionChanged = function(key)
       compactMode.onSelection(key)
     end,
+    onNavTargetsChanged = gamepadWiring.refresh,
   })
   local composer = composerRuntime.composer
   local composerInput = composer.input

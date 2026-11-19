@@ -102,7 +102,7 @@ function ComposerLaunchers.Create(factory, pane, input, options)
     end
     emojiShown = shown
     emojiButton:SetShown(shown)
-    if not shown then
+    if not shown and emojiPicker.frame:IsShown() then
       emojiPicker:close()
     end
     return true
