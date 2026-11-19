@@ -72,6 +72,7 @@ Model/ConversationStore/ChronologicalInsert.lua
 Model/ConversationStore/NewRecord.lua
 Model/ConversationStore.lua
 Model/CharacterMergeFold.lua
+Model/CharacterSeparate.lua
 Model/Filters/IgnoreList.lua
 Model/Filters/KeywordRules.lua
 Model/Filters/RulePresets.lua
@@ -561,6 +562,7 @@ Core/Bootstrap/WindowRuntime/PositionSlots.lua
 Core/Bootstrap/WindowRuntime/WhoTriggers.lua
 Core/Bootstrap/WindowRuntime/AddonAlerts.lua
 Core/Bootstrap/WindowRuntime/ContactPrefsUpdate.lua
+Core/Bootstrap/WindowRuntime/SeparateCallbacks.lua
 Core/Bootstrap/WindowRuntime/WindowCallbacks.lua
 Core/Bootstrap/WindowRuntime/IconRuntime.lua
 Core/Bootstrap/WindowRuntime/MinimapIconRuntime.lua

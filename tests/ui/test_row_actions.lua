@@ -17,6 +17,8 @@ local ROW_ACTIONS = {
   "whoPlayer",
   "onInviteContact",
   "canInviteContact",
+  "onSeparateCharacter",
+  "listMergedCharacters",
 }
 
 -- Swaps module[name] for replacement and returns a function that puts it back.

@@ -110,6 +110,7 @@ local SAVED_SPOT_KEYS = {
   "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on.",
 }
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
+local SEPARATE_KEY = "Separate %s"
 
 -- "%s|%d" for "Last seen %s ... %d"; "%%" is a literal percent, not a slot.
 local function formatSlots(text)
@@ -255,6 +256,9 @@ return function()
 
     -- test_language_reload_prompt_is_translated
     assert(catalog[LANGUAGE_RELOAD_KEY] ~= nil, code .. " is missing a translation for '" .. LANGUAGE_RELOAD_KEY .. "'")
+
+    -- test_separate_character_entry_is_translated
+    assert(type(catalog[SEPARATE_KEY]) == "string" and catalog[SEPARATE_KEY] ~= "", code .. " is missing a translation for '" .. SEPARATE_KEY .. "'")
 
     -- test_preview_reply_reason_names_the_translated_preview_toggle
     local replyReason = catalog[REPLY_REASON_KEY]

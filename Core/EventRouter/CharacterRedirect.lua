@@ -19,13 +19,16 @@ end
 
 -- Every fold tells the runtime before the line is stored, so state that
 -- follows the chat (the open chat above all) moves to the friend's chat first.
+-- The third result says the fold opened the friend's chat with nothing in
+-- it, so the line about to be stored opens a new chat.
 local function fold(state, characterKey, bnetKey, bnetContact, name)
   local store = state.store
+  local opensNewChat = store.conversations[bnetKey] == nil and store.conversations[characterKey] == nil
   CharacterMergeFold.Fold(store, state.characterMerges, characterKey, bnetKey, bnetContact, name, maxMessagesOf(store))
   if type(state.onCharacterMerged) == "function" then
     state.onCharacterMerged(characterKey, bnetKey)
   end
-  return bnetKey, CharacterMergeMap.Get(state.characterMerges, characterKey)
+  return bnetKey, CharacterMergeMap.Get(state.characterMerges, characterKey), opensNewChat
 end
 
 local function cacheMiss(state, characterKey)
@@ -49,7 +52,8 @@ end
 
 -- The friend who owns the character, as a contact, or nil. Only the account
 -- id and battle tag are taken from the API answer, both checked for secrets
--- before any other test on them.
+-- before any other test on them. An answer that says the account is not a
+-- friend (or hides whether it is) is no match; one without the flag is.
 local function lookupFriend(state, guid)
   local api = state.bnetApi
   if type(api) ~= "table" or type(api.GetAccountInfoByGUID) ~= "function" then
@@ -57,6 +61,9 @@ local function lookupFriend(state, guid)
   end
   local ok, info = pcall(api.GetAccountInfoByGUID, guid)
   if not ok or SecretValue.Is(info) or type(info) ~= "table" then
+    return nil, true
+  end
+  if SecretValue.Is(info.isFriend) or info.isFriend == false then
     return nil, true
   end
   local battleTag = info.battleTag
