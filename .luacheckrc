@@ -227,6 +227,9 @@ read_globals = {
   "LE_EXPANSION_LEVEL_CURRENT",
   "LE_PARTY_CATEGORY_HOME",
   "LE_PARTY_CATEGORY_INSTANCE",
+  "GamepadMode",
+  "SmartNavigation",
+  "SmartNavigation_MarkFrameIgnored",
 }
 
 -- Test files: allow busted globals and relaxed global access

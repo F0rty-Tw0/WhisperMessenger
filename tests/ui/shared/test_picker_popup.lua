@@ -98,4 +98,27 @@ return function()
     local reported = reportMenu(nil, { DropDownList1 = list })
     assert(#reported == 0, "no open menu, nothing to report")
   end
+
+  -- test_hide_shown_escape_frame_hides_the_most_recent_popup
+  withPopup(function(popup)
+    while PickerPopup.HideShownEscapeFrame() do
+    end -- popups earlier tests left shown stay registered (module state)
+    local other = FakeUI.NewFactory().CreateFrame("Frame", "WhisperMessengerTestPicker2", nil)
+    PickerPopup.RegisterEscape(NAME, popup)
+    PickerPopup.RegisterEscape("WhisperMessengerTestPicker2", other)
+    other:Show()
+    popup:Show()
+    assert(PickerPopup.HideShownEscapeFrame() == true, "a shown popup was hidden")
+    assert(not popup:IsShown() and other:IsShown(), "the most recently shown popup goes first")
+    assert(PickerPopup.HideShownEscapeFrame() == true and not other:IsShown(), "then the next one")
+  end)
+
+  -- test_hide_shown_escape_frame_returns_false_with_none_shown
+  withPopup(function(popup)
+    while PickerPopup.HideShownEscapeFrame() do
+    end
+    PickerPopup.RegisterEscape(NAME, popup)
+    assert(not popup:IsShown(), "fake frames start hidden")
+    assert(PickerPopup.HideShownEscapeFrame() == false, "nothing shown, nothing hidden")
+  end)
 end

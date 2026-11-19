@@ -406,6 +406,8 @@ UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
 UI/MessengerWindow/WindowScripts/Frame/EscapeKey.lua
 UI/MessengerWindow/WindowScripts/Frame/EscapeOrder.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowStrata.lua
+UI/MessengerWindow/WindowScripts/Frame/GamepadCloseOrder.lua
+UI/MessengerWindow/WindowScripts/Frame/GamepadNav.lua
 UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua
 UI/MessengerWindow/AppearanceSettings/SelectorSkin.lua
@@ -489,6 +491,7 @@ UI/MessengerWindow/MessengerWindow/DockWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowShell.lua
 UI/MessengerWindow/MessengerWindow/ComposerRuntime.lua
 UI/MessengerWindow/MessengerWindow/SavedStateApply.lua
+UI/MessengerWindow/MessengerWindow/GamepadWiring.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/Bootstrap/WindowRuntime/PanelRegistry.lua
