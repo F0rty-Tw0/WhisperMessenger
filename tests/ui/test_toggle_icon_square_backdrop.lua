@@ -1,7 +1,9 @@
--- The square shape sits on a solid square backdrop in the icon's background
--- color, like the circle's dark disc, so the ground never shows through the
--- slot fill behind the bubbles.
+-- With EllesmereUI's look, the square sits on a solid square backdrop in the
+-- icon's background color, like the circle's dark disc, so the ground never
+-- shows through the slot fill behind the bubbles. Without it the square's
+-- fill is the icon background itself, so there is no backdrop.
 local FakeUI = require("tests.helpers.fake_ui")
+local withProfile = require("tests.helpers.ellesmere_profile")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
@@ -23,7 +25,7 @@ end
 
 return function()
   -- test_square_shows_an_opaque_backdrop_in_the_icon_background_color
-  do
+  withProfile({}, function()
     local icon = iconWith("square", true)
     local backdrop = icon.squareBackdrop
     assert(backdrop ~= nil, "the square has a backdrop")
@@ -31,6 +33,12 @@ return function()
     assert(backdrop.texturePath == SquareLook.SQUARE_TEXTURE, "square-shaped, got " .. tostring(backdrop.texturePath))
     assert(sameColor(backdrop.vertexColor, Theme.COLORS.toggle_icon_bg), "painted like the circle's disc")
     assert((backdrop.vertexColor[4] or 1) == 1, "opaque: the ground does not show through")
+  end)
+
+  -- test_circle_path_square_has_no_backdrop
+  do
+    local icon = iconWith("square", true)
+    assert(not icon.squareBackdrop:IsShown(), "without EllesmereUI the square's own fill is opaque")
   end
 
   -- test_circle_has_no_square_backdrop

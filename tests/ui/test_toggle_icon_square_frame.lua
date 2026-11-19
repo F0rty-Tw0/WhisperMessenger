@@ -4,6 +4,7 @@
 local Theme = require("WhisperMessenger.UI.Theme")
 local borderWidget = require("tests.helpers.border_widget")
 local Shape = require("tests.helpers.toggle_icon_shape")
+local withProfile = require("tests.helpers.ellesmere_profile")
 local IconBorder = require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 
@@ -95,7 +96,7 @@ return function()
   end
 
   -- test_hover_and_press_fills_draw_over_the_frame
-  do
+  withProfile({}, function()
     local icon = widget({})
     local frameSublevel = icon.squareFrame.drawSublevel
     assert(icon.squareHover.drawLayer == "OVERLAY" and icon.squareHover.drawSublevel == 1, "hover fill at OVERLAY 1")
@@ -107,7 +108,7 @@ return function()
     assert(icon.squareHover.shown == true, "hover fill shown")
     assert(icon.squarePushed.shown == true, "pushed fill shown")
     assert(icon.squareFrame.shown == true, "frame stays under the fills")
-  end
+  end)
 
   -- test_shape_change_swaps_ring_and_frame
   do
