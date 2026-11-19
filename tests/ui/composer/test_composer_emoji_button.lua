@@ -54,7 +54,17 @@ return function()
   do
     local composer = build({ showEmojiButton = false })
     assert(not composer.emojiButton:IsShown(), "a saved off builds without the button")
+  end
+
+  -- test_saved_off_leaves_a_two_button_box
+  do
+    local composer = build({ showEmojiButton = false })
     assert(composer.box.width == 524, "two buttons leave a 524px box, got " .. tostring(composer.box.width))
+  end
+
+  -- test_saved_off_puts_quick_reply_next_to_send
+  do
+    local composer = build({ showEmojiButton = false })
     assert(lastPoint(composer.quickReplyButton, "RIGHT")[2] == composer.sendButton, "quick reply sits next to send")
   end
 
@@ -85,14 +95,26 @@ return function()
     assert(env.heights[#env.heights] == 44, "the window hears the one-row height")
   end
 
-  -- test_showing_again_restores_three_buttons
+  -- test_showing_again_shows_the_button
+  do
+    local composer = build({ showEmojiButton = false })
+    composer.setEmojiButtonShown(true)
+    assert(composer.emojiButton:IsShown(), "the button shows again")
+  end
+
+  -- test_showing_again_gives_the_width_back
+  do
+    local composer = build({ showEmojiButton = false })
+    composer.setEmojiButtonShown(true)
+    assert(composer.box.width == 494, "the box gives the width back, got " .. tostring(composer.box.width))
+  end
+
+  -- test_showing_again_wraps_the_line_again
   do
     local composer = build({ showEmojiButton = false })
     typeChars(composer, 70)
     assert(composer.getHeight() == 44, "precondition: 70 chars fit one row with two buttons")
     composer.setEmojiButtonShown(true)
-    assert(composer.emojiButton:IsShown(), "the button shows again")
-    assert(composer.box.width == 494, "the box gives the width back, got " .. tostring(composer.box.width))
     assert(composer.getHeight() == 56, "the line wraps again, got " .. tostring(composer.getHeight()))
   end
 

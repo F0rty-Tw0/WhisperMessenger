@@ -47,7 +47,8 @@ return function()
   do
     local runtime = fakeRuntime()
     runtime.window = nil
-    ComposerSetting.Apply(runtime, "showEmojiButton", false)
+    local ok, err = pcall(ComposerSetting.Apply, runtime, "showEmojiButton", false)
+    assert(ok, "no window does not error: " .. tostring(err))
   end
 
   print("PASS: test_setting_reactions_composer")
