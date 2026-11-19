@@ -10,6 +10,8 @@ local Failsafe = require("WhisperMessenger.Core.Bootstrap.WhisperIngestFailsafe"
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
 local ChatPrint = require("WhisperMessenger.Util.ChatPrint")
 
+local unpack = unpack or table.unpack
+
 local GLOBALS = { "C_Timer", "InCombatLockdown", "geterrorhandler", "UIParent", "SlashCmdList" }
 
 local function saveGlobals()
