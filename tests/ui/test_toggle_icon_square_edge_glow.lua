@@ -60,10 +60,12 @@ return function()
 
   -- test_edge_glow_hides_on_leave
   do
+    local name = "test_edge_glow_hides_on_leave"
     local icon = widget({})
     enter(icon)
+    assert(edgeGlowOnBox(icon, 3.15), name .. ": edge glow on the box while hovered")
     icon.frame:GetScript("OnLeave")(icon.frame)
-    assert(icon.hoverGlow.shown == false, "test_edge_glow_hides_on_leave")
+    assert(icon.hoverGlow.shown == false, name .. ": hidden on leave")
   end
 
   -- test_edge_glow_on_the_ellesmere_path
@@ -99,7 +101,7 @@ return function()
     local icon = widget({})
     enter(icon)
     icon.setUnreadCount(2)
-    assert(icon.hoverGlow.shown == true, name .. ": glow still shown")
+    assert(edgeGlowOnBox(icon, 3.15), name .. ": edge glow still on the box")
     assert(Shape.fillsWithSquareGlow(icon.pulseTexture, icon.frame), name .. ": pulse along the edge")
   end
 
