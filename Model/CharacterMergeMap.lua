@@ -92,6 +92,42 @@ function CharacterMergeMap.ListForBnet(merges, bnetKey)
   return list
 end
 
+local CHARACTER_KEY_PREFIX = "wow::WOW::"
+
+-- The name part of a character key, without the realm, or nil for any other key.
+local function baseNameOf(key)
+  if type(key) ~= "string" or string.find(key, CHARACTER_KEY_PREFIX, 1, true) ~= 1 then
+    return nil
+  end
+
+  return string.match(string.sub(key, #CHARACTER_KEY_PREFIX + 1), "^([^%-]+)")
+end
+
+-- A name without a realm finds a merged character on any realm, as the name
+-- lookup does, but only when no other merged character or character chat
+-- shares that name.
+local function mergedKeyForBareName(merges, conversations, baseName)
+  local found = nil
+  for characterKey in pairs(merges.merged) do
+    if baseNameOf(characterKey) == baseName and CharacterMergeMap.Get(merges, characterKey) ~= nil then
+      if found ~= nil then
+        return nil
+      end
+      found = characterKey
+    end
+  end
+  if found == nil then
+    return nil
+  end
+  for key in pairs(conversations) do
+    if key ~= found and baseNameOf(key) == baseName then
+      return nil
+    end
+  end
+
+  return found
+end
+
 -- The merged Battle.net chat key plus the character key it was built from.
 local function mergedChatForName(merges, conversations, name)
   if type(merges) ~= "table" or type(conversations) ~= "table" then
@@ -103,10 +139,15 @@ local function mergedChatForName(merges, conversations, name)
   end
   -- A character key never holds the local profile id.
   local characterKey = Identity.BuildConversationKey(nil, contact.contactKey)
-  local entry = CharacterMergeMap.Get(merges, characterKey)
+  local hasRealm = string.find(contact.canonicalName, "-", 1, true) ~= nil
+  if CharacterMergeMap.Get(merges, characterKey) == nil and not hasRealm then
+    characterKey = mergedKeyForBareName(merges, conversations, contact.canonicalName)
+  end
+  local entry = characterKey and CharacterMergeMap.Get(merges, characterKey)
   if entry == nil or conversations[entry.bnetKey] == nil then
     return nil
   end
+
   return entry.bnetKey, characterKey
 end
 

@@ -187,4 +187,31 @@ return function()
     local key = CharacterMergeMap.ResolveWhisperName(runtime, "Arthas")
     assert(key == K, "not folded yet: the character's own chat wins, got " .. tostring(key))
   end
+
+  -- test_resolve_whisper_name_finds_a_folded_other_realm_character_by_bare_name
+  do
+    local runtime = { characterMerges = fresh(), store = { conversations = { [B] = { channel = "BN" } } } }
+    CharacterMergeMap.Record(runtime.characterMerges, K_OTHER_REALM, B, "Arthas-Area52")
+    local key = CharacterMergeMap.ResolveWhisperName(runtime, "Arthas")
+    assert(key == B, "a bare name of one folded character resolves to B, got " .. tostring(key))
+  end
+
+  -- test_resolve_whisper_name_skips_a_bare_name_two_merged_characters_share
+  do
+    local conversations = { [B] = { channel = "BN" }, [B_OTHER] = { channel = "BN" } }
+    local runtime = { characterMerges = fresh(), store = { conversations = conversations } }
+    CharacterMergeMap.Record(runtime.characterMerges, K_OTHER_REALM, B, "Arthas-Area52")
+    CharacterMergeMap.Record(runtime.characterMerges, "wow::WOW::arthas-stormrage", B_OTHER, "Arthas-Stormrage")
+    local key = CharacterMergeMap.ResolveWhisperName(runtime, "Arthas")
+    assert(key == nil, "two merged characters share the name: the name lookup decides, got " .. tostring(key))
+  end
+
+  -- test_resolve_whisper_name_keeps_a_same_realm_chat_over_a_bare_name_merge
+  do
+    local conversations = { [B] = { channel = "BN" }, [K] = { channel = "WOW", displayName = "Arthas" } }
+    local runtime = { characterMerges = fresh(), store = { conversations = conversations } }
+    CharacterMergeMap.Record(runtime.characterMerges, K_OTHER_REALM, B, "Arthas-Area52")
+    local key = CharacterMergeMap.ResolveWhisperName(runtime, "Arthas")
+    assert(key == K, "an unmerged chat with the same name keeps the bare name, got " .. tostring(key))
+  end
 end
