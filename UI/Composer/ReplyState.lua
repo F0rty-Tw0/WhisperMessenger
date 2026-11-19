@@ -42,6 +42,20 @@ function ReplyState.Create(getKey, onChanged)
     end
   end
 
+  -- A chat that folds into another hands over its target; the receiving
+  -- chat keeps its own when it has one.
+  function state.move(fromKey, toKey)
+    if fromKey == nil or toKey == nil or fromKey == toKey then
+      return
+    end
+    targets[toKey] = targets[toKey] or targets[fromKey]
+    targets[fromKey] = nil
+    local key = getKey()
+    if key == fromKey or key == toKey then
+      state.sync()
+    end
+  end
+
   return state
 end
 
