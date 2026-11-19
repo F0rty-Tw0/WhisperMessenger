@@ -1,4 +1,5 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
+local MessageMetadata = require("WhisperMessenger.Model.ConversationStore.MessageMetadata")
 
 -- A character's lines stored in their Battle.net friend's chat keep what
 -- marks them as the character's (channel, name, class), and never turn the
@@ -105,5 +106,15 @@ return function()
     Store.AppendIncoming(store, B, characterLine("in"), true)
     assert(conversation.lastActivityAt == 200 and conversation.lastPreview == "from the character", "activity and preview follow the line")
     assert(conversation.lastIncomingAt == 200 and conversation.lastIncomingPreview == "from the character", "last-incoming follows the line")
+  end
+
+  -- test_character_line_in_chat_without_a_channel_is_compacted
+  do
+    local store = Store.New({})
+    local conversation = Store.EnsureConversation(store, "wow::WOW::arthas")
+    local line = characterLine("out")
+    MessageMetadata.Compact(line, conversation)
+    assert(line.guid == nil, "the guid is dropped")
+    assert(line.channel == nil and line.playerName == nil and line.classTag == nil, "only a Battle.net chat keeps a character's marks")
   end
 end

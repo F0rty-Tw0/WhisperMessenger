@@ -9,6 +9,13 @@ local MessageMetadata = {}
 
 local WHISPER_CHANNELS = { WOW = true, BN = true }
 
+-- A character's line kept in its Battle.net friend's chat keeps what marks it
+-- as the character's, and leaves the chat's identity alone so replies still
+-- go out over Battle.net.
+local function isCharacterLineInBnetChat(conversation, message)
+  return conversation ~= nil and conversation.channel == "BN" and message.channel == "WOW"
+end
+
 -- Drops what the conversation already holds and nothing reads off the line.
 -- Group and channel lines keep each sender's identity, and an unsent record
 -- keeps what a resend needs. Older versions read none of the dropped fields
@@ -29,9 +36,7 @@ function MessageMetadata.Compact(message, conversation)
   message.bnetAccountID = nil
   message.battleTag = nil
   message.gameAccountName = nil
-  if conversation ~= nil and message.channel ~= conversation.channel then
-    -- A character's line kept in its Battle.net friend's chat keeps what
-    -- marks it as the character's.
+  if isCharacterLineInBnetChat(conversation, message) then
     return
   end
   if message.direction == "out" then
@@ -132,9 +137,7 @@ function MessageMetadata.ApplyIncoming(conversation, message)
 end
 
 function MessageMetadata.ApplyContact(state, key, conversation, message)
-  -- A character's line in its Battle.net friend's chat leaves the chat's
-  -- identity alone, so replies still go out over Battle.net.
-  if conversation.channel == "BN" and message.channel == "WOW" then
+  if isCharacterLineInBnetChat(conversation, message) then
     return
   end
   local oldGuid = conversation.guid
