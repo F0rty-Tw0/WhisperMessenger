@@ -122,6 +122,7 @@ function ContactsRuntime.Create(factory, options)
         options.onReorder(orders)
       end
     end,
+    onNavTargetsChanged = options.onNavTargetsChanged,
   })
 
   local contacts = {
