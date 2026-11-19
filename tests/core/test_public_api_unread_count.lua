@@ -52,6 +52,15 @@ return function()
     assert(api.GetUnreadCount("Bob") == 0)
   end
 
+  -- test_merged_character_returns_the_battle_net_count
+  do
+    local api, runtime = build()
+    local bnetKey = "bnet::BN::thrall#1234"
+    runtime.store.conversations[bnetKey] = { channel = "BN", displayName = "Thrall#1234", unreadCount = 4 }
+    runtime.characterMerges = { merged = { ["wow::WOW::go'el-area52"] = { bnetKey = bnetKey, name = "Go'el-Area52" } }, separated = {} }
+    assert(api.GetUnreadCount("Go'el-Area52") == 4, "got " .. tostring(api.GetUnreadCount("Go'el-Area52")))
+  end
+
   -- test_unknown_name_returns_zero
   do
     local api = build()
