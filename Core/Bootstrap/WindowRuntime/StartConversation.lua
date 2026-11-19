@@ -6,6 +6,7 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
+local CharacterRedirect = ns.EventRouterCharacterRedirect or require("WhisperMessenger.Core.EventRouter.CharacterRedirect")
 
 local StartConversation = {}
 
@@ -81,7 +82,13 @@ function StartConversation.Create(options)
         return false
       end
 
-      ensureWhisperConversation(runtime, conversationKey, normalizedName)
+      -- A merged character's chat is the friend's Battle.net chat.
+      local mergedKey = CharacterRedirect.MergedKey(runtime, conversationKey)
+      if mergedKey ~= nil then
+        conversationKey = mergedKey
+      else
+        ensureWhisperConversation(runtime, conversationKey, normalizedName)
+      end
     end
 
     if type(askWho) == "function" then

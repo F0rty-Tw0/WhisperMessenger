@@ -1,5 +1,11 @@
 -- focused start-conversation flow regression
 local StartConversation = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.StartConversation")
+local Store = require("WhisperMessenger.Model.ConversationStore")
+local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
+
+local K = "wow::WOW::arthas-area52"
+local B = "bnet::BN::jaina#1234"
+local NAME = "Arthas-Area52"
 
 local function makeRuntime()
   return {
@@ -9,6 +15,15 @@ local function makeRuntime()
       return 1000
     end,
   }
+end
+
+local function mergedRuntime()
+  local runtime = makeRuntime()
+  runtime.store = Store.New({})
+  Store.EnsureConversation(runtime.store, B, { channel = "BN", battleTag = "Jaina#1234", bnetAccountID = 77 })
+  runtime.characterMerges = CharacterMergeMap.Ensure({})
+  CharacterMergeMap.Record(runtime.characterMerges, K, B, NAME)
+  return runtime
 end
 
 local function makeWindow(state)
@@ -235,5 +250,25 @@ return function()
     assert(result.startConversation("New-Realm") == true, "expected capped manual conversation start to succeed")
     assert(runtime.store.conversations.existing == nil, "manual creation must evict the eligible oldest conversation")
     assert(runtime.store.conversations[selectedKey] ~= nil, "manual creation must retain the selected conversation")
+  end
+
+  -- A merged character opens the Battle.net chat; a separated one its own.
+  do
+    local runtime = mergedRuntime()
+    local selectedKey
+    local start = StartConversation.Create({
+      runtime = runtime,
+      getWindow = function()
+        return makeWindow({})
+      end,
+      selectConversation = function(key)
+        selectedKey = key
+      end,
+    }).startConversation
+    assert(start(NAME) == true and selectedKey == B, "starting a chat with a merged character opens B, got " .. tostring(selectedKey))
+    assert(runtime.store.conversations[K] == nil, "no K row is created")
+    CharacterMergeMap.MarkSeparated(runtime.characterMerges, K)
+    start(NAME)
+    assert(selectedKey == K and runtime.store.conversations[K] ~= nil, "a separated character opens K")
   end
 end
