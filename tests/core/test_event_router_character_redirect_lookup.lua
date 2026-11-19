@@ -81,6 +81,22 @@ local function test_account_without_battle_tag_is_no_match()
   assert(resolve(state) == K and state.store.conversations[B] == nil, "no battleTag: no merge")
 end
 
+local function test_empty_battle_tag_is_no_match()
+  local state = newState({ bnetAccountID = 7, battleTag = "" })
+  assert(resolve(state) == K and state.store.conversations[B] == nil, "an empty battleTag: no merge")
+end
+
+local function test_secret_account_id_is_not_kept()
+  local state = newState(FRIEND)
+  withSecret(function(value)
+    return value == 77
+  end, function()
+    assert(resolve(state) == B, "the battleTag alone still matches")
+  end)
+  local merged = state.store.conversations[B]
+  assert(merged.bnetAccountID == nil, "a secret account id is not stored, got " .. tostring(merged.bnetAccountID))
+end
+
 local function test_secret_battle_tag_is_no_match()
   local state = newState(FRIEND)
   withSecret(function(value)
@@ -106,6 +122,8 @@ return function()
   test_api_error_is_a_miss()
   test_no_match_is_looked_up_once_per_session()
   test_account_without_battle_tag_is_no_match()
+  test_empty_battle_tag_is_no_match()
+  test_secret_account_id_is_not_kept()
   test_secret_battle_tag_is_no_match()
   test_secret_name_skips_lookup()
 end
