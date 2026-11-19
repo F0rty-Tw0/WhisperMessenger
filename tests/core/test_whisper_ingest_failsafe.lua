@@ -228,6 +228,52 @@ return function()
     assert(received[3] == nil and received[4] == nil and received[5] == 42 and received[6] == nil, "expected nils and the later arg in place")
   end)
 
+  -- test_deferred_refresh_error_reports_once_and_echoes_each_line
+  run(function(ctx)
+    local lines = {
+      { eventName = "CHAT_MSG_WHISPER", text = "one", name = "Bob-Realm" },
+      { eventName = "CHAT_MSG_WHISPER_INFORM", text = "two", name = "Bob-Realm" },
+    }
+    Failsafe.GuardDeferredRefresh(ctx.Bootstrap, lines, function()
+      error("draw broke")
+    end)
+    assert(#ctx.reported == 1, "expected the refresh error reported once, got " .. #ctx.reported)
+    assert(ctx.printed[1] == PREFIX .. "Hit an error. Whisper from Bob-Realm: one", "unexpected echo: " .. tostring(ctx.printed[1]))
+    assert(ctx.printed[2] == PREFIX .. "Hit an error. Whisper to Bob-Realm: two", "unexpected echo: " .. tostring(ctx.printed[2]))
+  end)
+
+  -- test_deferred_refresh_error_counts_each_line_toward_the_stop
+  run(function(ctx)
+    local lines = {}
+    for index = 1, Failsafe.MAX_ERRORS do
+      lines[index] = { eventName = "CHAT_MSG_WHISPER", text = "part " .. index, name = "Bob-Realm" }
+    end
+    Failsafe.GuardDeferredRefresh(ctx.Bootstrap, lines, function()
+      error("draw broke")
+    end)
+    assert(ctx.active.CHAT_MSG_WHISPER == nil, "expected whispers no longer hidden")
+    assert(countOf(ctx.printed, STOPPED) == 1, "expected the stop notice once")
+  end)
+
+  -- test_deferred_refresh_success_echoes_nothing
+  run(function(ctx)
+    local ran = false
+    Failsafe.GuardDeferredRefresh(ctx.Bootstrap, { { eventName = "CHAT_MSG_WHISPER", text = "one", name = "Bob-Realm" } }, function()
+      ran = true
+    end)
+    assert(ran, "expected the refresh to run")
+    assert(#ctx.printed == 0 and #ctx.reported == 0, "expected no echo or report on success")
+  end)
+
+  -- test_deferred_refresh_without_whisper_lines_propagates
+  run(function(ctx)
+    local ok = pcall(Failsafe.GuardDeferredRefresh, ctx.Bootstrap, { { eventName = "CHAT_MSG_AFK", text = "brb", name = "Bob-Realm" } }, function()
+      error("draw broke")
+    end)
+    assert(not ok, "expected a refresh for non-whisper lines to propagate as before")
+    assert(#ctx.reported == 0 and #ctx.printed == 0, "expected no failsafe handling without a whisper line")
+  end)
+
   -- test_non_whisper_event_errors_propagate
   run(function(ctx)
     local ok = pcall(ctx.route, "CHAT_MSG_AFK", "brb", "Bob-Realm")
