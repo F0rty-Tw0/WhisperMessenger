@@ -86,7 +86,8 @@ function GamepadNav.New(frame, deps)
   local nav = {}
   local registered, shown = false, false
   local refreshScheduled = false
-  local pendingRegister, pendingHide, pendingRefresh = false, false, false
+  local pendingRegister, pendingHide, pendingRefresh, pendingScroll = false, false, false, false
+  local scrollTarget = nil
   local ignored = setmetatable({}, { __mode = "k" })
   local ignoreQueue = {}
 
@@ -115,7 +116,8 @@ function GamepadNav.New(frame, deps)
   end
 
   -- Combat over: queued ignores, then the pending hide or re-register,
-  -- then one re-scan if one was asked for meanwhile.
+  -- then the scroll frame the game asked for meanwhile, then one re-scan
+  -- if one was asked for meanwhile.
   local function settle()
     if inCombat() then
       after(0, settle)
@@ -135,6 +137,12 @@ function GamepadNav.New(frame, deps)
       pendingRegister = false
       if shown then
         register()
+      end
+    end
+    if pendingScroll then
+      pendingScroll = false
+      if registered and smartNavigation:GetPanelInfo(frame, true) ~= nil then
+        smartNavigation:SetScrollFrameForFrame(frame, scrollTarget)
       end
     end
     if pendingRefresh then
@@ -199,10 +207,14 @@ function GamepadNav.New(frame, deps)
 
   -- The right stick scrolls scrollFrame once the game knows the window.
   function nav.setScrollFrame(scrollFrame)
+    scrollTarget = scrollFrame
     smartNavigation:SetSmartNavPanelInfoAddedCallback(frame, function()
-      if not inCombat() then
-        smartNavigation:SetScrollFrameForFrame(frame, scrollFrame)
+      if inCombat() then
+        pendingScroll = true
+        return
       end
+      pendingScroll = false
+      smartNavigation:SetScrollFrameForFrame(frame, scrollFrame)
     end)
   end
 

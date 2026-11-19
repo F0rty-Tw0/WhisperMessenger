@@ -136,6 +136,31 @@ return function()
     assert(env.count("SetScrollFrameForFrame") == 0, "wrapped call blocked in combat")
   end
 
+  -- test_panel_info_in_combat_sets_scroll_frame_on_regen
+  do
+    local env, frame, nav = setup()
+    local scrollFrame = {}
+    nav.onShow()
+    nav.setScrollFrame(scrollFrame)
+    env.combat = true
+    frame.smartNavPanelInfoAddedCallback({})
+    assert(env.count("SetScrollFrameForFrame") == 0, "blocked in combat")
+    endCombat(env)
+    assert(env.count("SetScrollFrameForFrame") == 1 and env.scrollFrameFor(frame) == scrollFrame, "set once after regen")
+  end
+
+  -- test_scroll_frame_pending_from_combat_is_dropped_once_hidden
+  do
+    local env, frame, nav = setup()
+    nav.onShow()
+    nav.setScrollFrame({})
+    env.combat = true
+    frame.smartNavPanelInfoAddedCallback({})
+    nav.onHide()
+    endCombat(env)
+    assert(env.count("SetScrollFrameForFrame") == 0, "unregistered by the settle: no scroll frame")
+  end
+
   -- test_regen_with_nothing_pending_makes_no_call
   do
     local env, _, nav = setup()
