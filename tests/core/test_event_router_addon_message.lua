@@ -1,10 +1,13 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local LivePresence = require("WhisperMessenger.Model.LivePresence")
 local AddonMessage = require("WhisperMessenger.Core.EventRouter.AddonMessage")
+local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
 
 -- Addon side-channel messages, called the way the router calls them once
 -- the payload passed its secret-string check.
 local KEY = "wow::WOW::arthas-area52"
+local B = "bnet::BN::jaina#1234"
+local NAME = "Arthas-Area52"
 
 local function newState()
   local state = {
@@ -60,10 +63,28 @@ local function test_battle_net_sender_key_links_the_game_account()
   assert(AddonMessage.BattleNetReactionSenderKey(state, {}) == nil, "no ids, no sender key")
 end
 
+-- A merged character's chat lives on as the Battle.net chat only.
+local function mergedState()
+  local state = newState()
+  state.store.conversations[KEY] = nil
+  Store.EnsureConversation(state.store, B, { channel = "BN", battleTag = "Jaina#1234", bnetAccountID = 77 })
+  state.characterMerges = CharacterMergeMap.Ensure({})
+  CharacterMergeMap.Record(state.characterMerges, KEY, B, NAME)
+  return state
+end
+
+local function test_merged_character_typing_resolves_b()
+  local state = mergedState()
+  local conversation =
+    AddonMessage.HandleCharacter(state, { prefix = "WMRX", text = LivePresence.EncodeTyping(true), channel = "WHISPER", playerName = NAME })
+  assert(conversation == state.store.conversations[B], "typing from a merged character should resolve the Battle.net chat")
+end
+
 return function()
   test_character_typing_returns_the_conversation()
   test_character_unknown_prefix_is_ignored()
   test_character_quest_link_is_buffered_by_sender_name()
   test_battle_net_quest_link_is_buffered_by_account()
   test_battle_net_sender_key_links_the_game_account()
+  test_merged_character_typing_resolves_b()
 end
