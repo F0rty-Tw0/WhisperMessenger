@@ -131,4 +131,35 @@ return function()
     assert(#list == 2, "both characters are listed, got " .. #list)
     assert(list[1].characterKey == 7 and list[2].characterKey == K, "same name sorts by key, first " .. tostring(list[1].characterKey))
   end
+
+  -- test_bnet_key_for_name_finds_the_merged_chat
+  do
+    local merges = fresh()
+    CharacterMergeMap.Record(merges, K_OTHER_REALM, B, "Arthas-Area52")
+    local conversations = { [B] = { channel = "BN" } }
+    assert(CharacterMergeMap.BnetKeyForName(merges, conversations, "Arthas-Area52") == B, "the character's name finds B")
+    assert(CharacterMergeMap.BnetKeyForName(merges, conversations, "Uther") == nil, "an unmerged name finds nothing")
+    assert(CharacterMergeMap.BnetKeyForName(merges, conversations, "") == nil, "a blank name finds nothing")
+    assert(CharacterMergeMap.BnetKeyForName(merges, conversations, nil) == nil, "no name finds nothing")
+  end
+
+  -- test_bnet_key_for_name_ignores_a_gone_chat_and_keeps_the_entry
+  do
+    local merges = fresh()
+    CharacterMergeMap.Record(merges, K, B, "Arthas")
+    assert(CharacterMergeMap.BnetKeyForName(merges, {}, "Arthas") == nil, "B is gone: no key")
+    assert(CharacterMergeMap.Get(merges, K) ~= nil, "a lookup never changes the saved map")
+  end
+
+  -- test_resolve_whisper_name_prefers_the_character_chat
+  do
+    local runtime = { characterMerges = fresh(), store = { conversations = { [B] = { channel = "BN" } } } }
+    CharacterMergeMap.Record(runtime.characterMerges, K, B, "Arthas")
+    assert(CharacterMergeMap.ResolveWhisperName(runtime, "Arthas") == B, "folded: the name resolves to B")
+    runtime.store.conversations[K] = { channel = "WOW", displayName = "Arthas" }
+    assert(CharacterMergeMap.ResolveWhisperName(runtime, "Arthas") == K, "not folded yet: the character's own chat")
+    runtime.characterMerges = nil
+    runtime.store.conversations[K] = nil
+    assert(CharacterMergeMap.ResolveWhisperName(runtime, "Arthas") == nil, "no merge map: nothing")
+  end
 end

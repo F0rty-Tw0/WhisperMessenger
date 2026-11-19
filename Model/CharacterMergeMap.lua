@@ -6,6 +6,8 @@ end
 -- Account-wide saved maps for character chats folded into a Battle.net chat.
 -- merged[characterKey] = { bnetKey = ..., name = ... }; separated[characterKey]
 -- = true once the player split that character off for good.
+local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+
 local CharacterMergeMap = {}
 
 local ipairs = ipairs
@@ -88,6 +90,34 @@ function CharacterMergeMap.ListForBnet(merges, bnetKey)
   end
   sort(list, byNameThenKey)
   return list
+end
+
+-- The Battle.net chat a character name was merged into, or nil. It only
+-- reads: an entry whose Battle.net chat is gone stays in the map.
+function CharacterMergeMap.BnetKeyForName(merges, conversations, name)
+  if type(merges) ~= "table" or type(conversations) ~= "table" then
+    return nil
+  end
+  local contact = Identity.FromWhisper(name)
+  if contact.canonicalName == "" then
+    return nil
+  end
+  -- A character key never holds the local profile id.
+  local entry = CharacterMergeMap.Get(merges, Identity.BuildConversationKey(nil, contact.contactKey))
+  if entry == nil or conversations[entry.bnetKey] == nil then
+    return nil
+  end
+  return entry.bnetKey
+end
+
+-- The chat a character name resolves to: its own chat while one is stored,
+-- else the Battle.net chat it was merged into.
+function CharacterMergeMap.ResolveWhisperName(runtime, name)
+  local key = Identity.ResolveWhisperConversation(runtime, name, "WOW")
+  if key ~= nil or runtime == nil or runtime.store == nil then
+    return key
+  end
+  return CharacterMergeMap.BnetKeyForName(runtime.characterMerges, runtime.store.conversations, name)
 end
 
 ns.CharacterMergeMap = CharacterMergeMap
