@@ -144,9 +144,9 @@ return function()
     nav.setScrollFrame(scrollFrame)
     env.combat = true
     frame.smartNavPanelInfoAddedCallback({})
-    assert(env.count("SetScrollFrameForFrame") == 0, "blocked in combat")
+    assert(env.count("SetScrollFrameForFrame") == 1, "blocked in combat")
     endCombat(env)
-    assert(env.count("SetScrollFrameForFrame") == 1 and env.scrollFrameFor(frame) == scrollFrame, "set once after regen")
+    assert(env.count("SetScrollFrameForFrame") == 2 and env.scrollFrameFor(frame) == scrollFrame, "set once after regen")
   end
 
   -- test_scroll_frame_pending_from_combat_is_dropped_once_hidden
@@ -158,7 +158,7 @@ return function()
     frame.smartNavPanelInfoAddedCallback({})
     nav.onHide()
     endCombat(env)
-    assert(env.count("SetScrollFrameForFrame") == 0, "unregistered by the settle: no scroll frame")
+    assert(env.count("SetScrollFrameForFrame") == 1, "unregistered by the settle: no scroll frame")
   end
 
   -- test_regen_with_nothing_pending_makes_no_call
@@ -198,5 +198,25 @@ return function()
     env.uninstall()
     rawset(_G, "Enum", savedEnum)
     assert(ok, err)
+  end
+
+  -- test_settings_open_and_closed_in_combat_settle_once_in_order
+  do
+    local env, frame, nav = setup()
+    local chat, menu, page = {}, {}, {}
+    nav.setScrollFrame(chat)
+    nav.onShow()
+    env.combat = true
+    nav.markFocusable(menu)
+    nav.markFocusable(page)
+    nav.setScrollFrame(page)
+    nav.refresh()
+    nav.setScrollFrame(chat)
+    nav.refresh()
+    assert(names(env) == "FrameShown,SetScrollFrameForFrame", "nothing in combat")
+    endCombat(env)
+    local settled = "FrameShown,SetScrollFrameForFrame,MarkFrameFocusable,MarkFrameFocusable,SetScrollFrameForFrame,RefreshButtonGroups"
+    assert(names(env) == settled, "marks, then the scroll frame once, then one re-scan")
+    assert(env.scrollFrameFor(frame) == chat, "settings closed: the chat scrolls again")
   end
 end

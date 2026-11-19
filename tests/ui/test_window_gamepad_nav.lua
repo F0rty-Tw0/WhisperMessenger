@@ -123,4 +123,36 @@ return function()
     nav.ignore(nil)
     assert(env.count("MarkFrameIgnored") == 1 and env.calls[1].args[1] == grip and env.calls[1].args[2] == true, "once")
   end
+
+  -- test_set_scroll_frame_while_registered_swaps_at_once
+  do
+    local env, frame, nav = setup()
+    local chat, page = {}, {}
+    nav.setScrollFrame(chat)
+    nav.onShow()
+    nav.setScrollFrame(page)
+    assert(env.count("SetScrollFrameForFrame") == 2 and env.scrollFrameFor(frame) == page, "settings open: right stick → page")
+    nav.setScrollFrame(chat)
+    assert(env.count("SetScrollFrameForFrame") == 3 and env.scrollFrameFor(frame) == chat, "settings closed: back to the chat")
+  end
+
+  -- test_reregistration_uses_the_latest_scroll_frame
+  do
+    local env, frame, nav = setup()
+    local chat, page = {}, {}
+    nav.setScrollFrame(chat)
+    nav.onShow()
+    nav.setScrollFrame(page)
+    nav.onHide()
+    nav.onShow()
+    assert(env.scrollFrameFor(frame) == page, "panel-info callback reads the latest frame")
+  end
+
+  -- test_set_scroll_frame_while_unregistered_waits_for_registration
+  do
+    local env, _, nav = setup()
+    nav.setScrollFrame({})
+    nav.setScrollFrame({})
+    assert(env.count("SetScrollFrameForFrame") == 0, "no panel info yet: no call")
+  end
 end

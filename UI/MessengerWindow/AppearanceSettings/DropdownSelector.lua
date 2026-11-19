@@ -15,6 +15,9 @@ local DropdownSelector = {}
 local DEFAULT_BUTTON_HEIGHT = 26
 local DEFAULT_MENU_HEIGHT = 156
 
+-- Every custom-look menu built, so the controller's B can close an open one.
+local menus = setmetatable({}, { __mode = "k" })
+
 function DropdownSelector.Create(factory, parent, options)
   options = options or {}
   local native = NativeDropdown.Create(factory, parent, options)
@@ -72,6 +75,7 @@ function DropdownSelector.Create(factory, parent, options)
   menu:SetScrollChild(content)
   content:Show()
   menu:Hide()
+  menus[menu] = true
 
   local optionButtons = {}
   local buttonPool = {}
@@ -263,6 +267,19 @@ function DropdownSelector.Create(factory, parent, options)
       applyColorTexture(menuBg, palette.bg)
     end,
   }
+end
+
+-- Hides every open custom-look menu (the native look's game menu closes
+-- itself); true when one was open.
+function DropdownSelector.HideShownMenu()
+  local hidden = false
+  for menu in pairs(menus) do
+    if menu:IsShown() then
+      menu:Hide()
+      hidden = true
+    end
+  end
+  return hidden
 end
 
 ns.MessengerWindowDropdownSelector = DropdownSelector

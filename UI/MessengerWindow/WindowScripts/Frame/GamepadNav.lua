@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local GamepadMarks = ns.MessengerWindowGamepadMarks or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadMarks")
 
 -- The one place that talks to the WoW: Forever gamepad UI
 -- (GamepadMode.FrameControlsManager and SmartNavigation) for the messenger
@@ -26,6 +27,9 @@ local function inert()
     setCloseHandler = noop,
     setScrollFrame = noop,
     ignore = noop,
+    markFocusable = noop,
+    setStepper = noop,
+    setEdgeOverride = noop,
     isActive = never,
     isRegistered = never,
   }
@@ -67,8 +71,8 @@ local function defaultCreateFrame()
 end
 
 -- frame: the messenger window. deps (all optional): isForever, gamepadMode,
--- smartNavigation, markIgnored, inCombat, after, createFrame; default to the
--- game's.
+-- smartNavigation, markIgnored, markFocusable, addJumpOverride, directions,
+-- inCombat, after, createFrame; default to the game's.
 function GamepadNav.New(frame, deps)
   deps = deps or {}
   local isForever = pick(deps, "isForever", FlavorCompat.isForever)
@@ -79,6 +83,9 @@ function GamepadNav.New(frame, deps)
     return inert()
   end
   local markIgnored = pick(deps, "markIgnored", _G.SmartNavigation_MarkFrameIgnored)
+  local markFocusable = pick(deps, "markFocusable", _G.SmartNavigation_MarkFrameFocusable)
+  local addJumpOverride = pick(deps, "addJumpOverride", _G.SmartNavigation_AddJumpNavigationOverride)
+  local directions = pick(deps, "directions", _G.SMART_NAV_INPUT_DIRECTION)
   local inCombat = pick(deps, "inCombat", defaultInCombat)
   local after = pick(deps, "after", defaultAfter)
   local createFrame = pick(deps, "createFrame", defaultCreateFrame)
@@ -87,9 +94,14 @@ function GamepadNav.New(frame, deps)
   local registered, shown = false, false
   local refreshScheduled = false
   local pendingRegister, pendingHide, pendingRefresh, pendingScroll = false, false, false, false
-  local scrollTarget = nil
-  local ignored = setmetatable({}, { __mode = "k" })
-  local ignoreQueue = {}
+  local scrollTarget, scrollCallbackSet = nil, false
+  local marks = GamepadMarks.New({
+    inCombat = inCombat,
+    markIgnored = markIgnored,
+    markFocusable = markFocusable,
+    addJumpOverride = addJumpOverride,
+    directions = directions,
+  })
 
   local function register()
     local result = fcm:FrameShown(frame)
@@ -115,7 +127,7 @@ function GamepadNav.New(frame, deps)
     rescan()
   end
 
-  -- Combat over: queued ignores, then the pending hide or re-register,
+  -- Combat over: queued marks, then the pending hide or re-register,
   -- then the scroll frame the game asked for meanwhile, then one re-scan
   -- if one was asked for meanwhile.
   local function settle()
@@ -123,11 +135,7 @@ function GamepadNav.New(frame, deps)
       after(0, settle)
       return
     end
-    local queue = ignoreQueue
-    ignoreQueue = {}
-    for _, entry in ipairs(queue) do
-      markIgnored(entry.widget, entry.dontPropagate)
-    end
+    marks.settle()
     if registered and (pendingHide or pendingRegister) then
       fcm:FrameHidden(frame)
       registered = false
@@ -205,31 +213,32 @@ function GamepadNav.New(frame, deps)
     end
   end
 
-  -- The right stick scrolls scrollFrame once the game knows the window.
-  function nav.setScrollFrame(scrollFrame)
-    scrollTarget = scrollFrame
-    smartNavigation:SetSmartNavPanelInfoAddedCallback(frame, function()
-      if inCombat() then
-        pendingScroll = true
-        return
-      end
-      pendingScroll = false
-      smartNavigation:SetScrollFrameForFrame(frame, scrollFrame)
-    end)
+  local function applyScrollTarget()
+    if inCombat() then
+      pendingScroll = true
+      return
+    end
+    pendingScroll = false
+    smartNavigation:SetScrollFrameForFrame(frame, scrollTarget)
   end
 
-  -- The D-pad skips widget (and its children unless dontPropagate).
-  function nav.ignore(widget, dontPropagate)
-    if widget == nil or ignored[widget] or not markIgnored then
-      return
+  -- The right stick scrolls the latest scrollFrame: at once when the game
+  -- knows the window, else once it does.
+  function nav.setScrollFrame(scrollFrame)
+    scrollTarget = scrollFrame
+    if not scrollCallbackSet then
+      scrollCallbackSet = true
+      smartNavigation:SetSmartNavPanelInfoAddedCallback(frame, applyScrollTarget)
     end
-    ignored[widget] = true
-    if inCombat() then
-      table.insert(ignoreQueue, { widget = widget, dontPropagate = dontPropagate })
-      return
+    if registered and smartNavigation:GetPanelInfo(frame, true) ~= nil then
+      applyScrollTarget()
     end
-    markIgnored(widget, dontPropagate)
   end
+
+  nav.ignore = marks.ignore
+  nav.markFocusable = marks.markFocusable
+  nav.setStepper = marks.setStepper
+  nav.setEdgeOverride = marks.setEdgeOverride
 
   function nav.isActive()
     return true

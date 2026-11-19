@@ -5,7 +5,8 @@ end
 
 -- Shared disabled look: the target fades to ALPHA and a transparent cover on
 -- top swallows clicks and explains why on hover. The owning control also
--- checks isEnabled() in its handlers, so scripted clicks are ignored too.
+-- checks isEnabled() (or target._wmDisabled) in its handlers, so scripted
+-- and controller clicks are ignored too.
 local DisabledState = {}
 
 DisabledState.ALPHA = 0.4
@@ -59,6 +60,7 @@ function DisabledState.Attach(factory, target)
   function state.set(nextEnabled, nextReason)
     enabled = nextEnabled ~= false
     reason = nextReason
+    target._wmDisabled = not enabled
     if target.SetAlpha then
       target:SetAlpha(enabled and 1 or DisabledState.ALPHA)
     end

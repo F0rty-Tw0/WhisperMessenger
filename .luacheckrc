@@ -230,6 +230,9 @@ read_globals = {
   "GamepadMode",
   "SmartNavigation",
   "SmartNavigation_MarkFrameIgnored",
+  "SmartNavigation_MarkFrameFocusable",
+  "SmartNavigation_AddJumpNavigationOverride",
+  "SMART_NAV_INPUT_DIRECTION",
 }
 
 -- Test files: allow busted globals and relaxed global access

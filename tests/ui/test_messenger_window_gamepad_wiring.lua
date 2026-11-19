@@ -1,12 +1,24 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FakeGamepad = require("tests.helpers.fake_gamepad")
+local FindUI = require("tests.helpers.find_ui")
+local DropdownSelector = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
 
 local function fakeNav()
   ---@type table<string, any>
   local nav = { seen = {} }
-  for _, name in ipairs({ "onShow", "onHide", "refresh", "setCloseHandler", "setScrollFrame", "ignore" }) do
+  for _, name in ipairs({
+    "onShow",
+    "onHide",
+    "refresh",
+    "setCloseHandler",
+    "setScrollFrame",
+    "ignore",
+    "markFocusable",
+    "setStepper",
+    "setEdgeOverride",
+  }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
     end
@@ -33,6 +45,12 @@ local function setup(opts)
     chrome = { resizeGrip = factory.CreateFrame("Button", nil, frame) },
     layout = { contactsResizeHandle = factory.CreateFrame("Button", nil, frame) },
   }
+  if opts.settings then
+    shell.layout.optionsPanel = factory.CreateFrame("Frame", nil, frame)
+    shell.layout.optionsScrollView = { scrollFrame = factory.CreateFrame("ScrollFrame", nil, frame) }
+    shell.layout.optionsMenuScrollView = { scrollFrame = factory.CreateFrame("ScrollFrame", nil, frame) }
+    shell.settingsRuntime = { settingsPanels = { false } }
+  end
   local input = factory.CreateFrame("EditBox", nil, frame)
   local box = opts.plainBox and input or factory.CreateFrame("Frame", nil, frame)
   local state = { options = false, panel = nil, calls = {} }
@@ -175,5 +193,24 @@ return function()
     local t = setup()
     t.wiring.refresh()
     assert(t.nav.count("refresh") == 1, "refresh reaches GamepadNav")
+  end
+
+  -- test_attach_hands_the_settings_panes_to_the_nav
+  do
+    local t = setup({ settings = true })
+    assert(type(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged) == "function", "tabs can report")
+  end
+
+  -- test_b_closes_an_open_settings_dropdown_through_the_wiring
+  do
+    local t = setup({ shown = true })
+    local selector = DropdownSelector.Create(FakeUI.NewFactory(), t.frame, {
+      labelText = "Font Family",
+      optionsList = { { key = "a", label = "A" } },
+      initial = "a",
+    })
+    local menu = FindUI.dropdownMenu(selector.row)
+    selector.button:GetScript("OnClick")(selector.button)
+    assert(t.close() == true and not menu:IsShown() and #t.state.calls == 0, "B closes the dropdown, the window stays")
   end
 end
