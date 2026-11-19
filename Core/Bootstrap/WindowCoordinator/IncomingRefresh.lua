@@ -60,29 +60,46 @@ end
 -- (zero-delay timer), never later. Unlike Debounce it also runs while the
 -- window is hidden, since that refresh keeps the icon badges current. It
 -- stays a full contact rebuild: an append can expire messages of other
--- chats. Without a timer API each request refreshes at once.
--- options: cTimer, refreshWindow(focusKey), getSelectedKey.
+-- chats. Without a timer API each request refreshes at once, still inside
+-- the caller's event handler.
+-- schedule(key, line): line is the chat line that asked, kept for the guard.
+-- options: cTimer, refreshWindow(focusKey), getSelectedKey, and optional
+-- guard(lines, run), which runs the deferred refresh for those lines (the
+-- whisper failsafe, since the event handler has returned by then).
 function IncomingRefresh.NextFrame(options)
   local cTimer = options.cTimer
   local refreshWindow = options.refreshWindow
   local getSelectedKey = options.getSelectedKey
+  local guard = options.guard
   local pending = {}
+  local pendingLines = {}
   local armed = false
 
   local function flush()
     armed = false
-    local keys = pending
-    pending = {}
+    local keys, lines = pending, pendingLines
+    pending, pendingLines = {}, {}
     PerfCounters.Increment("refreshes")
-    refreshWindow(pickFocusKey(keys, getSelectedKey))
+    local focusKey = pickFocusKey(keys, getSelectedKey)
+    if guard == nil then
+      refreshWindow(focusKey)
+      return
+    end
+    guard(lines, function()
+      refreshWindow(focusKey)
+    end)
   end
 
-  return function(key)
+  return function(key, line)
     if not (cTimer and type(cTimer.After) == "function") then
+      PerfCounters.Increment("refreshes")
       refreshWindow(key)
       return
     end
     pending[key] = true
+    if line ~= nil then
+      pendingLines[#pendingLines + 1] = line
+    end
     if armed then
       return
     end

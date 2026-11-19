@@ -28,9 +28,10 @@ end
 
 -- Whispers coalesce only within one frame: a zero-delay timer, no
 -- visibility gate (a hidden window still updates its icon badges).
-local function whisperHarness()
+local function whisperHarness(guard)
   local h = { timers = {}, delays = {}, calls = {} }
   h.schedule = IncomingRefresh.NextFrame({
+    guard = guard,
     cTimer = {
       After = function(delay, fn)
         h.delays[#h.delays + 1] = delay
@@ -180,5 +181,50 @@ return function()
     h.schedule("b")
     h.timers[1]()
     assert(PerfCounters.Get("refreshes") == 1, "one whisper flush counts one refresh, got " .. PerfCounters.Get("refreshes"))
+  end
+
+  -- test_whisper_refresh_without_timer_api_counts_one_refresh
+  do
+    PerfCounters.Reset()
+    local schedule = IncomingRefresh.NextFrame({
+      cTimer = nil,
+      getSelectedKey = function()
+        return "sel"
+      end,
+      refreshWindow = function() end,
+    })
+    schedule("a")
+    assert(PerfCounters.Get("refreshes") == 1, "an immediate whisper refresh counts too, got " .. PerfCounters.Get("refreshes"))
+  end
+
+  -- test_whisper_flush_runs_under_the_guard_with_every_line
+  do
+    local guarded = {}
+    local h = whisperHarness(function(lines, run)
+      guarded[#guarded + 1] = lines
+      run()
+    end)
+    local lineA, lineB = { text = "one" }, { text = "two" }
+    h.schedule("a", lineA)
+    h.schedule("b", lineB)
+    h.timers[1]()
+    assert(#guarded == 1, "one guarded run per flush, got " .. #guarded)
+    assert(guarded[1][1] == lineA and guarded[1][2] == lineB, "the guard gets every line of the frame")
+    assert(#h.calls == 1, "the guarded run refreshes the window once, got " .. #h.calls)
+  end
+
+  -- test_whisper_flush_guard_gets_only_its_own_frame_lines
+  do
+    local guarded = {}
+    local h = whisperHarness(function(lines, run)
+      guarded[#guarded + 1] = lines
+      run()
+    end)
+    local lineA, lineB = { text = "one" }, { text = "two" }
+    h.schedule("a", lineA)
+    h.timers[1]()
+    h.schedule("b", lineB)
+    h.timers[2]()
+    assert(#guarded[2] == 1 and guarded[2][1] == lineB, "a flushed line must not carry into the next frame")
   end
 end
