@@ -70,6 +70,7 @@ Model/ConversationStore/RepeatCollapse.lua
 Model/ConversationStore/ChronologicalInsert.lua
 Model/ConversationStore.lua
 Model/Filters/IgnoreList.lua
+Model/CharacterMergeMap.lua
 Model/Filters/KeywordRules.lua
 Model/Filters/RulePresets.lua
 Model/Filters/DuplicateCollapse.lua
