@@ -57,4 +57,15 @@ return function()
     assert(lastText == "Jaina is offline.", "setup: the status line sorts last, got " .. tostring(lastText))
     assert(merged.lastPreview == "Jaina is offline.", "a same-second status line is the preview, got " .. tostring(merged.lastPreview))
   end
+
+  -- test_merged_preview_keeps_a_same_second_line_kept_outside_the_thread_with_a_later_id
+  do
+    local conversations = {
+      old = { messages = { line("m3", "user", "in thread", 300, 3) }, lastActivityAt = 300, lastActivityLineID = 5, lastPreview = "outside" },
+      new = { messages = { line("m1", "user", "hi", 100, 1) }, lastActivityAt = 100, lastActivityLineID = 1, lastPreview = "hi" },
+    }
+    ConversationMerge.Rekey(conversations, "old", "new", 50)
+    local preview = conversations.new.lastPreview
+    assert(preview == "outside", "a later line ID at the same second keeps its preview, got " .. tostring(preview))
+  end
 end
