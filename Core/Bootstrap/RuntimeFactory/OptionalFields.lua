@@ -43,12 +43,15 @@ local OptionalFields = {
   -- default: isConversationOpen (falls back to the active key),
   -- isWindowVisible (relationship repaints assume visible), isChatLocked
   -- (held whispers are not ready), getActivePreviewSurface (falls back to
-  -- the widget icon), ensureWindow (reply-to-last falls back to toggle).
+  -- the widget icon), ensureWindow (reply-to-last falls back to toggle),
+  -- scheduleWhisperRefresh (live lines refresh through the caller's
+  -- callback at once).
   "isConversationOpen",
   "isWindowVisible",
   "isChatLocked",
   "getActivePreviewSurface",
   "ensureWindow",
+  "scheduleWhisperRefresh",
 }
 
 ns.BootstrapRuntimeFactoryOptionalFields = OptionalFields

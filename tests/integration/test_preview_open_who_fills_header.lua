@@ -19,12 +19,14 @@ local ROW = {
   area = "Orgrimmar",
 }
 
-local function receiveWhisper(runtime)
+-- The whisper's window refresh runs on the next frame: the queued timers.
+local function receiveWhisper(runtime, env)
   local finishSlide = CompactRuntime.FinishSlide
   rawset(CompactRuntime, "FinishSlide", function() end)
   local ok, err = pcall(CompactRuntime.ReceiveWhisper, runtime)
   rawset(CompactRuntime, "FinishSlide", finishSlide)
   assert(ok, err)
+  Env.RunAfters(env)
 end
 
 local function clickPreview(runtime)
@@ -68,7 +70,7 @@ return function()
   -- test_preview_click_who_answer_fills_class_and_online
   Env.Case("preview who fills header", { whoToUi = false }, function(env)
     CompactRuntime.Run({ compactLayout = false, showPlayerLevels = true }, function(runtime)
-      receiveWhisper(runtime)
+      receiveWhisper(runtime, env)
       -- A chat whose sender came without a guid: only /who can tell Online.
       local conversation = runtime.store.conversations[KEY]
       conversation.guid = nil
@@ -96,7 +98,7 @@ return function()
   -- test_preview_click_who_answer_beats_guid_chat_offline
   Env.Case("preview who beats guid offline", { whoToUi = false }, function(env)
     CompactRuntime.Run({ compactLayout = false, showPlayerLevels = true }, function(runtime)
-      receiveWhisper(runtime)
+      receiveWhisper(runtime, env)
       -- The game's whisper check said Offline for a player who is online.
       local conversation = runtime.store.conversations[KEY]
       assert(conversation.guid ~= nil, "the whisper came with a guid")

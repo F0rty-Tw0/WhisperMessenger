@@ -5,11 +5,11 @@
 local WindowCoordinator = require("WhisperMessenger.Core.Bootstrap.WindowCoordinator")
 
 local function makeCoordinator()
-  local h = { timers = {}, builds = {}, contactRefreshes = 0, selectionRefreshes = 0 }
+  local h = { timers = {}, builds = {}, contactRefreshes = 0, selectionRefreshes = 0, shown = true }
   local window = {
     frame = {
       IsShown = function()
-        return true
+        return h.shown
       end,
     },
     refreshContacts = function()
@@ -67,6 +67,28 @@ return function()
     h.coordinator.scheduleIncomingRefresh("sel")
     h.timers[1]()
     assert(h.selectionRefreshes == 1 and h.contactRefreshes == 0, "a selected line refreshes the open conversation")
+  end
+
+  -- test_whispers_in_one_frame_refresh_the_open_conversation_once
+  do
+    local h = makeCoordinator()
+    h.coordinator.scheduleWhisperRefresh("other")
+    h.coordinator.scheduleWhisperRefresh("sel")
+    assert(#h.builds == 0, "whispers must not refresh synchronously")
+    assert(#h.timers == 1, "two whispers arm one timer, got " .. #h.timers)
+    h.timers[1]()
+    assert(#h.builds == 1 and h.builds[1] == false, "one full contact build per frame")
+    assert(h.selectionRefreshes == 1 and h.contactRefreshes == 0, "the open conversation is redrawn")
+  end
+
+  -- test_whisper_refresh_runs_while_window_hidden
+  do
+    local h = makeCoordinator()
+    h.shown = false
+    h.coordinator.scheduleWhisperRefresh("other")
+    assert(#h.timers == 1, "a hidden window still arms the whisper refresh")
+    h.timers[1]()
+    assert(#h.builds == 1, "the hidden refresh rebuilds contacts for the icon badges")
   end
 
   -- test_direct_refresh_stays_full_and_synchronous

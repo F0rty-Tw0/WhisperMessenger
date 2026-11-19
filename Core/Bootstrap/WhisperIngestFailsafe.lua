@@ -7,6 +7,7 @@ local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
+local ipairs = ipairs
 local select = select
 local type = type
 local unpack = _G.unpack or table.unpack
@@ -93,6 +94,35 @@ function WhisperIngestFailsafe.RouteLiveEvent(Bootstrap, EventBridge, runtime, r
   end
   onIngestError(Bootstrap, direction, ...)
   return nil
+end
+
+local function hasWhisperLine(lines)
+  for _, line in ipairs(lines) do
+    if DIRECTION_BY_EVENT[line.eventName] then
+      return true
+    end
+  end
+  return false
+end
+
+-- The window refresh for live lines runs on a later frame, after
+-- RouteLiveEvent returned, so it is guarded here. lines: { eventName, text,
+-- name } for each line that asked. An error is reported once and each
+-- whisper line goes through the failsafe; without a whisper line the error
+-- propagates, as it does for non-whisper events.
+function WhisperIngestFailsafe.GuardDeferredRefresh(Bootstrap, lines, run)
+  if not hasWhisperLine(lines) then
+    return run()
+  end
+  if xpcall(run, reportError) then
+    return
+  end
+  for _, line in ipairs(lines) do
+    local direction = DIRECTION_BY_EVENT[line.eventName]
+    if direction then
+      onIngestError(Bootstrap, direction, line.text, line.name)
+    end
+  end
 end
 
 ns.BootstrapWhisperIngestFailsafe = WhisperIngestFailsafe
