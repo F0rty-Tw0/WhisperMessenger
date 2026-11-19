@@ -161,7 +161,7 @@ end
 local function earliestDeadline(runtime)
   local earliest
   for _, field in ipairs(PENDING_QUEUE_FIELDS) do
-    for _, queue in pairs(runtime[field]) do
+    for _, queue in pairs(runtime[field] or {}) do
       for _, entry in ipairs(queue) do
         local deadline = entry.recordedAt + TTL_SECONDS
         if earliest == nil or deadline < earliest then
@@ -244,6 +244,23 @@ function PendingQueue.ClearConversation(state, conversationKey)
     end
   end
   pruneSenderAliases(runtime)
+end
+
+-- Points every waiting entry for oldKey at newKey; nothing is removed.
+function PendingQueue.RemapConversation(state, oldKey, newKey)
+  local runtime = type(state) == "table" and state.messageReactionRuntime or nil
+  if type(runtime) ~= "table" then
+    return
+  end
+  for _, field in ipairs(PENDING_QUEUE_FIELDS) do
+    for _, queue in pairs(runtime[field] or {}) do
+      for _, entry in ipairs(queue) do
+        if entry.conversationKey == oldKey then
+          entry.conversationKey = newKey
+        end
+      end
+    end
+  end
 end
 
 function PendingQueue.FlushControls(state)
