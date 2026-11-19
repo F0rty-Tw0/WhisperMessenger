@@ -78,8 +78,12 @@ return function()
   -- test_only_bubbles_and_real_buttons_are_stops (Review Focus 5)
   do
     local nav = recordingNav()
-    local content = layout({ incoming("hi", 0), outgoing("sent", 1), outgoing("oops", 2, "failed") }, { onMessageAction = function() end })
+    local reacted = incoming("hi", 0)
+    reacted.reaction = { key = "heart", actorName = "Thrall", updatedAt = 1 }
+    local content = layout({ reacted, outgoing("sent", 1), outgoing("oops", 2, "failed") }, { onMessageAction = function() end })
     GamepadTranscript.Attach(nav, { content = content })
+    local reactionPill = firstBubble(content)._wmBubbleResult.reactionFrame
+    assert(reactionPill ~= nil and reactionPill:IsShown(), "test precondition: the reaction pill is drawn")
     local bubbles, delivery, other = 0, 0, {}
     for _, target in ipairs(navTargets(nav, content)) do
       if target._wmBubbleResult then
