@@ -109,6 +109,10 @@ local SAVED_SPOT_KEYS = {
   "Open at saved spot",
   "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on.",
 }
+local EMOJI_BUTTON_KEYS = {
+  "Show emoji button",
+  "Shows the emoji button next to the message box. Turn it off to give the message box more room. Typed emoji codes still work.",
+}
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 local SEPARATE_KEY = "Separate %s"
 
@@ -251,6 +255,11 @@ return function()
 
     -- test_open_at_saved_spot_strings_are_translated
     for _, key in ipairs(SAVED_SPOT_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_emoji_button_strings_are_translated
+    for _, key in ipairs(EMOJI_BUTTON_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 

@@ -18,6 +18,7 @@ local TabVisibilitySetting = SettingReactions.TabVisibilitySetting
 local RefreshingSettings = SettingReactions.RefreshingSettings
 local EscapeSetting = SettingReactions.EscapeSetting
 local IconSettingReactions = SettingReactions.IconSettingReactions
+local ComposerSetting = SettingReactions.ComposerSetting
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
 local Relationship = ns.Relationship or require("WhisperMessenger.Model.Relationship")
@@ -169,6 +170,7 @@ function SettingsHandler.Create(options)
         composer.remeasure()
       end
     end
+    ComposerSetting.Apply(runtime, key, persistedValue)
     if key == "fontColor" and fonts.SetFontColor then
       fonts.SetFontColor(persistedValue or "default")
     end

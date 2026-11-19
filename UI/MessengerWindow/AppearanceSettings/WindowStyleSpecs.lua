@@ -67,7 +67,21 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     },
   }
 
-  return { compactLayoutSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec }
+  local showEmojiButtonSpec = {
+    key = "showEmojiButton",
+    label = text("Show emoji button"),
+    labelKey = "Show emoji button",
+    initial = config.showEmojiButton ~= false,
+    onChange = function(value)
+      onChange("showEmojiButton", value)
+    end,
+    tooltipLines = {
+      text("Show emoji button"),
+      text("Shows the emoji button next to the message box. Turn it off to give the message box more room. Typed emoji codes still work."),
+    },
+  }
+
+  return { compactLayoutSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec, showEmojiButtonSpec }
 end
 
 ns.AppearanceSettingsWindowStyleSpecs = WindowStyleSpecs

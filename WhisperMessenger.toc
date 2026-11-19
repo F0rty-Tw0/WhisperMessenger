@@ -326,8 +326,8 @@ UI/Composer/Popover.lua
 UI/Composer/EmojiPicker.lua
 UI/Composer/QuickReplyPicker.lua
 UI/Composer/LauncherButton.lua
-UI/Composer/ComposerLaunchers.lua
 UI/Composer/ComposerLayout.lua
+UI/Composer/ComposerLaunchers.lua
 UI/Composer/ComposerSurface.lua
 UI/Composer/SendButtonStyle.lua
 UI/Composer/ReplyState.lua

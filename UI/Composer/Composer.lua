@@ -76,19 +76,20 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     getQuickReplies = options.getQuickReplies,
     showEmoji = options.showEmojiButton ~= false,
   })
+  local layoutParts = {
+    pane = pane,
+    box = box,
+    scroll = inputBox.scroll,
+    input = input,
+    sendButton = button,
+    emojiButton = launchers.emojiButton,
+    emojiIcon = launchers.emojiButton.icon,
+    quickReplyButton = launchers.quickReplyButton,
+  }
   local relayout = ComposerRelayout.Create({
     parent = parent,
     pane = pane,
-    parts = {
-      pane = pane,
-      box = box,
-      scroll = inputBox.scroll,
-      input = input,
-      sendButton = button,
-      emojiButton = launchers.emojiButton,
-      emojiIcon = launchers.emojiButton.icon,
-      quickReplyButton = launchers.quickReplyButton,
-    },
+    parts = layoutParts,
     rows = rows,
     input = input,
     multiLine = inputBox.multiLine,
@@ -246,7 +247,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     -- maxBarHeight caps the rows (nil = up to two).
     relayout = relayout.resize,
     setEmojiButtonShown = function(shown)
-      if not launchers.setEmojiShown(shown == true) then
+      local changed = launchers.setEmojiShown(shown == true)
+      if not changed then
         return
       end
       relayout.refresh()

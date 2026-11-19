@@ -10,6 +10,7 @@ local LauncherButton = ns.ComposerLauncherButton or require("WhisperMessenger.UI
 local EmojiPicker = ns.ComposerEmojiPicker or require("WhisperMessenger.UI.Composer.EmojiPicker")
 local QuickReplyPicker = ns.ComposerQuickReplyPicker or require("WhisperMessenger.UI.Composer.QuickReplyPicker")
 local QuickReplies = ns.QuickReplies or require("WhisperMessenger.Model.QuickReplies")
+local ComposerLayout = ns.ComposerLayout or require("WhisperMessenger.UI.Composer.ComposerLayout")
 
 -- The composer's picker buttons (quick replies, emoji) and their pickers.
 -- Picks are inserted at the input's cursor; nothing is ever sent from here.
@@ -95,22 +96,28 @@ function ComposerLaunchers.Create(factory, pane, input, options)
   end
 
   -- True only when the shown state changed. Hiding also closes the picker.
+  -- `shown` is a boolean; Composer converts the setting at its edge.
   function launchers.setEmojiShown(shown)
-    shown = shown == true
     if shown == emojiShown then
       return false
     end
     emojiShown = shown
     emojiButton:SetShown(shown)
-    if not shown then
+    local pickerOpen = emojiPicker.frame:IsShown()
+    if not shown and pickerOpen then
       emojiPicker:close()
     end
+
     return true
   end
 
   -- Buttons on the composer row: quick reply, emoji when shown, send.
   function launchers.buttonCount()
-    return emojiShown and 3 or 2
+    if emojiShown then
+      return ComposerLayout.FULL_BUTTON_COUNT
+    end
+
+    return ComposerLayout.FULL_BUTTON_COUNT - 1
   end
 
   emojiButton:SetShown(emojiShown)
