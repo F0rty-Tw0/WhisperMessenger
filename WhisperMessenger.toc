@@ -211,6 +211,7 @@ UI/Helpers.lua
 UI/LevelColor.lua
 UI/Badge.lua
 UI/Shared/PickerStyles.lua
+UI/Shared/PopupEscape.lua
 UI/Shared/PickerPopup.lua
 UI/Shared/KeybindHints.lua
 UI/Shared/UnreadSummary.lua
