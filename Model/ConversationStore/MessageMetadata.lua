@@ -23,10 +23,37 @@ function MessageMetadata.IsOutgoingUser(message)
   return message ~= nil and message.kind == "user" and message.direction == "out"
 end
 
+-- Only real chat is activity. A status line ("player is offline", a zone
+-- divider) leaves list order and the retention clock on the last real
+-- message, except in a chat with no activity yet, which must still age out.
+function MessageMetadata.MovesActivity(conversation, message)
+  return message.kind ~= "system" or (tonumber(conversation.lastActivityAt) or 0) == 0
+end
+
+-- What a line that is not simply appended moves, as (movesPreview,
+-- movesActivity). The preview shows the newest line of any kind: isNewestLine
+-- says it is the newest in the transcript, and it must also be newer than the
+-- last activity, which can come from a line kept outside the transcript.
+-- Activity follows the newest real line wherever it sits in the transcript,
+-- so a real line arriving behind a newer status line still moves it.
+function MessageMetadata.Moves(conversation, message, isNewestLine)
+  local newerThanActivity = MessageMetadata.IsLatest(message, conversation.lastActivityAt, conversation.lastActivityLineID)
+  return isNewestLine and newerThanActivity, newerThanActivity and MessageMetadata.MovesActivity(conversation, message)
+end
+
+function MessageMetadata.ApplyMoves(conversation, message, movesPreview, movesActivity)
+  if movesPreview then
+    conversation.lastPreview = message.text
+  end
+  if movesActivity then
+    conversation.lastActivityAt = message.sentAt
+    conversation.lastActivityLineID = message.lineID
+  end
+end
+
+-- For a line appended to the end of the transcript.
 function MessageMetadata.ApplyActivity(conversation, message)
-  conversation.lastPreview = message.text
-  conversation.lastActivityAt = message.sentAt
-  conversation.lastActivityLineID = message.lineID
+  MessageMetadata.ApplyMoves(conversation, message, true, MessageMetadata.MovesActivity(conversation, message))
 end
 
 function MessageMetadata.ApplyIncoming(conversation, message)
