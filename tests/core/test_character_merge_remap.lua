@@ -119,12 +119,32 @@ return function()
     assert(runtime.sendStatusByConversation[K] == nil, "the character's status is dropped")
   end
 
-  -- test_typing_follows_the_merge
+  -- test_typing_indicator_is_dropped_on_merge
   do
     local runtime = fresh()
     runtime.typingByConversation[K] = 1010
     CharacterMergeRemap.Apply(runtime, K, B)
-    assert(runtime.typingByConversation[B] == 1010 and runtime.typingByConversation[K] == nil, "the typing indicator moves with its expiry time")
+    -- No expiry timer runs for the friend's chat, so a moved indicator would
+    -- stay up; the whisper that merged the chat ends the typing anyway.
+    assert(runtime.typingByConversation[K] == nil, "no typing indicator is left on the character key")
+    assert(runtime.typingByConversation[B] == nil, "the friend's chat shows no typing without a timer behind it")
+  end
+
+  -- test_friend_typing_indicator_is_kept
+  do
+    local runtime = fresh()
+    runtime.typingByConversation[B] = 1008
+    runtime.typingByConversation[K] = 1010
+    CharacterMergeRemap.Apply(runtime, K, B)
+    assert(runtime.typingByConversation[B] == 1008, "the friend's own typing indicator stays")
+  end
+
+  -- test_own_typing_follows_the_merge
+  do
+    local runtime = fresh()
+    runtime.typingOut = { active = true, conversationKey = K }
+    CharacterMergeRemap.Apply(runtime, K, B)
+    assert(runtime.typingOut.conversationKey == B, "the stopped-typing notice goes to the friend's chat")
   end
 
   -- test_typing_expiry_flag_leaves_the_character_key
@@ -167,11 +187,21 @@ return function()
   do
     local runtime = fresh()
     local queues = PendingQueue.RuntimeState(runtime)
-    queues.identityMessages["arthas"] = { { conversationKey = K, recordedAt = 990 } }
-    queues.operations["thrall"] = { { conversationKey = OTHER, recordedAt = 990 } }
+    -- A character sender's queue is keyed by the character's chat key.
+    queues.identityMetadata[K] = { { conversationKey = K, recordedAt = 990 } }
+    queues.operations[OTHER] = { { conversationKey = OTHER, recordedAt = 990 } }
     CharacterMergeRemap.Apply(runtime, K, B)
-    assert(queues.identityMessages["arthas"][1].conversationKey == B, "a waiting reaction now targets the friend's chat")
-    assert(queues.operations["thrall"][1].conversationKey == OTHER, "another chat's waiting reaction is untouched")
+    assert(queues.identityMetadata[K] == nil, "no waiting reaction is left under the character's sender key")
+    assert(queues.identityMetadata[B][1].conversationKey == B, "a waiting reaction now waits for the friend's chat")
+    assert(queues.operations[OTHER][1].conversationKey == OTHER, "another chat's waiting reaction is untouched")
+  end
+
+  -- test_staged_reply_link_follows_the_merge
+  do
+    local runtime = fresh()
+    runtime.replyLinksStaged = { { conversationKey = K, link = {}, recordedAt = 990 } }
+    CharacterMergeRemap.Apply(runtime, K, B)
+    assert(runtime.replyLinksStaged[1].conversationKey == B, "a waiting quote now waits for the friend's chat")
   end
 
   -- test_reply_target_follows_the_merge

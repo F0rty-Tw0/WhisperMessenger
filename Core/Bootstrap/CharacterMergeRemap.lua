@@ -5,6 +5,8 @@ end
 
 local BNetRekey = ns.BootstrapLifecycleHandlersBNetRekey or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.BNetRekey")
 local PendingQueue = ns.MessageReactionsPendingQueue or require("WhisperMessenger.Model.MessageReactions.PendingQueue")
+local SenderAlias = ns.MessageReactionsSenderAlias or require("WhisperMessenger.Model.MessageReactions.SenderAlias")
+local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 
 -- Once a character's chat folds into their Battle.net friend's chat, the
 -- session state kept under the character's key moves to the friend's key.
@@ -15,7 +17,6 @@ local ipairs = ipairs
 -- Per-chat session maps where the friend's chat keeps its own value.
 local MOVED_MAPS = {
   "sendStatusByConversation",
-  "typingByConversation",
   "livePresencePeers",
   "lastAlertAtByConversation",
 }
@@ -61,12 +62,22 @@ function CharacterMergeRemap.Apply(runtime, characterKey, bnetKey)
     moveEntry(runtime[field], characterKey, bnetKey)
   end
   movePendingSends(runtime.pendingOutgoing, characterKey, bnetKey)
-  -- The expiry timer is bound to the character's key; a flag on the friend's
-  -- chat with no timer behind it would block its later typing expiries.
+  -- The typing expiry timer is bound to the character's key, so a moved
+  -- indicator would stay up in the friend's chat; dropped instead, and the
+  -- peer's next typing packet shows it again with its own timer. A flag on
+  -- the friend's chat with no timer would block its later expiries.
+  clearEntry(runtime.typingByConversation, characterKey)
   clearEntry(runtime.typingExpiryPending, characterKey)
   -- Rebuilt on demand, so dropped rather than moved.
   clearEntry(runtime.collapseIndex, characterKey)
+  local typingOut = runtime.typingOut
+  if type(typingOut) == "table" and typingOut.conversationKey == characterKey then
+    typingOut.conversationKey = bnetKey
+  end
+  -- A character sender's side-channel key is its chat key.
   PendingQueue.RemapConversation(runtime, characterKey, bnetKey)
+  SenderAlias.MoveQueues(runtime, characterKey, bnetKey)
+  MessageReplies.RemapStaged(runtime, characterKey, bnetKey)
   local window = runtime.window
   if window and window.composer and window.composer.moveReply then
     window.composer.moveReply(characterKey, bnetKey)
