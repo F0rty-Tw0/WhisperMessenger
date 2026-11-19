@@ -3,9 +3,9 @@ local Identity = require("WhisperMessenger.Model.Identity")
 local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
 local CharacterMergeFold = require("WhisperMessenger.Model.CharacterMergeFold")
 
-local K = "wow::WOW::arthas-area52"
-local B = "bnet::BN::jaina#1234"
-local NAME = "Arthas-Area52"
+local World = require("tests.helpers.character_merge_world")
+
+local K, B, NAME = World.K, World.B, World.NAME
 
 local function friend()
   return Identity.FromBattleNet(77, { battleTag = "Jaina#1234", accountName = "Jaina" })

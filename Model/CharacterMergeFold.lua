@@ -13,40 +13,6 @@ local CharacterMergeFold = {}
 
 local ipairs = ipairs
 
-local IDENTITY_FIELDS = {
-  "channel",
-  "displayName",
-  "guid",
-  "bnetAccountID",
-  "battleTag",
-  "gameAccountName",
-  "className",
-  "classTag",
-  "raceName",
-  "raceTag",
-  "factionName",
-}
-
-local function identityOf(contact)
-  local fields = {}
-  for _, field in ipairs(IDENTITY_FIELDS) do
-    fields[field] = contact[field]
-  end
-  return fields
-end
-
--- Written straight into the store: EnsureConversation could evict the
--- character chat that is about to move into this record.
-local function newBnetRecord(store, bnetKey, contact)
-  local record = identityOf(contact)
-  record.conversationKey = bnetKey
-  record.messages = {}
-  record.unreadCount = 0
-  record.unreadActivityCount = 0
-  record.lastActivityAt = 0
-  store.conversations[bnetKey] = record
-end
-
 local function stampLines(characterChat, name)
   for _, line in ipairs(characterChat.messages or {}) do
     if type(line) == "table" and (line.kind == "user" or line.kind == "system") then
@@ -67,9 +33,11 @@ function CharacterMergeFold.Fold(store, merges, characterKey, bnetKey, bnetConta
       return nil
     end
     if characterChat == nil then
-      Store.EnsureConversation(store, bnetKey, identityOf(bnetContact))
+      Store.EnsureConversation(store, bnetKey, bnetContact)
     else
-      newBnetRecord(store, bnetKey, bnetContact)
+      -- Stored directly: EnsureConversation could evict the character chat
+      -- that is about to move into this record.
+      store.conversations[bnetKey] = Store.NewRecord(bnetKey, bnetContact)
     end
   end
   if characterChat ~= nil then
@@ -77,6 +45,7 @@ function CharacterMergeFold.Fold(store, merges, characterKey, bnetKey, bnetConta
     ConversationMerge.Rekey(store.conversations, characterKey, bnetKey, maxMessages, store.messageRetentionAt)
   end
   CharacterMergeMap.Record(merges, characterKey, bnetKey, name)
+
   return store.conversations[bnetKey]
 end
 
