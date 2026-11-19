@@ -92,9 +92,8 @@ function CharacterMergeMap.ListForBnet(merges, bnetKey)
   return list
 end
 
--- The Battle.net chat a character name was merged into, or nil. It only
--- reads: an entry whose Battle.net chat is gone stays in the map.
-function CharacterMergeMap.BnetKeyForName(merges, conversations, name)
+-- The merged Battle.net chat key plus the character key it was built from.
+local function mergedChatForName(merges, conversations, name)
   if type(merges) ~= "table" or type(conversations) ~= "table" then
     return nil
   end
@@ -103,21 +102,32 @@ function CharacterMergeMap.BnetKeyForName(merges, conversations, name)
     return nil
   end
   -- A character key never holds the local profile id.
-  local entry = CharacterMergeMap.Get(merges, Identity.BuildConversationKey(nil, contact.contactKey))
+  local characterKey = Identity.BuildConversationKey(nil, contact.contactKey)
+  local entry = CharacterMergeMap.Get(merges, characterKey)
   if entry == nil or conversations[entry.bnetKey] == nil then
     return nil
   end
-  return entry.bnetKey
+  return entry.bnetKey, characterKey
+end
+
+-- The Battle.net chat a character name was merged into, or nil. It only
+-- reads: an entry whose Battle.net chat is gone stays in the map.
+function CharacterMergeMap.BnetKeyForName(merges, conversations, name)
+  local bnetKey = mergedChatForName(merges, conversations, name)
+  return bnetKey
 end
 
 -- The chat a character name resolves to: its own chat while one is stored,
--- else the Battle.net chat it was merged into.
+-- else the Battle.net chat it was merged into, else the name lookup. The
+-- merge wins over the lookup's bare-name fallback, which could pick a
+-- same-named character on another realm.
 function CharacterMergeMap.ResolveWhisperName(runtime, name)
-  local key = Identity.ResolveWhisperConversation(runtime, name, "WOW")
-  if key ~= nil or runtime == nil or runtime.store == nil then
-    return key
+  local conversations = runtime and runtime.store and runtime.store.conversations
+  local bnetKey, characterKey = mergedChatForName(runtime and runtime.characterMerges, conversations, name)
+  if bnetKey ~= nil and conversations[characterKey] == nil then
+    return bnetKey
   end
-  return CharacterMergeMap.BnetKeyForName(runtime.characterMerges, runtime.store.conversations, name)
+  return Identity.ResolveWhisperConversation(runtime, name, "WOW")
 end
 
 ns.CharacterMergeMap = CharacterMergeMap

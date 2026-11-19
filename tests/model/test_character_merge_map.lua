@@ -162,4 +162,29 @@ return function()
     runtime.store.conversations[K] = nil
     assert(CharacterMergeMap.ResolveWhisperName(runtime, "Arthas") == nil, "no merge map: nothing")
   end
+
+  -- test_resolve_whisper_name_prefers_the_merged_chat_over_another_realm
+  do
+    local conversations = {
+      [B] = { channel = "BN" },
+      [K_OTHER_REALM] = { channel = "WOW", displayName = "Arthas-Area52" },
+    }
+    local runtime = { characterMerges = fresh(), store = { conversations = conversations } }
+    CharacterMergeMap.Record(runtime.characterMerges, K, B, "Arthas")
+    local key = CharacterMergeMap.ResolveWhisperName(runtime, "Arthas")
+    assert(key == B, "folded same-realm name resolves to B, not Area52, got " .. tostring(key))
+  end
+
+  -- test_resolve_whisper_name_keeps_the_unfolded_chat_beside_another_realm
+  do
+    local conversations = {
+      [B] = { channel = "BN" },
+      [K] = { channel = "WOW", displayName = "Arthas" },
+      [K_OTHER_REALM] = { channel = "WOW", displayName = "Arthas-Area52" },
+    }
+    local runtime = { characterMerges = fresh(), store = { conversations = conversations } }
+    CharacterMergeMap.Record(runtime.characterMerges, K, B, "Arthas")
+    local key = CharacterMergeMap.ResolveWhisperName(runtime, "Arthas")
+    assert(key == K, "not folded yet: the character's own chat wins, got " .. tostring(key))
+  end
 end
