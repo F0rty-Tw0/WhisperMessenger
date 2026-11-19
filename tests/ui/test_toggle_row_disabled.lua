@@ -2,6 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local Theme = require("WhisperMessenger.UI.Theme")
+local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local UIHelpers = require("WhisperMessenger.UI.Helpers")
 local SettingsControls = require("WhisperMessenger.UI.Shared.SettingsControls")
 local NotificationSettings = require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
@@ -45,5 +46,21 @@ return function()
     mute:GetScript("OnClick")(mute, "LeftButton")
     whisper:GetScript("OnClick")(whisper, "LeftButton")
     assert(changes.muteAllSounds == false and changes.playSoundOnWhisper ~= nil, "unmuted: the sound toggle works again")
+  end
+
+  -- test_click_on_a_covered_native_checkbox_undoes_its_own_toggle
+  do
+    Hud.Configure("classic")
+    local changes = {}
+    local toggle = UIHelpers.createToggleRow(factory, parent, "T", false, colors, { width = 280 }, function(v)
+      changes[#changes + 1] = v
+    end)
+    UIHelpers.attachDisabledState(factory, toggle.row).set(false, "why")
+    Hud.Configure("off")
+    assert(toggle.dot.frameType == "CheckButton", "native look: a Blizzard checkbox")
+    -- The game flips a CheckButton before its OnClick runs.
+    toggle.dot:SetChecked(true)
+    toggle.dot:GetScript("OnClick")(toggle.dot, nil)
+    assert(#changes == 0 and toggle.dot:GetChecked() == false, "covered checkbox shows its real value again")
   end
 end
