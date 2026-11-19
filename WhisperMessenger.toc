@@ -487,6 +487,7 @@ UI/MessengerWindow/MessengerWindow/DockWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowShell.lua
 UI/MessengerWindow/MessengerWindow/ComposerRuntime.lua
 UI/MessengerWindow/MessengerWindow/SavedStateApply.lua
+UI/MessengerWindow/MessengerWindow/GamepadWiring.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/Bootstrap/WindowRuntime/PanelRegistry.lua
