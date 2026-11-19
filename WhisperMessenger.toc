@@ -65,12 +65,12 @@ Model/ProfileLinks.lua
 Model/Retention.lua
 Model/ConversationStore/MessageMetadata.lua
 Model/ConversationMerge.lua
+Model/CharacterMergeMap.lua
 Model/ConversationStore/StoreRetention.lua
 Model/ConversationStore/RepeatCollapse.lua
 Model/ConversationStore/ChronologicalInsert.lua
 Model/ConversationStore.lua
 Model/Filters/IgnoreList.lua
-Model/CharacterMergeMap.lua
 Model/Filters/KeywordRules.lua
 Model/Filters/RulePresets.lua
 Model/Filters/DuplicateCollapse.lua
