@@ -6,7 +6,17 @@ local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWind
 local function fakeNav()
   ---@type table<string, any>
   local nav = { seen = {} }
-  for _, name in ipairs({ "onShow", "onHide", "refresh", "setCloseHandler", "setScrollFrame", "ignore" }) do
+  for _, name in ipairs({
+    "onShow",
+    "onHide",
+    "refresh",
+    "setCloseHandler",
+    "setScrollFrame",
+    "ignore",
+    "markFocusable",
+    "setStepper",
+    "setEdgeOverride",
+  }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
     end
@@ -33,6 +43,12 @@ local function setup(opts)
     chrome = { resizeGrip = factory.CreateFrame("Button", nil, frame) },
     layout = { contactsResizeHandle = factory.CreateFrame("Button", nil, frame) },
   }
+  if opts.settings then
+    shell.layout.optionsPanel = factory.CreateFrame("Frame", nil, frame)
+    shell.layout.optionsScrollView = { scrollFrame = factory.CreateFrame("ScrollFrame", nil, frame) }
+    shell.layout.optionsMenuScrollView = { scrollFrame = factory.CreateFrame("ScrollFrame", nil, frame) }
+    shell.settingsRuntime = { settingsPanels = { false } }
+  end
   local input = factory.CreateFrame("EditBox", nil, frame)
   local box = opts.plainBox and input or factory.CreateFrame("Frame", nil, frame)
   local state = { options = false, panel = nil, calls = {} }
@@ -175,5 +191,11 @@ return function()
     local t = setup()
     t.wiring.refresh()
     assert(t.nav.count("refresh") == 1, "refresh reaches GamepadNav")
+  end
+
+  -- test_attach_hands_the_settings_panes_to_the_nav
+  do
+    local t = setup({ settings = true })
+    assert(type(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged) == "function", "tabs can report")
   end
 end
