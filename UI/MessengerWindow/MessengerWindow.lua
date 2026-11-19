@@ -19,6 +19,7 @@ local WindowSurface = ns.MessengerWindowWindowSurface or require("WhisperMesseng
 local CompactWiring = ns.MessengerWindowCompactWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.CompactWiring")
 local DockWiring = ns.MessengerWindowDockWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.DockWiring")
 local SavedStateApply = ns.MessengerWindowSavedStateApply or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SavedStateApply")
+local GamepadWiring = ns.MessengerWindowGamepadWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
 
 local MessengerWindow = {}
 
@@ -30,6 +31,7 @@ function MessengerWindow.Create(factory, options)
   local initialState, windowGeometry = shell.initialState, shell.windowGeometry
   local currentContactsWidth = shell.contactsWidth
   local chrome, frame, layout = shell.chrome, shell.frame, shell.layout
+  local gamepadWiring = GamepadWiring.Create(shell)
   local settingsRuntime = shell.settingsRuntime
   local settingsPanels = settingsRuntime.settingsPanels
   local compactMode = CompactWiring.Hooks()
@@ -65,6 +67,7 @@ function MessengerWindow.Create(factory, options)
       return conversation
     end,
     getSelectedConversationKey = getSelectedConversationKey,
+    onNavTargetsChanged = gamepadWiring.refresh,
   })
   local contactsController = contactsRuntime.contactsController
   local refreshContacts = contactsRuntime.refreshContacts
@@ -103,6 +106,7 @@ function MessengerWindow.Create(factory, options)
       return contactsRail
     end,
     tabToggle = contactsRuntime.tabToggle,
+    onNavTargetsChanged = gamepadWiring.refresh,
   })
   local panelHost = panelWiring.panelHost
   local windowVisibility = panelWiring.windowVisibility
@@ -194,6 +198,7 @@ function MessengerWindow.Create(factory, options)
     end,
   })
   panelWiring.hookWindowHide()
+  gamepadWiring.attach({ composer = composer, conversation = conversation, compactMode = compactMode, windowVisibility = windowVisibility })
   contactsRail = ContactsRail.Create({
     frame = frame,
     layout = layout,
