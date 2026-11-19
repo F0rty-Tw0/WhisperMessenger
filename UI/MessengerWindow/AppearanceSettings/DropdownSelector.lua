@@ -17,6 +17,13 @@ local DEFAULT_MENU_HEIGHT = 156
 
 -- Every custom-look menu built, so the controller's B can close an open one.
 local menus = setmetatable({}, { __mode = "k" })
+-- Open or close: the controller re-scans, so the D-pad reaches new options.
+local onMenuToggled
+local function menuToggled()
+  if onMenuToggled then
+    onMenuToggled()
+  end
+end
 
 function DropdownSelector.Create(factory, parent, options)
   options = options or {}
@@ -76,6 +83,8 @@ function DropdownSelector.Create(factory, parent, options)
   content:Show()
   menu:Hide()
   menus[menu] = true
+  menu:SetScript("OnShow", menuToggled)
+  menu:SetScript("OnHide", menuToggled)
 
   local optionButtons = {}
   local buttonPool = {}
@@ -280,6 +289,10 @@ function DropdownSelector.HideShownMenu()
     end
   end
   return hidden
+end
+
+function DropdownSelector.SetMenuToggledHook(fn)
+  onMenuToggled = fn
 end
 
 ns.MessengerWindowDropdownSelector = DropdownSelector

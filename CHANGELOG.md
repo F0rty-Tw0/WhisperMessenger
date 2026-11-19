@@ -7,7 +7,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 ## [Unreleased]
 
 - On WoW: Forever, you can now use the messenger with a controller: move through your chats and buttons, scroll the chat, and press B to close.
-- On WoW: Forever, the settings pages now work with a controller.
+- On WoW: Forever, the settings pages now work with a controller, including picking a choice from a drop-down list with the D-pad.
 - On WoW: Forever, pop-up pickers and dialogs now work with a controller.
 - On WoW: Forever, the X button opens the right-click menu on contacts, messages and the chat header.
 - New option at the top of Notifications: "Mute all sounds" silences every Whisper Messenger sound at once. Your sound choices are kept for when you turn it off, and picking a sound still plays a preview.
