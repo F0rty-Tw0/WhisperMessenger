@@ -5,7 +5,6 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
 local setTextColor = UIHelpers.setTextColor
 
@@ -22,7 +21,7 @@ local ComposerSendFocus = ns.ComposerSendFocus or require("WhisperMessenger.UI.C
 local ComposerSubmit = ns.ComposerSubmit or require("WhisperMessenger.UI.Composer.ComposerSubmit")
 local ComposerRows = ns.ComposerRows or require("WhisperMessenger.UI.Composer.ComposerRows")
 local ComposerInputBox = ns.ComposerInputBox or require("WhisperMessenger.UI.Composer.ComposerInputBox")
-local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
+local ComposerRelayout = ns.ComposerRelayout or require("WhisperMessenger.UI.Composer.ComposerRelayout")
 
 local Composer = {}
 
@@ -43,7 +42,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   pane:SetScript("OnHide", function()
     PickerStyles.HideTooltip()
   end)
-  local parentWidth = sizeValue(parent, "GetWidth", "width", 600)
   pane:SetAllPoints(parent)
 
   local paneBg = pane:CreateTexture(nil, "BACKGROUND")
@@ -75,17 +73,24 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     getMaxBytes = limit.messageMaxBytes,
     getQuickReplies = options.getQuickReplies,
   })
-  local layoutParts = {
+  local relayout = ComposerRelayout.Create({
+    parent = parent,
     pane = pane,
-    box = box,
-    scroll = inputBox.scroll,
+    parts = {
+      pane = pane,
+      box = box,
+      scroll = inputBox.scroll,
+      input = input,
+      sendButton = button,
+      emojiButton = launchers.emojiButton,
+      emojiIcon = launchers.emojiButton.icon,
+      quickReplyButton = launchers.quickReplyButton,
+    },
+    rows = rows,
     input = input,
-    sendButton = button,
-    emojiButton = launchers.emojiButton,
-    emojiIcon = launchers.emojiButton.icon,
-    quickReplyButton = launchers.quickReplyButton,
-  }
-  ComposerLayout.Apply(layoutParts, parentWidth, 1, rows.lineHeight())
+    multiLine = inputBox.multiLine,
+    onHeightChanged = options.onHeightChanged,
+  })
 
   local surface
   if nativeChrome then
@@ -109,38 +114,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   end
 
   LinkHooks.RegisterInput(input)
-
-  local function currentParentWidth(fallback)
-    local width = sizeValue(parent, "GetWidth", "width", fallback)
-    if type(width) ~= "number" or width <= 0 then
-      return fallback
-    end
-    return width
-  end
-
-  -- Rows follow the text (a client without the template keeps one row); the
-  -- window hears of a new bar height only when it changes.
-  local layoutWidth, maxHeight = parentWidth, nil
-  local reportedHeight = Theme.COMPOSER_HEIGHT
-
-  local function refreshRows()
-    GlyphCoverage.UpdateInput(input)
-    local text
-    if inputBox.multiLine then
-      text = input:GetText() or ""
-    end
-    local count, height = rows.fit(text, ComposerLayout.TextWidth(layoutWidth), maxHeight)
-    ComposerLayout.Apply(layoutParts, layoutWidth, count, rows.lineHeight())
-    if height == reportedHeight then
-      return
-    end
-    reportedHeight = height
-    if options.onHeightChanged then
-      options.onHeightChanged(height)
-    end
-  end
-  -- A hook: SetScript here would drop the OnShow hook send focus put on the pane.
-  pane:HookScript("OnShow", refreshRows)
 
   button.disabled = sendDisabled
   paintSendButton(sendDisabled, false)
@@ -166,7 +139,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     isDisabled = function()
       return sendDisabled
     end,
-    afterClear = refreshRows,
+    afterClear = relayout.refresh,
   })
 
   local function syncPlaceholder(text)
@@ -187,7 +160,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       return
     end
     syncPlaceholder(text)
-    refreshRows()
+    relayout.refresh()
     if onDraftChanged and not loadingDraft and selectedContact.conversationKey ~= nil then
       onDraftChanged(selectedContact.conversationKey, text)
     end
@@ -202,7 +175,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     loadingDraft = false
     limit.remember()
     syncPlaceholder(text)
-    refreshRows()
+    relayout.refresh()
     replies.sync()
   end
 
@@ -261,27 +234,13 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       end
       paintSendButton(sendDisabled, false)
       launchers.refreshTheme()
-      layoutWidth = currentParentWidth(layoutWidth)
-      refreshRows()
+      relayout.refreshWidth()
     end,
-    getHeight = function()
-      return reportedHeight
-    end,
+    getHeight = relayout.getHeight,
     -- The font changed: the same text may take other rows or row heights.
-    remeasure = refreshRows,
+    remeasure = relayout.refresh,
     -- maxBarHeight caps the rows (nil = up to two).
-    relayout = function(parentW, maxBarHeight)
-      -- Prefer the pane's live width over the passed-in hint: the caller
-      -- passes the full content width, but composerPane has a right-margin
-      -- anchor (-20 in fake_ui, -8 in production WoW) that makes the pane
-      -- narrower. Using the hint would overflow the right padding.
-      local effectiveW = currentParentWidth(parentW)
-      if type(effectiveW) ~= "number" or effectiveW <= 0 then
-        return
-      end
-      layoutWidth, maxHeight = effectiveW, maxBarHeight
-      refreshRows()
-    end,
+    relayout = relayout.resize,
   }
 end
 
