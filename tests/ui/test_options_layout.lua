@@ -167,7 +167,7 @@ return function()
     assert(hasLabel(layout.appearanceTab, "Appearance"), "appearanceTab should have 'Appearance' label")
     assert(hasLabel(layout.behaviorTab, "Behavior"), "behaviorTab should have 'Behavior' label")
     assert(hasLabel(layout.notificationsTab, "Notifications"), "notificationsTab should have 'Notifications' label")
-    assert(hasLabel(layout.iconsTab, "Icons"), "iconsTab should have 'Icons' label")
+    assert(hasLabel(layout.iconsTab, "Widget"), "iconsTab should have 'Widget' label")
     assert(hasLabel(layout.whatsNewTab, "What's New"), "whatsNewTab should have 'What's New' label")
   end
 
@@ -190,7 +190,7 @@ return function()
     assert(hasLabel(localizedLayout.appearanceTab, "Внешний вид"), "appearance tab should be localized")
     assert(hasLabel(localizedLayout.behaviorTab, "Поведение"), "behavior tab should be localized")
     assert(hasLabel(localizedLayout.notificationsTab, "Уведомления"), "notifications tab should be localized")
-    assert(hasLabel(localizedLayout.iconsTab, "Значки"), "icons tab should be localized")
+    assert(hasLabel(localizedLayout.iconsTab, "Виджет"), "icons tab should be localized")
     assert(hasLabel(localizedLayout.whatsNewTab, "Что нового"), "what's new tab should be localized")
     assert(hasLabel(localizedLayout.clearAllChatsButton, "Очистить все чаты"), "clear all chats button should be localized")
     assert(

@@ -67,7 +67,6 @@ local Italian = {
   ["Appearance"] = "Aspetto",
   ["Behavior"] = "Comportamento",
   ["Notifications"] = "Notifiche",
-  ["Icons"] = "Icone",
   ["Clear All Chats"] = "Cancella tutte le chat",
   ["Reset Icon"] = "Reset icona",
   ["Reset Window"] = "Reset finestra",

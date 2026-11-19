@@ -30,7 +30,7 @@ return function()
         texts[child.text] = true
       end
     end
-    assert(texts["Icons"], "test_icons_owns_all_icon_and_widget_controls: English title should use the fallback key")
+    assert(texts["Widget"], "test_icons_owns_all_icon_and_widget_controls: English title should use the fallback key")
     assert(texts["Configure icon and widget settings."], "test_icons_owns_all_icon_and_widget_controls: English hint should use the fallback key")
 
     local modes = modeButtons(result)
@@ -266,7 +266,7 @@ return function()
         texts[child.text] = true
       end
     end
-    assert(texts["Значки"], "test_icons_refresh_layout_and_language: Icons title should be localized")
+    assert(texts["Виджет"], "test_icons_refresh_layout_and_language: Icons title should be localized")
     assert(
       texts["Настройте параметры значков и виджета."],
       "test_icons_refresh_layout_and_language: Icons hint should be localized"

@@ -40,7 +40,7 @@ function IconSettings.Create(factory, parent, config, options)
   frame:SetAllPoints(parent)
 
   local header = SettingsControls.CreateHeader(frame, {
-    title = text("Icons"),
+    title = text("Widget"),
     hint = text("Configure icon and widget settings."),
   })
   local hint = header.hint
@@ -230,7 +230,7 @@ function IconSettings.Create(factory, parent, config, options)
   refreshTheme(Theme)
 
   local function setLanguage()
-    header.title:SetText(text("Icons"))
+    header.title:SetText(text("Widget"))
     header.hint:SetText(text("Configure icon and widget settings."))
     iconSizeRow.label:SetText(text("Icon Size"))
     iconDesaturatedToggle.label:SetText(text("Desaturate icon when idle"))

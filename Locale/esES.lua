@@ -67,7 +67,6 @@ local Spanish = {
   ["Appearance"] = "Apariencia",
   ["Behavior"] = "Comportamiento",
   ["Notifications"] = "Notificaciones",
-  ["Icons"] = "Iconos",
   ["Clear All Chats"] = "Borrar todos los chats",
   ["Reset Icon"] = "Restab. icono",
   ["Reset Window"] = "Restab. ventana",
