@@ -1,5 +1,6 @@
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
 local Theme = require("WhisperMessenger.UI.Theme")
+local Relationship = require("WhisperMessenger.Model.Relationship")
 local FakeUI = require("tests.helpers.fake_ui")
 
 local function newItem(name, unreadCount)
@@ -117,5 +118,22 @@ return function()
     assert(counts[2] > 0 and counts[3] > 0, "blanked rows should rebind")
     assert(rows[2].title.text == "Bob", "row 2 should show Bob again, got " .. tostring(rows[2].title.text))
     assert(rows[2]:IsShown() == true, "row 2 should be shown again")
+  end
+
+  -- test_offline_battle_net_row_skips_its_bind
+  do
+    local function bnetItem()
+      local item = newItem("Mike#1234")
+      item.channel = "BN"
+      -- The enricher resolves the relationship afresh on every refresh.
+      item.relationship = Relationship.Resolve(item, {})
+      return item
+    end
+    local options = { visibleCount = 1 }
+    local rows = ContactsList.Refresh(factory, parent, {}, { bnetItem() }, options)
+    assert(rows[1].relationshipMark ~= nil, "an offline Battle.net friend should show the Battle.net mark")
+    local counts = countBinds(rows)
+    ContactsList.Refresh(factory, parent, rows, { bnetItem() }, options)
+    assert(counts[1] == 0, "an unchanged Battle.net row should not rebind, got " .. counts[1] .. " name writes")
   end
 end

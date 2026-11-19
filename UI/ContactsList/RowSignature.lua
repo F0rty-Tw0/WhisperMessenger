@@ -22,7 +22,8 @@ local type = type
 --
 -- Item fields are compared generically, so a field a future enricher adds is
 -- covered without a line here. Table fields (availability, relationship) are
--- compared one level deep: enrichers build them fresh on every refresh.
+-- compared by value, lists inside them (relationship.ties) entry by entry:
+-- enrichers build them fresh on every refresh.
 local RowSignature = {}
 
 -- The store record: the bind reads it only for the shown preview, which
@@ -89,6 +90,21 @@ local function fillItemSlots(ctx, item)
   ctx[PREVIEW_SLOT] = AddonGreetingText.ForPreview(item.conversation, item.lastPreview)
 end
 
+-- A list inside a table field (relationship.ties) against its snapshot.
+local function sameEntries(snapshot, value)
+  for key, entry in pairs(value) do
+    if snapshot[key] ~= entry then
+      return false
+    end
+  end
+  for key in pairs(snapshot) do
+    if value[key] == nil then
+      return false
+    end
+  end
+  return true
+end
+
 local function sameTable(copy, count, value)
   if copy == nil then
     return false
@@ -96,7 +112,12 @@ local function sameTable(copy, count, value)
   local seen = 0
   for key, nested in pairs(value) do
     seen = seen + 1
-    if copy[key] ~= nested then
+    local stored = copy[key]
+    if type(nested) == "table" then
+      if type(stored) ~= "table" or not sameEntries(stored, nested) then
+        return false
+      end
+    elseif stored ~= nested then
       return false
     end
   end
@@ -143,12 +164,20 @@ local function clearTable(t)
   end
 end
 
+local function snapshotOf(value)
+  local snapshot = {}
+  for key, entry in pairs(value) do
+    snapshot[key] = entry
+  end
+  return snapshot
+end
+
 local function copyNested(signature, key, value)
   local copy = signature.nested[key] or {}
   clearTable(copy)
   local count = 0
   for nestedKey, nested in pairs(value) do
-    copy[nestedKey] = nested
+    copy[nestedKey] = type(nested) == "table" and snapshotOf(nested) or nested
     count = count + 1
   end
   signature.nested[key] = copy
