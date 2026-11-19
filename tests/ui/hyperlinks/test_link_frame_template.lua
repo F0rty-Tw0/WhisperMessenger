@@ -91,6 +91,22 @@ return function()
     eq(frame._wmSecureLinks, false, "frame that lost the template secure flag")
   end)
 
+  -- test_reused_frame_keeps_its_secure_flag_after_our_click_script
+  -- A pooled frame that lost the template gets our own click script from
+  -- BindClick; handed out again, that script must not make it look secure.
+  withTemplate(true, function()
+    local factory = FakeUI.NewFactory()
+    local pooled = factory.CreateFrame("Frame", nil, nil)
+    factory.CreateFrame = function()
+      return pooled
+    end
+    local first = LinkClicks.CreateLinkFrame(factory, "Frame", nil, nil)
+    eq(first._wmSecureLinks, false, "first hand-out secure flag")
+    first:SetScript("OnHyperlinkClick", function() end)
+    local again = LinkClicks.CreateLinkFrame(factory, "Frame", nil, nil)
+    eq(again._wmSecureLinks, false, "reused frame with our click script secure flag")
+  end)
+
   -- test_hyperlinks_re_exports_same_functions
   eq(Hyperlinks.LinkFrameTemplate, LinkClicks.LinkFrameTemplate, "LinkFrameTemplate re-export")
   eq(Hyperlinks.CreateLinkFrame, LinkClicks.CreateLinkFrame, "CreateLinkFrame re-export")
