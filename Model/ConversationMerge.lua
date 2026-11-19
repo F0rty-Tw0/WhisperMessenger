@@ -114,6 +114,7 @@ end
 
 -- The row preview is the merged thread's last line, which may be a status
 -- line, unless the activity came from a newer line kept outside the thread.
+-- At the same second a line with no ID (a status line) counts as the newer.
 local function mergedPreview(messages, latestActivity)
   local lastLine = messages[#messages]
   if type(lastLine) ~= "table" then
@@ -121,7 +122,8 @@ local function mergedPreview(messages, latestActivity)
   end
   local lineAt = numericValue(lastLine.sentAt)
   local activityAt = numericValue(latestActivity.lastActivityAt)
-  if activityAt > lineAt or (activityAt == lineAt and numericValue(latestActivity.lastActivityLineID) > numericValue(lastLine.lineID)) then
+  local activityLineIsLater = lastLine.lineID ~= nil and numericValue(latestActivity.lastActivityLineID) > numericValue(lastLine.lineID)
+  if activityAt > lineAt or (activityAt == lineAt and activityLineIsLater) then
     return latestActivity.lastPreview
   end
   return lastLine.text

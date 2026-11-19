@@ -44,4 +44,17 @@ return function()
     local preview = conversations.new.lastPreview
     assert(preview == "recorded", "activity newer than the thread keeps its preview, got " .. tostring(preview))
   end
+
+  -- test_merged_preview_is_a_status_line_in_the_same_second_as_the_activity
+  do
+    local conversations = {
+      old = { messages = { line("s1", "system", "Jaina is offline.", 300) }, lastActivityAt = 300, lastPreview = "Jaina is offline." },
+      new = { messages = { line("m1", "user", "hi", 300, 5) }, lastActivityAt = 300, lastActivityLineID = 5, lastPreview = "hi" },
+    }
+    ConversationMerge.Rekey(conversations, "old", "new", 50)
+    local merged = conversations.new
+    local lastText = merged.messages[#merged.messages].text
+    assert(lastText == "Jaina is offline.", "setup: the status line sorts last, got " .. tostring(lastText))
+    assert(merged.lastPreview == "Jaina is offline.", "a same-second status line is the preview, got " .. tostring(merged.lastPreview))
+  end
 end
