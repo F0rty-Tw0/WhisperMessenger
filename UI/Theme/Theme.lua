@@ -35,6 +35,8 @@ local function canApplyPreset(preset)
   return true
 end
 
+local colorRevision = 0
+
 local function applyPresetColors(preset)
   for key, current in pairs(Theme.COLORS) do
     local token = preset[key]
@@ -43,6 +45,7 @@ local function applyPresetColors(preset)
     current[3] = token[3]
     current[4] = token[4]
   end
+  colorRevision = colorRevision + 1
 end
 
 -- Window title in both chromes (not localized: it is the addon name).
@@ -97,6 +100,12 @@ end
 
 function Theme.GetPreset()
   return activePresetKey
+end
+
+-- Goes up whenever the preset colors or the fonts change: painted rows
+-- compare it to tell they are stale.
+function Theme.Revision()
+  return colorRevision + Fonts.Revision()
 end
 
 -- A live preset takes its colors from another addon and is applied again

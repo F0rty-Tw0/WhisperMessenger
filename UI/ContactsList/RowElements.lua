@@ -174,15 +174,15 @@ function RowElements.createFactionIcon(_factory, row, item, ns_ref)
   return tex
 end
 
-function RowElements.updateTimestamp(row, item, ns_ref)
-  if row.timeLabel == nil then
-    return
-  end
+-- The row's time label ("now", "5m", "Yesterday").
+function RowElements.TimeText(item, ns_ref)
+  local timeFormat = ns_ref and ns_ref.TimeFormat
+  return timeFormat and timeFormat.ContactPreview and timeFormat.ContactPreview(item.lastActivityAt) or ""
+end
 
-  if ns_ref and ns_ref.TimeFormat and ns_ref.TimeFormat.ContactPreview then
-    row.timeLabel:SetText(ns_ref.TimeFormat.ContactPreview(item.lastActivityAt))
-  else
-    row.timeLabel:SetText("")
+function RowElements.updateTimestamp(row, item, ns_ref)
+  if row.timeLabel ~= nil then
+    row.timeLabel:SetText(RowElements.TimeText(item, ns_ref))
   end
 end
 
