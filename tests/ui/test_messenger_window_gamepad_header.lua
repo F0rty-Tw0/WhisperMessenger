@@ -1,0 +1,70 @@
+local FakeUI = require("tests.helpers.fake_ui")
+local FakeGamepad = require("tests.helpers.fake_gamepad")
+local Flavor = require("tests.helpers.flavor")
+local ContactsContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
+local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
+
+-- Like the live client, SetScript drops the hooks HookScript added before it.
+local function withLiveSetScript(factory)
+  local create = factory.CreateFrame
+  factory.CreateFrame = function(...)
+    local frame = create(...)
+    local setScript = frame.SetScript
+    frame.SetScript = function(self, eventName, handler)
+      if self._hookScripts then
+        self._hookScripts[eventName] = nil
+      end
+      return setScript(self, eventName, handler)
+    end
+    return frame
+  end
+  return factory
+end
+
+local function build()
+  local factory = withLiveSetScript(FakeUI.NewFactory())
+  local savedUIParent = _G.UIParent
+  _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
+  _G.UIParent:SetSize(1280, 720)
+  local window = MessengerWindow.Create(factory, {})
+  _G.UIParent = savedUIParent
+  return window
+end
+
+-- Runs fn(env) on the given flavor with the fake gamepad UI installed.
+local function onFlavor(isRetail, isForever, fn)
+  local env = FakeGamepad.New()
+  env.install()
+  local ok, err = pcall(Flavor.With, isRetail, isForever, function()
+    fn(env)
+  end)
+  env.uninstall()
+  assert(ok, err)
+end
+
+return function()
+  -- test_x_on_the_header_opens_the_chat_menu
+  onFlavor(false, true, function(env)
+    local window = build()
+    window.frame:Show()
+    local view = window.conversation
+    local contact = { displayName = "Arthas", channel = "WOW" }
+    view._selectedContact = contact
+    local opened, original = {}, ContactsContextMenu.Open
+    rawset(ContactsContextMenu, "Open", function(target, anchor)
+      opened[#opened + 1] = { target = target, anchor = anchor }
+      return true
+    end)
+    local ok, err = pcall(env.pressX, view.headerFrame)
+    rawset(ContactsContextMenu, "Open", original)
+    assert(ok, err)
+    assert(#opened == 1 and opened[1].target == contact and opened[1].anchor == view.headerFrame, "same menu as a mouse right-click")
+  end)
+
+  -- test_retail_header_has_no_binding
+  onFlavor(true, false, function(env)
+    local window = build()
+    window.frame:Show()
+    assert(env.pressX(window.conversation.headerFrame) == false and #env.calls == 0, "Retail unchanged")
+  end)
+end

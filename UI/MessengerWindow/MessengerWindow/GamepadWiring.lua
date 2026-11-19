@@ -137,8 +137,9 @@ function GamepadWiring.Create(shell, nav)
     nav.setCloseHandler(buildCloseHandler(frame, refs))
     attachPopups(nav)
     -- X opens the right-click menu of a focused target that carries the
-    -- context (contact rows).
+    -- context (contact rows, messages, the chat header).
     nav.bindRightClick(GamepadNav.RIGHT_CLICK_CONTEXT, Localization.Text("Options"))
+    refs.conversation.headerFrame.buttonContext = GamepadNav.RIGHT_CLICK_CONTEXT
     -- The pickers live inside the window: a re-scan makes their buttons
     -- D-pad stops. Their own SetScript calls ran at build, before this.
     for _, picker in ipairs(composerPickers(refs.composer)) do

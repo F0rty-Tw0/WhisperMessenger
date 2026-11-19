@@ -66,6 +66,7 @@ local function setup(opts)
     composer = { box = box, input = input },
     conversation = {
       transcript = { scrollFrame = factory.CreateFrame("ScrollFrame", nil, frame), content = factory.CreateFrame("Frame", nil, frame) },
+      headerFrame = factory.CreateFrame("Frame", nil, frame),
     },
     compactMode = {
       onBack = function()
@@ -226,6 +227,12 @@ return function()
     end
     assert(t.nav.count("bindRightClick") == 1, "bound once")
     assert(seen[1] == GamepadNav.RIGHT_CLICK_CONTEXT and seen[2] == "Options", "our context, the existing Options label")
+  end
+
+  -- test_attach_tags_the_chat_header_for_x
+  do
+    local t = setup()
+    assert(t.refs.conversation.headerFrame.buttonContext == GamepadNav.RIGHT_CLICK_CONTEXT, "X opens the header menu")
   end
 
   -- test_inactive_nav_skips_the_settings_walk
