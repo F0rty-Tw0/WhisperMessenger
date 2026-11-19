@@ -73,4 +73,11 @@ return function()
     pressModified(press, "UP")
     assert(got.calls[1] == "UP", "Shift+Up is passed on to the game")
   end
+
+  -- test_modified_down_reaches_the_old_handler
+  do
+    local _, press, got = build()
+    pressModified(press, "DOWN")
+    assert(got.calls[1] == "DOWN", "Shift+Down is passed on to the game")
+  end
 end
