@@ -273,4 +273,36 @@ return function()
     press("UP")
     assert(input:GetText() == "", "no history source leaves the box alone")
   end
+
+  local function pressModified(press, key)
+    local saved = rawget(_G, "IsModifierKeyDown")
+    rawset(_G, "IsModifierKeyDown", function()
+      return true
+    end)
+    local ok, err = pcall(press, key)
+    rawset(_G, "IsModifierKeyDown", saved)
+    assert(ok, err)
+  end
+
+  -- test_modified_up_on_empty_box_keeps_the_default
+  do
+    local input, _, press = build()
+    pressModified(press, "UP")
+    assert(input:GetText() == "", "Shift+Up on an empty box recalls nothing")
+  end
+
+  -- test_modified_up_does_not_build_the_list
+  do
+    local _, _, press, got = build()
+    pressModified(press, "UP")
+    assert(got.asked == 0, "Shift+Up never asks for the sent lines")
+  end
+
+  -- test_modified_up_during_a_recall_does_not_step
+  do
+    local input, _, press = build()
+    press("UP")
+    pressModified(press, "UP")
+    assert(input:GetText() == "e1", "Shift+Up keeps the recalled line")
+  end
 end
