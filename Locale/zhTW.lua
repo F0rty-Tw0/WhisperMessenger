@@ -565,6 +565,8 @@ local TraditionalChinese = {
   ["Guild invite"] = "邀請加入公會",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "按 Ctrl+C 複製指令，然後貼到聊天框中。",
   ["Read-only here. Reply in the game's Communities window."] = "此處僅供閱讀。請在遊戲的社群視窗中回覆。",
+  -- Contact menu: split a character out of a Battle.net chat
+  ["Separate %s"] = "分離%s",
 }
 
 ns.Locale_zhTW = TraditionalChinese

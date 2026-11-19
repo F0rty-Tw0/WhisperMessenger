@@ -73,8 +73,9 @@ local function controlOutcome(state, controlResult, reactionConversationKey, deg
   return false
 end
 
-local function storeIncoming(state, eventName, payload, contact, conversationKey, incomingMessage, isActive)
-  local isNewConversation = state.store.conversations[conversationKey] == nil
+-- opensNewChat: a fold just opened this friend's chat empty for the line.
+local function storeIncoming(state, eventName, payload, contact, conversationKey, incomingMessage, isActive, opensNewChat)
+  local isNewConversation = opensNewChat == true or state.store.conversations[conversationKey] == nil
   if payload.replayedAt then
     Store.InsertIncomingChronological(state.store, conversationKey, incomingMessage, isActive)
   else
@@ -89,11 +90,15 @@ local function storeIncoming(state, eventName, payload, contact, conversationKey
   end
 end
 
-function IncomingWhisper.Handle(state, eventName, payload, contact, conversationKey, isActive, sentAt, mergeEntry)
+function IncomingWhisper.Handle(state, eventName, payload, contact, conversationKey, isActive, sentAt, mergeEntry, opensNewChat)
   local addonGreeting, hideGreeting
   if eventName == "CHAT_MSG_WHISPER" then
     addonGreeting, hideGreeting = AddonGreetingIngest.ClaimForWhisper(state, contact, payload, sentAt)
     if hideGreeting then
+      -- A fold opened this friend's chat for the hidden greeting alone.
+      if opensNewChat == true then
+        Store.Remove(state.store, conversationKey)
+      end
       return nil
     end
   end
@@ -148,7 +153,7 @@ function IncomingWhisper.Handle(state, eventName, payload, contact, conversation
     end
   end
 
-  storeIncoming(state, eventName, payload, contact, conversationKey, incomingMessage, isActive)
+  storeIncoming(state, eventName, payload, contact, conversationKey, incomingMessage, isActive, opensNewChat)
   return conversationWithKey(state, conversationKey), { outgoingFromPendingSend = false }
 end
 
