@@ -113,6 +113,22 @@ return function()
     assert(list[1].name == "Arthas" and list[1].characterKey == K, "sorted by name, first " .. tostring(list[1].name))
     assert(list[2].name == "Arthas-Area52" and list[2].characterKey == K_OTHER_REALM, "the other realm reads differently")
     assert(list[3].name == "Uther", "last by name")
+  end
+
+  -- test_list_for_bnet_with_no_merges_is_empty
+  do
+    local merges = fresh()
+    CharacterMergeMap.Record(merges, K, B, "Arthas")
     assert(#CharacterMergeMap.ListForBnet(merges, "bnet::BN::nobody#1") == 0, "a chat with no merges lists none")
+  end
+
+  -- test_list_for_bnet_breaks_a_name_tie_by_key
+  do
+    local merges = fresh()
+    CharacterMergeMap.Record(merges, 7, B, "Arthas")
+    CharacterMergeMap.Record(merges, K, B, "Arthas")
+    local list = CharacterMergeMap.ListForBnet(merges, B)
+    assert(#list == 2, "both characters are listed, got " .. #list)
+    assert(list[1].characterKey == 7 and list[2].characterKey == K, "same name sorts by key, first " .. tostring(list[1].characterKey))
   end
 end
