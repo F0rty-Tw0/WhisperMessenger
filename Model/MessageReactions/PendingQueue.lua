@@ -253,7 +253,7 @@ function PendingQueue.RemapConversation(state, oldKey, newKey)
     return
   end
   for _, field in ipairs(PENDING_QUEUE_FIELDS) do
-    for _, queue in pairs(runtime[field] or {}) do
+    for _, queue in pairs(runtime[field]) do
       for _, entry in ipairs(queue) do
         if entry.conversationKey == oldKey then
           entry.conversationKey = newKey
