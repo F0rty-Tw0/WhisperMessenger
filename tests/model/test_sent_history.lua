@@ -90,23 +90,67 @@ return function()
     same(list, { "A" }, "a dropped line does not split a duplicate run")
   end
 
-  -- test_caps_at_max_entries
+  -- test_secret_line_never_reaches_fits
   do
+    local saved = rawget(_G, "issecretvalue")
+    rawset(_G, "issecretvalue", function(value)
+      return value == "SECRET"
+    end)
+    local fitsSawSecret = false
+    local function recordingFits(text)
+      if text == "SECRET" then
+        fitsSawSecret = true
+      end
+      return true
+    end
+    SentHistory.Build(chat({ out("SECRET", 2), out("ok", 1) }), recordingFits)
+    rawset(_G, "issecretvalue", saved)
+    assert(fitsSawSecret == false, "fits must never be called with a secret line")
+  end
+
+  -- test_max_entries_is_fifty
+  do
+    assert(SentHistory.MAX_ENTRIES == 50, "cap is 50, got " .. tostring(SentHistory.MAX_ENTRIES))
+  end
+
+  local function sixtyLines()
     local messages = {}
     for index = 1, 60 do
       messages[index] = out("line" .. index, index)
     end
-    local list = SentHistory.Build(chat(messages))
-    assert(SentHistory.MAX_ENTRIES == 50, "cap is 50")
+    return SentHistory.Build(chat(messages))
+  end
+
+  -- test_list_stops_at_max_entries
+  do
+    local list = sixtyLines()
     assert(#list == 50, "list capped at 50, got " .. #list)
-    assert(list[1] == "line60", "newest kept first")
-    assert(list[50] == "line11", "oldest kept is the 50th newest")
+  end
+
+  -- test_capped_list_starts_with_newest_line
+  do
+    local list = sixtyLines()
+    assert(list[1] == "line60", "newest kept first, got " .. tostring(list[1]))
+  end
+
+  -- test_capped_list_ends_with_fiftieth_newest_line
+  do
+    local list = sixtyLines()
+    assert(list[50] == "line11", "oldest kept is the 50th newest, got " .. tostring(list[50]))
   end
 
   -- test_empty_store_gives_empty_list
   do
     assert(#SentHistory.Build({}) == 0, "empty store")
+  end
+
+  -- test_nil_store_gives_empty_list
+  do
     assert(#SentHistory.Build(nil) == 0, "nil store")
+  end
+
+  -- test_chat_without_messages_gives_empty_list
+  do
     assert(#SentHistory.Build({ ["me::WOW::x"] = { messages = nil } }) == 0, "chat without messages")
   end
 end
