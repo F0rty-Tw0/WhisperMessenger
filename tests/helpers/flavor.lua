@@ -4,6 +4,13 @@ local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 
 local Flavor = {}
 
+-- isRetail, isForever of each flavor stub.
+Flavor.ALL = {
+  { name = "Retail", true, false },
+  { name = "Forever", true, true },
+  { name = "Classic", false, false },
+}
+
 function Flavor.With(isRetail, isForever, fn)
   local savedRetail, savedForever = FlavorCompat.isRetail, FlavorCompat.isForever
   FlavorCompat.isRetail, FlavorCompat.isForever = isRetail, isForever

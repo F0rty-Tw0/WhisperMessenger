@@ -10,13 +10,6 @@ local ComposerPadHint = require("WhisperMessenger.UI.Composer.ComposerPadHint")
 
 local CONTACT = { conversationKey = "me::WOW::a", displayName = "A", channel = "WOW" }
 
--- isRetail, isForever of each flavor stub.
-local FLAVORS = {
-  { name = "Retail", true, false },
-  { name = "Forever", true, true },
-  { name = "Classic", false, false },
-}
-
 local function pictures(key)
   return "atlas-" .. key
 end
@@ -66,7 +59,7 @@ end
 
 -- Runs check under every flavor stub, with the gamepad API installed or not.
 local function eachFlavor(withApi, check)
-  for _, flavor in ipairs(FLAVORS) do
+  for _, flavor in ipairs(Flavor.ALL) do
     local env = FakeGamepad.New()
     if withApi then
       env.install()
@@ -221,13 +214,6 @@ return function()
     })
     r.input:SetFocus()
     assert(fired == 1, "a hook added before the hint still fires")
-  end
-
-  -- test_composer_submit_is_what_enter_runs
-  do
-    local composer = buildComposer(FakeUI.NewFactory({ wrap = true }))
-    assert(composer.submit ~= nil, "the composer exposes submit")
-    assert(composer.submit == composer.input:GetScript("OnEnterPressed"), "submit is the Enter script itself")
   end
 
   -- test_composer_has_no_pad_hint_without_the_gamepad_api

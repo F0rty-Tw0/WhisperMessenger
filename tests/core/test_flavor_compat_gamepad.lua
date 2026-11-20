@@ -3,13 +3,6 @@ local Flavor = require("tests.helpers.flavor")
 
 local GLOBALS = { "GamepadMode", "SmartNavigation", "InputUtil", "InputIconTextureSetUtility" }
 
--- isRetail, isForever of each flavor stub.
-local FLAVORS = {
-  { name = "Retail", true, false },
-  { name = "Forever", true, true },
-  { name = "Classic", false, false },
-}
-
 -- Runs check() with the three globals set to values (a missing key → nil),
 -- then restores them even when check fails.
 local function withGlobals(values, check)
@@ -70,7 +63,7 @@ local function iconLookup(lookup)
 end
 
 return function()
-  for _, flavor in ipairs(FLAVORS) do
+  for _, flavor in ipairs(Flavor.ALL) do
     Flavor.With(flavor[1], flavor[2], function()
       -- test_has_gamepad_ui_true_when_the_api_is_present
       withGlobals(api(), function()

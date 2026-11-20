@@ -9,13 +9,6 @@ local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWind
 
 local CONTACT = { conversationKey = "me::WOW::a", displayName = "A", channel = "WOW" }
 
--- isRetail, isForever of each flavor stub.
-local FLAVORS = {
-  { name = "Retail", true, false },
-  { name = "Forever", true, true },
-  { name = "Classic", false, false },
-}
-
 local function fakeNav(active)
   ---@type table<string, any>
   local nav = { seen = {} }
@@ -138,7 +131,7 @@ local function click(composer)
 end
 
 local function eachFlavor(check)
-  for _, flavor in ipairs(FLAVORS) do
+  for _, flavor in ipairs(Flavor.ALL) do
     local ok, err = pcall(Flavor.With, flavor[1], flavor[2], check)
     assert(ok, flavor.name .. ": " .. tostring(err))
   end
