@@ -1,6 +1,14 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FakeGamepad = require("tests.helpers.fake_gamepad")
+local Flavor = require("tests.helpers.flavor")
 local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
+
+-- isRetail, isForever of each flavor stub.
+local FLAVORS = {
+  { name = "Retail", true, false },
+  { name = "Forever", true, true },
+  { name = "Classic", false, false },
+}
 
 local function setup(overrides)
   local env = FakeGamepad.New()
@@ -8,20 +16,51 @@ local function setup(overrides)
   return env, frame, GamepadNav.New(frame, env.deps(overrides))
 end
 
+-- Every nav method a window calls, once.
+local function useAll(env, nav)
+  nav.setCloseHandler(function()
+    return true
+  end)
+  nav.setScrollFrame({})
+  nav.onShow()
+  nav.refresh()
+  nav.ignore({})
+  nav.onHide()
+  env.flush()
+end
+
+-- A nav built from the game's globals on the given flavor stub.
+local function onFlavor(flavor, withoutApi, fn)
+  local env = FakeGamepad.New()
+  local frame = FakeUI.NewFactory().CreateFrame("Frame", "WhisperMessengerWindow", nil)
+  env.install(withoutApi)
+  local ok, err = pcall(Flavor.With, flavor[1], flavor[2], function()
+    fn(env, frame, GamepadNav.New(frame, { after = env.after, createFrame = env.createFrame }))
+  end)
+  env.uninstall()
+  assert(ok, err)
+end
+
 return function()
-  -- test_off_forever_touches_nothing
-  for _, overrides in ipairs({ { isForever = false }, { gamepadMode = false } }) do
+  -- test_without_the_api_touches_nothing
+  for _, overrides in ipairs({ { hasGamepadUI = false }, { gamepadMode = false }, { smartNavigation = false } }) do
     local env, frame, nav = setup(overrides)
-    nav.setCloseHandler(function()
-      return true
+    useAll(env, nav)
+    assert(#env.calls == 0 and frame.SmartNavigationCloseHandler == nil and nav.isActive() == false, "inert without the API")
+  end
+
+  for _, flavor in ipairs(FLAVORS) do
+    -- test_api_present_activates_the_nav_on_every_flavor
+    onFlavor(flavor, false, function(env, _, nav)
+      nav.onShow()
+      assert(nav.isActive() and nav.isRegistered() and env.count("FrameShown") == 1, flavor.name .. ": the API turns the nav on")
     end)
-    nav.setScrollFrame({})
-    nav.onShow()
-    nav.refresh()
-    nav.ignore({})
-    nav.onHide()
-    env.flush()
-    assert(#env.calls == 0 and frame.SmartNavigationCloseHandler == nil and nav.isActive() == false, "inert off Forever")
+
+    -- test_api_absent_makes_no_gamepad_call_on_any_flavor
+    onFlavor(flavor, true, function(env, frame, nav)
+      useAll(env, nav)
+      assert(#env.calls == 0 and frame.SmartNavigationCloseHandler == nil and nav.isActive() == false, flavor.name .. ": inert")
+    end)
   end
 
   -- test_show_registers_and_hide_unregisters

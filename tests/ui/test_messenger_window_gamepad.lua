@@ -31,10 +31,11 @@ local function build()
   return window
 end
 
--- Runs fn(env) on the given flavor with the fake gamepad UI installed.
-local function onFlavor(isRetail, isForever, fn)
+-- Runs fn(env) on the given flavor with the fake gamepad UI installed;
+-- withoutApi: on a client that has no gamepad UI.
+local function onFlavor(isRetail, isForever, fn, withoutApi)
   local env = FakeGamepad.New()
-  env.install()
+  env.install(withoutApi)
   local ok, err = pcall(Flavor.With, isRetail, isForever, function()
     fn(env)
   end)
@@ -111,13 +112,25 @@ return function()
     assert(type(window.conversation.transcript.onNavTargetsChanged) == "function", "messages tagged as they render")
   end)
 
-  -- test_retail_touches_no_gamepad_api
-  onFlavor(true, false, function(env)
-    local window = build()
-    window.frame:Show()
-    window.setOptionsVisible(true)
-    assert(#env.calls == 0 and window.frame.SmartNavigationCloseHandler == nil, "Retail unchanged")
-  end)
+  -- Retail, Forever, Classic: isRetail, isForever of each flavor stub.
+  for _, flavor in ipairs({ { true, false }, { true, true }, { false, false } }) do
+    -- test_client_without_the_api_touches_no_gamepad_api
+    onFlavor(flavor[1], flavor[2], function(env)
+      local window = build()
+      window.frame:Show()
+      window.setOptionsVisible(true)
+      assert(#env.calls == 0 and window.frame.SmartNavigationCloseHandler == nil, "no gamepad UI: unchanged")
+    end, true)
+
+    -- test_client_with_the_api_registers_on_any_flavor
+    onFlavor(flavor[1], flavor[2], function(env)
+      local window = build()
+      window.frame:Show()
+      window.setOptionsVisible(true)
+      assert(env.count("FrameShown") == 1 and type(window.frame.SmartNavigationCloseHandler) == "function", "the API alone turns it on")
+      assert(env.scrollFrameFor(window.frame) ~= window.conversation.transcript.scrollFrame, "the settings walk is on too")
+    end)
+  end
 
   -- test_settings_panes_take_the_right_stick_and_rescan_on_tab_select
   onFlavor(false, true, function(env)

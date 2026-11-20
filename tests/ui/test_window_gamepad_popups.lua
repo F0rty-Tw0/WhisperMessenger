@@ -210,15 +210,15 @@ return function()
     assert(popup.SmartNavigationCloseHandler(popup) == true and closed == 1, "the first handler stays")
   end
 
-  -- test_popup_methods_off_forever_touch_nothing
-  for _, overrides in ipairs({ { isForever = false }, { gamepadMode = false } }) do
+  -- test_popup_methods_without_the_api_touch_nothing
+  for _, overrides in ipairs({ { hasGamepadUI = false }, { gamepadMode = false } }) do
     local env, _, nav, popup = setup(overrides)
     nav.setPopupCloseHandler(popup, function()
       return true
     end)
     open(nav, popup)
     close(nav, popup)
-    assert(#env.calls == 0 and popup.SmartNavigationCloseHandler == nil, "inert off Forever")
+    assert(#env.calls == 0 and popup.SmartNavigationCloseHandler == nil, "inert without the gamepad UI API")
   end
 
   -- test_popup_methods_without_handle_popup_shown_do_nothing

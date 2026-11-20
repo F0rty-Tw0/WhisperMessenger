@@ -17,7 +17,8 @@ local GamepadTranscript = ns.MessengerWindowGamepadTranscript or require("Whispe
 -- composer padding, stops on each message, and reaches every settings
 -- control. Our popups
 -- take pad focus while open; B closes them and the composer pickers first.
--- Off Forever the nav does nothing, so neither does this.
+-- On a client without the gamepad UI API the nav does nothing, so neither
+-- does this.
 local GamepadWiring = {}
 
 local function ignoreDeadStops(nav, shell, refs)
@@ -31,7 +32,7 @@ local function ignoreDeadStops(nav, shell, refs)
     nav.ignore(composer.box, true)
   end
   local transcript = refs.conversation and refs.conversation.transcript
-  -- Off Forever the nav is inert: no walk of the chat on every render.
+  -- Without the API the nav is inert: no walk of the chat on every render.
   if transcript and nav.isActive() then
     -- Messages are stops; their dead parts are skipped as they render.
     GamepadTranscript.Attach(nav, transcript)
@@ -81,7 +82,7 @@ end
 
 -- Pages built before attach (General) are scanned now; later ones when
 -- SettingsTabs reports through onNavTargetsChanged. An inactive nav
--- (Retail, Classic) gets no walk: every mark would be a no-op.
+-- (no gamepad UI API) gets no walk: every mark would be a no-op.
 local function attachSettings(nav, shell, transcript)
   local settingsPanels = shell.settingsRuntime and shell.settingsRuntime.settingsPanels
   if not settingsPanels or not nav.isActive() then
