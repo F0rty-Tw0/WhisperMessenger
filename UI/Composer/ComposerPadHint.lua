@@ -24,9 +24,11 @@ local WORD_GAP = "   "
 
 local function pictureSize(label)
   local _, height = label:GetFont()
+
   if type(height) ~= "number" or height <= 0 then
     return PICTURE_FALLBACK_SIZE
   end
+
   return math.floor(height + 0.5)
 end
 
@@ -36,13 +38,16 @@ local function buttonMark(key, letter, buttonAtlas, atlasMarkup, size)
     return letter
   end
   local found, atlas = pcall(buttonAtlas, key)
+
   if not found or type(atlas) ~= "string" or atlas == "" then
     return letter
   end
   local made, markup = pcall(atlasMarkup, atlas, size, size)
+
   if made and type(markup) == "string" then
     return markup
   end
+
   return letter
 end
 
@@ -68,27 +73,32 @@ function ComposerPadHint.Create(factory, pane, parts)
     local size = pictureSize(label)
     local a = buttonMark(_G["GAMEPAD_FACE_BOTTOM"] or "PAD1", "A", buttonAtlas, atlasMarkup, size)
     local b = buttonMark(_G["GAMEPAD_FACE_RIGHT"] or "PAD2", "B", buttonAtlas, atlasMarkup, size)
+
     return a .. " " .. Localization.Text("Send") .. WORD_GAP .. b .. " " .. Localization.Text("Back")
   end
 
-  input:HookScript("OnEditFocusGained", function()
-    if not isPadUIOn() then
+  local function onFocusGained()
+    local padUIOn = isPadUIOn()
+
+    if not padUIOn then
       return
     end
     label:SetText(hintText())
     frame:Show()
-  end)
+  end
+
+  local function refreshTheme()
+    UIHelpers.setTextColor(label, Theme.COLORS.text_secondary)
+  end
+
+  input:HookScript("OnEditFocusGained", onFocusGained)
   input:HookScript("OnEditFocusLost", function()
     frame:Hide()
   end)
 
-  return {
-    frame = frame,
-    label = label,
-    refreshTheme = function()
-      UIHelpers.setTextColor(label, Theme.COLORS.text_secondary)
-    end,
-  }
+  local hint = { frame = frame, label = label, refreshTheme = refreshTheme }
+
+  return hint
 end
 
 ns.ComposerPadHint = ComposerPadHint

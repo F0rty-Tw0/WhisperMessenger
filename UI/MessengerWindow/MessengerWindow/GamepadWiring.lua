@@ -141,7 +141,6 @@ function GamepadWiring.Create(shell, nav)
     end)
     -- No register here even if the frame is shown: the build hides it right
     -- after Create, and every real show arrives through the OnShow hook.
-    -- A on the message box focuses it, then sends; B takes the cursor out.
     local clearComposerFocus = GamepadComposer.Attach(nav, refs.composer)
     nav.setCloseHandler(buildCloseHandler(frame, refs, clearComposerFocus))
     attachPopups(nav)

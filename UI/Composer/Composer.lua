@@ -66,7 +66,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   local box, input = inputBox.box, inputBox.input
   -- Controller hint: only where the pad can focus the box (template box, gamepad API).
   local padHint
-  if inputBox.scroll ~= nil and FlavorCompat.HasGamepadUI() then
+  local hasPadUI = FlavorCompat.HasGamepadUI()
+
+  if inputBox.scroll ~= nil and hasPadUI then
     padHint = ComposerPadHint.Create(factory, pane, { input = input, box = box })
   end
   local rows = ComposerRows.Create(pane, Theme.FONTS.composer_input)

@@ -13,27 +13,42 @@ local GamepadComposer = {}
 -- clearComposerFocus, or nil (and sets nothing) when the nav is inert or
 -- the box has no scroll frame: the window then behaves as without a pad.
 function GamepadComposer.Attach(nav, composer)
-  if not nav.isActive() or composer == nil or composer.scroll == nil then
+  local navActive = nav.isActive()
+
+  if not navActive or composer == nil or composer.scroll == nil then
     return nil
   end
   local input = composer.input
-  -- A on a stop calls this field when it has one. No check of its own:
-  -- submit follows Enter's rules (disabled, empty, slash commands).
-  composer.scroll.OnSmartNavClick = function()
-    if input:HasFocus() then
+
+  -- No check of its own: submit follows Enter's rules (disabled, empty,
+  -- slash commands).
+  local function onSmartNavClick()
+    local hasFocus = input:HasFocus()
+
+    if hasFocus then
       composer.submit()
     else
       input:SetFocus()
     end
   end
+
   -- Unlike Escape, B leaves a pending reply in place.
-  return function()
-    if input:HasFocus() then
+  local function clearComposerFocus()
+    local hasFocus = input:HasFocus()
+
+    if hasFocus then
       input:ClearFocus()
+
       return true
     end
+
     return false
   end
+
+  -- A on a stop calls this field when it has one.
+  composer.scroll.OnSmartNavClick = onSmartNavClick
+
+  return clearComposerFocus
 end
 
 ns.MessengerWindowGamepadComposer = GamepadComposer
