@@ -143,9 +143,8 @@ return function()
       end
     end
     assert(
-      table.concat(order, ",")
-        == "MarkFrameIgnored,FrameShown,SetScrollFrameForFrame,CreatePromptedBinding,CreatePromptedBindingFooter,ShowAndActivateBindings",
-      "ignores, then register, then scroll frame, then the X footer"
+      table.concat(order, ",") == "MarkFrameIgnored,FrameShown,SetScrollFrameForFrame",
+      "ignores, then register, then scroll frame; nothing for X"
     )
     assert(env.count("FrameShown") == 1, "one registration")
     assert(env.scrollFrameFor(t.frame) == t.refs.conversation.transcript.scrollFrame, "right stick scrolls the chat")

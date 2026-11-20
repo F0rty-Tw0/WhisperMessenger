@@ -138,12 +138,11 @@ return function()
     assert(bubble and bubble.buttonContext == GamepadNav.RIGHT_CLICK_CONTEXT, "a bubble laid out later is tagged too")
   end
 
-  -- test_x_on_a_bubble_opens_its_menu_once
+  -- test_game_right_click_on_a_bubble_opens_its_menu_once
   do
     local env = FakeGamepad.New()
     local window = FakeUI.NewFactory().CreateFrame("Frame", "WhisperMessengerWindow", nil)
     local nav = GamepadNav.New(window, env.deps())
-    nav.bindRightClick(GamepadNav.RIGHT_CLICK_CONTEXT, "Options")
     nav.onShow()
     local content = layout({ incoming("hi", 0) })
     GamepadTranscript.Attach(nav, { content = content })
@@ -152,7 +151,7 @@ return function()
       opened = opened + 1
       return true
     end)
-    local ok, err = pcall(env.pressX, firstBubble(content))
+    local ok, err = pcall(env.rightClick, firstBubble(content))
     rawset(ChatContextMenu, "Open", original)
     assert(ok, err)
     assert(opened == 1, "MouseDown opens the menu, MouseUp does not open it again; got " .. opened)
