@@ -10,6 +10,7 @@ local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperM
 local GamepadSettings = ns.MessengerWindowGamepadSettings or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local GamepadTranscript = ns.MessengerWindowGamepadTranscript or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadTranscript")
+local GamepadComposer = ns.MessengerWindowGamepadComposer or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadComposer")
 
 -- The messenger window's part of the WoW: Forever gamepad UI: register on
 -- show, B closes the topmost layer, the right stick scrolls the chat (the
@@ -26,8 +27,9 @@ local function ignoreDeadStops(nav, shell, refs)
   nav.ignore(chrome.resizeGrip)
   nav.ignore(layout.contactsResizeHandle)
   local composer = refs.composer
-  -- The holder alone: the message box under it stays reachable. Without the
-  -- input-scroll template the holder is the message box itself.
+  -- The holder alone: the template's scroll frame under it (not the edit
+  -- box) stays the D-pad stop. Without the input-scroll template the holder
+  -- is the message box itself.
   if composer and composer.box ~= composer.input then
     nav.ignore(composer.box, true)
   end
@@ -49,7 +51,8 @@ local function composerPickers(composer)
   return pickers
 end
 
-local function buildCloseHandler(frame, refs)
+-- clearComposerFocus: GamepadComposer.Attach's result, nil = no such step.
+local function buildCloseHandler(frame, refs, clearComposerFocus)
   local visibility = refs.windowVisibility
   return GamepadCloseOrder.Build({
     isWindowShown = function()
@@ -66,6 +69,7 @@ local function buildCloseHandler(frame, refs)
       return false
     end,
     closeOpenDropdown = DropdownSelector.HideShownMenu,
+    clearComposerFocus = clearComposerFocus,
     -- Read at press time: compact mode replaces the hook after the build.
     compactBack = function()
       return refs.compactMode.onBack()
@@ -137,7 +141,9 @@ function GamepadWiring.Create(shell, nav)
     end)
     -- No register here even if the frame is shown: the build hides it right
     -- after Create, and every real show arrives through the OnShow hook.
-    nav.setCloseHandler(buildCloseHandler(frame, refs))
+    -- A on the message box focuses it, then sends; B takes the cursor out.
+    local clearComposerFocus = GamepadComposer.Attach(nav, refs.composer)
+    nav.setCloseHandler(buildCloseHandler(frame, refs, clearComposerFocus))
     attachPopups(nav)
     -- X opens the right-click menu of a focused target that carries the
     -- context (contact rows, messages, the chat header).
