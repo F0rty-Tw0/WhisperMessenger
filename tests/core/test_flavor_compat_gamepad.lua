@@ -1,14 +1,7 @@
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 local Flavor = require("tests.helpers.flavor")
 
-local GLOBALS = { "GamepadMode", "SmartNavigation", "InputUtil" }
-
--- isRetail, isForever of each flavor stub.
-local FLAVORS = {
-  { name = "Retail", true, false },
-  { name = "Forever", true, true },
-  { name = "Classic", false, false },
-}
+local GLOBALS = { "GamepadMode", "SmartNavigation", "InputUtil", "InputIconTextureSetUtility" }
 
 -- Runs check() with the three globals set to values (a missing key → nil),
 -- then restores them even when check fails.
@@ -65,8 +58,12 @@ local function inputUtil(result)
   }
 end
 
+local function iconLookup(lookup)
+  return { GetNormalActiveInputIconButtonTexture = lookup }
+end
+
 return function()
-  for _, flavor in ipairs(FLAVORS) do
+  for _, flavor in ipairs(Flavor.ALL) do
     Flavor.With(flavor[1], flavor[2], function()
       -- test_has_gamepad_ui_true_when_the_api_is_present
       withGlobals(api(), function()
@@ -164,5 +161,51 @@ return function()
     assert(FlavorCompat.IsGamepadUIEnabled() == false, "off first")
     enabled = true
     assert(FlavorCompat.IsGamepadUIEnabled() == true, "the player picked up the pad: on, no reload")
+  end)
+
+  -- test_gamepad_button_atlas_returns_the_games_atlas_name
+  withGlobals({ InputIconTextureSetUtility = iconLookup(function(key)
+    return "atlas-" .. key
+  end) }, function()
+    assert(FlavorCompat.GamepadButtonAtlas("PAD1") == "atlas-PAD1", "the game's picture for the button")
+  end)
+
+  -- test_gamepad_button_atlas_is_nil_without_the_lookup
+  withGlobals({}, function()
+    assert(FlavorCompat.GamepadButtonAtlas("PAD1") == nil, "no lookup, no picture")
+  end)
+  withGlobals({ InputIconTextureSetUtility = {} }, function()
+    assert(FlavorCompat.GamepadButtonAtlas("PAD1") == nil, "lookup table without the function, no picture")
+  end)
+
+  -- test_gamepad_button_atlas_is_nil_when_the_lookup_throws
+  withGlobals({ InputIconTextureSetUtility = iconLookup(function()
+    error("no icon set")
+  end) }, function()
+    assert(FlavorCompat.GamepadButtonAtlas("PAD1") == nil, "an error means no picture")
+  end)
+
+  -- test_gamepad_button_atlas_is_nil_for_a_non_string_result
+  for _, result in ipairs({ false, "", 42, {} }) do
+    local lookup = iconLookup(function()
+      if result == false then
+        return nil
+      end
+      return result
+    end)
+    withGlobals({ InputIconTextureSetUtility = lookup }, function()
+      assert(FlavorCompat.GamepadButtonAtlas("PAD1") == nil, "only a non-empty string is an atlas: " .. tostring(result))
+    end)
+  end
+
+  -- test_gamepad_button_atlas_is_nil_for_a_non_string_key
+  local lookups = 0
+  withGlobals({ InputIconTextureSetUtility = iconLookup(function()
+    lookups = lookups + 1
+    return "atlas"
+  end) }, function()
+    assert(FlavorCompat.GamepadButtonAtlas(nil) == nil, "nil key, no picture")
+    assert(FlavorCompat.GamepadButtonAtlas(7) == nil, "number key, no picture")
+    assert(lookups == 0, "the lookup is not asked about a bad key")
   end)
 end

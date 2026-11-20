@@ -21,18 +21,13 @@ function AlphaController.getAlpha(target, fallback)
 end
 
 function AlphaController.hookScript(target, eventName, handler)
-  if target == nil or type(target.SetScript) ~= "function" then
+  if target == nil then
     return
   end
-  local previous = target.GetScript and target:GetScript(eventName) or nil
-  if previous == nil then
-    target:SetScript(eventName, handler)
-    return
+  -- SetScript would drop every hook added before it with HookScript.
+  if type(target.HookScript) == "function" then
+    target:HookScript(eventName, handler)
   end
-  target:SetScript(eventName, function(...)
-    previous(...)
-    handler(...)
-  end)
 end
 
 -- frame: the window frame

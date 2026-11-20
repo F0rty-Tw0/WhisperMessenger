@@ -1,4 +1,8 @@
+local FakeUI = require("tests.helpers.fake_ui")
+local Composer = require("WhisperMessenger.UI.Composer")
 local ComposerSubmit = require("WhisperMessenger.UI.Composer.ComposerSubmit")
+
+local CONTACT = { conversationKey = "me::WOW::a", displayName = "A", channel = "WOW" }
 
 local function build(options)
   options = options or {}
@@ -22,7 +26,7 @@ local function build(options)
     },
     limit = { remember = function() end },
     sendFocus = { afterSend = function() end },
-    selectedContact = { conversationKey = "me::WOW::a", displayName = "A", channel = "WOW" },
+    selectedContact = CONTACT,
     onSend = function()
       calls.sent = calls.sent + 1
       return options.accepted
@@ -38,6 +42,14 @@ local function build(options)
     end,
   })
   return submit, input, calls
+end
+
+-- A real composer on fake frames.
+local function buildComposer()
+  local factory = FakeUI.NewFactory()
+  local parent = factory.CreateFrame("Frame", "parent", nil)
+
+  return Composer.Create(factory, parent, CONTACT, function() end, nil, nil, nil, nil)
 end
 
 return function()
@@ -73,6 +85,13 @@ return function()
     assert(calls.sent == 1, "the send was tried")
     assert(input.text == "hello", "refused text stays")
     assert(calls.afterClear == 0, "nothing cleared")
+  end
+
+  -- test_composer_submit_is_what_enter_runs
+  do
+    local composer = buildComposer()
+    assert(composer.submit ~= nil, "the composer exposes submit")
+    assert(composer.submit == composer.input:GetScript("OnEnterPressed"), "submit is the Enter script itself")
   end
 
   print("PASS: test_composer_submit")

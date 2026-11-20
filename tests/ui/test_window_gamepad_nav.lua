@@ -4,13 +4,6 @@ local Flavor = require("tests.helpers.flavor")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 
--- isRetail, isForever of each flavor stub.
-local FLAVORS = {
-  { name = "Retail", true, false },
-  { name = "Forever", true, true },
-  { name = "Classic", false, false },
-}
-
 local function setup(overrides)
   local env = FakeGamepad.New()
   local frame = FakeUI.NewFactory().CreateFrame("Frame", "WhisperMessengerWindow", nil)
@@ -76,7 +69,7 @@ return function()
     assert(ok, err)
   end
 
-  for _, flavor in ipairs(FLAVORS) do
+  for _, flavor in ipairs(Flavor.ALL) do
     -- test_partial_api_makes_no_gamepad_call_on_any_flavor
     onFlavor(flavor, "partial", function(env, frame, nav)
       useAll(env, nav)

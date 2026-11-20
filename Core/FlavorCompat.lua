@@ -147,6 +147,25 @@ function FlavorCompat.IsGamepadUIEnabled()
   return ok and enabled == true
 end
 
+-- The atlas name of the game's picture for pad button key ("PAD1", ...) on
+-- the pad in use, or nil. Read on every call, so a pad swap shows at once.
+-- Blizzard's lookup throws when the active icon set has no entry for the
+-- key, so it runs in pcall; anything but a non-empty string is no picture.
+function FlavorCompat.GamepadButtonAtlas(key)
+  if type(key) ~= "string" then
+    return nil
+  end
+  local iconUtil = _G["InputIconTextureSetUtility"]
+  if type(iconUtil) ~= "table" or type(iconUtil.GetNormalActiveInputIconButtonTexture) ~= "function" then
+    return nil
+  end
+  local ok, atlas = pcall(iconUtil.GetNormalActiveInputIconButtonTexture, key)
+  if ok and type(atlas) == "string" and atlas ~= "" then
+    return atlas
+  end
+  return nil
+end
+
 ns.FlavorCompat = FlavorCompat
 
 return FlavorCompat

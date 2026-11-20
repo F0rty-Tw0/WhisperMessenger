@@ -194,7 +194,7 @@ return function()
     assert(not ignoredWith(t.nav, t.refs.conversation.transcript.content), "messages stay reachable")
     assert(type(t.refs.conversation.transcript.onNavTargetsChanged) == "function", "new messages are tagged as they render")
     local holder, holderNoProp = ignoredWith(t.nav, t.refs.composer.box)
-    assert(holder and holderNoProp == true, "composer holder alone; the message box under it stays")
+    assert(holder and holderNoProp == true, "composer holder alone; the scroll frame under it, not the edit box, stays the stop")
   end
 
   -- test_plain_edit_box_composer_is_not_ignored

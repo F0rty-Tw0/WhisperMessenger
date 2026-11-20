@@ -59,8 +59,6 @@ return function()
   assert(window.frame.scripts.OnUpdate == nil, "expected idle window not to own an updater")
   assert(window.frame.scripts.OnEnter ~= nil, "expected window hover handler")
   assert(window.frame.scripts.OnLeave ~= nil, "expected window leave handler")
-  assert(window.composer.input.scripts.OnEditFocusGained ~= nil, "expected focus gain opacity hook")
-  assert(window.composer.input.scripts.OnEditFocusLost ~= nil, "expected focus loss opacity hook")
 
   window.frame:Show()
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected shown window to start fully opaque")
@@ -98,15 +96,20 @@ return function()
   window.frame.scripts.OnLeave(window.frame)
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected leaving the window without activity to keep it opaque")
 
-  window.composer.input:SetFocus()
-  assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected focused input to keep the window fully opaque")
-
   movementSpeed = 7
+  alphaTicker.callback()
+  assert(window.frame.alpha == Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA, "expected movement to dim the window before focus")
+
+  window.composer.input:SetFocus()
+  assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected focus gain alone to restore full opacity")
+
   alphaTicker.callback()
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected focus to override outside activity dimming")
 
-  movementSpeed = 0
   window.composer.input:ClearFocus()
+  assert(window.frame.alpha == Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA, "expected focus loss alone to dim the window while moving")
+
+  movementSpeed = 0
   alphaTicker.callback()
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected opacity to return to normal after focus and outside activity end")
 

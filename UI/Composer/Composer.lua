@@ -23,6 +23,8 @@ local ComposerRows = ns.ComposerRows or require("WhisperMessenger.UI.Composer.Co
 local ComposerInputBox = ns.ComposerInputBox or require("WhisperMessenger.UI.Composer.ComposerInputBox")
 local ComposerRelayout = ns.ComposerRelayout or require("WhisperMessenger.UI.Composer.ComposerRelayout")
 local ComposerHistory = ns.ComposerHistory or require("WhisperMessenger.UI.Composer.ComposerHistory")
+local ComposerPadHint = ns.ComposerPadHint or require("WhisperMessenger.UI.Composer.ComposerPadHint")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 
 local Composer = {}
 
@@ -62,6 +64,13 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
 
   local inputBox = ComposerInputBox.Create(factory, pane)
   local box, input = inputBox.box, inputBox.input
+  -- Controller hint: only where the pad can focus the box (template box, gamepad API).
+  local padHint
+  local hasPadUI = FlavorCompat.HasGamepadUI()
+
+  if inputBox.scroll ~= nil and hasPadUI then
+    padHint = ComposerPadHint.Create(factory, pane, { input = input, box = box })
+  end
   local rows = ComposerRows.Create(pane, Theme.FONTS.composer_input)
   local limit = ComposerLimit.Create(input)
   local sendFocus = ComposerSendFocus.Create(pane, input, {
@@ -213,6 +222,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     quickReplyButton = launchers.quickReplyButton,
     quickReplyPicker = launchers.quickReplyPicker,
     placeholder = placeholder,
+    padHint = padHint,
+    submit = submitMessage,
     loadDraft = loadDraft,
     -- Cap for the conversation's channel; set before its draft loads.
     setMaxBytes = limit.setChannel,
@@ -249,6 +260,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       end
       paintSendButton(sendDisabled, false)
       launchers.refreshTheme()
+      if padHint then
+        padHint.refreshTheme()
+      end
       relayout.refreshWidth()
     end,
     getHeight = relayout.getHeight,
