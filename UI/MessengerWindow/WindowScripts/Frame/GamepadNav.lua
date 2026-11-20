@@ -5,7 +5,6 @@ end
 
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local GamepadDeps = ns.MessengerWindowGamepadDeps or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadDeps")
-local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local GamepadMarks = ns.MessengerWindowGamepadMarks or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadMarks")
 local GamepadPopups = ns.MessengerWindowGamepadPopups or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadPopups")
 
@@ -16,9 +15,6 @@ local GamepadPopups = ns.MessengerWindowGamepadPopups or require("WhisperMesseng
 -- Nothing calls into that UI in combat: what was asked for then is done
 -- when combat ends.
 local GamepadNav = {}
-
--- Marks the targets that have a right-click menu, for the X button.
-GamepadNav.RIGHT_CLICK_CONTEXT = Constants.GAMEPAD_RIGHT_CLICK_CONTEXT
 
 local function noop() end
 
@@ -40,7 +36,6 @@ local function inert()
     popupShown = noop,
     popupHidden = noop,
     setPopupCloseHandler = noop,
-    bindRightClick = noop,
     isActive = never,
     isRegistered = never,
   }
@@ -214,12 +209,6 @@ function GamepadNav.New(frame, deps)
       applyScrollTarget()
     end
   end
-
-  -- Does nothing: X stays unbound until the addon has a binding of its
-  -- own. The game's prompt footer changed the game's binding list from
-  -- addon code, and controller players then got an error about the
-  -- protected SetPreferredGamepadInteractTarget.
-  nav.bindRightClick = noop
 
   nav.ignore = marks.ignore
   nav.markFocusable = marks.markFocusable
