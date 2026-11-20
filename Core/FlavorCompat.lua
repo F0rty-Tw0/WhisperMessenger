@@ -95,6 +95,27 @@ function FlavorCompat.HasTemplate(name)
   return ok and info ~= nil
 end
 
+-- True when the client has the gamepad UI API the addon talks to
+-- (GamepadMode.FrameControlsManager and SmartNavigation). Every gamepad piece
+-- turns on by this, never by flavor: WoW: Forever has the API today, and the
+-- same code runs wherever Blizzard ships it next.
+function FlavorCompat.HasGamepadUI()
+  local gamepadMode = _G["GamepadMode"]
+  local fcm = type(gamepadMode) == "table" and gamepadMode.FrameControlsManager or nil
+  return type(fcm) == "table" and type(fcm.FrameShown) == "function" and type(_G["SmartNavigation"]) == "table"
+end
+
+-- True while the game's gamepad UI is on (the player is using the pad).
+-- Blizzard's own check, read on every call; a missing API or an error is off.
+function FlavorCompat.IsGamepadUIEnabled()
+  local inputUtil = _G["InputUtil"]
+  if type(inputUtil) ~= "table" or type(inputUtil.IsGamepadUIEnabled) ~= "function" then
+    return false
+  end
+  local ok, enabled = pcall(inputUtil.IsGamepadUIEnabled)
+  return ok and enabled == true
+end
+
 ns.FlavorCompat = FlavorCompat
 
 return FlavorCompat
