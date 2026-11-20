@@ -139,6 +139,27 @@ return function()
       assert(env.count("FrameShown") == 1 and type(window.frame.SmartNavigationCloseHandler) == "function", "the API alone turns it on")
       assert(env.scrollFrameFor(window.frame) ~= window.conversation.transcript.scrollFrame, "the settings walk is on too")
     end)
+
+    -- test_pad_hint_follows_the_cursor_in_the_built_window
+    onFlavor(flavor[1], flavor[2], function()
+      local savedInputUtil = rawget(_G, "InputUtil")
+      rawset(_G, "InputUtil", {
+        IsGamepadUIEnabled = function()
+          return true
+        end,
+      })
+      local ok, err = pcall(function()
+        local window = build()
+        local hint = window.composer.padHint
+        assert(hint ~= nil, "the built window has the pad hint")
+        window.composer.input:SetFocus()
+        assert(hint.frame:IsShown() == true, "cursor in the box shows the hint")
+        window.composer.input:ClearFocus()
+        assert(hint.frame:IsShown() == false, "cursor out of the box hides it")
+      end)
+      rawset(_G, "InputUtil", savedInputUtil)
+      assert(ok, err)
+    end)
   end
 
   -- test_settings_panes_take_the_right_stick_and_rescan_on_tab_select
