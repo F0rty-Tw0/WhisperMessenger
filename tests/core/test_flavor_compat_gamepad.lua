@@ -25,7 +25,29 @@ local function withGlobals(values, check)
   assert(ok, err)
 end
 
+-- Every Blizzard method the gamepad nav calls without a guard of its own.
+local REQUIRED = {
+  GamepadMode = { "FrameShown", "FrameHidden" },
+  SmartNavigation = { "GetPanelInfo", "RefreshButtonGroups", "SetScrollFrameForFrame", "SetSmartNavPanelInfoAddedCallback", "RightClick" },
+}
+
+local function withMethods(names)
+  local object = {}
+  for _, name in ipairs(names) do
+    object[name] = function() end
+  end
+  return object
+end
+
 local function api()
+  return {
+    GamepadMode = { FrameControlsManager = withMethods(REQUIRED.GamepadMode) },
+    SmartNavigation = withMethods(REQUIRED.SmartNavigation),
+  }
+end
+
+-- A client with only part of the API: FrameShown and an empty SmartNavigation.
+local function partialApi()
   return {
     GamepadMode = { FrameControlsManager = { FrameShown = function() end } },
     SmartNavigation = {},
@@ -56,6 +78,11 @@ return function()
         assert(FlavorCompat.HasGamepadUI() == false, flavor.name .. ": no API, no gamepad UI")
       end)
 
+      -- test_has_gamepad_ui_false_with_a_partial_api
+      withGlobals(partialApi(), function()
+        assert(FlavorCompat.HasGamepadUI() == false, flavor.name .. ": part of the API is not the API")
+      end)
+
       -- test_gamepad_ui_enabled_follows_the_game
       withGlobals({ InputUtil = inputUtil(true) }, function()
         assert(FlavorCompat.IsGamepadUIEnabled() == true, flavor.name .. ": on when the game says so")
@@ -68,11 +95,38 @@ return function()
     end)
   end
 
-  -- test_has_gamepad_ui_false_without_frame_shown
-  local noFrameShown = api()
-  noFrameShown.GamepadMode.FrameControlsManager = {}
-  withGlobals(noFrameShown, function()
-    assert(FlavorCompat.HasGamepadUI() == false, "FrameControlsManager without FrameShown is not the API")
+  -- test_has_gamepad_ui_false_without_any_one_required_method
+  for _, name in ipairs(REQUIRED.GamepadMode) do
+    local missing = api()
+    missing.GamepadMode.FrameControlsManager[name] = nil
+    withGlobals(missing, function()
+      assert(FlavorCompat.HasGamepadUI() == false, "FrameControlsManager without " .. name .. " is not the API")
+    end)
+  end
+  for _, name in ipairs(REQUIRED.SmartNavigation) do
+    local missing = api()
+    missing.SmartNavigation[name] = nil
+    withGlobals(missing, function()
+      assert(FlavorCompat.HasGamepadUI() == false, "SmartNavigation without " .. name .. " is not the API")
+    end)
+  end
+
+  -- test_has_gamepad_ui_checks_the_tables_it_is_given
+  local given = api()
+  withGlobals({}, function()
+    assert(FlavorCompat.HasGamepadUI(given.GamepadMode, given.SmartNavigation) == true, "given tables stand in for the globals")
+  end)
+
+  -- test_has_gamepad_ui_given_tables_win_over_the_globals
+  local partial = partialApi()
+  withGlobals(api(), function()
+    assert(FlavorCompat.HasGamepadUI(partial.GamepadMode, partial.SmartNavigation) == false, "the given partial API decides")
+  end)
+
+  -- test_has_gamepad_ui_false_argument_means_absent
+  withGlobals(api(), function()
+    assert(FlavorCompat.HasGamepadUI(false, false) == false, "false is absent: no fallback to the globals")
+    assert(FlavorCompat.HasGamepadUI(nil, false) == false, "one absent table is enough")
   end)
 
   -- test_has_gamepad_ui_false_without_smart_navigation
