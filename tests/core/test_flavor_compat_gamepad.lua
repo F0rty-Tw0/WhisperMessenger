@@ -127,6 +127,7 @@ return function()
   withGlobals(api(), function()
     assert(FlavorCompat.HasGamepadUI(false, false) == false, "false is absent: no fallback to the globals")
     assert(FlavorCompat.HasGamepadUI(nil, false) == false, "one absent table is enough")
+    assert(FlavorCompat.HasGamepadUI(false, nil) == false, "an absent GamepadMode alone is enough")
   end)
 
   -- test_has_gamepad_ui_false_without_smart_navigation
