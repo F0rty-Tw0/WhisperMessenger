@@ -49,8 +49,32 @@ end
 local TEXTS = { "ok", "ok", "hm", "abc", "SECRET", "", "a longer line", "lol" }
 local SENT_AT_FORMS = { "number", "number", "number", "number", "string", "garbage", "missing" }
 
+-- The test's own generator (Lehmer, exact in doubles), so every platform
+-- builds the same stores. math.random follows the C runtime: on Windows the
+-- first draw after a small seed is near 0, and every store came out empty.
+local RANDOM_MODULUS, RANDOM_MULTIPLIER, RANDOM_WARM_UP = 2147483647, 16807, 3
+local randomState = 1
+
+-- random(high) is 1..high, random(low, high) is low..high, as math.random.
+local function random(low, high)
+  randomState = (randomState * RANDOM_MULTIPLIER) % RANDOM_MODULUS
+  if high == nil then
+    low, high = 1, low
+  end
+  return low + math.floor(randomState / RANDOM_MODULUS * (high - low + 1))
+end
+
+-- seed: 1 or more. The first draws after a small seed are small too, so
+-- they are thrown away.
+local function seedRandom(seed)
+  randomState = seed
+  for _ = 1, RANDOM_WARM_UP do
+    random(1)
+  end
+end
+
 local function pick(list)
-  return list[math.random(#list)]
+  return list[random(#list)]
 end
 
 local function sentAtValue(sentAt)
@@ -66,10 +90,10 @@ local function sentAtValue(sentAt)
 end
 
 local function randomLine(sentAt)
-  local roll = math.random(10)
+  local roll = random(10)
   local direction = roll <= 7 and "out" or "in"
   local kind = roll == 10 and "system" or "user"
-  local text = math.random(20) == 1 and 42 or pick(TEXTS)
+  local text = random(20) == 1 and 42 or pick(TEXTS)
   return { kind = kind, direction = direction, text = text, sentAt = sentAt }
 end
 
@@ -78,18 +102,18 @@ end
 -- garbage or missing.
 local function randomChat()
   local messages = {}
-  local sentAt = math.random(5)
-  local shuffled = math.random(4) == 1
-  local messy = math.random(3) == 1
-  for index = 1, math.random(0, 45) do
-    sentAt = sentAt + math.random(0, 2)
-    local line = randomLine(shuffled and math.random(60) or sentAt)
+  local sentAt = random(5)
+  local shuffled = random(4) == 1
+  local messy = random(3) == 1
+  for index = 1, random(0, 45) do
+    sentAt = sentAt + random(0, 2)
+    local line = randomLine(shuffled and random(60) or sentAt)
     if messy then
       line.sentAt = sentAtValue(line.sentAt)
     end
     messages[index] = line
   end
-  if math.random(8) == 1 then
+  if random(8) == 1 then
     messages[#messages + 2] = randomLine(sentAt + 1)
   end
   return { messages = messages }
@@ -97,13 +121,13 @@ end
 
 local function randomStore()
   local conversations = {}
-  for index = 1, math.random(0, 7) do
+  for index = 1, random(0, 7) do
     conversations["me::WOW::c" .. index] = randomChat()
   end
-  if math.random(6) == 1 then
+  if random(6) == 1 then
     conversations["me::WOW::broken"] = "not a chat"
   end
-  if math.random(6) == 1 then
+  if random(6) == 1 then
     conversations["me::WOW::empty"] = { messages = "not a list" }
   end
   return conversations
@@ -154,9 +178,9 @@ return function()
     local capped = 0
     withSecretFake(function()
       for seed = 1, 400 do
-        math.randomseed(seed)
+        seedRandom(seed)
         local conversations = randomStore()
-        local fits = math.random(3) == 1 and shortOnly or nil
+        local fits = random(3) == 1 and shortOnly or nil
         local expected = referenceBuild(conversations, fits)
         if #expected == SentHistory.MAX_ENTRIES then
           capped = capped + 1
