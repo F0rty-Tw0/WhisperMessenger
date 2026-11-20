@@ -12,8 +12,8 @@ local GamepadRightClick = ns.MessengerWindowGamepadRightClick or require("Whispe
 
 -- The one place that talks to the game's gamepad UI
 -- (GamepadMode.FrameControlsManager and SmartNavigation) for the messenger
--- window and its popups. On a client without that API (today: every flavor
--- but WoW: Forever) every method does nothing.
+-- window and its popups. On a client without the whole API (today: every
+-- flavor but WoW: Forever) every method does nothing.
 -- Nothing calls into that UI in combat: what was asked for then is done
 -- when combat ends.
 local GamepadNav = {}
@@ -47,20 +47,20 @@ local function inert()
   }
 end
 
--- frame: the messenger window. deps (all optional): hasGamepadUI,
--- gamepadMode, smartNavigation, markIgnored, markFocusable, addJumpOverride,
+-- frame: the messenger window. deps (all optional): gamepadMode,
+-- smartNavigation, markIgnored, markFocusable, addJumpOverride,
 -- directions, inCombat, after, createFrame, gamepadSharedUtility,
 -- rightClickKey, promptedBindingMixin; default to the game's.
 function GamepadNav.New(frame, deps)
   deps = deps or {}
   local pick = GamepadDeps.pick
-  local hasGamepadUI = pick(deps, "hasGamepadUI", FlavorCompat.HasGamepadUI())
-  local gamepadMode = pick(deps, "gamepadMode", _G.GamepadMode)
-  local smartNavigation = pick(deps, "smartNavigation", _G.SmartNavigation)
-  local fcm = type(gamepadMode) == "table" and gamepadMode.FrameControlsManager or nil
-  if not hasGamepadUI or type(fcm) ~= "table" or type(fcm.FrameShown) ~= "function" or type(smartNavigation) ~= "table" then
+  -- The one gate: FlavorCompat reads a nil dep as the game's and a false
+  -- one as absent, as pick does. Past it, every method it lists exists.
+  if not FlavorCompat.HasGamepadUI(deps.gamepadMode, deps.smartNavigation) then
     return inert()
   end
+  local fcm = pick(deps, "gamepadMode", _G.GamepadMode).FrameControlsManager
+  local smartNavigation = pick(deps, "smartNavigation", _G.SmartNavigation)
   local markIgnored = pick(deps, "markIgnored", _G.SmartNavigation_MarkFrameIgnored)
   local markFocusable = pick(deps, "markFocusable", _G.SmartNavigation_MarkFrameFocusable)
   local addJumpOverride = pick(deps, "addJumpOverride", _G.SmartNavigation_AddJumpNavigationOverride)

@@ -32,7 +32,8 @@ local function build()
 end
 
 -- Runs fn(env) on the given flavor with the fake gamepad UI installed;
--- withoutApi: on a client that has no gamepad UI.
+-- withoutApi: true on a client that has no gamepad UI, "partial" on one
+-- that has only part of it.
 local function onFlavor(isRetail, isForever, fn, withoutApi)
   local env = FakeGamepad.New()
   env.install(withoutApi)
@@ -121,6 +122,14 @@ return function()
       window.setOptionsVisible(true)
       assert(#env.calls == 0 and window.frame.SmartNavigationCloseHandler == nil, "no gamepad UI: unchanged")
     end, true)
+
+    -- test_client_with_a_partial_api_builds_and_touches_no_gamepad_api
+    onFlavor(flavor[1], flavor[2], function(env)
+      local window = build()
+      window.frame:Show()
+      window.setOptionsVisible(true)
+      assert(#env.calls == 0 and window.frame.SmartNavigationCloseHandler == nil, "part of the gamepad UI: unchanged")
+    end, "partial")
 
     -- test_client_with_the_api_registers_on_any_flavor
     onFlavor(flavor[1], flavor[2], function(env)

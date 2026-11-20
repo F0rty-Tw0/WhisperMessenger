@@ -79,7 +79,7 @@ return function()
   end
 
   -- test_new_marks_without_the_api_touch_nothing
-  for _, overrides in ipairs({ { hasGamepadUI = false }, { gamepadMode = false } }) do
+  for _, overrides in ipairs({ { smartNavigation = false }, { gamepadMode = false } }) do
     local env, _, nav = setup(overrides)
     nav.markFocusable({})
     assert(#env.calls == 0, "inert without the gamepad UI API")
@@ -170,7 +170,7 @@ return function()
   end
 
   -- test_stepper_needs_the_game_functions
-  for _, overrides in ipairs({ { hasGamepadUI = false }, { addJumpOverride = false }, { directions = false } }) do
+  for _, overrides in ipairs({ { smartNavigation = false }, { addJumpOverride = false }, { directions = false } }) do
     local env, _, nav = setup(overrides)
     nav.setStepper({}, function() end)
     assert(#env.calls == 0, "no override without the game's functions")
@@ -228,7 +228,7 @@ return function()
   end
 
   -- test_edge_override_needs_the_game_functions
-  for _, overrides in ipairs({ { hasGamepadUI = false }, { addJumpOverride = false }, { directions = false } }) do
+  for _, overrides in ipairs({ { smartNavigation = false }, { addJumpOverride = false }, { directions = false } }) do
     local env, _, nav = setup(overrides)
     nav.setEdgeOverride({}, "DOWN", function()
       return true

@@ -166,7 +166,7 @@ return function()
 
   -- test_without_the_api_bind_touches_nothing
   do
-    local env, _, nav = make({ hasGamepadUI = false })
+    local env, _, nav = make({ gamepadMode = false })
     nav.bindRightClick(CTX, "Options")
     nav.onShow()
     assert(#env.calls == 0, "inert nav")

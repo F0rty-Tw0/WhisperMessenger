@@ -211,7 +211,7 @@ return function()
   end
 
   -- test_popup_methods_without_the_api_touch_nothing
-  for _, overrides in ipairs({ { hasGamepadUI = false }, { gamepadMode = false } }) do
+  for _, overrides in ipairs({ { smartNavigation = false }, { gamepadMode = false } }) do
     local env, _, nav, popup = setup(overrides)
     nav.setPopupCloseHandler(popup, function()
       return true

@@ -88,7 +88,7 @@ return function()
   -- test_without_the_api_popups_touch_nothing
   -- First: the reaction picker and delivery menu are module singletons, and
   -- later blocks give them a close handler.
-  withWindow({ hasGamepadUI = false }, function(env, factory, frame)
+  withWindow({ gamepadMode = false }, function(env, factory, frame)
     local popup = OPENERS.reaction(factory, factory.CreateFrame("Button", nil, frame))
     popup:Hide()
     assert(#env.calls == 0 and popup.SmartNavigationCloseHandler == nil, "clients without the gamepad UI unchanged")
@@ -98,7 +98,7 @@ return function()
   do
     local factory = FakeUI.NewFactory()
     local frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", nil)
-    local nav = GamepadNav.New(frame, { hasGamepadUI = false })
+    local nav = GamepadNav.New(frame, { gamepadMode = false })
     local reached = 0
     nav.popupShown = function()
       reached = reached + 1
