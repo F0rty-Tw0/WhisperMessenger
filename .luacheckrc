@@ -231,6 +231,7 @@ read_globals = {
   "GamepadMode",
   "GamepadSharedUtility",
   "GAMEPAD_FACE_LEFT",
+  "InputUtil",
   "PromptedBindingMixin",
   "SmartNavigation",
   "SmartNavigation_MarkFrameIgnored",

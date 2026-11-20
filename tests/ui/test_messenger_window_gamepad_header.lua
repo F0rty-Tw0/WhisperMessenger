@@ -31,10 +31,11 @@ local function build()
   return window
 end
 
--- Runs fn(env) on the given flavor with the fake gamepad UI installed.
-local function onFlavor(isRetail, isForever, fn)
+-- Runs fn(env) on the given flavor with the fake gamepad UI installed;
+-- withoutApi: on a client that has no gamepad UI.
+local function onFlavor(isRetail, isForever, fn, withoutApi)
   local env = FakeGamepad.New()
-  env.install()
+  env.install(withoutApi)
   local ok, err = pcall(Flavor.With, isRetail, isForever, function()
     fn(env)
   end)
@@ -61,10 +62,17 @@ return function()
     assert(#opened == 1 and opened[1].target == contact and opened[1].anchor == view.headerFrame, "same menu as a mouse right-click")
   end)
 
-  -- test_retail_header_has_no_binding
+  -- test_header_without_the_api_has_no_binding
   onFlavor(true, false, function(env)
     local window = build()
     window.frame:Show()
-    assert(env.pressX(window.conversation.headerFrame) == false and #env.calls == 0, "Retail unchanged")
+    assert(env.pressX(window.conversation.headerFrame) == false and #env.calls == 0, "no gamepad UI: unchanged")
+  end, true)
+
+  -- test_retail_header_with_the_api_gets_the_binding
+  onFlavor(true, false, function(env)
+    local window = build()
+    window.frame:Show()
+    assert(#env.bindings == 1, "the API alone binds X, whatever the flavor")
   end)
 end

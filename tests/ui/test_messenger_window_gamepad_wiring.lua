@@ -238,13 +238,13 @@ return function()
   -- test_inactive_nav_skips_the_settings_walk
   do
     local t = setup({ settings = true, inactive = true })
-    assert(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged == nil, "Retail and Classic: no settings walk")
+    assert(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged == nil, "no gamepad UI: no settings walk")
   end
 
   -- test_inactive_nav_skips_the_transcript_walk
   do
     local t = setup({ inactive = true })
-    assert(t.refs.conversation.transcript.onNavTargetsChanged == nil, "Retail and Classic: no walk of the chat on render")
+    assert(t.refs.conversation.transcript.onNavTargetsChanged == nil, "no gamepad UI: no walk of the chat on render")
   end
 
   -- test_b_closes_an_open_settings_dropdown_through_the_wiring

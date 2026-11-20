@@ -10,10 +10,10 @@ local GamepadMarks = ns.MessengerWindowGamepadMarks or require("WhisperMessenger
 local GamepadPopups = ns.MessengerWindowGamepadPopups or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadPopups")
 local GamepadRightClick = ns.MessengerWindowGamepadRightClick or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadRightClick")
 
--- The one place that talks to the WoW: Forever gamepad UI
+-- The one place that talks to the game's gamepad UI
 -- (GamepadMode.FrameControlsManager and SmartNavigation) for the messenger
--- window and its popups. Off Forever, or without that UI, every method does
--- nothing.
+-- window and its popups. On a client without the whole API (today: every
+-- flavor but WoW: Forever) every method does nothing.
 -- Nothing calls into that UI in combat: what was asked for then is done
 -- when combat ends.
 local GamepadNav = {}
@@ -47,20 +47,20 @@ local function inert()
   }
 end
 
--- frame: the messenger window. deps (all optional): isForever, gamepadMode,
--- smartNavigation, markIgnored, markFocusable, addJumpOverride, directions,
--- inCombat, after, createFrame, gamepadSharedUtility, rightClickKey,
--- promptedBindingMixin; default to the game's.
+-- frame: the messenger window. deps (all optional): gamepadMode,
+-- smartNavigation, markIgnored, markFocusable, addJumpOverride,
+-- directions, inCombat, after, createFrame, gamepadSharedUtility,
+-- rightClickKey, promptedBindingMixin; default to the game's.
 function GamepadNav.New(frame, deps)
   deps = deps or {}
   local pick = GamepadDeps.pick
-  local isForever = pick(deps, "isForever", FlavorCompat.isForever)
-  local gamepadMode = pick(deps, "gamepadMode", _G.GamepadMode)
-  local smartNavigation = pick(deps, "smartNavigation", _G.SmartNavigation)
-  local fcm = type(gamepadMode) == "table" and gamepadMode.FrameControlsManager or nil
-  if not isForever or type(fcm) ~= "table" or type(fcm.FrameShown) ~= "function" or type(smartNavigation) ~= "table" then
+  -- The one gate: FlavorCompat reads a nil dep as the game's and a false
+  -- one as absent, as pick does. Past it, every method it lists exists.
+  if not FlavorCompat.HasGamepadUI(deps.gamepadMode, deps.smartNavigation) then
     return inert()
   end
+  local fcm = pick(deps, "gamepadMode", _G.GamepadMode).FrameControlsManager
+  local smartNavigation = pick(deps, "smartNavigation", _G.SmartNavigation)
   local markIgnored = pick(deps, "markIgnored", _G.SmartNavigation_MarkFrameIgnored)
   local markFocusable = pick(deps, "markFocusable", _G.SmartNavigation_MarkFrameFocusable)
   local addJumpOverride = pick(deps, "addJumpOverride", _G.SmartNavigation_AddJumpNavigationOverride)

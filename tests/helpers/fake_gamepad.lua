@@ -203,7 +203,6 @@ function FakeGamepad.New()
 
   function env.deps(overrides)
     local deps = {
-      isForever = true,
       gamepadMode = env.gamepadMode,
       smartNavigation = env.smartNavigation,
       markIgnored = env.markIgnored,
@@ -223,13 +222,19 @@ function FakeGamepad.New()
     return deps
   end
 
-  function env.install()
+  -- withoutApi: true = a client without the gamepad UI (no GamepadMode);
+  -- "partial" = a client with FrameShown alone and an empty SmartNavigation.
+  -- The other globals stay, so any gamepad call the addon still makes is
+  -- logged.
+  function env.install(withoutApi)
     saved = {}
     for _, name in ipairs(GLOBALS) do
       saved[name] = rawget(_G, name)
     end
-    rawset(_G, "GamepadMode", env.gamepadMode)
-    rawset(_G, "SmartNavigation", env.smartNavigation)
+    local partial = withoutApi == "partial"
+    local partialMode = { FrameControlsManager = { FrameShown = fcm.FrameShown } }
+    rawset(_G, "GamepadMode", (partial and partialMode) or (not withoutApi and env.gamepadMode) or nil)
+    rawset(_G, "SmartNavigation", partial and {} or env.smartNavigation)
     rawset(_G, "SmartNavigation_MarkFrameIgnored", env.markIgnored)
     rawset(_G, "SmartNavigation_MarkFrameFocusable", env.markFocusable)
     rawset(_G, "SmartNavigation_AddJumpNavigationOverride", env.addJumpOverride)

@@ -164,9 +164,9 @@ return function()
     assert(#env.bindings == 0 and env.count("FrameShown") == 1, "partial API: no X, no error")
   end
 
-  -- test_off_forever_bind_touches_nothing
+  -- test_without_the_api_bind_touches_nothing
   do
-    local env, _, nav = make({ isForever = false })
+    local env, _, nav = make({ gamepadMode = false })
     nav.bindRightClick(CTX, "Options")
     nav.onShow()
     assert(#env.calls == 0, "inert nav")

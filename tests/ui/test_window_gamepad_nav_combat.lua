@@ -176,7 +176,7 @@ return function()
     local savedEnum = rawget(_G, "Enum")
     env.install()
     local ok, err = pcall(function()
-      local nav = GamepadNav.New(frame, { isForever = true, after = env.after, createFrame = env.createFrame })
+      local nav = GamepadNav.New(frame, { after = env.after, createFrame = env.createFrame })
       env.combat = true
       nav.onShow()
       assert(#env.calls == 0, "InCombatLockdown blocks the call")

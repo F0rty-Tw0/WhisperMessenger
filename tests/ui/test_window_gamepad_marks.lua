@@ -78,11 +78,11 @@ return function()
     assert(#env.calls == 0, "absent game function: no call, no error")
   end
 
-  -- test_new_marks_off_forever_touch_nothing
-  for _, overrides in ipairs({ { isForever = false }, { gamepadMode = false } }) do
+  -- test_new_marks_without_the_api_touch_nothing
+  for _, overrides in ipairs({ { smartNavigation = false }, { gamepadMode = false } }) do
     local env, _, nav = setup(overrides)
     nav.markFocusable({})
-    assert(#env.calls == 0, "inert off Forever")
+    assert(#env.calls == 0, "inert without the gamepad UI API")
   end
 
   -- test_marks_default_to_the_game_globals
@@ -91,7 +91,7 @@ return function()
     local frame = FakeUI.NewFactory().CreateFrame("Frame", "WhisperMessengerWindow", nil)
     env.install()
     local ok, err = pcall(function()
-      local nav = GamepadNav.New(frame, { isForever = true, after = env.after, createFrame = env.createFrame })
+      local nav = GamepadNav.New(frame, { after = env.after, createFrame = env.createFrame })
       nav.markFocusable({})
       assert(names(env) == "MarkFrameFocusable", "defaults read _G")
     end)
@@ -170,7 +170,7 @@ return function()
   end
 
   -- test_stepper_needs_the_game_functions
-  for _, overrides in ipairs({ { isForever = false }, { addJumpOverride = false }, { directions = false } }) do
+  for _, overrides in ipairs({ { smartNavigation = false }, { addJumpOverride = false }, { directions = false } }) do
     local env, _, nav = setup(overrides)
     nav.setStepper({}, function() end)
     assert(#env.calls == 0, "no override without the game's functions")
@@ -228,7 +228,7 @@ return function()
   end
 
   -- test_edge_override_needs_the_game_functions
-  for _, overrides in ipairs({ { isForever = false }, { addJumpOverride = false }, { directions = false } }) do
+  for _, overrides in ipairs({ { smartNavigation = false }, { addJumpOverride = false }, { directions = false } }) do
     local env, _, nav = setup(overrides)
     nav.setEdgeOverride({}, "DOWN", function()
       return true
