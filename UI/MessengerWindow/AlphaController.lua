@@ -27,20 +27,7 @@ function AlphaController.hookScript(target, eventName, handler)
   -- SetScript would drop every hook added before it with HookScript.
   if type(target.HookScript) == "function" then
     target:HookScript(eventName, handler)
-    return
   end
-  if type(target.SetScript) ~= "function" then
-    return
-  end
-  local previous = target.GetScript and target:GetScript(eventName) or nil
-  if previous == nil then
-    target:SetScript(eventName, handler)
-    return
-  end
-  target:SetScript(eventName, function(...)
-    previous(...)
-    handler(...)
-  end)
 end
 
 -- frame: the window frame
