@@ -160,6 +160,15 @@ return function()
       rawset(_G, "InputUtil", savedInputUtil)
       assert(ok, err)
     end)
+
+    -- test_built_window_puts_the_a_handler_on_the_message_box
+    onFlavor(flavor[1], flavor[2], function()
+      local window = build()
+      local scroll = window.composer.scroll
+      assert(type(scroll.OnSmartNavClick) == "function", "the built window sets the A handler on the message box")
+      scroll.OnSmartNavClick(scroll)
+      assert(window.composer.input:HasFocus() == true, "A puts the cursor in the box")
+    end)
   end
 
   -- test_settings_panes_take_the_right_stick_and_rescan_on_tab_select

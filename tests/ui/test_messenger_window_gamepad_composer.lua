@@ -192,6 +192,17 @@ return function()
     assert(#sent == 0, "an empty box sends nothing")
   end
 
+  -- test_a_sends_the_text_in_the_box
+  do
+    local composer, sent = realComposer()
+    composer.input:SetText("hi")
+    composer.input:SetFocus()
+    click(composer)
+    assert(#sent == 1, "A in the box sends once, got " .. #sent)
+    assert(sent[1].text == "hi", "the payload carries the typed text, got " .. tostring(sent[1].text))
+    assert(sent[1].conversationKey == CONTACT.conversationKey, "the payload names the open conversation")
+  end
+
   -- test_b_takes_the_cursor_out_before_closing
   do
     local t = setup()

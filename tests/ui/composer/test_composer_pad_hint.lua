@@ -250,6 +250,17 @@ return function()
     assert(composer.padHint ~= nil and composer.padHint.frame ~= nil, "a hint with the API and the scroll frame")
   end)
 
+  -- test_composer_refresh_theme_repaints_the_hint
+  eachFlavor(true, function()
+    local composer = buildComposer(FakeUI.NewFactory({ wrap = true }))
+    local label = composer.padHint.label
+    label:SetTextColor(0, 0, 0, 0)
+    composer.refreshTheme()
+    local want = Theme.COLORS.text_secondary
+    local r, g, b = label:GetTextColor()
+    assert(r == want[1] and g == want[2] and b == want[3], "the composer's refreshTheme paints the hint label again")
+  end)
+
   Fonts.Initialize("default")
   print("PASS: test_composer_pad_hint")
 end
