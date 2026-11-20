@@ -9,7 +9,8 @@ local GamepadCloseOrder = {}
 
 -- deps: isWindowShown, hideShownPopup, hideComposerPopover (true when it
 -- closed the emoji or quick-reply picker), closeOpenDropdown (optional: true
--- when it closed a settings dropdown), compactBack, isOptionsVisible,
+-- when it closed a settings dropdown), clearComposerFocus (optional: true
+-- when it took the cursor out of the message box), compactBack, isOptionsVisible,
 -- setOptionsVisible, getVisiblePanel, setPanelVisible, closeWindow.
 -- The handler always returns true, so the game never falls back to its own
 -- close behavior for the window.
@@ -25,6 +26,9 @@ function GamepadCloseOrder.Build(deps)
       return true
     end
     if deps.closeOpenDropdown and deps.closeOpenDropdown() then
+      return true
+    end
+    if deps.clearComposerFocus and deps.clearComposerFocus() == true then
       return true
     end
     if deps.compactBack() then

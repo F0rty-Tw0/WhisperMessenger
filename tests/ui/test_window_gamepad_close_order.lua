@@ -16,6 +16,7 @@ local function build(state)
     hideShownPopup = record("hideShownPopup", state.popup == true),
     hideComposerPopover = record("hideComposerPopover", state.popover == true),
     closeOpenDropdown = state.dropdown ~= nil and record("closeOpenDropdown", state.dropdown) or nil,
+    clearComposerFocus = state.cursor ~= nil and record("clearComposerFocus", state.cursor) or nil,
     compactBack = record("compactBack", state.compactChat == true),
     isOptionsVisible = function()
       return state.options == true
@@ -107,5 +108,66 @@ return function()
   do
     local close, calls = build({ shown = false, popover = true })
     assert(close() == true and not called(calls, "hideComposerPopover"), "hidden window: nothing closed")
+  end
+
+  -- test_b_takes_the_cursor_out_and_closes_nothing
+  do
+    local close, calls = build({ cursor = true, compactChat = true, options = true })
+    assert(close() == true, "handled")
+    assert(#calls == 3 and calls[1].name == "hideShownPopup" and calls[2].name == "hideComposerPopover", "upper layers asked first")
+    assert(calls[3].name == "clearComposerFocus", "cursor leaves the box, nothing else closes")
+  end
+
+  -- test_open_picker_closes_before_the_cursor_leaves
+  do
+    local close, calls = build({ popover = true, cursor = true })
+    assert(close() == true and not called(calls, "clearComposerFocus"), "picker first, cursor stays")
+  end
+
+  -- test_open_popup_closes_before_the_cursor_leaves
+  do
+    local close, calls = build({ popup = true, cursor = true })
+    assert(close() == true and not called(calls, "clearComposerFocus"), "popup first, cursor stays")
+  end
+
+  -- test_open_dropdown_closes_before_the_cursor_leaves
+  do
+    local close, calls = build({ dropdown = true, cursor = true })
+    assert(close() == true and not called(calls, "clearComposerFocus"), "dropdown first, cursor stays")
+  end
+
+  -- test_cursor_leaves_before_compact_back
+  do
+    local close, calls = build({ cursor = true, compactChat = true })
+    assert(close() == true and not called(calls, "compactBack"), "compact chat stays open while the cursor leaves")
+  end
+
+  -- test_cursor_not_in_the_box_goes_on_with_the_old_order
+  do
+    local close, calls = build({ cursor = false })
+    assert(close() == true and called(calls, "clearComposerFocus"), "asked about the cursor")
+    assert(calls[#calls - 1].name == "compactBack" and last(calls) == "closeWindow", "then the old order")
+  end
+
+  -- test_only_true_counts_as_the_cursor_leaving
+  do
+    local close, calls = build({ cursor = 1 })
+    assert(close() == true and last(calls) == "closeWindow", "a truthy non-true answer goes on with the old order")
+  end
+
+  -- test_hidden_window_never_asks_about_the_cursor
+  do
+    local close, calls = build({ shown = false, cursor = true })
+    assert(close() == true and #calls == 0, "hidden window: no call at all")
+  end
+
+  -- test_without_the_dep_the_order_is_unchanged
+  do
+    local close, calls = build({})
+    assert(close() == true and #calls == 4, "four steps")
+    local names = { "hideShownPopup", "hideComposerPopover", "compactBack", "closeWindow" }
+    for i, name in ipairs(names) do
+      assert(calls[i].name == name, "step " .. i .. " is " .. name)
+    end
   end
 end
