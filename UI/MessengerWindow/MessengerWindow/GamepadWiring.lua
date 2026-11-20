@@ -8,7 +8,6 @@ local GamepadCloseOrder = ns.MessengerWindowGamepadCloseOrder or require("Whispe
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local GamepadSettings = ns.MessengerWindowGamepadSettings or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
-local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local GamepadTranscript = ns.MessengerWindowGamepadTranscript or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadTranscript")
 local GamepadComposer = ns.MessengerWindowGamepadComposer or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadComposer")
 
@@ -144,12 +143,6 @@ function GamepadWiring.Create(shell, nav)
     local clearComposerFocus = GamepadComposer.Attach(nav, refs.composer)
     nav.setCloseHandler(buildCloseHandler(frame, refs, clearComposerFocus))
     attachPopups(nav)
-    -- X opens the right-click menu of a focused target that carries the
-    -- context (contact rows, messages, the chat header).
-    nav.bindRightClick(GamepadNav.RIGHT_CLICK_CONTEXT, Localization.Text("Options"))
-    if refs.conversation then
-      refs.conversation.headerFrame.buttonContext = GamepadNav.RIGHT_CLICK_CONTEXT
-    end
     -- The pickers live inside the window: a re-scan makes their buttons
     -- D-pad stops. Their own SetScript calls ran at build, before this.
     for _, picker in ipairs(composerPickers(refs.composer)) do
