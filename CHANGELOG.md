@@ -6,6 +6,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+## [2.1.9] - 2026-11-21
+
 - New option at the top of Notifications: "Mute all sounds" silences every Whisper Messenger sound at once. Your sound choices are kept for when you turn it off, and picking a sound still plays a preview.
 - New whispers take up much less memory (about half for whispers with characters) and less room in your saved chat history file. Your chats look the same.
 - Whispers with a character that belongs to one of your Battle.net friends now go into that friend's Battle.net chat, and an earlier chat with that character joins it, so each friend has one chat.
