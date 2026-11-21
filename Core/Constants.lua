@@ -4,7 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Constants = {
-  VERSION = "v2.1.8",
+  VERSION = "v2.1.9",
 
   -- WoW: Forever gamepad UI: targets carrying this buttonContext open
   -- their right-click menu with the X button.
