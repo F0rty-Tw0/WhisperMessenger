@@ -15,6 +15,7 @@ local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.Mess
 local PartMerge = ns.EventRouterPartMerge or require("WhisperMessenger.Core.EventRouter.PartMerge")
 local AddonGreetingIngest = ns.EventRouterAddonGreetingIngest or require("WhisperMessenger.Core.EventRouter.AddonGreetingIngest")
 local WhisperMessage = ns.EventRouterWhisperMessage or require("WhisperMessenger.Core.EventRouter.WhisperMessage")
+local CharacterMergeMap = ns.CharacterMergeMap or require("WhisperMessenger.Model.CharacterMergeMap")
 
 local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
@@ -45,8 +46,9 @@ local function battleNetReactionSenderKey(state, payload)
   return nil
 end
 
+-- A merged character's side channel shows in the Battle.net chat.
 local function resolveWhisperReactionConversation(state, playerName, computedConversationKey)
-  return Identity.ResolveWhisperConversation(state, playerName, "WOW") or computedConversationKey
+  return CharacterMergeMap.ResolveWhisperName(state, playerName) or computedConversationKey
 end
 
 local function recordConvertedReactionFallbackActivity(state, result, fallbackConversationKey)

@@ -51,6 +51,7 @@ return function()
     windowAnimation = false,
     iconDock = false,
     openAtSavedSpot = true,
+    showEmojiButton = false,
     -- behavior
     dimWhenMoving = false,
     autoFocusComposer = true,
@@ -87,6 +88,7 @@ return function()
     mentionSound = "orb",
     playSoundOnSend = true,
     sentSound = "ding",
+    muteAllSounds = true,
     iconSize = 56,
     iconDesaturated = false,
     iconBackground = false,
@@ -194,6 +196,7 @@ return function()
   assert(appearanceCapture.config.windowAnimation == false, "appearance config should carry windowAnimation")
   assert(appearanceCapture.config.iconDock == false, "appearance config should carry iconDock")
   assert(appearanceCapture.config.openAtSavedSpot == true, "appearance config should carry openAtSavedSpot")
+  assert(appearanceCapture.config.showEmojiButton == false, "appearance config should carry showEmojiButton")
 
   -- Notifications owns sound settings only.
   assert(
@@ -210,6 +213,7 @@ return function()
   assert(notificationCapture.config.mentionSound == "orb", "Notifications config should forward mentionSound")
   assert(notificationCapture.config.playSoundOnSend == true, "Notifications config should forward playSoundOnSend")
   assert(notificationCapture.config.sentSound == "ding", "Notifications config should forward sentSound")
+  assert(notificationCapture.config.muteAllSounds == true, "Notifications config should forward muteAllSounds")
   assert(notificationCapture.config.iconMode == nil, "Notifications config should not include iconMode")
   assert(notificationCapture.config.iconSize == nil, "Notifications config should not include iconSize")
 

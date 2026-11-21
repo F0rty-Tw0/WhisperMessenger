@@ -26,6 +26,15 @@ return function()
     assert(#lines == 0, "another conversation shows nothing, got " .. #lines)
   end
 
+  -- test_merged_character_resolves_to_the_battle_net_chat
+  do
+    local runtime = makeRuntime()
+    local bnetKey = "bnet::BN::thrall#1234"
+    runtime.store.conversations[bnetKey] = { channel = "BN", displayName = "Thrall#1234" }
+    runtime.characterMerges = { merged = { ["wow::WOW::go'el"] = { bnetKey = bnetKey, name = "Go'el" } }, separated = {} }
+    assert(ContactInfo.ResolvesTo(runtime, "Go'el", bnetKey) == true, "a merged character's name resolves to B")
+  end
+
   -- test_several_sources_one_line_each_in_source_key_order
   do
     local runtime = makeRuntime()

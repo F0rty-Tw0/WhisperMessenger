@@ -12,6 +12,7 @@ local PartMerge = ns.EventRouterPartMerge or require("WhisperMessenger.Core.Even
 local AddonGreetingIngest = ns.EventRouterAddonGreetingIngest or require("WhisperMessenger.Core.EventRouter.AddonGreetingIngest")
 local WhisperMessage = ns.EventRouterWhisperMessage or require("WhisperMessenger.Core.EventRouter.WhisperMessage")
 local AddonMessage = ns.EventRouterAddonMessage or require("WhisperMessenger.Core.EventRouter.AddonMessage")
+local CharacterRedirect = ns.EventRouterCharacterRedirect or require("WhisperMessenger.Core.EventRouter.CharacterRedirect")
 
 local buildMessage = WhisperMessage.BuildMessage
 local confirmWhisperAvailability = WhisperMessage.ConfirmWhisperAvailability
@@ -72,8 +73,9 @@ local function controlOutcome(state, controlResult, reactionConversationKey, deg
   return false
 end
 
-local function storeIncoming(state, eventName, payload, contact, conversationKey, incomingMessage, isActive)
-  local isNewConversation = state.store.conversations[conversationKey] == nil
+-- opensNewChat: a fold just opened this friend's chat empty for the line.
+local function storeIncoming(state, eventName, payload, contact, conversationKey, incomingMessage, isActive, opensNewChat)
+  local isNewConversation = opensNewChat == true or state.store.conversations[conversationKey] == nil
   if payload.replayedAt then
     Store.InsertIncomingChronological(state.store, conversationKey, incomingMessage, isActive)
   else
@@ -88,15 +90,24 @@ local function storeIncoming(state, eventName, payload, contact, conversationKey
   end
 end
 
-function IncomingWhisper.Handle(state, eventName, payload, contact, conversationKey, isActive, sentAt)
+function IncomingWhisper.Handle(state, eventName, payload, contact, conversationKey, isActive, sentAt, mergeEntry, opensNewChat)
   local addonGreeting, hideGreeting
   if eventName == "CHAT_MSG_WHISPER" then
     addonGreeting, hideGreeting = AddonGreetingIngest.ClaimForWhisper(state, contact, payload, sentAt)
     if hideGreeting then
+      -- A fold opened this friend's chat for the hidden greeting alone.
+      if opensNewChat == true then
+        Store.Remove(state.store, conversationKey)
+        -- Nothing is returned, so the router won't redraw: drop the empty row now.
+        if type(state.refreshWindow) == "function" then
+          state.refreshWindow()
+        end
+      end
       return nil
     end
   end
   local incomingMessage = buildMessage(state, payload, contact, "in", "user", sentAt)
+  CharacterRedirect.Stamp(incomingMessage, mergeEntry)
   incomingMessage.addonGreeting = addonGreeting
   local correlationText = QuestLinkText.CanonicalizeForTransport(incomingMessage.text)
   local senderKey, reactionSenderKey, reactionConversationKey, reactionActorName = reactionRoute(state, eventName, payload, contact, conversationKey)
@@ -146,7 +157,7 @@ function IncomingWhisper.Handle(state, eventName, payload, contact, conversation
     end
   end
 
-  storeIncoming(state, eventName, payload, contact, conversationKey, incomingMessage, isActive)
+  storeIncoming(state, eventName, payload, contact, conversationKey, incomingMessage, isActive, opensNewChat)
   return conversationWithKey(state, conversationKey), { outgoingFromPendingSend = false }
 end
 

@@ -58,6 +58,7 @@ function SettingsPanels.Create(factory, options)
         windowAnimation = settingsConfig.windowAnimation,
         iconDock = settingsConfig.iconDock,
         openAtSavedSpot = settingsConfig.openAtSavedSpot,
+        showEmojiButton = settingsConfig.showEmojiButton,
       },
     },
     {
@@ -119,6 +120,7 @@ function SettingsPanels.Create(factory, options)
       settingsKey = "notificationSettings",
       create = options.notificationCreate,
       config = {
+        muteAllSounds = settingsConfig.muteAllSounds,
         playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
         notificationSound = settingsConfig.notificationSound,
         flashTaskbarOnWhisper = settingsConfig.flashTaskbarOnWhisper,

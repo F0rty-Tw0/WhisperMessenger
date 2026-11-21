@@ -37,6 +37,7 @@ local DEFAULTS = {
   windowAnimation = true,
   iconDock = true,
   openAtSavedSpot = true,
+  showEmojiButton = true,
 }
 
 local function pctFormat(v)

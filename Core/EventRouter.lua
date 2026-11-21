@@ -14,6 +14,7 @@ local WhisperMessage = ns.EventRouterWhisperMessage or require("WhisperMessenger
 local AddonMessage = ns.EventRouterAddonMessage or require("WhisperMessenger.Core.EventRouter.AddonMessage")
 local IncomingWhisper = ns.EventRouterIncomingWhisper or require("WhisperMessenger.Core.EventRouter.IncomingWhisper")
 local OutgoingWhisper = ns.EventRouterOutgoingWhisper or require("WhisperMessenger.Core.EventRouter.OutgoingWhisper")
+local CharacterRedirect = ns.EventRouterCharacterRedirect or require("WhisperMessenger.Core.EventRouter.CharacterRedirect")
 
 local buildConversationContact = WhisperMessage.BuildConversationContact
 local buildMessage = WhisperMessage.BuildMessage
@@ -61,14 +62,17 @@ local function handleWhisperEvent(state, eventName, payload)
   if conversationKey == nil then
     return nil
   end
+  -- Before the open-chat check: a fold may swap the open chat to the friend's.
+  local mergeEntry, opensNewChat
+  conversationKey, mergeEntry, opensNewChat = CharacterRedirect.Resolve(state, contact, conversationKey, payload)
 
   local isActive = isOpen(state, conversationKey)
   local sentAt = payload.replayedAt or state.now()
 
   if eventName == "CHAT_MSG_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER" then
-    return IncomingWhisper.Handle(state, eventName, payload, contact, conversationKey, isActive, sentAt)
+    return IncomingWhisper.Handle(state, eventName, payload, contact, conversationKey, isActive, sentAt, mergeEntry, opensNewChat)
   elseif eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" then
-    return OutgoingWhisper.Handle(state, payload, contact, conversationKey, sentAt)
+    return OutgoingWhisper.Handle(state, payload, contact, conversationKey, sentAt, mergeEntry)
   elseif eventName == "CHAT_MSG_AFK" or eventName == "CHAT_MSG_DND" then
     Store.SetActiveStatus(state.store, conversationKey, {
       eventName = eventName,

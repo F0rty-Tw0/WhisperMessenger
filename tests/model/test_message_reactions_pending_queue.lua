@@ -75,6 +75,16 @@ return function()
     assert(#runtime.operations.sender == 1 and runtime.operations.sender[1].conversationKey == "b", "other conversation must stay")
   end
 
+  -- test_remap_conversation_points_waiting_entries_at_the_new_key
+  do
+    local state = {}
+    local runtime = record(state, "identityMessages", "sender", { recordedAt = 0, conversationKey = "a" })
+    record(state, "controls", "other", { recordedAt = 0, conversationKey = "b" })
+    PendingQueue.RemapConversation(state, "a", "c")
+    assert(runtime.identityMessages.sender[1].conversationKey == "c", "waiting entry must follow the new key")
+    assert(runtime.controls.other[1].conversationKey == "b", "other conversation must stay")
+  end
+
   -- test_flush_controls_degrades_and_drops_runtime
   do
     local state = {}

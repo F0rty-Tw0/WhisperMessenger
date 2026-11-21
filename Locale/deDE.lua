@@ -67,7 +67,6 @@ local German = {
   ["Appearance"] = "Aussehen",
   ["Behavior"] = "Verhalten",
   ["Notifications"] = "Benachrichtigungen",
-  ["Icons"] = "Symbole",
   ["Clear All Chats"] = "Alle Chats löschen",
   ["Reset Icon"] = "Symbol-Reset",
   ["Reset Window"] = "Fenster-Reset",
@@ -148,6 +147,8 @@ local German = {
   ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "Solange das Fenster geöffnet ist, sitzt die schwebende Schaltfläche in der oberen linken Ecke des Fensters. Schalte die Option aus, damit die Schaltfläche dort bleibt, wo sie ist.",
   ["Open at saved spot"] = "Am gespeicherten Ort öffnen",
   ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "Das Fenster öffnet sich dort, wo du es zuletzt verschoben hast. Schalte sie aus, um das Fenster an der schwebenden Schaltfläche zu öffnen und die Schaltfläche mitzubewegen, wenn du das Fenster verschiebst. Gilt nur, solange „Schaltfläche am Fenster andocken“ eingeschaltet ist.",
+  ["Show emoji button"] = "Emoji-Schaltfläche anzeigen",
+  ["Shows the emoji button next to the message box. Turn it off to give the message box more room. Typed emoji codes still work."] = "Zeigt die Emoji-Schaltfläche neben dem Nachrichtenfeld. Schalte sie aus, um dem Nachrichtenfeld mehr Platz zu geben. Eingetippte Emoji-Codes funktionieren weiterhin.",
   ["Reload the interface now to switch the window style?"] = "Benutzeroberfläche jetzt neu laden, um den Fensterstil zu wechseln?",
   ["Dim when moving"] = "Beim Bewegen abdunkeln",
   ["Reduces window opacity while your character is moving."] = "Reduziert die Fensterdeckkraft, während sich der Charakter bewegt.",
@@ -212,6 +213,9 @@ local German = {
   ["Mention sound"] = "Erwähnungston",
   ["Play sound when you send a whisper"] = "Ton beim Senden eines Flüsterns",
   ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "Spielt jedes Mal einen Ton, wenn ein hier geschriebenes Flüstern gesendet wird. Wähle unten den Ton.",
+  ["Mute all sounds"] = "Alle Töne stummschalten",
+  ["Silences every sound Whisper Messenger plays. Your sound choices below are kept."] = "Schaltet jeden Ton von Whisper Messenger stumm. Deine Tonauswahl unten bleibt erhalten.",
+  ["Turn off Mute all sounds to change this."] = "Schalte „Alle Töne stummschalten“ aus, um dies zu ändern.",
   ["Sent whisper sound"] = "Ton für gesendetes Flüstern",
   ["Icon Size"] = "Symbolgröße",
   ["Desaturate icon when idle"] = "Symbol entsättigen, wenn ungelesen",
@@ -562,6 +566,8 @@ local German = {
   ["Guild invite"] = "In Gilde einladen",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Strg+C drücken, um den Befehl zu kopieren, und ihn dann in den Chat einfügen.",
   ["Read-only here. Reply in the game's Communities window."] = "Nur lesbar. Antworte im Community-Fenster des Spiels.",
+  -- Contact menu: split a character out of a Battle.net chat
+  ["Separate %s"] = "%s abtrennen",
 }
 
 ns.Locale_deDE = German

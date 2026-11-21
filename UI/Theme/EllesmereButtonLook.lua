@@ -3,12 +3,13 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
--- How EllesmereUI draws its action buttons, for the widget's square under
--- the EllesmereUI theme: slot background, Action Bar 1's border, and the
--- Bar Animations hover ("highlight") and pushed effects. Read from
--- EllesmereUI Action Bars' profile (keys as in its EllesmereUIActionBars.lua
--- defaults); every call is protected, and without the module (or on any
--- error) the result is EllesmereUI's defaults with plain fills.
+-- How EllesmereUI draws its action buttons, for the widget's square when
+-- EllesmereUI Action Bars' profile can be read (IsAvailable): slot
+-- background, Action Bar 1's border, and the Bar Animations hover
+-- ("highlight") and pushed effects. Read from that profile (keys as in its
+-- EllesmereUIActionBars.lua defaults); every call is protected, and without
+-- the module (or on any error) Read returns EllesmereUI's defaults with
+-- plain fills.
 local ButtonLook = {}
 
 local MEDIA = "Interface\\AddOns\\EllesmereUIActionBars\\Media\\"
@@ -103,6 +104,14 @@ function ButtonLook.Read()
     return look
   end
   return defaults()
+end
+
+-- True when EllesmereUI Action Bars' profile can be read. The widget's
+-- square uses this look only then; without it the square copies the circle.
+function ButtonLook.IsAvailable()
+  local ok, p = pcall(profile)
+
+  return ok and p ~= nil
 end
 
 ns.ThemeEllesmereButtonLook = ButtonLook

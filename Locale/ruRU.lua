@@ -67,7 +67,6 @@ local Russian = {
   ["Appearance"] = "Внешний вид",
   ["Behavior"] = "Поведение",
   ["Notifications"] = "Уведомления",
-  ["Icons"] = "Значки",
   ["Clear All Chats"] = "Очистить все чаты",
   ["Reset Icon"] = "Сброс значка",
   ["Reset Window"] = "Сброс окна",
@@ -148,6 +147,8 @@ local Russian = {
   ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "Пока окно открыто, плавающая кнопка находится в его левом верхнем углу. Отключите, чтобы кнопка оставалась на своём месте.",
   ["Open at saved spot"] = "Открывать в сохранённом месте",
   ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "Окно открывается там, куда вы переместили его в последний раз. Отключите, чтобы окно открывалось у плавающей кнопки, а кнопка перемещалась вместе с окном. Только когда включено «Закреплять кнопку на окне».",
+  ["Show emoji button"] = "Показывать кнопку эмодзи",
+  ["Shows the emoji button next to the message box. Turn it off to give the message box more room. Typed emoji codes still work."] = "Показывает кнопку эмодзи рядом с полем сообщения. Отключите, чтобы дать полю сообщения больше места. Набранные коды эмодзи по-прежнему работают.",
   ["Reload the interface now to switch the window style?"] = "Перезагрузить интерфейс сейчас, чтобы сменить стиль окна?",
   ["Dim when moving"] = "Затемнять при движении",
   ["Reduces window opacity while your character is moving."] = "Уменьшает прозрачность окна, пока персонаж движется.",
@@ -212,6 +213,9 @@ local Russian = {
   ["Mention sound"] = "Звук упоминания",
   ["Play sound when you send a whisper"] = "Звук при отправке шепота",
   ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "Проигрывает звук каждый раз, когда отправляется шепот, написанный здесь. Выберите звук ниже.",
+  ["Mute all sounds"] = "Отключить все звуки",
+  ["Silences every sound Whisper Messenger plays. Your sound choices below are kept."] = "Отключает все звуки Whisper Messenger. Выбранные ниже звуки сохраняются.",
+  ["Turn off Mute all sounds to change this."] = "Выключите «Отключить все звуки», чтобы изменить это.",
   ["Sent whisper sound"] = "Звук отправленного шепота",
   ["Icon Size"] = "Размер значка",
   ["Desaturate icon when idle"] = "Обесцвечивать значок в покое",
@@ -562,6 +566,8 @@ local Russian = {
   ["Guild invite"] = "Пригласить в гильдию",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Нажмите Ctrl+C, чтобы скопировать команду, затем вставьте её в чат.",
   ["Read-only here. Reply in the game's Communities window."] = "Только для чтения. Отвечайте в окне сообществ игры.",
+  -- Contact menu: split a character out of a Battle.net chat
+  ["Separate %s"] = "Отделить %s",
 }
 
 ns.Locale_ruRU = Russian

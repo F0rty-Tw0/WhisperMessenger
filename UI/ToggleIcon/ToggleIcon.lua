@@ -152,6 +152,7 @@ function ToggleIcon.Create(factory, options)
 
   -- count is the number shown; pulseCount (default count) starts the glow.
   local unreadSummary = ""
+  local refreshDesaturation
   local function setUnreadCount(count, pulseCount)
     unreadSummary = UnreadSummary.Format(UnreadSummary.Split(count, pulseCount))
     local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
@@ -166,7 +167,7 @@ function ToggleIcon.Create(factory, options)
     pulseState.setUnreadWants((tonumber(pulseCount or count) or 0) > 0 and allowPulse and showBadge)
 
     desaturation.update(unreadCount)
-    squareLook.apply(desaturation.isActive())
+    refreshDesaturation()
     transparency.setHasUnread(unreadCount > 0)
   end
 
@@ -204,7 +205,7 @@ function ToggleIcon.Create(factory, options)
     end,
   })
 
-  local function refreshDesaturation()
+  refreshDesaturation = function()
     IconArt.PaintFace(art, hover.active)
     squareLook.apply(desaturation.isActive())
   end
@@ -231,7 +232,7 @@ function ToggleIcon.Create(factory, options)
     frame:SetSize(newSize, newSize)
     art.applySize(newSize)
     lock.applyLayout(newSize)
-    squareLook.apply(desaturation.isActive()) -- glows sized from the glyph
+    refreshDesaturation() -- glows sized from the glyph
   end
 
   setUnreadCount(options.unreadCount)

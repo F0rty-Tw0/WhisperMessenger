@@ -28,4 +28,45 @@ return function()
     assert(SenderAlias.Associate(state, "alias", "two") == false, "conflicting association must fail")
     assert(SenderAlias.Associate(state, "same", "same") == false, "self alias must fail")
   end
+
+  -- test_move_queues_folds_one_sender_into_another_in_recorded_order
+  do
+    local state = {}
+    local runtime = PendingQueue.RuntimeState(state)
+    PendingQueue.Record(state, runtime, runtime.identityMetadata, "to", { recordedAt = 5 })
+    PendingQueue.Record(state, runtime, runtime.identityMetadata, "from", { recordedAt = 2 })
+    SenderAlias.MoveQueues(state, "from", "to")
+    local queue = runtime.identityMetadata.to
+    assert(runtime.identityMetadata.from == nil, "the old sender's queue must be folded away")
+    assert(#queue == 2 and queue[1].recordedAt == 2 and queue[2].recordedAt == 5, "merged queue must be time-ordered")
+  end
+
+  -- test_move_queues_records_no_alias
+  do
+    local state = {}
+    local runtime = PendingQueue.RuntimeState(state)
+    PendingQueue.Record(state, runtime, runtime.operations, "from", { recordedAt = 2 })
+    SenderAlias.MoveQueues(state, "from", "to")
+    assert(SenderAlias.Resolve(state, "from") == "from", "a moved sender must not become an alias")
+  end
+
+  -- test_move_queues_keeps_the_sender_cap
+  do
+    local state = {}
+    local runtime = PendingQueue.RuntimeState(state)
+    for index = 1, 32 do
+      PendingQueue.Record(state, runtime, runtime.operations, "to", { recordedAt = 10 + index })
+    end
+    PendingQueue.Record(state, runtime, runtime.operations, "from", { recordedAt = 1 })
+    SenderAlias.MoveQueues(state, "from", "to")
+    local queue = runtime.operations.to
+    assert(#queue == 32 and queue[1].recordedAt == 11, "the oldest entry must be evicted past the cap, got " .. #queue)
+  end
+
+  -- test_move_queues_without_waiting_reactions_is_a_no_op
+  do
+    local state = {}
+    SenderAlias.MoveQueues(state, "from", "to")
+    assert(state.messageReactionRuntime == nil, "nothing is created when nothing waits")
+  end
 end

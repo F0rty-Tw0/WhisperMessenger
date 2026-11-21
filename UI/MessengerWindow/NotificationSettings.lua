@@ -14,6 +14,7 @@ local NotificationSettings = {}
 local PADDING = Theme.CONTENT_PADDING
 
 local DEFAULTS = {
+  muteAllSounds = false,
   playSoundOnWhisper = false,
   notificationSound = SoundSelector.DEFAULT_SOUND,
   flashTaskbarOnWhisper = true,
@@ -48,6 +49,30 @@ function NotificationSettings.Create(factory, parent, config, options)
   local rowSpacing = -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
   local panel = SettingsControls.NewPanelRegistry()
 
+  -- The sound toggles below only matter while mute is off; they keep their values while greyed.
+  local muted = config.muteAllSounds == true
+  local refreshMuted
+
+  -- The mute toggle and Reset to Defaults both land here, so the greying follows at once.
+  local function changed(key, value)
+    if key == "muteAllSounds" then
+      muted = value
+      refreshMuted()
+    end
+    onChange(key, value)
+  end
+
+  local muteToggle = panel:bind(
+    UIHelpers.createToggleRow(factory, frame, text("Mute all sounds"), muted, toggleColors, toggleLayout, function(value)
+      changed("muteAllSounds", value)
+    end, {
+      text("Mute all sounds"),
+      text("Silences every sound Whisper Messenger plays. Your sound choices below are kept."),
+    }),
+    { type = "toggle", key = "muteAllSounds", default = DEFAULTS.muteAllSounds }
+  )
+  muteToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -24)
+
   local playSoundToggle = panel:bind(
     UIHelpers.createToggleRow(
       factory,
@@ -66,7 +91,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     ),
     { type = "toggle", key = "playSoundOnWhisper", default = DEFAULTS.playSoundOnWhisper }
   )
-  playSoundToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -24)
+  playSoundToggle.row:SetPoint("TOPLEFT", muteToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local soundSelector = panel:bind(
     SoundSelector.Create(factory, frame, {
@@ -161,6 +186,18 @@ function NotificationSettings.Create(factory, parent, config, options)
   )
   sentSoundSelector.row:SetPoint("TOPLEFT", sentSoundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  local soundToggleStates = {}
+  for _, toggle in ipairs({ playSoundToggle, requestSoundToggle, sentSoundToggle }) do
+    soundToggleStates[#soundToggleStates + 1] = UIHelpers.attachDisabledState(factory, toggle.row)
+  end
+  refreshMuted = function()
+    local reason = muted and text("Turn off Mute all sounds to change this.") or nil
+    for _, state in ipairs(soundToggleStates) do
+      state.set(not muted, reason)
+    end
+  end
+  refreshMuted()
+
   local flashToggle = panel:bind(
     UIHelpers.createToggleRow(
       factory,
@@ -193,7 +230,7 @@ function NotificationSettings.Create(factory, parent, config, options)
   )
   resetButton:SetPoint("TOPLEFT", flashToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
-    panel:reset(onChange)
+    panel:reset(changed)
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -212,6 +249,8 @@ function NotificationSettings.Create(factory, parent, config, options)
   local function setLanguage()
     header.title:SetText(text("Notifications"))
     header.hint:SetText(text("Configure alerts for incoming messages."))
+    muteToggle.label:SetText(text("Mute all sounds"))
+    refreshMuted()
     playSoundToggle.label:SetText(text("Play sound on new whisper"))
     soundSelector.label:SetText(text("Notification sound"))
     soundSelector.setOptionsList(SoundSelector.Options())

@@ -67,7 +67,6 @@ local Korean = {
   ["Appearance"] = "외형",
   ["Behavior"] = "동작",
   ["Notifications"] = "알림",
-  ["Icons"] = "아이콘",
   ["Clear All Chats"] = "모든 대화 삭제",
   ["Reset Icon"] = "아이콘 초기화",
   ["Reset Window"] = "창 초기화",
@@ -148,6 +147,8 @@ local Korean = {
   ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "창이 열려 있는 동안 떠 있는 버튼이 창의 왼쪽 위 모서리에 놓입니다. 끄면 버튼이 있던 자리에 그대로 둡니다.",
   ["Open at saved spot"] = "저장된 위치에서 열기",
   ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "창이 마지막으로 옮긴 위치에서 열립니다. 끄면 떠 있는 버튼 위치에서 창이 열리고, 창을 옮길 때 버튼도 함께 옮겨집니다. '버튼을 창에 고정'이 켜져 있을 때만 적용됩니다.",
+  ["Show emoji button"] = "이모티콘 버튼 표시",
+  ["Shows the emoji button next to the message box. Turn it off to give the message box more room. Typed emoji codes still work."] = "메시지 입력란 옆에 이모티콘 버튼을 표시합니다. 끄면 메시지 입력란이 더 넓어집니다. 직접 입력한 이모티콘 코드는 계속 작동합니다.",
   ["Reload the interface now to switch the window style?"] = "창 스타일을 바꾸려면 지금 인터페이스를 다시 불러올까요?",
   ["Dim when moving"] = "이동 시 어둡게",
   ["Reduces window opacity while your character is moving."] = "캐릭터가 이동할 때 창 투명도를 낮춥니다.",
@@ -212,6 +213,9 @@ local Korean = {
   ["Mention sound"] = "언급 소리",
   ["Play sound when you send a whisper"] = "귓속말 전송 시 소리 재생",
   ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "여기에서 작성한 귓속말이 전송될 때마다 소리를 재생합니다. 아래에서 소리를 선택하세요.",
+  ["Mute all sounds"] = "모든 소리 끄기",
+  ["Silences every sound Whisper Messenger plays. Your sound choices below are kept."] = "Whisper Messenger의 모든 소리를 끕니다. 아래에서 고른 소리는 그대로 유지됩니다.",
+  ["Turn off Mute all sounds to change this."] = "이 설정을 바꾸려면 '모든 소리 끄기'를 해제하세요.",
   ["Sent whisper sound"] = "보낸 귓속말 소리",
   ["Icon Size"] = "아이콘 크기",
   ["Desaturate icon when idle"] = "비활성 시 아이콘 흑백",
@@ -562,6 +566,8 @@ local Korean = {
   ["Guild invite"] = "길드 초대",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Ctrl+C를 눌러 명령어를 복사한 다음 대화창에 붙여넣으세요.",
   ["Read-only here. Reply in the game's Communities window."] = "여기서는 읽기 전용입니다. 게임의 커뮤니티 창에서 답장하세요.",
+  -- Contact menu: split a character out of a Battle.net chat
+  ["Separate %s"] = "%s 분리",
 }
 
 ns.Locale_koKR = Korean

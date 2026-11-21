@@ -81,6 +81,17 @@ return function()
     assert(refreshCount() == 1, "the window refreshes once")
   end)
 
+  check("test_tab_click_on_merged_character_marks_battle_net_chat_read", function()
+    local runtime = newRuntime(0)
+    local bnetKey = "bnet::BN::friend#1234"
+    runtime.store.conversations["wow::WOW::thrall"] = nil
+    runtime.store.conversations[bnetKey] = { channel = "BN", unreadCount = 2 }
+    runtime.characterMerges = { merged = { ["wow::WOW::thrall"] = { bnetKey = bnetKey, name = "Thrall" } }, separated = {} }
+    local captured = install(runtime)
+    captured.fn(tab(3), "LeftButton")
+    assert(runtime.store.conversations[bnetKey].unreadCount == 0, "reading a merged character's tab reads B")
+  end)
+
   check("test_tab_click_for_other_partner_leaves_unread", function()
     local runtime = newRuntime(2)
     local captured = install(runtime)

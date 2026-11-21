@@ -67,7 +67,6 @@ local TraditionalChinese = {
   ["Appearance"] = "外觀",
   ["Behavior"] = "行為",
   ["Notifications"] = "通知",
-  ["Icons"] = "圖示",
   ["Clear All Chats"] = "清除所有對話",
   ["Reset Icon"] = "重設圖示",
   ["Reset Window"] = "重設視窗",
@@ -148,6 +147,8 @@ local TraditionalChinese = {
   ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "視窗開啟時，浮動按鈕會停在視窗的左上角。關閉此選項後，按鈕將留在原處。",
   ["Open at saved spot"] = "在儲存的位置開啟",
   ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "視窗會在你上次移動的位置開啟。關閉此選項後，視窗將在浮動按鈕處開啟，並且移動視窗時按鈕會隨之移動。僅在開啟「將按鈕停靠在視窗上」時有效。",
+  ["Show emoji button"] = "顯示表情符號按鈕",
+  ["Shows the emoji button next to the message box. Turn it off to give the message box more room. Typed emoji codes still work."] = "在訊息輸入框旁顯示表情符號按鈕。關閉後訊息輸入框會有更多空間。手動輸入的表情符號代碼仍然有效。",
   ["Reload the interface now to switch the window style?"] = "現在重新載入介面以切換視窗樣式嗎?",
   ["Dim when moving"] = "移動時變暗",
   ["Reduces window opacity while your character is moving."] = "在角色移動時降低視窗透明度。",
@@ -212,6 +213,9 @@ local TraditionalChinese = {
   ["Mention sound"] = "提及音效",
   ["Play sound when you send a whisper"] = "傳送密語時播放音效",
   ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "每次傳送在此處撰寫的密語時播放音效。在下方選擇音效。",
+  ["Mute all sounds"] = "靜音所有聲音",
+  ["Silences every sound Whisper Messenger plays. Your sound choices below are kept."] = "關閉 Whisper Messenger 的所有聲音。下方選擇的聲音會保留。",
+  ["Turn off Mute all sounds to change this."] = "關閉「靜音所有聲音」後才能變更。",
   ["Sent whisper sound"] = "已傳送密語音效",
   ["Icon Size"] = "圖示大小",
   ["Desaturate icon when idle"] = "閒置時圖示灰階",
@@ -562,6 +566,8 @@ local TraditionalChinese = {
   ["Guild invite"] = "邀請加入公會",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "按 Ctrl+C 複製指令，然後貼到聊天框中。",
   ["Read-only here. Reply in the game's Communities window."] = "此處僅供閱讀。請在遊戲的社群視窗中回覆。",
+  -- Contact menu: split a character out of a Battle.net chat
+  ["Separate %s"] = "分離%s",
 }
 
 ns.Locale_zhTW = TraditionalChinese

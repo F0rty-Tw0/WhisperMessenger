@@ -10,7 +10,7 @@ local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenge
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
-local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
+local AccentGlyph = ns.ToggleIconAccentGlyph or require("WhisperMessenger.UI.ToggleIcon.AccentGlyph")
 local IconArt = ns.ToggleIconIconArt or require("WhisperMessenger.UI.ToggleIcon.IconArt")
 local IconBorder = ns.ToggleIconIconBorder or require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 
@@ -119,7 +119,7 @@ function MinimapIcon.Create(factory, options)
   local art = IconArt.Create(frame, ICON_SIZE)
   local iconTex = art.chatIcon
   local border = IconBorder.Create(frame, { glyph = iconTex, glyphRatio = IconArt.GLYPH_RATIO, face = art.background })
-  local accentGlyph = SquareLook.CreateAccentGlyph(frame, iconTex)
+  local accentGlyph = AccentGlyph.Create(frame, iconTex)
 
   -- Glow pulse for unread messages (same inner glow as the widget icon)
   local pulseGlow = PulseGlow.Create(factory, frame, {

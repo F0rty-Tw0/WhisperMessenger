@@ -191,6 +191,8 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
     labelOptions.persistentFactory = factory
     labelOptions.openPlayerMenu = options and options.openPlayerMenu or nil
     labelOptions.senderFallbackClassTag = options and options.senderFallbackClassTag or nil
+    labelOptions.conversationChannel = options and options.conversationChannel or nil
+    labelOptions.conversationDisplayName = options and options.conversationDisplayName or nil
     local label = SenderLabel.CreateSenderLabel(pooledFactory, contentFrame, message, paneWidth, yOffset, labelOptions)
     yOffset = yOffset + label.height
   end

@@ -6,11 +6,20 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+- New option at the top of Notifications: "Mute all sounds" silences every Whisper Messenger sound at once. Your sound choices are kept for when you turn it off, and picking a sound still plays a preview.
+- New whispers take up much less memory (about half for whispers with characters) and less room in your saved chat history file. Your chats look the same.
+- Whispers with a character that belongs to one of your Battle.net friends now go into that friend's Battle.net chat, and an earlier chat with that character joins it, so each friend has one chat.
+- In a Battle.net friend's chat, messages they sent from one of their characters show the friend's name with the character's name next to it, like "Jaina - via Arthas".
+- Right-click a Battle.net friend's chat and pick "Separate <character>" to move that character's messages back into a chat of their own. Whispers with that character then stay in their own chat for good.
+- The "Icons" settings page is now called "Widget".
+- The square widget now matches the round one: same size, same idle grey, and with the background on the same hover. With the background off, hovering lights up the square's edge. With EllesmereUI installed, the square still follows your EllesmereUI action-bar look.
+- New setting under Appearance to hide the emoji button. The message box gets the freed space.
+- Press Up in an empty message box to bring back what you sent earlier, from any chat. Up and Down step through your sent messages.
 - Fixed: clicking links in the messenger could later break Blizzard windows (errors when opening your character panel, toys that wouldn't use).
 - Fixed: the message box no longer shows a thin slice of the previous line along its top edge once a long message scrolls.
 - Fixed: when the message box grows to two lines right after a reload, the window now makes room for it instead of letting the box cover the line above it.
 - Fixed: party, raid and instance chats now clear out after your Message Retention time like whispers do. Before, leaving the group or logging back in counted as new activity, so an old group chat could stay in your list for days.
-- Fixed: notices in a chat, like "player is offline" or "Left party", no longer move that chat to the top of your list or keep it from clearing out after your Message Retention time, also after you remove an unsent message. Only real messages count.
+- Fixed: notices in a chat, like "player is offline" or "Left party", no longer move that chat to the top of your list or keep it from clearing out after your Message Retention time, also after you remove an unsent message or when two chats with the same person are joined. Only real messages count.
 - Fixed: when two chats with the same person are joined into one, the chat list now shows the last line of the joined chat instead of an older message.
 
 ## [2.1.8] - 2026-11-16

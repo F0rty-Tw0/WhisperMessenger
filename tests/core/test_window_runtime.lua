@@ -88,6 +88,7 @@ local function makeRuntimeOptions()
       end
       function coord.scheduleAvailabilityRefresh() end
       function coord.scheduleIncomingRefresh() end
+      function coord.scheduleWhisperRefresh() end
       function coord.updateIconSurfaces()
         trackers.iconSurfaceUpdates = trackers.iconSurfaceUpdates + 1
       end
@@ -336,6 +337,10 @@ return function()
   assert(
     runtime.scheduleIncomingRefresh == trackers.coordinator.scheduleIncomingRefresh,
     "runtime.scheduleIncomingRefresh should share the coordinator's coalesced refresh"
+  )
+  assert(
+    runtime.scheduleWhisperRefresh == trackers.coordinator.scheduleWhisperRefresh,
+    "runtime.scheduleWhisperRefresh should share the coordinator's next-frame refresh"
   )
   assert(type(runtime.canReact) == "function", "runtime.canReact should expose dynamic reaction availability")
 

@@ -208,12 +208,39 @@ function ProfileLinksMenuEntry.Add(rootDescription, links)
   end
 end
 
+-- "Separate <Character>": one top-level entry per character folded into a
+-- Battle.net row, each moving that character's lines back into a chat of
+-- their own. Battle.net rows only; groups are never merged.
+local SeparateMenuEntry = {}
+
+local function canSeparate(item, rowActions)
+  return item.channel == "BN"
+    and type(item.conversationKey) == "string"
+    and type(rowActions) == "table"
+    and type(rowActions.listMergedCharacters) == "function"
+    and type(rowActions.onSeparateCharacter) == "function"
+end
+
+function SeparateMenuEntry.Add(rootDescription, item, rowActions)
+  if not canSeparate(item, rowActions) then
+    return
+  end
+  local bnetKey = item.conversationKey
+  for _, character in ipairs(rowActions.listMergedCharacters(bnetKey)) do
+    local characterKey = character.characterKey
+    rootDescription:CreateButton(string.format(Localization.Text("Separate %s"), character.name), function()
+      rowActions.onSeparateCharacter(bnetKey, characterKey)
+    end)
+  end
+end
+
 local MenuEntries = {
   Export = ExportMenuEntry,
   Notify = NotifyMenuEntries,
   AddFriend = AddFriendMenuEntry,
   Block = BlockMenuEntry,
   ProfileLinks = ProfileLinksMenuEntry,
+  Separate = SeparateMenuEntry,
 }
 
 ns.ContactsListMenuEntries = MenuEntries

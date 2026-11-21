@@ -19,6 +19,7 @@ local NotifyMenuEntries = MenuEntries.Notify
 local AddFriendMenuEntry = MenuEntries.AddFriend
 local BlockMenuEntry = MenuEntries.Block
 local ProfileLinksMenuEntry = MenuEntries.ProfileLinks
+local SeparateMenuEntry = MenuEntries.Separate
 
 local ContextMenu = {}
 
@@ -127,6 +128,7 @@ local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
   GuildInviteMenuEntry.Add(rootDescription, item)
   BlockMenuEntry.Add(rootDescription, item, rowActions)
   ProfileLinksMenuEntry.Add(rootDescription, profileLinks)
+  SeparateMenuEntry.Add(rootDescription, item, rowActions)
   addRowActionButtons(rootDescription, item, rowActions)
 end
 

@@ -67,11 +67,11 @@ return function()
   do
     local result = create()
     local row = FindUI.byLabel(result.frame, LABEL)
-    local animation = FindUI.byLabel(result.frame, "Open at saved spot")
+    local lastToggle = FindUI.byLabel(result.frame, "Show emoji button")
     local hud = FindUI.byLabel(result.frame, "Native WoW HUD")
     local preset = FindUI.byLabel(result.frame, "Theme Preset")
     assert(select(2, row:GetPoint()) == hud, "below the HUD picker")
-    assert(select(2, preset:GetPoint()) == animation, "above the theme preset")
+    assert(select(2, preset:GetPoint()) == lastToggle, "above the theme preset")
   end
 
   -- test_the_toggle_relabels_with_the_page

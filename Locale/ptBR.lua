@@ -67,7 +67,6 @@ local Portuguese = {
   ["Appearance"] = "Aparência",
   ["Behavior"] = "Comportamento",
   ["Notifications"] = "Notificações",
-  ["Icons"] = "Ícones",
   ["Clear All Chats"] = "Apagar todos os chats",
   ["Reset Icon"] = "Redef. ícone",
   ["Reset Window"] = "Redef. janela",
@@ -148,6 +147,8 @@ local Portuguese = {
   ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "Enquanto a janela está aberta, o botão flutuante fica no canto superior esquerdo da janela. Desative para deixar o botão onde está.",
   ["Open at saved spot"] = "Abrir na posição salva",
   ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "A janela abre onde você a moveu por último. Desative para abrir a janela no botão flutuante e mover o botão junto quando você mover a janela. Apenas com «Acoplar o botão à janela» ativado.",
+  ["Show emoji button"] = "Mostrar botão de emojis",
+  ["Shows the emoji button next to the message box. Turn it off to give the message box more room. Typed emoji codes still work."] = "Mostra o botão de emojis ao lado da caixa de mensagem. Desative para dar mais espaço à caixa de mensagem. Códigos de emoji digitados continuam funcionando.",
   ["Reload the interface now to switch the window style?"] = "Recarregar a interface agora para mudar o estilo da janela?",
   ["Dim when moving"] = "Esmaecer em movimento",
   ["Reduces window opacity while your character is moving."] = "Reduz a opacidade da janela enquanto seu personagem se move.",
@@ -212,6 +213,9 @@ local Portuguese = {
   ["Mention sound"] = "Som de menção",
   ["Play sound when you send a whisper"] = "Som ao enviar sussurro",
   ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "Toca um som sempre que um sussurro escrito aqui é enviado. Escolha o som abaixo.",
+  ["Mute all sounds"] = "Silenciar todos os sons",
+  ["Silences every sound Whisper Messenger plays. Your sound choices below are kept."] = "Silencia todos os sons do Whisper Messenger. Suas escolhas de som abaixo são mantidas.",
+  ["Turn off Mute all sounds to change this."] = "Desative “Silenciar todos os sons” para mudar isto.",
   ["Sent whisper sound"] = "Som de sussurro enviado",
   ["Icon Size"] = "Tamanho do ícone",
   ["Desaturate icon when idle"] = "Dessaturar ícone inativo",
@@ -562,6 +566,8 @@ local Portuguese = {
   ["Guild invite"] = "Convidar para a guilda",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Pressione Ctrl+C para copiar o comando e cole-o no chat.",
   ["Read-only here. Reply in the game's Communities window."] = "Somente leitura. Responda na janela de Comunidades do jogo.",
+  -- Contact menu: split a character out of a Battle.net chat
+  ["Separate %s"] = "Separar %s",
 }
 
 ns.Locale_ptBR = Portuguese

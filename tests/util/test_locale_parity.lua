@@ -24,6 +24,11 @@ local WIDGET_SHAPE_KEYS = {
 local COMMUNITY_NOTICE_KEYS = {
   "Read-only here. Reply in the game's Communities window.",
 }
+local MUTE_KEYS = {
+  "Mute all sounds",
+  "Silences every sound Whisper Messenger plays. Your sound choices below are kept.",
+  "Turn off Mute all sounds to change this.",
+}
 local CHANNEL_CONTEXT_KEYS = {
   "Show their last channel message",
   "When someone whispers you, their latest line from a channel such as Trade shows above the whisper. Turn this off to hide it.",
@@ -104,7 +109,12 @@ local SAVED_SPOT_KEYS = {
   "Open at saved spot",
   "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on.",
 }
+local EMOJI_BUTTON_KEYS = {
+  "Show emoji button",
+  "Shows the emoji button next to the message box. Turn it off to give the message box more room. Typed emoji codes still work.",
+}
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
+local SEPARATE_KEY = "Separate %s"
 
 -- "%s|%d" for "Last seen %s ... %d"; "%%" is a literal percent, not a slot.
 local function formatSlots(text)
@@ -183,6 +193,11 @@ return function()
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 
+    -- test_mute_strings_are_translated
+    for _, key in ipairs(MUTE_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
     -- test_relationship_strings_are_translated
     for _, key in ipairs(RELATIONSHIP_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
@@ -243,8 +258,16 @@ return function()
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 
+    -- test_emoji_button_strings_are_translated
+    for _, key in ipairs(EMOJI_BUTTON_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
     -- test_language_reload_prompt_is_translated
     assert(catalog[LANGUAGE_RELOAD_KEY] ~= nil, code .. " is missing a translation for '" .. LANGUAGE_RELOAD_KEY .. "'")
+
+    -- test_separate_character_entry_is_translated
+    assert(type(catalog[SEPARATE_KEY]) == "string" and catalog[SEPARATE_KEY] ~= "", code .. " is missing a translation for '" .. SEPARATE_KEY .. "'")
 
     -- test_preview_reply_reason_names_the_translated_preview_toggle
     local replyReason = catalog[REPLY_REASON_KEY]

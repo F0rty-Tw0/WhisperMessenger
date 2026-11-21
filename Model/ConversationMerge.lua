@@ -13,6 +13,8 @@ end
 
 assert(Retention, "Retention module not available")
 
+local MessageMetadata = ns.ConversationStoreMessageMetadata or require("WhisperMessenger.Model.ConversationStore.MessageMetadata")
+
 local ConversationMerge = {}
 
 local function numericValue(value)
@@ -29,6 +31,21 @@ local function newestConversation(canonical, legacy, timestampField, lineIDField
     return legacy
   end
   return canonical
+end
+
+-- The record whose activity the merged chat keeps. Real activity takes over
+-- from a status line that opened the other record, even when it is older,
+-- the same rule as a real line stored into a status-opened chat. Runs before
+-- the transcripts merge so the check reads each record's own lines.
+local function latestActivityRecord(canonical, legacy)
+  local canonicalStatusOnly = MessageMetadata.ActivityFromStatusLine(canonical)
+  if canonicalStatusOnly ~= MessageMetadata.ActivityFromStatusLine(legacy) then
+    local real = canonicalStatusOnly and legacy or canonical
+    if numericValue(real.lastActivityAt) > 0 then
+      return real
+    end
+  end
+  return newestConversation(canonical, legacy, "lastActivityAt", "lastActivityLineID")
 end
 
 local function deliberateSortOrder(conversation)
@@ -48,17 +65,21 @@ local function mergeMessages(canonical, legacy, maxMessages)
   local seenIDs = {}
   local sequence = 0
 
+  -- Line counters restart each session, so an id alone can match two real
+  -- lines; a true copy of one line also shares its time.
   local function append(messages)
     for _, message in ipairs(messages or {}) do
+      local sentAt = type(message) == "table" and numericValue(message.sentAt) or 0
       local messageID = type(message) == "table" and message.id or nil
-      if messageID == nil or not seenIDs[messageID] then
-        if messageID ~= nil then
-          seenIDs[messageID] = true
+      local dedupeKey = messageID ~= nil and (tostring(messageID) .. "@" .. tostring(sentAt)) or nil
+      if dedupeKey == nil or not seenIDs[dedupeKey] then
+        if dedupeKey ~= nil then
+          seenIDs[dedupeKey] = true
         end
         sequence = sequence + 1
         entries[#entries + 1] = {
           message = message,
-          sentAt = type(message) == "table" and numericValue(message.sentAt) or 0,
+          sentAt = sentAt,
           sequence = sequence,
         }
       end
@@ -129,7 +150,7 @@ local function mergedPreview(messages, latestActivity)
   return lastLine.text
 end
 
-local function mergeMetadata(canonical, legacy)
+local function mergeMetadata(canonical, legacy, latestActivity)
   canonical.pinned = canonical.pinned == true or legacy.pinned == true
   canonical.sortOrder = deliberateSortOrder(canonical) or deliberateSortOrder(legacy) or 0
   -- Player-set prefs: the canonical record wins, the legacy one fills gaps.
@@ -146,7 +167,9 @@ local function mergeMetadata(canonical, legacy)
   -- A message request stays one only if both records were (fail open).
   canonical.request = (canonical.request == true and legacy.request == true) or nil
 
-  local latestActivity = newestConversation(canonical, legacy, "lastActivityAt", "lastActivityLineID")
+  -- The away status follows the newest record by time, status lines included,
+  -- so it is picked before the activity fields are overwritten.
+  local newestRecord = newestConversation(canonical, legacy, "lastActivityAt", "lastActivityLineID")
   canonical.lastActivityAt = latestActivity.lastActivityAt
   canonical.lastActivityLineID = latestActivity.lastActivityLineID
   canonical.lastPreview = mergedPreview(canonical.messages, latestActivity)
@@ -157,10 +180,10 @@ local function mergeMetadata(canonical, legacy)
   canonical.lastIncomingSender = latestIncoming.lastIncomingSender
   canonical.lastIncomingPreview = latestIncoming.lastIncomingPreview
 
-  if latestActivity.activeStatus == nil or type(latestActivity.activeStatus) == "table" then
-    canonical.activeStatus = latestActivity.activeStatus
+  if newestRecord.activeStatus == nil or type(newestRecord.activeStatus) == "table" then
+    canonical.activeStatus = newestRecord.activeStatus
   else
-    local otherConversation = latestActivity == canonical and legacy or canonical
+    local otherConversation = newestRecord == canonical and legacy or canonical
     canonical.activeStatus = type(otherConversation.activeStatus) == "table" and otherConversation.activeStatus or nil
   end
 end
@@ -184,9 +207,10 @@ function ConversationMerge.Rekey(conversations, oldKey, newKey, maxMessages, mes
 
   local canonical = conversations[newKey]
   if type(canonical) == "table" then
+    local latestActivity = latestActivityRecord(canonical, legacy)
     mergeMessages(canonical, legacy, maxMessages)
     mergeUnreadCount(canonical, legacy)
-    mergeMetadata(canonical, legacy)
+    mergeMetadata(canonical, legacy, latestActivity)
   else
     canonical = legacy
   end

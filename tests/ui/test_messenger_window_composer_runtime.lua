@@ -2,7 +2,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local ComposerRuntime = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ComposerRuntime")
 
-local function build()
+local function build(settingsConfig, onNavTargetsChanged, windowOptions)
   local factory = FakeUI.NewFactory()
   local frame = factory.CreateFrame("Frame", nil, nil)
   local composerPane = factory.CreateFrame("Frame", nil, frame)
@@ -12,8 +12,8 @@ local function build()
   local runtime = ComposerRuntime.Create(factory, {
     frame = frame,
     layout = { composerPane = composerPane },
-    settingsConfig = {},
-    windowOptions = {},
+    settingsConfig = settingsConfig or {},
+    windowOptions = windowOptions or {},
     conversation = conversation,
     messageActions = {
       bind = function(boundConversation, boundComposer)
@@ -27,6 +27,7 @@ local function build()
     },
     closeWindow = function() end,
     refreshContacts = function() end,
+    onNavTargetsChanged = onNavTargetsChanged,
   })
   return runtime, frame, calls, conversation
 end
@@ -68,5 +69,34 @@ return function()
     assert(runtime.composer ~= nil, "composer built")
     assert(calls.themed[1] == conversation and calls.themed[2] == runtime.composer, "theme targets the composer")
     assert(calls.bound[1] == conversation and calls.bound[2] == runtime.composer, "message actions bound to the composer")
+  end
+
+  -- test_saved_off_builds_without_the_emoji_button
+  do
+    local runtime = build({ showEmojiButton = false })
+    assert(not runtime.composer.emojiButton:IsShown(), "a saved off builds without the emoji button")
+  end
+
+  -- test_emoji_toggle_tells_the_nav
+  do
+    local count = 0
+    local runtime = build({}, function()
+      count = count + 1
+    end)
+    runtime.composer.setEmojiButtonShown(false)
+    assert(count == 1, "hiding the emoji button tells the nav once, got " .. count)
+  end
+
+  -- test_composer_recalls_from_the_window_history
+  do
+    local runtime = build(nil, nil, {
+      getSentHistory = function()
+        return { "hello" }
+      end,
+    })
+    local input = runtime.composer.input
+    input:SetText("")
+    input.scripts.OnKeyDown(input, "UP")
+    assert(input:GetText() == "hello", "Up recalls from the window's history, got " .. tostring(input:GetText()))
   end
 end

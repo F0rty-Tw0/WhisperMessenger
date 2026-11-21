@@ -67,7 +67,6 @@ local SimplifiedChinese = {
   ["Appearance"] = "外观",
   ["Behavior"] = "行为",
   ["Notifications"] = "通知",
-  ["Icons"] = "图标",
   ["Clear All Chats"] = "清除所有对话",
   ["Reset Icon"] = "重置图标",
   ["Reset Window"] = "重置窗口",
@@ -148,6 +147,8 @@ local SimplifiedChinese = {
   ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "窗口打开时，浮动按钮会停在窗口的左上角。关闭此选项后，按钮将留在原处。",
   ["Open at saved spot"] = "在保存的位置打开",
   ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "窗口会在你上次移动的位置打开。关闭此选项后，窗口将在浮动按钮处打开，并且移动窗口时按钮会随之移动。仅在开启“将按钮停靠在窗口上”时有效。",
+  ["Show emoji button"] = "显示表情按钮",
+  ["Shows the emoji button next to the message box. Turn it off to give the message box more room. Typed emoji codes still work."] = "在消息输入框旁显示表情按钮。关闭后消息输入框会获得更多空间。手动输入的表情代码仍然有效。",
   ["Reload the interface now to switch the window style?"] = "现在重载界面以切换窗口样式吗?",
   ["Dim when moving"] = "移动时变暗",
   ["Reduces window opacity while your character is moving."] = "在角色移动时降低窗口不透明度。",
@@ -212,6 +213,9 @@ local SimplifiedChinese = {
   ["Mention sound"] = "提及音效",
   ["Play sound when you send a whisper"] = "发送密语时播放声音",
   ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "每次发送在此处编写的密语时播放声音。在下方选择音效。",
+  ["Mute all sounds"] = "静音所有声音",
+  ["Silences every sound Whisper Messenger plays. Your sound choices below are kept."] = "关闭 Whisper Messenger 的所有声音。下方选择的声音会保留。",
+  ["Turn off Mute all sounds to change this."] = "关闭“静音所有声音”后才能更改。",
   ["Sent whisper sound"] = "已发送密语音效",
   ["Icon Size"] = "图标大小",
   ["Desaturate icon when idle"] = "空闲时图标灰度",
@@ -562,6 +566,8 @@ local SimplifiedChinese = {
   ["Guild invite"] = "邀请加入公会",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "按 Ctrl+C 复制命令，然后粘贴到聊天框中。",
   ["Read-only here. Reply in the game's Communities window."] = "此处仅可阅读。请在游戏的社区窗口中回复。",
+  -- Contact menu: split a character out of a Battle.net chat
+  ["Separate %s"] = "分离%s",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

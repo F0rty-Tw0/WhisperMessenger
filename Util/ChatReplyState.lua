@@ -5,6 +5,7 @@ end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+local CharacterMergeMap = ns.CharacterMergeMap or require("WhisperMessenger.Model.CharacterMergeMap")
 local ChatReplyState = {}
 
 local function readEditBoxState(editBox, key)
@@ -85,7 +86,13 @@ local function ensureWhisperConversation(runtime, target, channel)
     return nil, channel ~= "BN"
   end
 
-  local conversationKey = Identity.ResolveWhisperConversation(runtime, target, channel)
+  -- A merged character's reply goes to the Battle.net chat, never a new character chat.
+  local conversationKey
+  if channel == "BN" then
+    conversationKey = Identity.ResolveWhisperConversation(runtime, target, "BN")
+  else
+    conversationKey = CharacterMergeMap.ResolveWhisperName(runtime, target)
+  end
   if conversationKey ~= nil then
     runtime.lastIncomingWhisperKey = conversationKey
     return conversationKey, true

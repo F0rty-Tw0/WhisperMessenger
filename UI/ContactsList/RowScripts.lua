@@ -123,13 +123,18 @@ local function installHoverWatchdog(row)
   end)
 end
 
+--- Forget the row's hover; the caller repaints it.
+function RowScripts.resetHover(row)
+  stopHoverWatchdog(row)
+  row._wmRowHover = false
+  row._wmActionHoverCount = 0
+end
+
 --- Bind OnEnter / OnLeave hover scripts to a row.
 --- Rows are re-bound on every refresh, so the closures are created once and
 --- read their state (row.item, row.selected) live at call time.
 function RowScripts.bindHover(row)
-  stopHoverWatchdog(row)
-  row._wmRowHover = false
-  row._wmActionHoverCount = 0
+  RowScripts.resetHover(row)
 
   if not row._wmHoverBound then
     row._wmHoverBound = true

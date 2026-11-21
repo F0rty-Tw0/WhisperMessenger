@@ -67,7 +67,6 @@ local French = {
   ["Appearance"] = "Apparence",
   ["Behavior"] = "Comportement",
   ["Notifications"] = "Notifications",
-  ["Icons"] = "Icônes",
   ["Clear All Chats"] = "Effacer tous les chats",
   ["Reset Icon"] = "Réinit. icône",
   ["Reset Window"] = "Réinit. fenêtre",
@@ -148,6 +147,8 @@ local French = {
   ["While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is."] = "Tant que la fenêtre est ouverte, le bouton flottant se place dans son coin supérieur gauche. Désactivez l'option pour laisser le bouton là où il est.",
   ["Open at saved spot"] = "Ouvrir à l'emplacement enregistré",
   ["The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on."] = "La fenêtre s'ouvre là où vous l'avez déplacée en dernier. Désactivez l'option pour ouvrir la fenêtre au niveau du bouton flottant et déplacer le bouton avec la fenêtre. Uniquement quand « Ancrer le bouton à la fenêtre » est activé.",
+  ["Show emoji button"] = "Afficher le bouton des émojis",
+  ["Shows the emoji button next to the message box. Turn it off to give the message box more room. Typed emoji codes still work."] = "Affiche le bouton des émojis à côté de la zone de message. Désactivez-le pour donner plus de place à la zone de message. Les codes d'émoji tapés fonctionnent toujours.",
   ["Reload the interface now to switch the window style?"] = "Recharger l'interface maintenant pour changer le style de la fenêtre ?",
   ["Dim when moving"] = "Atténuer pendant les déplacements",
   ["Reduces window opacity while your character is moving."] = "Réduit l'opacité de la fenêtre quand votre personnage se déplace.",
@@ -212,6 +213,9 @@ local French = {
   ["Mention sound"] = "Son des mentions",
   ["Play sound when you send a whisper"] = "Son lors de l'envoi d'un chuchotement",
   ["Plays a sound each time a whisper you write here is sent. Pick the sound below."] = "Joue un son chaque fois qu'un chuchotement que vous écrivez ici est envoyé. Choisissez le son ci-dessous.",
+  ["Mute all sounds"] = "Couper tous les sons",
+  ["Silences every sound Whisper Messenger plays. Your sound choices below are kept."] = "Coupe tous les sons de Whisper Messenger. Vos choix de sons ci-dessous sont conservés.",
+  ["Turn off Mute all sounds to change this."] = "Désactivez « Couper tous les sons » pour modifier cette option.",
   ["Sent whisper sound"] = "Son du chuchotement envoyé",
   ["Icon Size"] = "Taille de l'icône",
   ["Desaturate icon when idle"] = "Désaturer l'icône au repos",
@@ -562,6 +566,8 @@ local French = {
   ["Guild invite"] = "Inviter dans la guilde",
   ["Press Ctrl+C to copy the command, then paste it into chat."] = "Appuyez sur Ctrl+C pour copier la commande, puis collez-la dans le chat.",
   ["Read-only here. Reply in the game's Communities window."] = "Lecture seule ici. Répondez dans la fenêtre des communautés du jeu.",
+  -- Contact menu: split a character out of a Battle.net chat
+  ["Separate %s"] = "Séparer %s",
 }
 
 ns.Locale_frFR = French

@@ -4,6 +4,7 @@
 
 local FakeScanResolver = require("tests.helpers.fake_scan_resolver")
 local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
+local CharacterMergeMap = require("WhisperMessenger.Model.CharacterMergeMap")
 local Identity = require("WhisperMessenger.Model.Identity")
 local WindowCoordinator = require("WhisperMessenger.Core.Bootstrap.WindowCoordinator")
 local DataBuilder = require("WhisperMessenger.UI.ContactsList.DataBuilder")
@@ -50,6 +51,7 @@ local function makeBootstrap(store, visible)
   local Bootstrap = {
     runtime = {
       bnetApi = {},
+      characterMerges = CharacterMergeMap.Ensure({}),
       store = store,
       isWindowVisible = function()
         return visible
@@ -212,6 +214,7 @@ return function()
     local Bootstrap = {
       runtime = {
         bnetApi = {},
+        characterMerges = CharacterMergeMap.Ensure({}),
         store = store,
         isWindowVisible = coordinator.isWindowVisible,
         refreshWindow = function(focusKey, dirtyKeys)
