@@ -16,6 +16,17 @@ local function names(env)
   return table.concat(out, ",")
 end
 
+-- Up to 4 shown fake Buttons, returned as separate values.
+local function shownFrames(n)
+  local factory = FakeUI.NewFactory()
+  local out = {}
+  for i = 1, n do
+    out[i] = factory.CreateFrame("Button", nil, nil)
+    out[i]:Show()
+  end
+  return out[1], out[2], out[3], out[4]
+end
+
 local function endCombat(env)
   env.combat = false
   env.regen()
@@ -199,5 +210,52 @@ return function()
   do
     local env = FakeGamepad.New()
     assert(not pcall(env.addJumpOverride, {}, env.directions.LEFT, function() end), "fake raises on a function")
+  end
+
+  -- test_order_chains_shown_frames
+  do
+    local env, _, nav = setup()
+    local a, b, c = shownFrames(3)
+    nav.setOrder("bar", { a, b, c }, "LEFT", "RIGHT")
+    assert(env.overrideFor(a, "RIGHT") == b and env.overrideFor(b, "LEFT") == a, "a <-> b")
+    assert(env.overrideFor(b, "RIGHT") == c and env.overrideFor(c, "LEFT") == b, "b <-> c")
+    assert(env.overrideFor(a, "LEFT") == nil and env.overrideFor(c, "RIGHT") == nil, "ends free")
+  end
+
+  -- test_order_skips_a_hidden_frame
+  do
+    local env, _, nav = setup()
+    local a, b, c = shownFrames(3)
+    b:Hide()
+    nav.setOrder("bar", { a, b, c }, "LEFT", "RIGHT")
+    assert(env.overrideFor(a, "RIGHT") == c and env.overrideFor(c, "LEFT") == a, "hidden b is jumped over")
+    assert(env.overrideFor(b, "LEFT") == nil and env.overrideFor(b, "RIGHT") == nil, "hidden b gets no target")
+  end
+
+  -- test_reorder_clears_a_frame_that_left_the_chain
+  do
+    local env, _, nav = setup()
+    local a, b, c = shownFrames(3)
+    nav.setOrder("bar", { a, b, c }, "LEFT", "RIGHT")
+    c:Hide()
+    nav.setOrder("bar", { a, b, c }, "LEFT", "RIGHT")
+    assert(env.overrideFor(b, "RIGHT") == nil and env.overrideFor(c, "LEFT") == nil, "stale targets set to nil")
+  end
+
+  -- test_orders_with_different_keys_do_not_clear_each_other
+  do
+    local env, _, nav = setup()
+    local a, b, x, y = shownFrames(4)
+    nav.setOrder("bar", { a, b }, "LEFT", "RIGHT")
+    nav.setOrder("tabs", { x, y }, "UP", "DOWN")
+    nav.setOrder("tabs", {}, "UP", "DOWN")
+    assert(env.overrideFor(a, "RIGHT") == b and env.overrideFor(b, "LEFT") == a, "bar chain kept")
+    assert(env.overrideFor(x, "DOWN") == nil and env.overrideFor(y, "UP") == nil, "tabs chain cleared")
+  end
+
+  -- test_inert_nav_has_a_set_order
+  do
+    local _, _, inert = setup({ gamepadMode = false })
+    assert(type(inert.setOrder) == "function", "inert nav")
   end
 end

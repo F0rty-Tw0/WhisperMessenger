@@ -32,6 +32,7 @@ local function inert()
     ignore = noop,
     markFocusable = noop,
     setJumpTarget = noop,
+    setOrder = noop,
     popupShown = noop,
     popupHidden = noop,
     setPopupCloseHandler = noop,
@@ -212,6 +213,7 @@ function GamepadNav.New(frame, deps)
   nav.ignore = marks.ignore
   nav.markFocusable = marks.markFocusable
   nav.setJumpTarget = marks.setJumpTarget
+  nav.setOrder = marks.setOrder
   nav.popupShown = popups.popupShown
   nav.popupHidden = popups.popupHidden
   nav.setPopupCloseHandler = popups.setPopupCloseHandler

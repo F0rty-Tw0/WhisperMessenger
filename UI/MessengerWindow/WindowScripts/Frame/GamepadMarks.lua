@@ -67,6 +67,34 @@ function GamepadMarks.New(deps)
     apply(deps.addJumpOverride, widget, directions[dirName], targetFrame)
   end
 
+  -- Last chain set under each setOrder key.
+  local chains = {}
+
+  -- Chains the shown frames of `frames`, in the given order: backDir on
+  -- each jumps to the one before, forwardDir to the one after; the ends
+  -- get nil. A frame of the key's previous chain that is not in the new
+  -- one loses both targets.
+  function marks.setOrder(key, frames, backDir, forwardDir)
+    local chain, inChain = {}, {}
+    for _, frame in ipairs(frames) do
+      if frame:IsShown() then
+        chain[#chain + 1] = frame
+        inChain[frame] = true
+      end
+    end
+    for _, frame in ipairs(chains[key] or {}) do
+      if not inChain[frame] then
+        marks.setJumpTarget(frame, backDir, nil)
+        marks.setJumpTarget(frame, forwardDir, nil)
+      end
+    end
+    for i, frame in ipairs(chain) do
+      marks.setJumpTarget(frame, backDir, chain[i - 1])
+      marks.setJumpTarget(frame, forwardDir, chain[i + 1])
+    end
+    chains[key] = chain
+  end
+
   -- Out of combat only: runs what combat held back, in call order.
   function marks.settle()
     local pending = queue
