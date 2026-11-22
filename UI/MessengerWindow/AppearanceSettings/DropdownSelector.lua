@@ -122,22 +122,26 @@ function DropdownSelector.Create(factory, parent, options)
     return optionButton
   end
 
+  -- Rows keep menuSkin.inset clear of every menu edge; the menu grows by
+  -- it top and bottom, so the visible rows and the scroll range match the
+  -- modern look.
   local function layoutOptions()
+    local inset = menuSkin.inset
     local contentHeight = #optionButtons * buttonHeight
     local popupHeight = math.min(menuHeight, math.max(buttonHeight, contentHeight))
 
     for i, optionButton in ipairs(optionButtons) do
       optionButton:ClearAllPoints()
       if i == 1 then
-        optionButton:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        optionButton:SetPoint("TOPLEFT", content, "TOPLEFT", inset, -inset)
       else
         optionButton:SetPoint("TOPLEFT", optionButtons[i - 1], "BOTTOMLEFT", 0, 0)
       end
-      optionButton:SetSize(rowWidth, buttonHeight)
+      optionButton:SetSize(rowWidth - 2 * inset, buttonHeight)
     end
 
-    menu:SetSize(rowWidth, popupHeight)
-    content:SetSize(rowWidth, math.max(contentHeight, popupHeight))
+    menu:SetSize(rowWidth, popupHeight + 2 * inset)
+    content:SetSize(rowWidth, math.max(contentHeight, popupHeight) + 2 * inset)
     if menu.UpdateScrollChildRect then
       menu:UpdateScrollChildRect()
     end
@@ -178,7 +182,7 @@ function DropdownSelector.Create(factory, parent, options)
     for i, optionButton in ipairs(optionButtons) do
       if optionButton._key == selected and not optionButton._header then
         local rowTop = (i - 1) * buttonHeight
-        if rowTop + buttonHeight > menu:GetHeight() then
+        if rowTop + buttonHeight > menu:GetHeight() - 2 * menuSkin.inset then
           offset = math.min(rowTop, menu:GetVerticalScrollRange())
         end
         break

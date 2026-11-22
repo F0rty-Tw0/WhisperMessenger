@@ -81,7 +81,9 @@ end
 
 -- Hidden, scrollable open list under `button`; `content` is the scroll
 -- child. The look is decided here, once, so rows pooled later match:
--- menuSkin = { native, bg, panel }.
+-- menuSkin = { native, bg, panel, inset }. `inset` is how far rows stay
+-- inside the menu's edges: the tooltip border under the Native look, 0 in
+-- the modern one.
 function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
   local menu = factory.CreateFrame("ScrollFrame", nil, row)
   menu:SetPoint("TOPLEFT", button, "BOTTOMLEFT", 0, -2)
@@ -102,8 +104,9 @@ function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
   menu:SetScrollChild(content)
   content:Show()
 
-  local menuSkin = { native = Hud.IsOn(), bg = bg }
+  local menuSkin = { native = Hud.IsOn(), bg = bg, inset = 0 }
   if menuSkin.native then
+    menuSkin.inset = Theme.LAYOUT.NATIVE_BORDER_INSET
     local panel = PickerPopup.CreateTooltipFrame(factory, menu)
     panel:SetAllPoints(menu)
     levelPanel(menu, panel)
