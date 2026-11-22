@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local GamepadDeps = ns.MessengerWindowGamepadDeps or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadDeps")
 local GamepadNav = ns.MessengerWindowGamepadNav or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadCloseOrder = ns.MessengerWindowGamepadCloseOrder or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadCloseOrder")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
@@ -97,6 +98,7 @@ local function attachSettings(nav, shell, transcript)
     chatScrollFrame = transcript and transcript.scrollFrame,
     optionsPanel = layout.optionsPanel,
     panels = settingsPanels,
+    createFrame = GamepadDeps.defaultCreateFrame,
   })
   DropdownSelector.SetMenuToggledHook(nav.refresh)
 end
