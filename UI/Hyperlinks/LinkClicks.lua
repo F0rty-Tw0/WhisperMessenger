@@ -11,6 +11,7 @@ local PlayerLinkCodec = ns.UIHyperlinksPlayerLinkCodec or require("WhisperMessen
 local LinkClicks = {}
 
 local INLINE_LINK_TEMPLATE = "InlineHyperlinkFrameTemplate"
+local CURSOR_MENU = { atCursor = true }
 
 -- Template for a frame that shows links. With InlineHyperlinkFrameTemplate
 -- the game runs its own secure click handler; flavors without it get
@@ -47,6 +48,22 @@ local function resolveManualCopy()
 
   if type(require) == "function" then
     local ok, loaded = pcall(require, "WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
+    if ok and type(loaded) == "table" then
+      return loaded
+    end
+  end
+
+  return nil
+end
+
+-- Resolved at click time: the contact menu loads after this file.
+local function resolveContactMenu()
+  if type(ns.ContactsListContextMenu) == "table" then
+    return ns.ContactsListContextMenu
+  end
+
+  if type(require) == "function" then
+    local ok, loaded = pcall(require, "WhisperMessenger.UI.ContactsList.ContextMenu")
     if ok and type(loaded) == "table" then
       return loaded
     end
@@ -115,6 +132,36 @@ local function blizzardChatClickHandler()
   return mixin.OnHyperlinkClick
 end
 
+-- On Forever a right-clicked player name opens WM's own contact menu:
+-- Blizzard's chat-frame handler would open a Blizzard menu, which taints from
+-- addon code there. The link is player:name:lineID:chatType:chatTarget, and a
+-- name may hold spaces. The menu opens at the cursor: the frame can be a
+-- whole transcript, far taller than the name. Returns true when the menu
+-- took the click.
+local function openContactMenu(frame, link, button)
+  if not FlavorCompat.isForever or button ~= "RightButton" or type(link) ~= "string" then
+    return false
+  end
+  local name, lineID, chatType = string.match(link, "^player:([^:]+):?([^:]*):?([^:]*)")
+  if name == nil then
+    return false
+  end
+  local contactMenu = resolveContactMenu()
+  if contactMenu == nil or type(contactMenu.Open) ~= "function" then
+    return false
+  end
+
+  local keepsChatType = chatType ~= "" and chatType ~= "WHISPER"
+  local item = {
+    channel = "WOW",
+    displayName = name,
+    lineID = tonumber(lineID),
+    chatType = keepsChatType and chatType or nil,
+  }
+  contactMenu.Open(item, frame, nil, nil, nil, CURSOR_MENU)
+  return true
+end
+
 local function routeClick(frame, link, text, button)
   link = PlayerLinkCodec.DecodeLink(link)
   text = PlayerLinkCodec.DecodeText(text)
@@ -127,6 +174,10 @@ local function routeClick(frame, link, text, button)
   end
 
   if CombatItemRef.TryPin(link) then
+    return
+  end
+
+  if openContactMenu(frame, link, button) then
     return
   end
 
@@ -182,8 +233,9 @@ end
 -- whatever it calls, even Blizzard's own chat-frame click handler (a plain
 -- item click in combat then made ShowUIPanel print "Interface action
 -- failed"). Clicks go to that handler, except a shift-clicked player name for
--- the focused composer and a plain tooltip-link click in combat
--- (CombatItemRef). Without the handler, the click goes through HandleClick.
+-- the focused composer, a plain tooltip-link click in combat (CombatItemRef)
+-- and, on Forever, a right-clicked player name (openContactMenu). Without the
+-- handler, the click goes through HandleClick.
 function LinkClicks.BindClick(frame, onLinkClick)
   if frame._wmSecureLinks then
     frame._wmOnLinkClick = onLinkClick
