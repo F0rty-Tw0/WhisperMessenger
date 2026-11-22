@@ -179,6 +179,7 @@ function FakeGamepad.New()
     end
     assert(fired, "no frame registered " .. event)
   end
+  env.fire = fire
 
   -- Fires PLAYER_REGEN_ENABLED; leaves env.combat as the test set it.
   function env.regen()
