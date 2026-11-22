@@ -81,6 +81,24 @@ local function countEntries(filters)
   return count
 end
 
+-- The list's ▲ / ▼ scroll buttons, or nil, nil without the gamepad UI.
+-- onShownChanged(shown) runs on each pad UI flip; the first call comes from
+-- inside PadButtons.Create, before padUp is returned.
+local function createPadButtons(factory, frame, list, scrollBy, onShownChanged)
+  if not FlavorCompat.HasGamepadUI() then
+    return nil, nil
+  end
+  local padDown = PadButtons.Create(factory, frame, "down", function()
+    scrollBy(1)
+  end)
+  padDown:SetPoint("TOP", list, "BOTTOM", 0, -PadButtons.GAP)
+  local padUp = PadButtons.Create(factory, frame, "up", function()
+    scrollBy(-1)
+  end, onShownChanged)
+
+  return padUp, padDown
+end
+
 -- options = { filters, panel, onLayoutChanged, onFiltersChanged }. Returns
 -- the section with `bottom` (the frame the next control anchors below) and
 -- `redraw`.
@@ -171,6 +189,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
     if not padShown then
       list:SetPoint("TOPLEFT", titleSection.region, "BOTTOMLEFT", 0, -GAP)
       durationSelector.row:SetPoint("TOPLEFT", list, "BOTTOMLEFT", 0, -GAP)
+
       return
     end
     local centre = (width - PadButtons.SIZE) / 2
@@ -180,25 +199,17 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
     durationSelector.row:SetPoint("TOPLEFT", padDown, "BOTTOMLEFT", -centre, -GAP)
   end
 
-  if FlavorCompat.HasGamepadUI() then
-    padDown = PadButtons.Create(factory, frame, "down", function()
-      scrollBy(1)
-    end)
-    padDown:SetPoint("TOP", list, "BOTTOM", 0, -PadButtons.GAP)
-    padUp = PadButtons.Create(factory, frame, "up", function()
-      scrollBy(-1)
-    end, function(shown)
-      padShown = shown
-      -- The first call comes from inside Create, before padUp is set.
-      -- A later flip moves everything below, so the page re-lays out.
-      if padUp then
-        anchorList()
-        if options.onLayoutChanged then
-          options.onLayoutChanged()
-        end
+  padUp, padDown = createPadButtons(factory, frame, list, scrollBy, function(shown)
+    padShown = shown
+    -- The first call comes from inside Create, before padUp is set.
+    -- A later flip moves everything below, so the page re-lays out.
+    if padUp then
+      anchorList()
+      if options.onLayoutChanged then
+        options.onLayoutChanged()
       end
-    end)
-  end
+    end
+  end)
   anchorList()
 
   local addButton = options.panel:bind(
