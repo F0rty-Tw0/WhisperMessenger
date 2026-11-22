@@ -18,7 +18,7 @@ local function isShown(target)
 end
 
 -- parts: composerRuntime, contactsRuntime, conversation, panelWiring,
--- compactMode, dock, getSelectedConversationKey, onResetWindowPosition,
+-- compactMode, dock, edge, getSelectedConversationKey, onResetWindowPosition,
 -- onPositionChanged, getContactsRail (built after this, read at call time).
 -- Returns relayoutWindow, scriptResult.
 function LifecycleSetup.Run(shell, options, parts)
@@ -79,6 +79,9 @@ function LifecycleSetup.Run(shell, options, parts)
     end,
     isWindowPart = function(candidate)
       return dock.isWindowPart(candidate)
+    end,
+    isPinned = function()
+      return parts.edge.side() ~= nil
     end,
     isContactsCollapsed = windowGeometry.isCollapsed,
     setContactsCollapsed = function(collapsed, pointerWidth)

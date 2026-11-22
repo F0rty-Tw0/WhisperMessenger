@@ -135,6 +135,7 @@ function MessengerWindow.Create(factory, options)
     panelWiring = panelWiring,
     compactMode = compactMode,
     dock = dock,
+    edge = edge,
     getSelectedConversationKey = getSelectedConversationKey,
     onResetWindowPosition = onResetWindowPosition,
     onPositionChanged = onPositionChanged,

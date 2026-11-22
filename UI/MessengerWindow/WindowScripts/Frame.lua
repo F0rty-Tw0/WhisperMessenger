@@ -267,6 +267,7 @@ function Frame.WireFrame(refs, options)
     getEscapeClosesWindow = options.getEscapeClosesWindow,
     onStrataChanged = options.onStrataChanged,
     isWindowPart = options.isWindowPart,
+    isPinned = options.isPinned,
     buildState = options.buildState,
     onPositionChanged = options.onPositionChanged,
   })

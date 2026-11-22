@@ -50,7 +50,9 @@ function ScreenEdgeGlow.Create(factory, parent, options)
   local theme = options.theme or Theme
   local settings = options.settings or {}
   local frame = factory.CreateFrame("Frame", nil, parent)
-  frame:SetFrameStrata("BACKGROUND")
+  -- Over action bars and trackers; level 0 keeps it under the floating button and its preview.
+  frame:SetFrameStrata("HIGH")
+  frame:SetFrameLevel(0)
   frame:EnableMouse(false)
   frame:Hide()
 

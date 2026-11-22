@@ -70,7 +70,8 @@ return function()
     assert(frame.width == 48, "48 px deep, got " .. tostring(frame.width))
     assert(frame.height == 1080, "the full 1080, got " .. tostring(frame.height))
     assert(frame.mouseEnabled == false, "the glow takes no mouse")
-    assert(frame.frameStrata == "BACKGROUND", "background strata")
+    assert(frame.frameStrata == "HIGH", "above action bars and trackers")
+    assert(frame:GetFrameLevel() == 0, "under the floating button and its preview")
   end
 
   local function test_right_edge_glow_is_mirrored()

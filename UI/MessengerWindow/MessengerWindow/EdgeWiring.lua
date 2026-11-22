@@ -187,6 +187,11 @@ function EdgeWiring.Attach(edge, options)
     if placedSide == nil then
       gripWasShown = grip ~= nil and grip:IsShown()
       frame:SetMovable(false)
+      -- A side picked from a dropdown menu was a click outside, so the window is MEDIUM by now.
+      -- HIGH is the ceiling: the addon's popovers, dialogs and the colour picker are DIALOG.
+      if frame:GetFrameStrata() ~= "HIGH" then
+        frame:SetFrameStrata("HIGH")
+      end
     elseif placedSide ~= side then
       border.apply(nil)
     end
