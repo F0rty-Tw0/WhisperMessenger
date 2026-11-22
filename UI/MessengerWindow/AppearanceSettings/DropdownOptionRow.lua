@@ -15,10 +15,13 @@ local applyColorTexture = UIHelpers.applyColorTexture
 local DropdownOptionRow = {}
 
 -- Native: the selection art shows on the selected choice only; hover is the
--- button's highlight texture, so it leaves the text alone.
+-- button's highlight texture, so it leaves the text alone. Headers get no
+-- hover art, so they don't look clickable; a pooled row can switch between
+-- header and choice, hence set on every paint.
 local function paintNative(optionButton, palette, selectedKey)
   local selected = not optionButton._header and optionButton._key == selectedKey
   optionButton.bg:SetShown(selected)
+  optionButton._highlight:SetAlpha(optionButton._header and 0 or 1)
   if optionButton._header then
     UIHelpers.setTextColor(optionButton.label, Theme.COLORS.text_secondary)
   elseif selected then
@@ -61,9 +64,11 @@ function DropdownOptionRow.Create(factory, content, palette, getSelected, onPick
   bg:SetAllPoints(optionButton)
   optionButton._native = native == true
   if optionButton._native then
+    -- Dimmed like every native list selection (full-strength additive art glares).
     NativeArt.Set(bg, NativeArt.LIST_SELECTED)
+    bg:SetVertexColor(1, 1, 1, NativeArt.LIST_SELECTED_ALPHA)
     bg:Hide()
-    NativeArt.AddHighlight(optionButton, NativeArt.LIST_HOVER)
+    optionButton._highlight = NativeArt.AddHighlight(optionButton, NativeArt.LIST_HOVER)
   end
 
   local fontObject = optionButton._native and PickerPopup.MENU_FONT or Theme.FONTS.system_text

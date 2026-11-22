@@ -206,7 +206,7 @@ function DropdownSelector.Create(factory, parent, options)
       end
     end
     scrollToSelected()
-    menu:Raise()
+    DropdownSkin.RaiseMenu(menu, menuSkin)
     menu:Show()
   end)
   button:SetScript("OnEnter", function()

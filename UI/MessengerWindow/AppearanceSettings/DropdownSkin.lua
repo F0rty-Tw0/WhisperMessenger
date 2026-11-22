@@ -72,9 +72,16 @@ function DropdownSkin.Paint(skin, label, hovered)
   UIHelpers.setTextColor(label, colors.text_primary)
 end
 
--- Hidden, scrollable open list under `button`. `content` is the scroll child
--- and the menu's first Frame child. The look is decided here, once, so rows
--- pooled later match: menuSkin = { native, bg, panel }.
+-- Same level as the menu, so the scroll child (one above) draws on top.
+local function levelPanel(menu, panel)
+  if panel and panel.SetFrameLevel and menu.GetFrameLevel then
+    panel:SetFrameLevel(menu:GetFrameLevel())
+  end
+end
+
+-- Hidden, scrollable open list under `button`; `content` is the scroll
+-- child. The look is decided here, once, so rows pooled later match:
+-- menuSkin = { native, bg, panel }.
 function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
   local menu = factory.CreateFrame("ScrollFrame", nil, row)
   menu:SetPoint("TOPLEFT", button, "BOTTOMLEFT", 0, -2)
@@ -87,6 +94,8 @@ function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
 
   local bg = menu:CreateTexture(nil, "BACKGROUND")
   bg:SetAllPoints(menu)
+  -- Kept on the menu so a test can tell the flat fill from other textures.
+  menu._wmBg = bg
 
   local content = factory.CreateFrame("Frame", nil, menu)
   content:SetSize(rowWidth, buttonHeight)
@@ -95,18 +104,22 @@ function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
 
   local menuSkin = { native = Hud.IsOn(), bg = bg }
   if menuSkin.native then
-    -- Same level as the menu, so the scroll child (one above) draws on top.
     local panel = PickerPopup.CreateTooltipFrame(factory, menu)
     panel:SetAllPoints(menu)
-    if panel.SetFrameLevel and menu.GetFrameLevel then
-      panel:SetFrameLevel(menu:GetFrameLevel())
-    end
+    levelPanel(menu, panel)
     panel:Show()
     bg:Hide()
     menuSkin.panel = panel
   end
   menu:Hide()
   return menu, content, menuSkin
+end
+
+-- Lifts the menu above its siblings on open. Raise can re-base frame
+-- levels, so the native panel is levelled with the menu again.
+function DropdownSkin.RaiseMenu(menu, menuSkin)
+  menu:Raise()
+  levelPanel(menu, menuSkin.panel)
 end
 
 -- Modern look: flat fill in the palette's background. Native: the tooltip
