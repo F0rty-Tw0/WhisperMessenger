@@ -1,5 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
+local Localization = require("WhisperMessenger.Locale.Localization")
+local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
 
 local TOP_BAR = { "newConversationButton", "patchNotesButton", "markAllReadButton", "backButton", "optionsButton", "closeButton" }
 
@@ -90,6 +92,8 @@ local function assertOrder(args, key, frames, backDir, forwardDir)
 end
 
 return function()
+  Localization.Configure({ language = "enUS" })
+
   -- test_attach_orders_top_bar_settings_tabs_and_contact_tabs
   do
     local t = setup()
@@ -142,6 +146,31 @@ return function()
       assert(args[1] ~= t.contactTabs[1] and args[1] ~= t.contactTabs[2], "contact tab passed to nav.ignore")
       assert(args[1] ~= t.tabs[1] and args[1] ~= t.tabs[2], "settings tab passed to nav.ignore")
     end
+  end
+
+  -- test_tabs_shown_after_attach_rechain_the_contact_tabs
+  do
+    local factory = FakeUI.NewFactory()
+    local frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", nil)
+    local toggle = TabToggle.Create(factory, frame, {})
+    local nav = fakeNav(true)
+    local refs = { compactMode = {}, windowVisibility = {}, tabToggle = toggle }
+    GamepadWiring.Create({ frame = frame, chrome = {}, layout = {} }, nav).attach(refs)
+    local function lastContactTabs()
+      local last = nil
+      for _, args in ipairs(nav.calls("setOrder")) do
+        if args[1] == "contactTabs" then
+          last = args[2]
+        end
+      end
+      return last
+    end
+    toggle.setModes({ "whispers", "groups", "channels" })
+    assert(#lastContactTabs() == 3 and sameList(lastContactTabs(), toggle.getTabButtons()), "channels tab shown: re-chained")
+    toggle.addPanelTab("ca", "Alerts", function() end)
+    assert(#lastContactTabs() == 4 and sameList(lastContactTabs(), toggle.getTabButtons()), "panel tab added: re-chained")
+    toggle.setPanelTabShown("ca", false)
+    assert(#lastContactTabs() == 3 and sameList(lastContactTabs(), toggle.getTabButtons()), "panel tab hidden: re-chained")
   end
 
   -- test_refresh_before_attach_orders_nothing

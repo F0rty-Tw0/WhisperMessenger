@@ -125,7 +125,8 @@ local TOP_BAR = { "newConversationButton", "patchNotesButton", "markAllReadButto
 -- The D-pad walks the top bar and the contact tabs left / right and the
 -- settings tabs (a vertical list) up / down, in on-screen order. Each frame
 -- seen gets an OnShow / OnHide hook once (memo `hooked`), so a button that
--- hides, such as Mark all read, re-chains at once.
+-- hides, such as Mark all read, re-chains at once; contact tabs shown later
+-- re-chain through the toggle's tabs-changed handler (see attach).
 local function orderStops(nav, shell, refs, hooked, reorder)
   local chrome, layout = shell.chrome or {}, shell.layout or {}
   local bar = {}
@@ -133,10 +134,11 @@ local function orderStops(nav, shell, refs, hooked, reorder)
     bar[#bar + 1] = chrome[name]
   end
   local tabToggle = refs.tabToggle
+  local contactTabs = tabToggle and tabToggle.getTabButtons and tabToggle.getTabButtons() or {}
   local orders = {
     { "topBar", bar, "LEFT", "RIGHT" },
     { "settingsTabs", layout.settingsTabs or {}, "UP", "DOWN" },
-    { "contactTabs", tabToggle and tabToggle.getTabButtons and tabToggle.getTabButtons() or {}, "LEFT", "RIGHT" },
+    { "contactTabs", contactTabs, "LEFT", "RIGHT" },
   }
   for _, order in ipairs(orders) do
     for _, stop in ipairs(order[2]) do
@@ -199,6 +201,12 @@ function GamepadWiring.Create(shell, nav)
     end
     ignoreDeadStops(nav, shell, refs)
     attachSettings(nav, shell, transcript)
+    -- A tab shown later (a mode turned on, an addon panel's tab) has no
+    -- OnShow hook yet: the toggle reports the change instead.
+    local tabToggle = refs.tabToggle
+    if tabToggle and tabToggle.setTabsChangedHandler then
+      tabToggle.setTabsChangedHandler(reorder)
+    end
     attachedRefs = refs
     reorder()
   end
