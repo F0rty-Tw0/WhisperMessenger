@@ -34,6 +34,8 @@ local NATIVE_TEXT_COLOR = { 1, 1, 1, 1 }
 local frame
 local rows = {}
 local currentAnchor
+-- The anchor a click may land on without closing the popup, if any.
+local clickSafeAnchor
 local hookedAnchors = setmetatable({}, { __mode = "k" })
 local pools = { button = {}, checkbox = {}, divider = {}, title = {} }
 
@@ -95,9 +97,12 @@ local function onRowClick(button)
   MenuPopup.Close()
 end
 
+local function frameFactory()
+  return { CreateFrame = _G.CreateFrame }
+end
+
 local function createButtonRegion(kind)
-  local factory = { CreateFrame = _G.CreateFrame }
-  local button, label = PickerPopup.CreateTextButton(factory, frame, "", onRowClick)
+  local button, label = PickerPopup.CreateTextButton(frameFactory(), frame, "", onRowClick)
   local inset = kind == "checkbox" and CHECK_LABEL_PAD or LABEL_PAD
   label:ClearAllPoints()
   label:SetPoint("LEFT", button, "LEFT", inset, 0)
@@ -134,7 +139,6 @@ local function textRegion(row)
   return row.region._label, row.region._inset
 end
 
--- Takes a pooled region of each row's kind; hides the unused rest.
 local function assignRegions()
   local used = { button = 0, checkbox = 0, divider = 0, title = 0 }
   for _, row in ipairs(rows) do
@@ -172,7 +176,8 @@ local function fillButton(row)
   if button.SetEnabled then
     button:SetEnabled(row.enabled)
   end
-  UIHelpers.setTextColor(button._label, row.enabled and enabledColor() or Theme.COLORS.text_secondary)
+  local color = row.enabled and enabledColor() or Theme.COLORS.text_secondary
+  UIHelpers.setTextColor(button._label, color)
   if button._check then
     row.checked = type(row.isSelected) == "function" and row.isSelected() == true
     button._check:SetShown(row.checked)
@@ -204,14 +209,13 @@ local function layoutRows(width)
 end
 
 local function createFrame()
-  local factory = { CreateFrame = _G.CreateFrame }
-  local panel = PickerPopup.CreatePanel(factory, _G.UIParent, MENU_NAME, STRATA)
+  local panel = PickerPopup.CreatePanel(frameFactory(), _G.UIParent, MENU_NAME, STRATA)
   panel:SetScript("OnEvent", function(self, event)
-    PickerPopup.HandleEvent(self, event, MenuPopup.Close, currentAnchor)
+    PickerPopup.HandleEvent(self, event, MenuPopup.Close, clickSafeAnchor)
   end)
   panel:SetScript("OnHide", function(self)
     PickerPopup.Disarm(self)
-    currentAnchor = nil
+    currentAnchor, clickSafeAnchor = nil, nil
   end)
   rawset(_G, MENU_NAME, panel)
   return panel
@@ -230,13 +234,27 @@ local function hookAnchor(anchorFrame)
   end)
 end
 
+local function place(anchorFrame, atCursor)
+  frame:ClearAllPoints()
+  local placedAtCursor = atCursor and PickerPopup.PlaceAtCursor(frame)
+  if not placedAtCursor then
+    frame:SetPoint("TOPLEFT", anchorFrame, "TOPRIGHT", 0, 0)
+  end
+end
+
 -- Calls build(root) and shows the rows beside `anchorFrame`. Returns false,
--- with nothing shown, when there is nothing to show.
-function MenuPopup.Open(anchorFrame, build)
+-- with nothing shown, when there is nothing to show. options (optional):
+-- { atCursor = true } opens it at the cursor instead (beside the anchor
+-- when the cursor is unknown), for an anchor much larger than the click
+-- such as a chat transcript; a click on that anchor then closes it too.
+-- Either way the popup hides with its anchor.
+function MenuPopup.Open(anchorFrame, build, options)
   MenuPopup.Close()
-  if anchorFrame == nil or type(build) ~= "function" or type(_G.CreateFrame) ~= "function" or _G.UIParent == nil then
+  local canOpen = anchorFrame ~= nil and type(build) == "function" and type(_G.CreateFrame) == "function" and _G.UIParent ~= nil
+  if not canOpen then
     return false
   end
+  local atCursor = type(options) == "table" and options.atCursor == true
   rows = {}
   build(root)
   if #rows == 0 then
@@ -246,11 +264,11 @@ function MenuPopup.Open(anchorFrame, build)
   PickerStyles.ApplyPanelTheme(frame, frame._border)
   assignRegions()
   layoutRows(fillTexts())
-  frame:ClearAllPoints()
-  frame:SetPoint("TOPLEFT", anchorFrame, "TOPRIGHT", 0, 0)
+  place(anchorFrame, atCursor)
   PickerPopup.RegisterEscape(MENU_NAME, frame)
   hookAnchor(anchorFrame)
   currentAnchor = anchorFrame
+  clickSafeAnchor = not atCursor and anchorFrame or nil
   PickerPopup.ArmDismiss(frame)
   frame:Show()
   return true
@@ -271,6 +289,7 @@ function MenuPopup.GetFrame()
 end
 
 -- The current fill in display order: { kind, text, region, enabled, checked }.
+-- Rows() and row.checked exist for the tests to read the popup.
 function MenuPopup.Rows()
   return rows
 end
