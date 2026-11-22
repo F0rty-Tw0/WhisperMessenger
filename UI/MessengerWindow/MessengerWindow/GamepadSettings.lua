@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local MenuPopup = ns.MenuPopup or require("WhisperMessenger.UI.Shared.MenuPopup")
 local PadButtons = ns.SettingsControlsPadButtons or require("WhisperMessenger.UI.Shared.SettingsControls.PadButtons")
 
@@ -56,6 +57,8 @@ end
 -- A popup shown under the other mode is not registered with the game's
 -- pad frame manager, so B would not reach it: close it on the toggle.
 -- Then the pad buttons show or hide and the nav re-scans the new geometry.
+-- The event also fires on a switch between mouse and pad input with the
+-- pad UI unchanged: that one does nothing, so an open menu stays open.
 -- A client without the event (or the frame) keeps the other refreshes only.
 local function listenForPadToggle(nav, createFrame)
   if type(createFrame) ~= "function" then
@@ -68,7 +71,13 @@ local function listenForPadToggle(nav, createFrame)
   if not pcall(frame.RegisterEvent, frame, "INPUT_DEVICE_INTERFACE_TRANSITION") then
     return
   end
+  local padUIEnabled = FlavorCompat.IsGamepadUIEnabled()
   frame:SetScript("OnEvent", function()
+    local enabled = FlavorCompat.IsGamepadUIEnabled()
+    if enabled == padUIEnabled then
+      return
+    end
+    padUIEnabled = enabled
     if MenuPopup.IsShown() then
       MenuPopup.Close()
     end

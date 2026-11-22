@@ -201,6 +201,21 @@ return function()
     end)
   end)
 
+  -- test_event_without_a_pad_ui_change_keeps_the_menu_open
+  withPadUI(true, function(env)
+    MenuPopupWorld.With(function(_worldFactory, anchor)
+      local nav, s = fakeNav(), fakeSettings()
+      s.createFrame = env.createFrame
+      GamepadSettings.Attach(nav, s)
+      MenuPopup.Open(anchor, function(root)
+        root:CreateButton("X", function() end)
+      end)
+      env.fire(TOGGLE_EVENT)
+      assert(MenuPopup.IsShown() == true, "same pad UI mode: the popup stays open")
+      assert(nav.count("refresh") == 0, "same pad UI mode: no re-scan")
+    end)
+  end)
+
   -- test_settings_shown_refreshes_pad_buttons
   withPadUI(true, function(_env, state)
     local s = fakeSettings()
