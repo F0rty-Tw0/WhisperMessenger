@@ -54,6 +54,8 @@ local BORDER_KEYS = {
   "Shows the circle or square behind the widget icon. Turn it off to show only the two chat bubbles.",
 }
 local REMOVED_KEYS = {
+  "Edge handle",
+  "While the window is closed, a small tab on the screen edge shows your unread count. Click it to open the window. Only while Screen edge is on.",
   "Square button background",
   "Shows a square behind the widget icon when the widget shape is square. Turn it off to show only the two chat bubbles.",
   "Only with the square widget shape.",
@@ -112,6 +114,17 @@ local SAVED_SPOT_KEYS = {
 local EMOJI_BUTTON_KEYS = {
   "Show emoji button",
   "Shows the emoji button next to the message box. Turn it off to give the message box more room. Typed emoji codes still work.",
+}
+local SCREEN_EDGE_KEYS = {
+  "Screen edge",
+  "Holds the compact window against this edge of the screen at full height. It slides out when it opens and back in when it closes. Only while Compact window is on.",
+  "The compact window stays where you move it.",
+  "Edge glow",
+  "While the window is closed, the screen edge glows softly when you have unread whispers. Only while Screen edge is on.",
+  "Glow color",
+  "Custom",
+  "Glows in this theme's accent color.",
+  "Pick your own glow color.",
 }
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 local SEPARATE_KEY = "Separate %s"
@@ -260,6 +273,11 @@ return function()
 
     -- test_emoji_button_strings_are_translated
     for _, key in ipairs(EMOJI_BUTTON_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_screen_edge_strings_are_translated
+    for _, key in ipairs(SCREEN_EDGE_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 

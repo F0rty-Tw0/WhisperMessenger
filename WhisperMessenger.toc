@@ -358,6 +358,8 @@ UI/ToggleIcon/PreviewReplyHold.lua
 UI/ToggleIcon/PreviewCard.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
+UI/ToggleIcon/ScreenEdgeGlow.lua
+UI/ToggleIcon/ScreenEdgeSurface.lua
 UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/IconClick.lua
 UI/ToggleIcon/SquareEffects.lua
@@ -383,6 +385,8 @@ UI/MessengerWindow/ChromeBuilder/WindowShadow.lua
 UI/MessengerWindow/ChromeBuilder/BlizzardChrome.lua
 UI/MessengerWindow/ChromeBuilder/RetailChrome.lua
 UI/MessengerWindow/ChromeBuilder/ModernChrome.lua
+UI/MessengerWindow/ChromeBuilder/ScreenEdgeBorder.lua
+UI/MessengerWindow/ChromeBuilder/ScreenEdgeTabBand.lua
 UI/MessengerWindow/ChromeBuilder/Buttons.lua
 UI/MessengerWindow/ChromeBuilder/ResizeGrip.lua
 UI/MessengerWindow/ChromeBuilder/PatchNotesButton.lua
@@ -442,6 +446,8 @@ UI/MessengerWindow/GeneralSettings/TimeSection.lua
 UI/ContactsList/ExportPanel.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/Options.lua
+UI/MessengerWindow/AppearanceSettings/ColorPicker.lua
+UI/MessengerWindow/AppearanceSettings/ScreenEdgeRows.lua
 UI/MessengerWindow/AppearanceSettings/WindowStyleSpecs.lua
 UI/MessengerWindow/AppearanceSettings.lua
 UI/MessengerWindow/QuickRepliesSettings.lua
@@ -501,6 +507,7 @@ UI/MessengerWindow/MessengerWindow/WindowGrowAnimation.lua
 UI/MessengerWindow/MessengerWindow/CompactDockFlow.lua
 UI/MessengerWindow/MessengerWindow/CompactWiring.lua
 UI/MessengerWindow/MessengerWindow/DockWiring.lua
+UI/MessengerWindow/MessengerWindow/EdgeWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowShell.lua
 UI/MessengerWindow/MessengerWindow/ComposerRuntime.lua
 UI/MessengerWindow/MessengerWindow/SavedStateApply.lua
@@ -592,6 +599,7 @@ Core/Bootstrap/WindowRuntime/LiveThemeSync.lua
 Core/Bootstrap/WindowRuntime/GrowSource.lua
 Core/Bootstrap/WindowRuntime/IconMode.lua
 Core/Bootstrap/WindowRuntime/Surfaces.lua
+Core/Bootstrap/WindowRuntime/ScreenEdgeSetting.lua
 Core/Bootstrap/WindowRuntime/WindowBuilder.lua
 Core/Bootstrap/WindowRuntime/WindowActions.lua
 Core/Bootstrap/WindowRuntime/Flows.lua

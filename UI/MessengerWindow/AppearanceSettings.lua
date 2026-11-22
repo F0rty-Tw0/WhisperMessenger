@@ -11,6 +11,7 @@ local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMesse
 local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local Options = ns.AppearanceSettingsOptions or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.Options")
 local WindowStyleSpecs = ns.AppearanceSettingsWindowStyleSpecs or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.WindowStyleSpecs")
+local ScreenEdgeRows = ns.AppearanceSettingsScreenEdgeRows or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ScreenEdgeRows")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
@@ -34,6 +35,7 @@ local DEFAULTS = {
   bubbleColorPreset = "default",
   windowScale = 1.0,
   compactLayout = false,
+  edgeGlow = true,
   windowAnimation = true,
   iconDock = true,
   openAtSavedSpot = true,
@@ -110,6 +112,8 @@ function AppearanceSettings.Create(factory, parent, config, options)
   local windowStyleSpecs = WindowStyleSpecs.Build(config, onChange, text, gap)
   local windowStyleToggles = SettingsControls.BuildToggleList(factory, frame, hudStyleSelector.row, windowStyleSpecs)
   SettingsControls.BindToggleSpecs(panel, windowStyleToggles, windowStyleSpecs, DEFAULTS)
+
+  local screenEdgeRows = ScreenEdgeRows.Create(sel, panel, config, onChange, windowStyleToggles, gap)
 
   local themePresetSelector = panel:bind(
     sel(text("Theme Preset"), Options.BuildThemePresetOptions(), presetDefault, config.themePreset or presetDefault, function(v)
@@ -236,6 +240,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     hudStyleSelector.label:SetText(text("Native WoW HUD"))
     hudStyleSelector.setOptionsList(Options.BuildHudStyleOptions())
     SettingsControls.RelabelToggles(windowStyleToggles, windowStyleSpecs, text)
+    screenEdgeRows.setLanguage()
     themePresetSelector.label:SetText(text("Theme Preset"))
     themePresetSelector.setOptionsList(Options.BuildThemePresetOptions())
     windowScaleRow.label:SetText(text("Window Scale"))

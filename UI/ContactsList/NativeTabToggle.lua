@@ -30,6 +30,7 @@ NativeTabToggle.HEIGHT = TAB_HEIGHT
 -- window's bottom-left, tab tops overlap the bottom border by 2px, 1px apart.
 local WINDOW_LEFT_OFFSET = 11
 local BORDER_OVERLAP = 2
+NativeTabToggle.BORDER_OVERLAP = BORDER_OVERLAP
 local TAB_SPACING = 1
 -- How far the tabs reach below the window; the screen clamp must include it.
 local HANG_HEIGHT = TAB_HEIGHT - BORDER_OVERLAP
@@ -129,8 +130,7 @@ function NativeTabToggle.Create(factory, parent, options)
 
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetHeight(TAB_HEIGHT)
-  frame:SetPoint("TOPLEFT", window, "BOTTOMLEFT", WINDOW_LEFT_OFFSET, BORDER_OVERLAP)
-  frame:SetPoint("TOPRIGHT", window, "BOTTOMRIGHT", 0, BORDER_OVERLAP)
+  TabLayout.Hang(frame, window, WINDOW_LEFT_OFFSET, BORDER_OVERLAP, false)
 
   local whispers = createModeTab(factory, frame, window, 1, "Whispers", "whispers")
   local groups = whispers and createModeTab(factory, frame, window, 2, "Groups", "groups")
@@ -188,12 +188,7 @@ function NativeTabToggle.Create(factory, parent, options)
 
   -- TabLayout applies the shown state through toggle.setShown, so the
   -- clamp follows it.
-  local applyClamp = TabLayout.BindClamp(window, HANG_HEIGHT)
-  local setShown = toggle.setShown
-  toggle.setShown = function(shown)
-    setShown(shown)
-    applyClamp(shown)
-  end
+  TabLayout.BindHang(toggle, frame, window, WINDOW_LEFT_OFFSET, BORDER_OVERLAP, HANG_HEIGHT)
   return toggle
 end
 

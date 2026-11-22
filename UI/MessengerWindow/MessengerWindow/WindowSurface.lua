@@ -157,6 +157,7 @@ function WindowSurface.Build(parts)
     window.dockCompactIcon = parts.dock
   end
   window.applySavedState = parts.applySavedState
+  window.applyScreenEdge = parts.applyScreenEdge
   if parts.compactMode then
     window.isCompactLayout = true
     window.compactViewport = layout.compactViewport

@@ -91,4 +91,19 @@ return function()
     end
     assert(frame.scripts.OnUpdate == nil, "ends without an onDone")
   end
+
+  -- test_ease_in_is_cubic
+  assert(GlideClock.EaseIn(0.5) == 0.125)
+
+  -- test_run_passes_the_given_ease
+  do
+    local factory = FakeUI.NewFactory()
+    local frame = factory.CreateFrame("Frame", "Clocked", nil)
+    local seen
+    GlideClock.Run(frame, 1, function(t, p)
+      seen = { t = t, p = p }
+    end, nil, GlideClock.EaseIn)
+    frame.scripts.OnUpdate(frame, 0.02)
+    assert(near(seen.t, 0.02) and near(seen.p, GlideClock.EaseIn(0.02)), "the given ease shapes p")
+  end
 end

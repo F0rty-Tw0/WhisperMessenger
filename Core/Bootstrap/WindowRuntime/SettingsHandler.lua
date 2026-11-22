@@ -267,6 +267,9 @@ function SettingsHandler.Create(options)
     if options.onDetachedSetting then
       options.onDetachedSetting(key, persistedValue)
     end
+    if options.onScreenEdgeSetting then
+      options.onScreenEdgeSetting(key, persistedValue)
+    end
   end
 end
 

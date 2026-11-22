@@ -18,6 +18,7 @@ local WindowSizing = ns.MessengerWindowWindowSizing or require("WhisperMessenger
 local WindowSurface = ns.MessengerWindowWindowSurface or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSurface")
 local CompactWiring = ns.MessengerWindowCompactWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.CompactWiring")
 local DockWiring = ns.MessengerWindowDockWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.DockWiring")
+local EdgeWiring = ns.MessengerWindowEdgeWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.EdgeWiring")
 local SavedStateApply = ns.MessengerWindowSavedStateApply or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SavedStateApply")
 local GamepadWiring = ns.MessengerWindowGamepadWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
 
@@ -34,6 +35,7 @@ function MessengerWindow.Create(factory, options)
   local settingsRuntime = shell.settingsRuntime
   local compactMode = CompactWiring.Hooks()
   local dock = DockWiring.Hooks()
+  local edge = EdgeWiring.Hooks()
   local rowActions = RowActions.Collect(options)
 
   -- Contacts runtime. The selection controller and conversation pane are
@@ -124,7 +126,7 @@ function MessengerWindow.Create(factory, options)
   local refreshSelection = composerRuntime.refreshSelection
 
   local wrappedPosition, onResetWindowPosition = CompactWiring.WrapPosition(compactMode, options)
-  local onPositionChanged = DockWiring.WrapPosition(dock, wrappedPosition)
+  local onPositionChanged = DockWiring.WrapPosition(dock, EdgeWiring.WrapPosition(edge, wrappedPosition))
 
   local relayoutWindow, scriptResult = LifecycleSetup.Run(shell, options, {
     composerRuntime = composerRuntime,
@@ -142,6 +144,16 @@ function MessengerWindow.Create(factory, options)
   })
   panelWiring.hookWindowHide()
   gamepadWiring.attach({ composer = composer, conversation = conversation, compactMode = compactMode, windowVisibility = windowVisibility })
+  EdgeWiring.Attach(edge, {
+    factory = factory,
+    frame = frame,
+    chrome = chrome,
+    layout = layout,
+    tabToggle = contactsRuntime.tabToggle,
+    settingsConfig = settingsConfig,
+    compactLayout = compactLayout,
+    scriptResult = scriptResult,
+  })
   contactsRail = ContactsRail.Create({
     frame = frame,
     layout = layout,
@@ -199,11 +211,12 @@ function MessengerWindow.Create(factory, options)
     hooks = dock,
     factory = factory,
     chrome = chrome,
-    windowOptions = options,
+    windowOptions = EdgeWiring.DockOptions(edge, options),
     windowAlpha = windowAlpha,
     onPositionChanged = onPositionChanged,
     buildState = windowGeometry.buildState,
   })
+  EdgeWiring.Bind(edge, dock, applySavedState, windowSizing.relayoutCurrentSize)
   -- One relayout at build, so a bar height reported before the first resize moves the panes.
   windowSizing.relayoutCurrentSize()
 
@@ -245,6 +258,7 @@ function MessengerWindow.Create(factory, options)
     compactMode = compactLayout and compactMode or nil,
     dock = dock.dock,
     applySavedState = applySavedState,
+    applyScreenEdge = edge.applyLive,
   })
 end
 

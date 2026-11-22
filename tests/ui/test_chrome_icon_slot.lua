@@ -33,6 +33,16 @@ return function()
     assertCornerSlot(build(false, true), "custom")
   end
 
+  -- test_custom_chrome_exposes_its_window_edges
+  do
+    Hud.Configure("off")
+    local edges = build(false, true).windowEdges
+    assert(type(edges) == "table" and edges.left, "custom chrome exposes its edges")
+    Hud.Configure("classic")
+    assert(build(true, true).windowEdges == nil, "the Classic HUD has none")
+    Hud.Configure("off")
+  end
+
   -- test_classic_hud_has_a_corner_icon_spot
   do
     Hud.Configure("classic")

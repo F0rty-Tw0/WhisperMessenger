@@ -188,6 +188,7 @@ function WindowCoordinator.Create(options)
     getMinimapIcon = getMinimapIcon,
     getLdbObject = getLdbObject,
     getCompartment = options.getCompartment,
+    getEdgeSurface = options.getEdgeSurface,
     getDetachedPreview = options.getDetachedPreview,
     previewDetached = options.previewDetached,
     -- The registry, not the window: counts before the window is built.

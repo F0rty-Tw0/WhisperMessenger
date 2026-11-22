@@ -16,8 +16,9 @@ local function contacts()
   })
 end
 
+-- extra.hudStyle: "classic" or "retail" builds the Native HUD window (default off).
 function CompactWindow.Build(extra)
-  Hud.Configure("off")
+  Hud.Configure(extra and extra.hudStyle or "off")
   local factory = FakeUI.NewFactory()
   local savedUIParent = _G.UIParent
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)

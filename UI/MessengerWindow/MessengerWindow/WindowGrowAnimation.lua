@@ -71,6 +71,15 @@ local function readCenterPoint(region, into)
   return rect
 end
 
+-- A source marked growMotion.whole is a rectangle (the screen edge strip) the
+-- panel slides from and into; any other source is the point at its centre.
+local function readSource(region, into)
+  if region.growMotion and region.growMotion.whole then
+    return readRect(region, into)
+  end
+  return readCenterPoint(region, into)
+end
+
 local function buildPanel(factory, parent, theme)
   local panel = factory.CreateFrame("Frame", nil, parent)
   panel:SetFrameStrata("HIGH")
@@ -96,6 +105,18 @@ function WindowGrowAnimation.Attach(frame, options)
   -- The moving end of the panel, rewritten each tick. Only one step runs at a
   -- time (a new run makes the old step return at once), so one table is enough.
   local scratch = {}
+  -- The next play's time and easing, set by the begin* that made its step.
+  local runSeconds, runEase = duration, nil
+
+  local function chooseTiming(source, closing)
+    local motion = source.growMotion
+    if motion and motion.whole then
+      runSeconds = closing and motion.closeSeconds or motion.openSeconds
+      runEase = closing and GlideClock.EaseIn or nil
+    else
+      runSeconds, runEase = duration, nil
+    end
+  end
 
   -- In the window's strata: a window behind the map closes behind the map.
   local function paint()
@@ -152,7 +173,8 @@ function WindowGrowAnimation.Attach(frame, options)
   local function beginOpen(iconFrame)
     finish()
     local id = run
-    local from = readCenterPoint(iconFrame, {})
+    chooseTiming(iconFrame, false)
+    local from = readSource(iconFrame, {})
     targetAlpha = frame:GetAlpha()
     opening = true
     options.setAlphaHeld(true)
@@ -177,6 +199,7 @@ function WindowGrowAnimation.Attach(frame, options)
     run = run + 1
     local id = run
     releaseWindow()
+    chooseTiming(iconFrame, true)
     local from = readRect(frame, {})
     paint()
     return function(t, p)
@@ -187,7 +210,7 @@ function WindowGrowAnimation.Attach(frame, options)
         panel:Hide()
         return
       end
-      placePanel(from, readCenterPoint(iconFrame, scratch), t, p)
+      placePanel(from, readSource(iconFrame, scratch), t, p)
     end
   end
 
@@ -199,9 +222,9 @@ function WindowGrowAnimation.Attach(frame, options)
     if not panel:IsShown() then
       panel:Show()
     end
-    GlideClock.Run(panel, duration, step, function()
+    GlideClock.Run(panel, runSeconds, step, function()
       step(1, 1)
-    end)
+    end, runEase)
   end
 
   return {

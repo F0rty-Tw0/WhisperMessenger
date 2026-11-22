@@ -41,6 +41,22 @@ local Layout = {
   COMPACT_ICON_SLOT_Y = -6,
   COMPACT_ICON_SLOT_CLEARANCE = 40,
   COMPACT_SLIDE_SECONDS = 0.2,
+
+  -- Screen edge: the compact window held against the left or right screen edge.
+  SCREEN_EDGE_OPEN_SECONDS = 0.42,
+  SCREEN_EDGE_CLOSE_SECONDS = 0.32,
+  SCREEN_EDGE_SHADE_WIDTH = 14,
+  SCREEN_EDGE_GLOW_DEPTH = 48,
+  SCREEN_EDGE_GLOW_CYCLE_SECONDS = 3,
+  -- Docked Native HUD title row: buttons centred in it, then a gap and the
+  -- inset bevel divider (its atlas is 3 px tall); the content starts below.
+  SCREEN_EDGE_TITLE_ROW_HEIGHT = 26,
+  SCREEN_EDGE_TITLE_GAP = 3,
+  SCREEN_EDGE_DIVIDER_HEIGHT = 3,
+  -- Room under the tabs in the docked window's bottom band (the native tab
+  -- art reaches below its anchor); their tops hang from the band's divider.
+  SCREEN_EDGE_TAB_BAND_PAD_BOTTOM = 10,
+
   TOP_BAR_HEIGHT = 24,
   CONTENT_PADDING = 16,
   COMPOSER_HEIGHT = 44,

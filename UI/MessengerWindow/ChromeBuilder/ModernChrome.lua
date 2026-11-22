@@ -118,6 +118,7 @@ function ModernChrome.Build(factory, frame, options, theme)
     applyChromePaint = applyChromePaint,
     titleBar = titleBar,
     shadow = shadow,
+    edges = edgeTextures,
   }
 end
 

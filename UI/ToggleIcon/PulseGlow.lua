@@ -15,6 +15,7 @@ local INNER_GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\inner-gl
 local PULSE_FADE_IN = 0.5
 local PULSE_PEAK_HOLD = 0.25 -- keeps the original 1.75s cycle (0.75s + 1.0s)
 local PULSE_FADE_OUT = 1.0
+local PULSE_CYCLE = PULSE_FADE_IN + PULSE_PEAK_HOLD + PULSE_FADE_OUT
 
 local PulseGlow = {}
 
@@ -24,6 +25,8 @@ function PulseGlow.Create(factory, frame, options)
   options = options or {}
   local theme = options.theme or Theme
   local accent = options.accent or theme.COLORS.accent
+  -- options.cycleSeconds stretches the three phases, keeping their shares.
+  local stretch = (options.cycleSeconds or PULSE_CYCLE) / PULSE_CYCLE
   local glowFrame = factory.CreateFrame("Frame", nil, frame)
   -- Follows the host's size, including hosts sized after Create (title-bar buttons) and widget resizes.
   glowFrame:SetAllPoints(frame)
@@ -51,14 +54,14 @@ function PulseGlow.Create(factory, frame, options)
     local fadeIn = ag:CreateAnimation("Alpha")
     fadeIn:SetFromAlpha(0)
     fadeIn:SetToAlpha(0.8)
-    fadeIn:SetDuration(PULSE_FADE_IN)
-    fadeIn:SetEndDelay(PULSE_PEAK_HOLD)
+    fadeIn:SetDuration(PULSE_FADE_IN * stretch)
+    fadeIn:SetEndDelay(PULSE_PEAK_HOLD * stretch)
     fadeIn:SetOrder(1)
 
     local fadeOut = ag:CreateAnimation("Alpha")
     fadeOut:SetFromAlpha(0.8)
     fadeOut:SetToAlpha(0)
-    fadeOut:SetDuration(PULSE_FADE_OUT)
+    fadeOut:SetDuration(PULSE_FADE_OUT * stretch)
     fadeOut:SetOrder(2)
 
     if ag.SetScript then

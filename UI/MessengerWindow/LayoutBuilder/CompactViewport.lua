@@ -12,8 +12,15 @@ function CompactViewport.Build(factory, parent, topOffset, theme)
   local L = theme.LAYOUT
   local viewport = factory.CreateFrame("Frame", nil, parent)
   viewport:SetPoint("TOPLEFT", parent, "TOPLEFT", L.CONTACTS_PANE_LEFT_INSET, topOffset)
-  viewport:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -L.CONTENT_PANE_RIGHT_INSET, L.CONTENT_PANE_BOTTOM_INSET)
+  CompactViewport.SetBottomReserve(viewport, 0, theme)
   return viewport
+end
+
+-- Keeps reserve px free under the panes (the tab strip inside a window held
+-- at a screen edge). Replaces only the bottom point.
+function CompactViewport.SetBottomReserve(viewport, reserve, theme)
+  local L = theme.LAYOUT
+  viewport:SetPoint("BOTTOMRIGHT", viewport:GetParent(), "BOTTOMRIGHT", -L.CONTENT_PANE_RIGHT_INSET, L.CONTENT_PANE_BOTTOM_INSET + reserve)
 end
 
 -- Re-anchors the strip at layout.compactProgress. The panes keep their widths;

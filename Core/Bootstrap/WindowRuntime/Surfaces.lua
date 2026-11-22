@@ -6,6 +6,9 @@ end
 local IconMode = ns.BootstrapWindowRuntimeIconMode or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconMode")
 local IconRuntime = ns.BootstrapWindowRuntimeIconRuntime or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconRuntime")
 local MinimapIconRuntime = ns.BootstrapWindowRuntimeMinimapIconRuntime or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.MinimapIconRuntime")
+local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
+local EdgeWiring = ns.MessengerWindowEdgeWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.EdgeWiring")
+local ScreenEdgeSurface = ns.ToggleIconScreenEdgeSurface or require("WhisperMessenger.UI.ToggleIcon.ScreenEdgeSurface")
 local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DetachedPreviewRuntime")
 
@@ -101,6 +104,7 @@ function Surfaces.Create(options)
   local minimapIcon
   local detachedPreview
   local compartment
+  local edgeSurface
 
   local function resolveIconMode()
     return IconMode.Resolve(accountState.settings)
@@ -183,12 +187,36 @@ function Surfaces.Create(options)
     return compartment
   end
 
+  -- Built once, only while a screen edge is set, and seeded with the current
+  -- counts so unread whispers at login glow before the window exists.
+  local function ensureEdgeSurface()
+    if edgeSurface then
+      return edgeSurface
+    end
+    local settings = accountState.settings
+    if EdgeWiring.Side(settings) == nil then
+      return nil
+    end
+    edgeSurface = ScreenEdgeSurface.Create(options.uiFactory, options.uiParent, {
+      settings = settings,
+      getSide = function()
+        return EdgeWiring.Side(settings)
+      end,
+      isWindowShown = function()
+        return runtime.window ~= nil and runtime.window.frame:IsShown()
+      end,
+    })
+    edgeSurface.setUnreadCount(IconSurfaces.Counts(options.buildContacts(), runtime.panelRegistry))
+    return edgeSurface
+  end
+
   -- Every built surface, shown or hidden: a hidden one comes back in the
   -- theme picked while it was away.
   local function refreshTheme()
     repaint(icon)
     repaint(minimapIcon)
     repaint(detachedPreview)
+    repaint(edgeSurface)
   end
 
   return {
@@ -197,6 +225,7 @@ function Surfaces.Create(options)
     end,
     applyIconMode = applyIconMode,
     createCompartment = createCompartment,
+    ensureEdgeSurface = ensureEdgeSurface,
     ensureDetachedPreview = ensureDetachedPreview,
     refreshTheme = refreshTheme,
     isPreviewDetached = isPreviewDetached,
@@ -208,6 +237,10 @@ function Surfaces.Create(options)
     end,
     getCompartment = function()
       return compartment
+    end,
+    -- Built or not, whatever the side now.
+    getEdgeSurface = function()
+      return edgeSurface
     end,
     -- The surface only while the icon mode shows it.
     getWidgetIcon = getWidgetIcon,
