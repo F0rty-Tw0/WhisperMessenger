@@ -185,6 +185,21 @@ return function()
     assert(padShown(row), "shown at once")
   end)
 
+  -- test_toggling_back_to_the_first_mode_shows_them_again
+  withPadUI(true, function(env, state)
+    local nav, s = fakeNav(), fakeSettings()
+    local page = factory.CreateFrame("Frame", nil, parent)
+    local row = SettingsControls.CreateSliderRow(factory, page, sliderSpec)
+    s.panels, s.createFrame = { page }, env.createFrame
+    GamepadSettings.Attach(nav, s)
+    state.on = false
+    env.fire(TOGGLE_EVENT)
+    state.on = true
+    env.fire(TOGGLE_EVENT)
+    assert(padShown(row), "second toggle shows them again")
+    assert(nav.count("refresh") == 2, "one re-scan per real toggle")
+  end)
+
   -- test_toggle_closes_an_open_menu_popup
   withPadUI(true, function(env, state)
     MenuPopupWorld.With(function(_worldFactory, anchor)
