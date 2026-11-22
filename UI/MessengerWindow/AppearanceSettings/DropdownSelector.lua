@@ -8,14 +8,14 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local DropdownSkin = ns.MessengerWindowDropdownSkin or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSkin")
 local NativeDropdown = ns.MessengerWindowNativeDropdown or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.NativeDropdown")
 local DropdownOptionRow = ns.MessengerWindowDropdownOptionRow or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownOptionRow")
-local applyColorTexture = UIHelpers.applyColorTexture
 
 local DropdownSelector = {}
 
 local DEFAULT_BUTTON_HEIGHT = 26
 local DEFAULT_MENU_HEIGHT = 156
 
--- Every custom-look menu built, so the controller's B can close an open one.
+-- Every menu of WM's own built (either look), so the controller's B can
+-- close an open one.
 local menus = setmetatable({}, { __mode = "k" })
 -- Open or close: the controller re-scans, so the D-pad reaches new options.
 local onMenuToggled
@@ -65,26 +65,14 @@ function DropdownSelector.Create(factory, parent, options)
   button.label = buttonLabel
   local skin = DropdownSkin.Attach(button, buttonLabel)
 
-  local menu = factory.CreateFrame("ScrollFrame", nil, row)
-  menu:SetPoint("TOPLEFT", button, "BOTTOMLEFT", 0, -2)
-  menu:SetFrameLevel((row.GetFrameLevel and row:GetFrameLevel() or 1) + 20)
-  menu:SetClampedToScreen(true)
-  menu:EnableMouseWheel(true)
-  if menu.SetClipsChildren then
-    menu:SetClipsChildren(true)
-  end
-
-  local menuBg = menu:CreateTexture(nil, "BACKGROUND")
-  menuBg:SetAllPoints(menu)
-
-  local content = factory.CreateFrame("Frame", nil, menu)
-  content:SetSize(rowWidth, buttonHeight)
-  menu:SetScrollChild(content)
-  content:Show()
-  menu:Hide()
+  local menu, content, menuSkin = DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
   menus[menu] = true
-  menu:SetScript("OnShow", menuToggled)
-  menu:SetScript("OnHide", menuToggled)
+  local function onMenuShownOrHidden()
+    DropdownSkin.SyncPanel(menu, menuSkin)
+    menuToggled()
+  end
+  menu:SetScript("OnShow", onMenuShownOrHidden)
+  menu:SetScript("OnHide", onMenuShownOrHidden)
 
   local optionButtons = {}
   local buttonPool = {}
@@ -133,12 +121,16 @@ function DropdownSelector.Create(factory, parent, options)
   end
 
   local function createOptionButton()
-    local optionButton = DropdownOptionRow.Create(factory, content, palette, getSelected, pickOption)
+    local optionButton = DropdownOptionRow.Create(factory, content, palette, getSelected, pickOption, menuSkin.native)
     buttonPool[#buttonPool + 1] = optionButton
     return optionButton
   end
 
+  -- Under the Native look the menu is menuSkin.inset narrower on each side
+  -- (the tooltip panel's border around it), so the panel stays as wide as
+  -- the button; the visible rows and scroll range match the modern look.
   local function layoutOptions()
+    local listWidth = rowWidth - 2 * menuSkin.inset
     local contentHeight = #optionButtons * buttonHeight
     local popupHeight = math.min(menuHeight, math.max(buttonHeight, contentHeight))
 
@@ -149,11 +141,11 @@ function DropdownSelector.Create(factory, parent, options)
       else
         optionButton:SetPoint("TOPLEFT", optionButtons[i - 1], "BOTTOMLEFT", 0, 0)
       end
-      optionButton:SetSize(rowWidth, buttonHeight)
+      optionButton:SetSize(listWidth, buttonHeight)
     end
 
-    menu:SetSize(rowWidth, popupHeight)
-    content:SetSize(rowWidth, math.max(contentHeight, popupHeight))
+    menu:SetSize(listWidth, popupHeight)
+    content:SetSize(listWidth, math.max(contentHeight, popupHeight))
     if menu.UpdateScrollChildRect then
       menu:UpdateScrollChildRect()
     end
@@ -222,7 +214,7 @@ function DropdownSelector.Create(factory, parent, options)
       end
     end
     scrollToSelected()
-    menu:Raise()
+    DropdownSkin.RaiseMenu(menu, menuSkin)
     menu:Show()
   end)
   button:SetScript("OnEnter", function()
@@ -241,12 +233,15 @@ function DropdownSelector.Create(factory, parent, options)
         parentOnHide(...)
       end
       menu:Hide()
+      -- The menu is already invisible here, so WoW fires no OnHide for it:
+      -- sync the native panel by hand.
+      DropdownSkin.SyncPanel(menu, menuSkin)
     end)
   end
 
   setOptionsList(optionsList)
   paintClosedButton()
-  applyColorTexture(menuBg, palette.bg)
+  DropdownSkin.PaintMenu(menuSkin, palette)
 
   return {
     row = row,
@@ -273,12 +268,12 @@ function DropdownSelector.Create(factory, parent, options)
       mergePalette(nextColors)
       paintClosedButton()
       repaintOptions()
-      applyColorTexture(menuBg, palette.bg)
+      DropdownSkin.PaintMenu(menuSkin, palette)
     end,
   }
 end
 
--- Hides every open custom-look menu (the native look's game menu closes
+-- Hides every open menu of WM's own (the game's dropdown menu closes
 -- itself); true when one was open.
 function DropdownSelector.HideShownMenu()
   local hidden = false
