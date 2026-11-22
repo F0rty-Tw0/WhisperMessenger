@@ -1,10 +1,9 @@
-local FakeUI = require("tests.helpers.fake_ui")
 local Probe = require("tests.helpers.menu_popup_probe")
 local BannedMenuApis = require("tests.helpers.banned_menu_apis")
 local Flavor = require("tests.helpers.flavor")
+local World = require("tests.helpers.menu_popup_world")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local PopupUI = require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI")
-local MenuPopup = require("WhisperMessenger.UI.Shared.MenuPopup")
 local OwnMenu = require("WhisperMessenger.UI.ContactsList.OwnMenu")
 
 -- WM's own contact popup on WoW: Forever: title, Open chat, Copy name, the
@@ -28,80 +27,100 @@ local function wowItem()
   return { channel = "WOW", displayName = NAME, guid = "Player-1-A" }
 end
 
-return function()
-  local factory = FakeUI.NewFactory()
-  local savedParent, savedCreateFrame, savedSpecial = _G.UIParent, rawget(_G, "CreateFrame"), _G.UISpecialFrames
+-- Runs fn(anchor, copied) with the copy dialog replaced by a recorder:
+-- copied.text and copied.prompt hold the last call.
+local function withCopyDialog(fn)
   local savedShow = PopupUI.ShowManualCopyDialog
-  Localization.Configure({ language = "enUS" })
-  _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
-  rawset(_G, "CreateFrame", factory.CreateFrame)
-  _G.UISpecialFrames = {}
-  local anchor = factory.CreateFrame("Button", nil, _G.UIParent)
-  anchor:Show()
-  local copied, prompt
+  local copied = {}
   rawset(PopupUI, "ShowManualCopyDialog", function(text, options)
-    copied = text
-    prompt = options and options.prompt
+    copied.text = text
+    copied.prompt = options and options.prompt
+  end)
+  local ok, err = pcall(World.With, function(_factory, anchor)
+    fn(anchor, copied)
+  end)
+  rawset(PopupUI, "ShowManualCopyDialog", savedShow)
+  if not ok then
+    error(err, 0)
+  end
+end
+
+return function()
+  Localization.Configure({ language = "enUS" })
+
+  -- test_rows_in_spec_order
+  World.With(function(_factory, anchor)
+    assert(OwnMenu.Open(wowItem(), anchor, NAME, { onSelect = noop }, wmSection) == true, "popup opens")
+    local got = labels()
+    assert(got == "title:Arthas-Area52,button:Open chat,button:Copy name,divider,title:Whisper Messenger,button:Mute", "rows in order, got " .. got)
   end)
 
-  local ok, err = pcall(function()
-    -- test_rows_in_spec_order
-    BannedMenuApis.With(function(calls)
-      local item = wowItem()
-      assert(OwnMenu.Open(item, anchor, NAME, { onSelect = noop }, wmSection) == true, "popup opens")
-      local got = labels()
-      assert(got == "title:Arthas-Area52,button:Open chat,button:Copy name,divider,title:Whisper Messenger,button:Mute", "rows in order, got " .. got)
-      assert(#calls == 0, "touched " .. table.concat(calls, ", "))
+  -- test_open_touches_no_blizzard_menu
+  World.With(function(_factory, anchor)
+    BannedMenuApis.AssertNone(function()
+      OwnMenu.Open(wowItem(), anchor, NAME, { onSelect = noop }, wmSection)
     end)
+  end)
 
-    -- test_open_chat_calls_onSelect_with_item
-    do
-      local item = wowItem()
-      local selected
-      OwnMenu.Open(item, anchor, NAME, {
-        onSelect = function(it)
-          selected = it
-        end,
-      }, noop)
-      Probe.Click("Open chat")
-      assert(selected == item, "Open chat selects the row's item")
-    end
+  -- test_open_chat_calls_onSelect_with_item
+  World.With(function(_factory, anchor)
+    local item = wowItem()
+    local selected
+    OwnMenu.Open(item, anchor, NAME, {
+      onSelect = function(it)
+        selected = it
+      end,
+    }, noop)
+    Probe.Click("Open chat")
+    assert(selected == item, "Open chat selects the row's item")
+  end)
 
-    -- test_no_open_chat_without_onSelect
+  -- test_no_open_chat_without_rowActions
+  World.With(function(_factory, anchor)
     OwnMenu.Open(wowItem(), anchor, NAME, nil, noop)
     assert(labels() == "title:Arthas-Area52,button:Copy name", "no Open chat without rowActions, got " .. labels())
+  end)
+
+  -- test_no_open_chat_without_onSelect
+  World.With(function(_factory, anchor)
     OwnMenu.Open(wowItem(), anchor, NAME, { onPin = noop }, noop)
     assert(labels() == "title:Arthas-Area52,button:Copy name", "no Open chat without onSelect, got " .. labels())
+  end)
 
-    -- test_copy_name_opens_copy_dialog
-    Flavor.With(true, false, function()
-      copied, prompt = nil, nil
+  -- test_copy_name_keeps_realm_on_retail
+  Flavor.With(true, false, function()
+    withCopyDialog(function(anchor, copied)
       OwnMenu.Open(wowItem(), anchor, NAME, nil, noop)
       Probe.Click("Copy name")
-      assert(copied == "Arthas-Area52", "Retail copies the full name, got " .. tostring(copied))
-      assert(prompt == "Press Ctrl+C to copy the name.", "copy prompt")
+      assert(copied.text == "Arthas-Area52", "Retail copies the full name, got " .. tostring(copied.text))
     end)
-    Flavor.With(true, true, function()
-      copied, prompt = nil, nil
+  end)
+
+  -- test_copy_name_cuts_realm_on_forever
+  Flavor.With(true, true, function()
+    withCopyDialog(function(anchor, copied)
       OwnMenu.Open(wowItem(), anchor, NAME, nil, noop)
       Probe.Click("Copy name")
-      assert(copied == "Arthas", "Forever cuts the realm, got " .. tostring(copied))
-      assert(prompt == "Press Ctrl+C to copy the name.", "copy prompt")
+      assert(copied.text == "Arthas", "Forever cuts the realm, got " .. tostring(copied.text))
     end)
+  end)
 
-    -- test_copy_name_absent_on_bn_contact
+  -- test_copy_name_prompt
+  withCopyDialog(function(anchor, copied)
+    OwnMenu.Open(wowItem(), anchor, NAME, nil, noop)
+    Probe.Click("Copy name")
+    assert(copied.prompt == "Press Ctrl+C to copy the name.", "copy prompt, got " .. tostring(copied.prompt))
+  end)
+
+  -- test_copy_name_absent_on_bn_contact
+  World.With(function(_factory, anchor)
     OwnMenu.Open({ channel = "BN", displayName = "Jaina", battleTag = "Jaina#1" }, anchor, "Jaina", nil, noop)
     assert(Probe.Find("Copy name") == nil, "no Copy name on a BN contact")
+  end)
 
-    -- test_empty_wm_section_adds_nothing
+  -- test_empty_wm_section_adds_nothing
+  World.With(function(_factory, anchor)
     OwnMenu.Open(wowItem(), anchor, NAME, { onSelect = noop }, noop)
     assert(not string.find(labels(), "divider", 1, true), "empty WM section adds no divider, got " .. labels())
   end)
-
-  MenuPopup.Close()
-  rawset(PopupUI, "ShowManualCopyDialog", savedShow)
-  _G.UIParent = savedParent
-  rawset(_G, "CreateFrame", savedCreateFrame)
-  _G.UISpecialFrames = savedSpecial
-  assert(ok, err)
 end

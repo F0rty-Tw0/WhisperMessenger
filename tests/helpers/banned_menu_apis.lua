@@ -64,4 +64,12 @@ function BannedMenuApis.With(fn)
   assert(ok, err)
 end
 
+-- Runs fn() inside With and fails, listing them, when it hit any banned API.
+function BannedMenuApis.AssertNone(fn)
+  BannedMenuApis.With(function(calls)
+    fn()
+    assert(#calls == 0, "touched " .. table.concat(calls, ", "))
+  end)
+end
+
 return BannedMenuApis

@@ -5,6 +5,8 @@ local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local FakeUI = require("tests.helpers.fake_ui")
 local Probe = require("tests.helpers.menu_popup_probe")
+local Flavor = require("tests.helpers.flavor")
+local World = require("tests.helpers.menu_popup_world")
 local MenuPopup = require("WhisperMessenger.UI.Shared.MenuPopup")
 
 -- Right-clicking a contact offers "Copy profile link" with one entry per
@@ -120,22 +122,13 @@ return function()
   end
 
   -- test_forever_hides_submenu
-  do
-    local factory = FakeUI.NewFactory()
-    local savedParent, savedCreateFrame = _G.UIParent, rawget(_G, "CreateFrame")
-    _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
-    rawset(_G, "CreateFrame", factory.CreateFrame)
-    FlavorCompat.isForever = true
-    ContextMenu.Open(arthas, anchor, nil, onUpdatePrefs)
-    local shown = MenuPopup.IsShown()
-    local submenu = Probe.Find(SUBMENU)
-    MenuPopup.Close()
-    FlavorCompat.isForever = false
-    _G.UIParent = savedParent
-    rawset(_G, "CreateFrame", savedCreateFrame)
-    assert(shown, "WoW: Forever opens WM's own popup")
-    assert(submenu == nil, "no submenu on WoW: Forever")
-  end
+  Flavor.With(true, true, function()
+    World.With(function(_factory, popupAnchor)
+      ContextMenu.Open(arthas, popupAnchor, nil, onUpdatePrefs)
+      assert(MenuPopup.IsShown(), "WoW: Forever opens WM's own popup")
+      assert(Probe.Find(SUBMENU) == nil, "no submenu on WoW: Forever")
+    end)
+  end)
 
   -- test_classic_era_season_picks_warcraftlogs_site
   do
