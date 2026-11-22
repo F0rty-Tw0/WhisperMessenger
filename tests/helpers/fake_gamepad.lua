@@ -3,8 +3,7 @@
 -- Mirrors Blizzard's SmartNavigation.lua: FrameShown creates the panel info
 -- and fires the frame's panel-info-added callback (#L826-L845, #L839);
 -- the callback setter only stores it on the frame (#L1982-L1984).
--- env.press mirrors how SmartNav runs a jump override (#L1503-L1520,
--- Utility.lua#L513-L524). Prompted bindings (the X button, which the addon
+-- env.overrideFor reads the frame a jump override points at. Prompted bindings (the X button, which the addon
 -- must not use) and the game's right-click come from fake_gamepad_bindings.
 local FakeGamepadBindings = require("tests.helpers.fake_gamepad_bindings")
 
@@ -122,26 +121,20 @@ function FakeGamepad.New()
     RIGHT = { x = 1, y = 0, dirKey = "right" },
   }
 
+  -- WM must hand SmartNav a frame or nil, never a function override.
   local overrides = setmetatable({}, { __mode = "k" })
   function env.addJumpOverride(button, direction, override)
+    if type(override) == "function" then
+      error("fake SmartNav: jump override must be a frame or nil")
+    end
     log("AddJumpNavigationOverride", button, direction, override)
     overrides[button] = overrides[button] or {}
     overrides[button][direction.dirKey] = override
   end
 
-  -- A D-pad press on widget: "stay" when focus stays on it, else "move".
-  -- A function override runs first; then any override in combat is blocked.
-  function env.press(widget, dirName)
-    local stored = overrides[widget] and overrides[widget][env.directions[dirName].dirKey]
-    local result = stored
-    if type(stored) == "function" then
-      result = stored()
-    end
-    if stored ~= nil and env.combat then
-      log("ActionBlocked", widget)
-      return "stay"
-    end
-    return result == true and "stay" or "move"
+  -- The frame SmartNav jumps to when the D-pad presses dirName on widget.
+  function env.overrideFor(widget, dirName)
+    return overrides[widget] and overrides[widget][env.directions[dirName].dirKey]
   end
 
   function env.inCombat()

@@ -1,18 +1,16 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local FakeGamepad = require("tests.helpers.fake_gamepad")
 local FindUI = require("tests.helpers.find_ui")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local Theme = require("WhisperMessenger.UI.Theme")
 local SettingsControls = require("WhisperMessenger.UI.Shared.SettingsControls")
 local AppearanceSettings = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
 local SettingsRuntime = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsRuntime")
-local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadSettings = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
 
 local function fakeNav()
   ---@type table<string, any>
   local nav = { seen = {} }
-  for _, name in ipairs({ "markFocusable", "setStepper", "setEdgeOverride", "setScrollFrame", "refresh" }) do
+  for _, name in ipairs({ "markFocusable", "setScrollFrame", "refresh" }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
     end
@@ -97,29 +95,7 @@ return function()
     SettingsControls.CreateSliderRow = original
     assert(ok, err)
     for _, row in ipairs(created) do
-      assert(nav.countFor("markFocusable", row.slider) == 1 and nav.countFor("setStepper", row.slider) == 1, "slider marked once and steps")
+      assert(nav.countFor("markFocusable", row.slider) == 1, "slider marked once")
     end
-  end
-
-  -- test_pad_right_on_a_slider_at_max_stays_and_changes_nothing
-  do
-    local env = FakeGamepad.New()
-    local nav = GamepadNav.New(factory.CreateFrame("Frame", nil, parent), env.deps())
-    local changes = 0
-    local page = factory.CreateFrame("Frame", nil, parent)
-    local row = SettingsControls.CreateSliderRow(factory, page, {
-      label = "N",
-      min = 0,
-      max = 2,
-      step = 1,
-      initial = 1,
-      onChange = function()
-        changes = changes + 1
-      end,
-    })
-    GamepadSettings.Attach(nav, { panels = { page } })
-    assert(env.press(row.slider, "RIGHT") == "stay" and row.slider:GetValue() == 2 and changes == 1, "right steps, focus stays")
-    assert(env.press(row.slider, "RIGHT") == "stay" and changes == 1, "at max: stays, no change")
-    assert(env.press(row.slider, "DOWN") == "move", "down leaves the slider")
   end
 end

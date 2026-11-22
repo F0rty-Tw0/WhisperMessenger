@@ -99,140 +99,105 @@ return function()
     assert(ok, err)
   end
 
-  -- test_set_stepper_installs_left_and_right_once
+  -- test_jump_target_hands_smartnav_a_frame
   do
     local env, _, nav = setup()
-    local slider = {}
-    nav.setStepper(slider, function() end)
-    nav.setStepper(slider, function() end)
-    assert(env.count("AddJumpNavigationOverride") == 2, "LEFT and RIGHT, once per widget")
-    local keys = { env.calls[1].args[2].dirKey, env.calls[2].args[2].dirKey }
-    table.sort(keys)
-    assert(keys[1] == "left" and keys[2] == "right" and env.calls[1].args[1] == slider, "on the slider, left and right")
-    assert(type(env.calls[1].args[3]) == "function", "a function override, not a frame")
+    local a, b = {}, {}
+    nav.setJumpTarget(a, "RIGHT", b)
+    local call = env.calls[1]
+    assert(call ~= nil, "a call was made")
+    local args = call.args
+    assert(env.count("AddJumpNavigationOverride") == 1 and args[1] == a and args[2].dirKey == "right" and args[3] == b, "frame target")
   end
 
-  -- test_left_and_right_step_and_keep_focus
+  -- test_same_target_is_set_once
   do
     local env, _, nav = setup()
-    local slider, deltas = {}, {}
-    nav.setStepper(slider, function(delta)
-      table.insert(deltas, delta)
-    end)
-    assert(env.press(slider, "RIGHT") == "stay" and env.press(slider, "LEFT") == "stay", "focus stays on the slider")
-    assert(table.concat(deltas, ",") == "1,-1", "right +1, left -1")
+    local a, b = {}, {}
+    nav.setJumpTarget(a, "RIGHT", b)
+    nav.setJumpTarget(a, "RIGHT", b)
+    assert(env.count("AddJumpNavigationOverride") == 1, "memo: no second call")
   end
 
-  -- test_step_at_the_limit_still_keeps_focus
+  -- test_new_target_replaces_the_old
   do
     local env, _, nav = setup()
-    local slider, value = {}, 10
-    nav.setStepper(slider, function(delta)
-      value = math.min(10, value + delta)
-      return false
-    end)
-    assert(env.press(slider, "RIGHT") == "stay" and value == 10, "at max: no change, no jump to the next column")
+    local a, b, c = {}, {}, {}
+    nav.setJumpTarget(a, "RIGHT", b)
+    nav.setJumpTarget(a, "RIGHT", c)
+    assert(env.count("AddJumpNavigationOverride") == 2 and env.overrideFor(a, "RIGHT") == c, "retargeted")
   end
 
-  -- test_up_and_down_leave_the_stepper
+  -- test_each_direction_keeps_its_own_target
   do
     local env, _, nav = setup()
-    local slider, steps = {}, 0
-    nav.setStepper(slider, function()
-      steps = steps + 1
-    end)
-    assert(env.press(slider, "UP") == "move" and env.press(slider, "DOWN") == "move" and steps == 0, "up/down navigate")
+    local a, b = {}, {}
+    nav.setJumpTarget(a, "RIGHT", b)
+    nav.setJumpTarget(a, "LEFT", b)
+    assert(env.count("AddJumpNavigationOverride") == 2 and env.overrideFor(a, "LEFT") == b, "per direction")
   end
 
-  -- test_slider_can_be_focusable_and_a_stepper
+  -- test_nil_clears_a_set_target
   do
     local env, _, nav = setup()
-    local slider = {}
-    nav.markFocusable(slider)
-    nav.setStepper(slider, function() end)
-    assert(env.count("MarkFrameFocusable") == 1 and env.count("AddJumpNavigationOverride") == 2, "both marks apply")
+    local a, b, c = {}, {}, {}
+    nav.setJumpTarget(a, "RIGHT", b)
+    nav.setJumpTarget(a, "RIGHT", c)
+    nav.setJumpTarget(a, "RIGHT", nil)
+    local third = env.calls[3]
+    assert(third ~= nil, "a third call was made")
+    assert(env.count("AddJumpNavigationOverride") == 3 and third.args[3] == nil and env.overrideFor(a, "RIGHT") == nil, "cleared with nil")
+    nav.setJumpTarget(a, "RIGHT", nil)
+    assert(env.count("AddJumpNavigationOverride") == 3, "already clear: no call")
   end
 
-  -- test_set_stepper_in_combat_installs_once_after_regen
+  -- test_nil_on_an_unset_widget_does_nothing
   do
     local env, _, nav = setup()
-    local slider, steps = {}, 0
+    nav.setJumpTarget({}, "LEFT", nil)
+    assert(#env.calls == 0, "nothing to clear")
+  end
+
+  -- test_jump_target_in_combat_settles_the_last_target_in_order
+  do
+    local env, _, nav = setup()
+    local a, b, c = {}, {}, {}
     nav.onShow()
     env.combat = true
-    nav.setStepper(slider, function()
-      steps = steps + 1
-    end)
-    nav.setStepper(slider, function() end)
-    assert(env.count("AddJumpNavigationOverride") == 0, "no override in combat")
+    nav.setJumpTarget(a, "RIGHT", b)
+    nav.setJumpTarget(a, "RIGHT", c)
+    assert(env.count("AddJumpNavigationOverride") == 0, "none in combat")
     endCombat(env)
-    assert(env.count("AddJumpNavigationOverride") == 2, "installed once after regen")
-    assert(env.press(slider, "RIGHT") == "stay" and steps == 1, "the first step function is the one installed")
+    assert(env.count("AddJumpNavigationOverride") == 2, "both settled, in call order")
+    assert(env.overrideFor(a, "RIGHT") == c, "last target wins after regen")
   end
 
-  -- test_stepper_needs_the_game_functions
+  -- test_jump_target_needs_the_game_functions
   for _, overrides in ipairs({ { smartNavigation = false }, { addJumpOverride = false }, { directions = false } }) do
     local env, _, nav = setup(overrides)
-    nav.setStepper({}, function() end)
+    nav.setJumpTarget({}, "LEFT", {})
     assert(#env.calls == 0, "no override without the game's functions")
   end
 
-  -- test_edge_override_stays_when_on_press_returns_true
+  -- test_function_target_is_refused
   do
     local env, _, nav = setup()
-    local row, presses = {}, 0
-    nav.setEdgeOverride(row, "DOWN", function()
-      presses = presses + 1
-      return true
-    end)
-    assert(env.count("AddJumpNavigationOverride") == 1 and env.calls[1].args[2].dirKey == "down", "one DOWN override")
-    assert(env.press(row, "DOWN") == "stay" and presses == 1, "handled: focus stays")
-    assert(env.press(row, "UP") == "move" and presses == 1, "the other direction is untouched")
+    local ok, err = pcall(nav.setJumpTarget, {}, "LEFT", function() end)
+    assert(not ok and tostring(err):find("frame or nil", 1, true), "refused")
+    assert(env.count("AddJumpNavigationOverride") == 0, "no call")
   end
 
-  -- test_edge_override_moves_when_on_press_returns_nil
+  -- test_no_function_override_marks_are_left
   do
-    local env, _, nav = setup()
-    local row = {}
-    nav.setEdgeOverride(row, "UP", function() end)
-    assert(env.press(row, "UP") == "move", "not handled: SmartNav moves as usual")
+    local _, _, nav = setup()
+    assert(nav.setStepper == nil and nav.setEdgeOverride == nil, "active nav")
+    local _, _, inert = setup({ gamepadMode = false })
+    assert(inert.setStepper == nil and inert.setEdgeOverride == nil and type(inert.setJumpTarget) == "function", "inert nav")
   end
 
-  -- test_edge_override_once_per_widget_and_direction
+  -- test_fake_smartnav_rejects_function_overrides
   do
-    local env, _, nav = setup()
-    local row = {}
-    nav.setStepper(row, function() end)
-    nav.setEdgeOverride(row, "DOWN", function() end)
-    nav.setEdgeOverride(row, "DOWN", function() end)
-    nav.setEdgeOverride(row, "UP", function() end)
-    assert(env.count("AddJumpNavigationOverride") == 4, "LEFT, RIGHT, DOWN, UP: each once")
-  end
-
-  -- test_edge_override_in_combat_settles_once_with_the_stepper_queue
-  do
-    local env, _, nav = setup()
-    local slider, row = {}, {}
-    nav.onShow()
-    env.combat = true
-    nav.setStepper(slider, function() end)
-    nav.setEdgeOverride(row, "DOWN", function()
-      return true
-    end)
-    nav.setEdgeOverride(row, "DOWN", function() end)
-    assert(env.count("AddJumpNavigationOverride") == 0, "no override in combat")
-    endCombat(env)
-    env.regen()
-    assert(env.count("AddJumpNavigationOverride") == 3, "settled once")
-    assert(env.calls[4].args[1] == row and env.calls[4].args[2].dirKey == "down", "in call order, after the stepper's two")
-    assert(env.press(row, "DOWN") == "stay", "the first onPress is the one installed")
-  end
-
-  -- test_edge_override_needs_the_game_functions
-  for _, overrides in ipairs({ { smartNavigation = false }, { addJumpOverride = false }, { directions = false } }) do
-    local env, _, nav = setup(overrides)
-    nav.setEdgeOverride({}, "DOWN", function()
-      return true
-    end)
-    assert(#env.calls == 0, "no override without the game's functions")
+    local env = FakeGamepad.New()
+    assert(not pcall(env.addJumpOverride, {}, env.directions.LEFT, function() end), "fake raises on a function")
   end
 end

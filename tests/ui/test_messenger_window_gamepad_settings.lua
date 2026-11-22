@@ -4,7 +4,7 @@ local GamepadSettings = require("WhisperMessenger.UI.MessengerWindow.MessengerWi
 local function fakeNav()
   ---@type table<string, any>
   local nav = { seen = {} }
-  for _, name in ipairs({ "markFocusable", "setStepper", "setEdgeOverride", "setScrollFrame", "refresh" }) do
+  for _, name in ipairs({ "markFocusable", "setScrollFrame", "refresh" }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
     end
@@ -70,14 +70,13 @@ return function()
     local panels = { pageA, false }
     s.panels = panels
     local onTargetsChanged = GamepadSettings.Attach(nav, s)
-    assert(nav.count("markFocusable") == 1 and nav.last("setStepper")[1] == sliderA, "built page scanned at attach")
+    assert(nav.count("markFocusable") == 1 and nav.last("markFocusable")[1] == sliderA, "built page scanned at attach")
     local pageB = factory.CreateFrame("Frame", nil, parent)
     local sliderB = factory.CreateFrame("Slider", nil, pageB)
     sliderB._wmPadStep = function() end
     panels[2] = pageB
     onTargetsChanged()
     assert(nav.count("markFocusable") == 2 and nav.last("markFocusable")[1] == sliderB, "lazy page marked, page A not again")
-    assert(nav.count("setStepper") == 2 and nav.last("setStepper")[2] == sliderB._wmPadStep, "stepper is the widget's own step")
   end
 
   -- test_widget_tagged_after_its_first_scan_is_handed_over
@@ -90,26 +89,7 @@ return function()
     assert(nav.count("markFocusable") == 0, "untagged: nothing to hand over yet")
     slider._wmPadStep = function() end
     onTargetsChanged()
-    assert(nav.count("markFocusable") == 1 and nav.last("setStepper")[1] == slider, "tagged later: handed over on the next scan")
-  end
-
-  -- test_edge_tags_become_edge_overrides
-  do
-    local nav, s = fakeNav(), fakeSettings()
-    local page = factory.CreateFrame("Frame", nil, parent)
-    local button = factory.CreateFrame("Button", nil, page)
-    local down = function()
-      return true
-    end
-    button._wmPadEdges = { DOWN = down }
-    s.panels = { page }
-    local onTargetsChanged = GamepadSettings.Attach(nav, s)
-    onTargetsChanged()
-    local args = nav.last("setEdgeOverride")
-    assert(
-      nav.count("setEdgeOverride") == 1 and args[1] == button and args[2] == "DOWN" and args[3] == down,
-      "one edge override, not again on re-scan"
-    )
+    assert(nav.count("markFocusable") == 1 and nav.last("markFocusable")[1] == slider, "tagged later: handed over on the next scan")
   end
 
   -- test_missing_settings_parts_do_nothing

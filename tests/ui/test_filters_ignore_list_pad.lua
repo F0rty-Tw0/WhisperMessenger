@@ -34,24 +34,14 @@ return function()
     return NOW
   end)
 
-  -- test_dpad_past_the_last_visible_row_scrolls_the_list
+  -- test_ignore_rows_install_no_jump_override
   do
-    local result, factory, parent = create(8) -- 6 rows show Player001..Player006
+    local result, factory, parent = create(8)
     local env = attach(result, factory, parent)
-    local lastRow = FindUI.text(result.frame, "Player006").parent
-    local firstRow = FindUI.text(result.frame, "Player001").parent
-    assert(env.press(lastRow.removeButton, "DOWN") == "stay" and lastRow.nameText.text == "Player007", "next name scrolls in")
-    assert(env.press(lastRow.removeButton, "DOWN") == "stay" and lastRow.nameText.text == "Player008", "and the last one")
-    assert(env.press(lastRow.removeButton, "DOWN") == "move", "end of the list: D-pad moves on to Block for")
-    assert(env.press(firstRow.removeButton, "UP") == "stay" and firstRow.nameText.text == "Player002", "up at the top row scrolls back")
-  end
-
-  -- test_short_list_lets_the_dpad_move_on
-  do
-    local result, factory, parent = create(6)
-    local env = attach(result, factory, parent)
-    local lastRow = FindUI.text(result.frame, "Player006").parent
-    assert(env.press(lastRow.removeButton, "DOWN") == "move" and lastRow.nameText.text == "Player006", "nothing to scroll")
+    local name = FindUI.text(result.frame, "Player006")
+    assert(name ~= nil, "row shown")
+    assert(env.count("AddJumpNavigationOverride") == 0, "no jump override on the rows")
+    assert(name.parent.removeButton._wmPadEdges == nil, "no edge tag left")
   end
 
   rawset(_G, "time", savedTime)
