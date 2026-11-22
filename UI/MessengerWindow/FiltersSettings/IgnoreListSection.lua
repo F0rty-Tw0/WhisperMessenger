@@ -186,7 +186,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   local function anchorList()
     list:ClearAllPoints()
     durationSelector.row:ClearAllPoints()
-    if not padShown then
+    if not padShown or padUp == nil then
       list:SetPoint("TOPLEFT", titleSection.region, "BOTTOMLEFT", 0, -GAP)
       durationSelector.row:SetPoint("TOPLEFT", list, "BOTTOMLEFT", 0, -GAP)
 
