@@ -94,6 +94,10 @@ read_globals = {
   "StaticPopup1EditBox",
   "FriendsFrame_ShowBNDropdown",
   "FriendsFrame_ShowDropdown",
+  "PlayerLocation",
+  "C_ReportSystem",
+  "ReportFrame",
+  "ReportInfo",
 
   -- Taskbar alert
   "FlashClientIcon",

@@ -10,6 +10,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - On WoW: Forever, the settings pages now work with a controller, including picking a choice from a drop-down list with the D-pad.
 - On WoW: Forever, pop-up pickers and dialogs now work with a controller.
 - On WoW: Forever with a controller, press A on the message box to start typing and A again to send; B leaves the message box. A small hint shows both buttons. Typing itself still needs an on-screen keyboard or a real one.
+- Fixed: on WoW: Forever, right-clicking a contact, a message or a player name in a chat no longer causes "Interface action failed" in combat or blocks the Group Finder afterwards. Whisper Messenger now shows its own menu there instead.
 - Fixed: on WoW: Forever, settings drop-down lists now open WhisperMessenger's own list (in the game's style under the Native look), so they no longer interfere with other game menus or the controller's back button.
 
 ## [2.1.9] - 2026-11-21

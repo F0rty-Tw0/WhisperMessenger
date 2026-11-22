@@ -95,6 +95,23 @@ function PickerPopup.HandleEvent(frame, event, close, anchor)
   end
 end
 
+-- Puts frame's top-left corner on the cursor. Returns false, with no point
+-- set, when the game can't say where the cursor is.
+function PickerPopup.PlaceAtCursor(frame)
+  local parent = _G.UIParent
+  if parent == nil or type(_G.GetCursorPosition) ~= "function" or type(parent.GetEffectiveScale) ~= "function" then
+    return false
+  end
+  local x, y = _G.GetCursorPosition()
+  local scale = parent:GetEffectiveScale()
+  local known = type(x) == "number" and type(y) == "number" and type(scale) == "number" and scale > 0
+  if not known then
+    return false
+  end
+  frame:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", x / scale, y / scale)
+  return true
+end
+
 local function applyColor(setter, frame, color)
   if type(frame[setter]) == "function" then
     frame[setter](frame, color[1], color[2], color[3], color[4])
