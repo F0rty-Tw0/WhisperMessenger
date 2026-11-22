@@ -3,11 +3,17 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local MenuPopup = ns.MenuPopup or require("WhisperMessenger.UI.Shared.MenuPopup")
+local PadButtons = ns.SettingsControlsPadButtons or require("WhisperMessenger.UI.Shared.SettingsControls.PadButtons")
+
 -- The settings pages' part of the WoW: Forever gamepad UI. The right stick
 -- scrolls the open page while settings show, the chat otherwise. Widgets
--- the settings builders tagged go to the nav once each: _wmPadStep (a
--- slider: D-pad stop, left/right step it) and _wmPadEdges (up/down
--- handled by the widget). Page list and page are plain spatial nav.
+-- the settings builders tagged with _wmPadStep (a slider) or _wmPadButton
+-- (a − / + or ▲ / ▼ pad button) go to the nav once each as a D-pad stop.
+-- Page list and page are plain spatial nav. The pad buttons re-read the
+-- game's pad UI toggle when settings show, on each re-scan, and when the
+-- player flips the toggle (INPUT_DEVICE_INTERFACE_TRANSITION).
 local GamepadSettings = {}
 
 local function scrollFrameOf(scrollView)
@@ -20,6 +26,7 @@ local function followSettingsPane(nav, settings)
     return
   end
   local function follow()
+    PadButtons.Refresh()
     local target
     if optionsPanel:IsShown() then
       target = scrollFrameOf(settings.contentScrollView)
@@ -39,26 +46,49 @@ end
 
 -- True when the widget carried a tag (and so went to the nav).
 local function handOver(nav, widget)
-  local tagged = false
-  if type(widget._wmPadStep) == "function" then
-    tagged = true
-    nav.markFocusable(widget)
-    nav.setStepper(widget, widget._wmPadStep)
+  if type(widget._wmPadStep) ~= "function" and widget._wmPadButton ~= true then
+    return false
   end
-  if type(widget._wmPadEdges) == "table" then
-    tagged = true
-    for _, direction in ipairs({ "UP", "DOWN" }) do
-      local onPress = widget._wmPadEdges[direction]
-      if onPress then
-        nav.setEdgeOverride(widget, direction, onPress)
-      end
+  nav.markFocusable(widget)
+
+  return true
+end
+
+-- A popup shown under the other mode is not registered with the game's
+-- pad frame manager, so B would not reach it: close it on the toggle.
+-- Then the pad buttons show or hide and the nav re-scans the new geometry.
+-- The event also fires on a switch between mouse and pad input with the
+-- pad UI unchanged: that one does nothing, so an open menu stays open.
+-- A client without the event (or the frame) keeps the other refreshes only.
+local function listenForPadToggle(nav, createFrame)
+  if type(createFrame) ~= "function" then
+    return
+  end
+  local ok, frame = pcall(createFrame)
+  if not ok or type(frame) ~= "table" then
+    return
+  end
+  if not pcall(frame.RegisterEvent, frame, "INPUT_DEVICE_INTERFACE_TRANSITION") then
+    return
+  end
+  local padUIEnabled = FlavorCompat.IsGamepadUIEnabled()
+  frame:SetScript("OnEvent", function()
+    local enabled = FlavorCompat.IsGamepadUIEnabled()
+    if enabled == padUIEnabled then
+      return
     end
-  end
-  return tagged
+    padUIEnabled = enabled
+    if MenuPopup.IsShown() then
+      MenuPopup.Close()
+    end
+    PadButtons.Refresh()
+    nav.refresh()
+  end)
 end
 
 -- settings (all optional): contentScrollView, chatScrollFrame,
--- optionsPanel, panels (the settings pages; false = not built yet).
+-- optionsPanel, panels (the settings pages; false = not built yet),
+-- createFrame() -> event frame for the pad UI toggle.
 -- Returns onTargetsChanged: hands new tagged widgets over, then re-scans.
 function GamepadSettings.Attach(nav, settings)
   local seen = setmetatable({}, { __mode = "k" })
@@ -85,8 +115,10 @@ function GamepadSettings.Attach(nav, settings)
   end
 
   followSettingsPane(nav, settings)
+  listenForPadToggle(nav, settings.createFrame)
   scan()
   return function()
+    PadButtons.Refresh()
     scan()
     nav.refresh()
   end

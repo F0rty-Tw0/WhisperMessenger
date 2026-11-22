@@ -31,8 +31,8 @@ local function inert()
     setScrollFrame = noop,
     ignore = noop,
     markFocusable = noop,
-    setStepper = noop,
-    setEdgeOverride = noop,
+    setJumpTarget = noop,
+    setOrder = noop,
     popupShown = noop,
     popupHidden = noop,
     setPopupCloseHandler = noop,
@@ -212,8 +212,8 @@ function GamepadNav.New(frame, deps)
 
   nav.ignore = marks.ignore
   nav.markFocusable = marks.markFocusable
-  nav.setStepper = marks.setStepper
-  nav.setEdgeOverride = marks.setEdgeOverride
+  nav.setJumpTarget = marks.setJumpTarget
+  nav.setOrder = marks.setOrder
   nav.popupShown = popups.popupShown
   nav.popupHidden = popups.popupHidden
   nav.setPopupCloseHandler = popups.setPopupCloseHandler
