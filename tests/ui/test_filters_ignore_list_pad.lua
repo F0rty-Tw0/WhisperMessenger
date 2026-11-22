@@ -9,7 +9,7 @@ local PadButtons = require("WhisperMessenger.UI.Shared.SettingsControls.PadButto
 
 local NOW = 1000000
 
-local function create(count)
+local function create(count, onLayoutChanged)
   local filters = { ignored = {}, rules = {} }
   for index = 1, count do
     local name = string.format("Player%03d", index)
@@ -17,7 +17,8 @@ local function create(count)
   end
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
-  return FiltersSettings.Create(factory, parent, { filters = filters }, { onChange = function() end }), factory, parent
+  local options = { onChange = function() end, onLayoutChanged = onLayoutChanged }
+  return FiltersSettings.Create(factory, parent, { filters = filters }, options), factory, parent
 end
 
 -- The real nav over the fake SmartNav, attached to the Filters page.
@@ -126,6 +127,18 @@ return function()
     PadButtons.Refresh()
     assert(list.point[2] == titleRegion(result) and list.point[5] == -8 and #list.points == 1, "off: list back under the title")
     assert(blockForRow(result).point[2] == list and #blockForRow(result).points == 1, "off: Block for back on the list")
+  end)
+
+  -- test_pad_ui_toggle_tells_the_page_its_layout_changed
+  withPadUI(true, function(state)
+    local layoutChanges = 0
+    create(8, function()
+      layoutChanges = layoutChanges + 1
+    end)
+    local before = layoutChanges
+    state.on = false
+    PadButtons.Refresh()
+    assert(layoutChanges == before + 1, "toggle: page re-laid out once")
   end)
 
   -- test_up_button_stays_centred_after_a_width_change

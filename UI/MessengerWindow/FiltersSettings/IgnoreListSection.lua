@@ -190,8 +190,12 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
     end, function(shown)
       padShown = shown
       -- The first call comes from inside Create, before padUp is set.
+      -- A later flip moves everything below, so the page re-lays out.
       if padUp then
         anchorList()
+        if options.onLayoutChanged then
+          options.onLayoutChanged()
+        end
       end
     end)
   end
