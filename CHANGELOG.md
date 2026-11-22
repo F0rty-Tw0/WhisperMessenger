@@ -13,6 +13,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - On WoW: Forever with a controller, sliders now have − and + buttons and the blocked players list has up and down buttons; they show only while the game's controller mode is on. The D-pad moves across the title bar, the settings list and the Whispers / Groups tabs in the order you see them.
 - Fixed: on WoW: Forever, right-clicking a contact, a message or a player name in a chat no longer causes "Interface action failed" in combat or blocks the Group Finder afterwards. Whisper Messenger now shows its own menu there instead.
 - Fixed: on WoW: Forever, settings drop-down lists now open WhisperMessenger's own list (in the game's style under the Native look), so they no longer interfere with other game menus or the controller's back button.
+- Fixed: on WoW: Forever under the Native look, the settings drop-down lists are no longer see-through, and the chosen option is marked with a check in gold text.
 
 ## [2.1.9] - 2026-11-21
 
