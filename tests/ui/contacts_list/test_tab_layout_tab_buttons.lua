@@ -55,6 +55,19 @@ return function()
     assert(#got == 3 and got[3] == buttonLabeled(toggle, "Requests"), "hidden panel tab is gone")
   end
 
+  -- test_each_tab_change_reports_the_new_buttons
+  do
+    local toggle = TabToggle.Create(FakeUI.NewFactory(), FakeUI.NewFactory().CreateFrame("Frame", nil, nil), {})
+    local seen = {}
+    toggle.setTabsChangedHandler(function()
+      seen[#seen + 1] = #toggle.getTabButtons()
+    end)
+    toggle.setModes({ "whispers", "groups", "channels" })
+    toggle.addPanelTab("ca", "Alerts", noop)
+    toggle.setPanelTabShown("ca", false)
+    assert(table.concat(seen, ",") == "3,4,3", "setModes, addPanelTab and setPanelTabShown report: " .. table.concat(seen, ","))
+  end
+
   -- test_native_tab_buttons_are_the_visible_mode_tabs_in_order
   do
     local factory = FakeUI.NewFactory()
