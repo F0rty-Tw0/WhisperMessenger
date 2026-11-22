@@ -39,8 +39,9 @@ local function hoverAlpha(row)
   return highlight:GetAlpha()
 end
 
+-- The panel wraps the menu from outside: it hangs off the dropdown row.
 local function tooltipPanel(menu)
-  return FindUI.find(menu, function(n)
+  return FindUI.find(menu:GetParent(), function(n)
     return n.template == TOOLTIP_TEMPLATE
   end)
 end

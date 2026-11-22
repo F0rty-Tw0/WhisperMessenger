@@ -81,12 +81,16 @@ end
 
 -- Hidden, scrollable open list under `button`; `content` is the scroll
 -- child. The look is decided here, once, so rows pooled later match:
--- menuSkin = { native, bg, panel, inset }. `inset` is how far rows stay
--- inside the menu's edges: the tooltip border under the Native look, 0 in
--- the modern one.
+-- menuSkin = { native, bg, panel, inset }. Under the Native look the menu
+-- (which clips its rows) sits `inset` inside a tooltip panel on every side,
+-- so rows never draw on the panel's border; the panel is the row's child,
+-- not the menu's, so the clipping doesn't cut its border off. `inset` is 0
+-- in the modern look.
 function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
+  local native = Hud.IsOn()
+  local inset = native and Theme.LAYOUT.NATIVE_BORDER_INSET or 0
   local menu = factory.CreateFrame("ScrollFrame", nil, row)
-  menu:SetPoint("TOPLEFT", button, "BOTTOMLEFT", 0, -2)
+  menu:SetPoint("TOPLEFT", button, "BOTTOMLEFT", inset, -2 - inset)
   menu:SetFrameLevel((row.GetFrameLevel and row:GetFrameLevel() or 1) + 20)
   menu:SetClampedToScreen(true)
   menu:EnableMouseWheel(true)
@@ -104,18 +108,30 @@ function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
   menu:SetScrollChild(content)
   content:Show()
 
-  local menuSkin = { native = Hud.IsOn(), bg = bg, inset = 0 }
-  if menuSkin.native then
-    menuSkin.inset = Theme.LAYOUT.NATIVE_BORDER_INSET
-    local panel = PickerPopup.CreateTooltipFrame(factory, menu)
-    panel:SetAllPoints(menu)
+  local menuSkin = { native = native, bg = bg, inset = inset }
+  if native then
+    local panel = PickerPopup.CreateTooltipFrame(factory, row)
+    panel:SetPoint("TOPLEFT", menu, "TOPLEFT", -inset, inset)
+    panel:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", inset, -inset)
+    -- Clicks on the border land on the panel, not the settings below.
+    if panel.EnableMouse then
+      panel:EnableMouse(true)
+    end
     levelPanel(menu, panel)
-    panel:Show()
+    panel:Hide()
     bg:Hide()
     menuSkin.panel = panel
   end
   menu:Hide()
   return menu, content, menuSkin
+end
+
+-- The native panel is not the menu's child, so it follows the menu's
+-- open / closed state from the menu's OnShow / OnHide.
+function DropdownSkin.SyncPanel(menu, menuSkin)
+  if menuSkin.panel then
+    menuSkin.panel:SetShown(menu:IsShown())
+  end
 end
 
 -- Lifts the menu above its siblings on open. Raise can re-base frame

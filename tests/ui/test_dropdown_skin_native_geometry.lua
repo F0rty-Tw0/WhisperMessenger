@@ -1,6 +1,7 @@
--- Under the Native look the open list is a tooltip panel, so its rows (and
--- their hover / selected art) sit inside the panel's border instead of on
--- it. The modern list keeps its edge-to-edge rows.
+-- Under the Native look the open list sits inside a tooltip panel: the
+-- scrolling (clipping) list is inset by the panel's border on every side,
+-- so rows and their hover / selected art never draw on the border at any
+-- scroll offset. The modern list keeps its edge-to-edge rows.
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local Flavor = require("tests.helpers.flavor")
@@ -12,6 +13,7 @@ local ROW_WIDTH = 280
 local ROW_HEIGHT = 26
 local MENU_HEIGHT = 156
 local INSET = Theme.LAYOUT.NATIVE_BORDER_INSET
+local TOOLTIP_TEMPLATE = "TooltipBackdropTemplate"
 
 local function optionList(count)
   local list = {}
@@ -54,6 +56,26 @@ local function build(native, count, initial, menuHeight)
   return dropdown
 end
 
+local function findPanel(root)
+  return FindUI.find(root, function(n)
+    return n.template == TOOLTIP_TEMPLATE
+  end)
+end
+
+local function panelOf(dd)
+  return assert(findPanel(dd.row), "tooltip panel is drawn")
+end
+
+-- The SetPoint call anchoring `frame` by `point`, as { relativeTo, relativePoint, x, y }.
+local function anchor(frame, point)
+  for _, p in ipairs(frame.points or {}) do
+    if p[1] == point then
+      return { p[2], p[3], p[4], p[5] }
+    end
+  end
+  error("no " .. point .. " anchor")
+end
+
 -- Each row's box in the scroll child's space (y grows downwards), walking
 -- the anchor chain: the first row hangs off the content, the rest off the
 -- row above.
@@ -75,56 +97,49 @@ local function rowBoxes(rows)
   return boxes
 end
 
-local function assertInsidePanel(menu, rows)
-  local width, height = menu:GetWidth(), menu:GetHeight()
-  for i, box in ipairs(rowBoxes(rows)) do
-    local where = string.format("row %d at %s,%s..%s,%s in a %sx%s panel", i, box.left, box.top, box.right, box.bottom, width, height)
-    assert(box.left >= INSET and box.right <= width - INSET, where .. ": clears the left and right border")
-    assert(box.top >= INSET, where .. ": clears the top border")
-    assert(box.bottom <= height - INSET, where .. ": clears the bottom border")
-  end
-end
-
 return function()
-  -- test_native_panel_covers_the_menu
+  -- test_native_panel_is_outside_the_clipping_list
+  do
+    local dd = build(true, 3)
+    panelOf(dd)
+    assert(findPanel(FindUI.dropdownMenu(dd.row)) == nil, "panel is not a child of the list, which clips its children")
+  end
+
+  -- test_native_panel_wraps_the_list_by_the_border
+  do
+    local dd = build(true, 3)
+    local menu, panel = FindUI.dropdownMenu(dd.row), panelOf(dd)
+    local tl, br = anchor(panel, "TOPLEFT"), anchor(panel, "BOTTOMRIGHT")
+    assert(tl[1] == menu and tl[2] == "TOPLEFT" and tl[3] == -INSET and tl[4] == INSET, "panel's top-left is one border outside the list")
+    assert(br[1] == menu and br[2] == "BOTTOMRIGHT" and br[3] == INSET and br[4] == -INSET, "panel's bottom-right is one border outside the list")
+  end
+
+  -- test_native_list_hangs_one_border_inside_under_the_button
+  do
+    local dd = build(true, 3)
+    local tl = anchor(FindUI.dropdownMenu(dd.row), "TOPLEFT")
+    assert(tl[1] == dd.button and tl[2] == "BOTTOMLEFT" and tl[3] == INSET and tl[4] == -2 - INSET, "list sits a border inside the panel's corner")
+  end
+
+  -- test_native_panel_keeps_the_button_width
   do
     local menu = FindUI.dropdownMenu(build(true, 3).row)
-    local panel = assert(
-      FindUI.find(menu, function(n)
-        return n.template == "TooltipBackdropTemplate"
-      end),
-      "tooltip panel is drawn"
-    )
-    assert(panel.allPoints == menu, "tooltip panel spans the menu")
+    assert(menu:GetWidth() + 2 * INSET == ROW_WIDTH, "panel is as wide as the button, list " .. menu:GetWidth())
   end
 
-  -- test_native_rows_sit_inside_the_panel_border
-  do
-    local dd = build(true, 3)
-    assertInsidePanel(FindUI.dropdownMenu(dd.row), FindUI.dropdownOptions(dd.row))
-  end
-
-  -- test_native_menu_keeps_the_button_width
-  do
-    local dd = build(true, 3)
-    assert(FindUI.dropdownMenu(dd.row):GetWidth() == ROW_WIDTH, "native menu stays as wide as the button")
-  end
-
-  -- test_native_scrolled_to_the_end_last_row_sits_inside_the_border
-  do
-    local dd = build(true, 40)
-    local menu = FindUI.dropdownMenu(dd.row)
-    local rows = FindUI.dropdownOptions(dd.row)
-    menu:SetVerticalScroll(menu:GetVerticalScrollRange())
-    local last = rowBoxes(rows)[#rows]
-    local bottom = last.bottom - menu:GetVerticalScroll()
-    assert(bottom <= menu:GetHeight() - INSET, "last row clears the bottom border at full scroll, bottom " .. bottom)
-  end
-
-  -- test_native_menu_shows_the_same_number_of_rows
+  -- test_native_list_shows_the_same_number_of_rows
   do
     local menu = FindUI.dropdownMenu(build(true, 40).row)
-    assert(menu:GetHeight() - 2 * INSET == MENU_HEIGHT, "native list area is menuHeight tall, menu " .. menu:GetHeight())
+    assert(menu:GetHeight() == MENU_HEIGHT, "list area is menuHeight tall, got " .. menu:GetHeight())
+  end
+
+  -- test_native_rows_fill_the_list_width
+  do
+    local dd = build(true, 3)
+    local menu = FindUI.dropdownMenu(dd.row)
+    for i, box in ipairs(rowBoxes(FindUI.dropdownOptions(dd.row))) do
+      assert(box.left == 0 and box.right == menu:GetWidth(), "row " .. i .. " spans the list, " .. box.left .. ".." .. box.right)
+    end
   end
 
   -- test_native_scroll_range_is_unchanged
@@ -134,15 +149,29 @@ return function()
     assert(native:GetVerticalScrollRange() == modern:GetVerticalScrollRange(), "native scroll range matches the modern one")
   end
 
-  -- test_native_open_scrolls_the_selected_row_inside_the_border
+  -- test_native_open_scrolls_the_selected_row_into_view
   do
-    -- Row 6 ends at 156: past a 150 list area, though inside the 158 menu.
+    -- Row 6 ends at 156: past a 150 list area.
     local dd = build(true, 40, "font6", 150)
     local menu = FindUI.dropdownMenu(dd.row)
     FindUI.click(dd.button)
     local box = rowBoxes(FindUI.dropdownOptions(dd.row))[6]
     local offset = menu:GetVerticalScroll()
-    assert(box.top - offset >= INSET and box.bottom - offset <= menu:GetHeight() - INSET, "selected row inside the border, offset " .. offset)
+    assert(box.top >= offset and box.bottom <= offset + menu:GetHeight(), "selected row in view, offset " .. offset)
+  end
+
+  -- test_native_panel_shows_and_hides_with_the_list
+  do
+    local dd = build(true, 3)
+    local panel = panelOf(dd)
+    assert(not panel:IsShown(), "closed: no panel")
+    FindUI.click(dd.button)
+    assert(panel:IsShown(), "open: panel shown")
+    FindUI.click(dd.button)
+    assert(not panel:IsShown(), "closed again: panel hidden")
+    FindUI.click(dd.button)
+    DropdownSelector.HideShownMenu()
+    assert(not panel:IsShown(), "controller B: panel hidden")
   end
 
   -- test_modern_rows_fill_the_menu_edge_to_edge
@@ -150,6 +179,7 @@ return function()
     local dd = build(false, 3)
     local menu = FindUI.dropdownMenu(dd.row)
     local boxes = rowBoxes(FindUI.dropdownOptions(dd.row))
+    assert(findPanel(dd.row) == nil, "modern: no tooltip panel")
     assert(menu:GetWidth() == ROW_WIDTH and menu:GetHeight() == 3 * ROW_HEIGHT, "modern menu is rowWidth x rows")
     assert(boxes[1].left == 0 and boxes[1].top == 0 and boxes[1].right == ROW_WIDTH, "modern first row spans the top edge")
     assert(boxes[3].bottom == 3 * ROW_HEIGHT, "modern last row reaches the bottom edge")
