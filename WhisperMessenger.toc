@@ -434,6 +434,7 @@ UI/Shared/SettingsControls/Banner.lua
 UI/Shared/SettingsControls/Header.lua
 UI/Shared/SettingsControls/SectionLabel.lua
 UI/Shared/SettingsControls/SliderSkin.lua
+UI/Shared/SettingsControls/PadButtons.lua
 UI/Shared/SettingsControls/SliderPadStep.lua
 UI/Shared/SettingsControls.lua
 UI/Shared/DialogChrome.lua
