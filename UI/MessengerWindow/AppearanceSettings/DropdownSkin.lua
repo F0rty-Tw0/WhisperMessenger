@@ -5,11 +5,15 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 
 -- Closed-dropdown look: the same softly rounded input surface as the
 -- contacts search field, a down chevron on the right (the bundled back glyph
 -- rotated a quarter turn via tex coords, no new media) and a faint wash on
--- hover.
+-- hover. The open list is a flat panel in the modern look; under the Native
+-- WoW HUD it draws like the game's menus (a tooltip panel), while the closed
+-- button keeps its modern look.
 local DropdownSkin = {}
 
 DropdownSkin.CHEVRON_TEXTURE = Theme.TEXTURES.title_back_icon
@@ -66,6 +70,84 @@ function DropdownSkin.Paint(skin, label, hovered)
   skin.hover.setColor(colors.bg_contact_hover)
   UIHelpers.applyVertexColor(skin.chevron, hovered and colors.text_primary or colors.text_secondary)
   UIHelpers.setTextColor(label, colors.text_primary)
+end
+
+-- Same level as the menu, so the scroll child (one above) draws on top.
+local function levelPanel(menu, panel)
+  if panel and panel.SetFrameLevel and menu.GetFrameLevel then
+    panel:SetFrameLevel(menu:GetFrameLevel())
+  end
+end
+
+-- Hidden, scrollable open list under `button`; `content` is the scroll
+-- child. The look is decided here, once, so rows pooled later match:
+-- menuSkin = { native, bg, panel, inset }. Under the Native look the menu
+-- (which clips its rows) sits `inset` inside a tooltip panel on every side,
+-- so rows never draw on the panel's border; the panel is the row's child,
+-- not the menu's, so the clipping doesn't cut its border off. `inset` is 0
+-- in the modern look.
+function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
+  local native = Hud.IsOn()
+  local inset = native and Theme.LAYOUT.NATIVE_BORDER_INSET or 0
+  local menu = factory.CreateFrame("ScrollFrame", nil, row)
+  menu:SetPoint("TOPLEFT", button, "BOTTOMLEFT", inset, -2 - inset)
+  menu:SetFrameLevel((row.GetFrameLevel and row:GetFrameLevel() or 1) + 20)
+  menu:SetClampedToScreen(true)
+  menu:EnableMouseWheel(true)
+  if menu.SetClipsChildren then
+    menu:SetClipsChildren(true)
+  end
+
+  local bg = menu:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints(menu)
+  -- Kept on the menu so a test can tell the flat fill from other textures.
+  menu._wmBg = bg
+
+  local content = factory.CreateFrame("Frame", nil, menu)
+  content:SetSize(rowWidth, buttonHeight)
+  menu:SetScrollChild(content)
+  content:Show()
+
+  local menuSkin = { native = native, bg = bg, inset = inset }
+  if native then
+    local panel = PickerPopup.CreateTooltipFrame(factory, row)
+    panel:SetPoint("TOPLEFT", menu, "TOPLEFT", -inset, inset)
+    panel:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", inset, -inset)
+    -- Clicks on the border land on the panel, not the settings below.
+    if panel.EnableMouse then
+      panel:EnableMouse(true)
+    end
+    levelPanel(menu, panel)
+    panel:Hide()
+    bg:Hide()
+    menuSkin.panel = panel
+  end
+  menu:Hide()
+  return menu, content, menuSkin
+end
+
+-- The native panel is not the menu's child, so it follows the menu's
+-- open / closed state from the menu's OnShow / OnHide.
+function DropdownSkin.SyncPanel(menu, menuSkin)
+  if menuSkin.panel then
+    menuSkin.panel:SetShown(menu:IsShown())
+  end
+end
+
+-- Lifts the menu above its siblings on open. Raise can re-base frame
+-- levels, so the native panel is levelled with the menu again.
+function DropdownSkin.RaiseMenu(menu, menuSkin)
+  menu:Raise()
+  levelPanel(menu, menuSkin.panel)
+end
+
+-- Modern look: flat fill in the palette's background. Native: the tooltip
+-- panel draws the background.
+function DropdownSkin.PaintMenu(menuSkin, palette)
+  if menuSkin.native then
+    return
+  end
+  UIHelpers.applyColorTexture(menuSkin.bg, palette.bg)
 end
 
 ns.MessengerWindowDropdownSkin = DropdownSkin
