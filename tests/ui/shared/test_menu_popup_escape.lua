@@ -120,6 +120,26 @@ return function()
     assert(#hidden == 1 and hidden[1] == MenuPopup.GetFrame(), "hidden fires once, got " .. #hidden)
   end)
 
+  -- test_reopen_fires_shown_again
+  withWorld(function(env)
+    local shown = 0
+    PickerPopup.SetGamepadPopupHooks(function()
+      shown = shown + 1
+    end, function() end)
+    env.open(childAnchor(env))
+    env.open(childAnchor(env))
+    assert(shown == 2, "a reopen on another anchor fires shown again, got " .. shown)
+  end)
+
+  -- test_old_anchor_hiding_leaves_reopened_popup
+  withWorld(function(env)
+    local first = childAnchor(env)
+    env.open(first)
+    env.open(childAnchor(env))
+    first:Hide()
+    assert(MenuPopup.IsShown(), "only the current anchor closes the popup")
+  end)
+
   -- test_popup_hides_with_window_and_next_escape_closes_window
   withWorld(function(env)
     EscapeOrder.New(env.window).claim()

@@ -71,6 +71,18 @@ local function runBuilderCases()
     assert(Probe.Find("Notify").checked == true, "checkbox tick follows isSelected")
   end)
 
+  -- test_unselected_checkbox_hides_tick
+  World.With(function(_factory, anchor)
+    MenuPopup.Open(anchor, function(root)
+      root:CreateCheckbox("Mute", function()
+        return false
+      end, noop)
+    end)
+    local row = assert(Probe.Find("Mute"), "Mute row is drawn")
+    assert(row.checked == false, "unselected checkbox is unchecked")
+    assert(not row.region._check:IsShown(), "unselected checkbox hides its tick")
+  end)
+
   -- test_open_touches_no_blizzard_menu
   World.With(function(_factory, anchor)
     BannedMenuApis.AssertNone(function()
