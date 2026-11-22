@@ -215,6 +215,7 @@ UI/Badge.lua
 UI/Shared/PickerStyles.lua
 UI/Shared/PopupEscape.lua
 UI/Shared/PickerPopup.lua
+UI/Shared/MenuPopup.lua
 UI/Shared/KeybindHints.lua
 UI/Shared/UnreadSummary.lua
 UI/Shared/PanelBadge.lua
