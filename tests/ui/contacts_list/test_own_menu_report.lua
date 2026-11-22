@@ -77,7 +77,7 @@ return function()
     reported = nil
     OwnMenu.Open(item, anchor, "Arthas", nil, noop)
     Probe.Click("Report")
-    return reported
+    return assert(reported, "report fired")
   end
 
   local ok, err = pcall(function()
