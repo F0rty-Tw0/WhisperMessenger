@@ -10,6 +10,7 @@ local Header = ns.SettingsControlsHeader or require("WhisperMessenger.UI.Shared.
 local SectionLabel = ns.SettingsControlsSectionLabel or require("WhisperMessenger.UI.Shared.SettingsControls.SectionLabel")
 local SliderSkin = ns.SettingsControlsSliderSkin or require("WhisperMessenger.UI.Shared.SettingsControls.SliderSkin")
 local SliderPadStep = ns.SettingsControlsSliderPadStep or require("WhisperMessenger.UI.Shared.SettingsControls.SliderPadStep")
+local SliderTooltip = ns.SettingsControlsSliderTooltip or require("WhisperMessenger.UI.Shared.SettingsControls.SliderTooltip")
 local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
@@ -65,8 +66,9 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   local tooltip = spec.tooltip
   local commitOnRelease = spec.commitOnRelease == true
 
+  local sliderHeight = Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT
   local row = factory.CreateFrame("Frame", nil, parent)
-  row:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT + 20)
+  row:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, sliderHeight + 20)
 
   local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
@@ -78,7 +80,7 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   -- Native WoW HUD: Blizzard slider; the template draws track and thumb.
   local nativeSlider = Hud.IsOn() and NativeControls.CreateSlider(factory, row) or nil
   local slider = nativeSlider or factory.CreateFrame("Slider", nil, row)
-  slider:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT)
+  slider:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, sliderHeight)
   slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_LABEL_SPACING)
   if slider.SetOrientation then
     slider:SetOrientation("HORIZONTAL")
@@ -110,8 +112,25 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
     UIHelpers.setTextColor(maxLabel, rangeColor)
   end
 
+  -- The pad buttons' space on each side of the slider (0 = none).
+  local rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
+  local currentInset = 0
+  local layoutResizeActive = false
+  local function placeSlider()
+    slider:ClearAllPoints()
+    slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", currentInset, -Theme.LAYOUT.SETTINGS_LABEL_SPACING)
+    layoutResizeActive = true
+    slider:SetSize(rowWidth - 2 * currentInset, sliderHeight)
+    layoutResizeActive = false
+    SliderSkin.UpdateFill(skin)
+  end
+
   slider:SetValue(initial)
   SliderPadStep.Attach(slider, min, max, step)
+  SliderPadStep.AddButtons(factory, row, slider, function(inset)
+    currentInset = inset
+    placeSlider()
+  end)
   valueFs:SetText(formatFn and formatFn(initial) or tostring(initial))
   SliderSkin.Apply(skin, Theme)
   paintLabels(Theme)
@@ -119,7 +138,6 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   local dragActive = false
   local pendingValue
   local valueChangeGeneration = 0
-  local layoutResizeActive = false
 
   slider:SetScript("OnValueChanged", function(_self, value, userInput)
     SliderSkin.UpdateFill(skin)
@@ -176,28 +194,7 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
     end)
   end
 
-  if tooltip and row.SetScript then
-    local lines = type(tooltip) == "table" and tooltip or { tooltip }
-    row:SetScript("OnEnter", function()
-      if _G.GameTooltip and _G.GameTooltip.SetOwner then
-        _G.GameTooltip:SetOwner(row, "ANCHOR_TOP")
-        _G.GameTooltip:SetText(lines[1])
-        for i = 2, #lines do
-          if _G.GameTooltip.AddLine then
-            pcall(_G.GameTooltip.AddLine, _G.GameTooltip, lines[i], 1, 1, 1)
-          end
-        end
-        _G.GameTooltip:Show()
-      end
-    end)
-    row:SetScript("OnLeave", function()
-      if _G.GameTooltip and _G.GameTooltip.Hide then
-        _G.GameTooltip:Hide()
-      end
-    end)
-  end
-
-  local sliderHeight = Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT
+  SliderTooltip.Attach(row, tooltip)
 
   return {
     row = row,
@@ -212,11 +209,9 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
       if type(nextWidth) ~= "number" or nextWidth <= 0 then
         return
       end
+      rowWidth = nextWidth
       row:SetSize(nextWidth, sliderHeight + 20)
-      layoutResizeActive = true
-      slider:SetSize(nextWidth, sliderHeight)
-      layoutResizeActive = false
-      SliderSkin.UpdateFill(skin)
+      placeSlider()
     end,
     applyTheme = function(activeTheme)
       SliderSkin.Apply(skin, activeTheme)
