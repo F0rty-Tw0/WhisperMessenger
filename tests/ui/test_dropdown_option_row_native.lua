@@ -45,10 +45,11 @@ local function check(row)
   end)
 end
 
--- x offset of the label's LEFT anchor.
-local function labelInset(row)
+-- x offset of the label's `point` anchor (LEFT by default).
+local function labelInset(row, point)
+  point = point or "LEFT"
   for _, pt in ipairs(row.label.points or {}) do
-    if pt[1] == "LEFT" then
+    if pt[1] == point then
       return pt[4]
     end
   end
@@ -139,6 +140,13 @@ return function()
     assert(labelInset(row) == PickerPopup.CHECK_LABEL_PAD, "choice label starts after the check, got " .. tostring(labelInset(row)))
   end
 
+  -- test_native_choice_label_keeps_its_right_inset
+  do
+    local row = newRow("a", true)
+    DropdownOptionRow.Paint(row, PALETTE, "b")
+    assert(labelInset(row, "RIGHT") == -8, "choice label stops 8px short of the right edge, got " .. tostring(labelInset(row, "RIGHT")))
+  end
+
   -- test_native_header_label_starts_at_the_edge
   do
     local row = header(newRow("a", true))
@@ -171,6 +179,7 @@ return function()
 
   -- test_modern_label_keeps_its_inset
   do
-    assert(labelInset(newRow("a", false)) == 8, "modern label inset unchanged")
+    local row = newRow("a", false)
+    assert(labelInset(row) == 8 and labelInset(row, "RIGHT") == -8, "modern label insets unchanged")
   end
 end

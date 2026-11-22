@@ -104,6 +104,7 @@ return function()
   do
     local fill = nativePanel(newFactory())._wmFill
     assert(fill.drawLayer == "BACKGROUND", "fill draws in the background layer, got " .. tostring(fill.drawLayer))
+    assert(fill.drawSublevel == -8, "fill draws at the lowest sublevel, got " .. tostring(fill.drawSublevel))
   end
 
   -- test_native_panel_fill_stays_inside_the_border
