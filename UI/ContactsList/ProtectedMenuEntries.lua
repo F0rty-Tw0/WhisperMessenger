@@ -37,15 +37,24 @@ local function disable(element)
   end
 end
 
-local function fixCopy(element, item)
+-- The click that shows the row's name in our copy dialog; nil without a name.
+function ProtectedMenuEntries.CopyNameHandler(item)
   local name = characterName(item)
-  if name == nil or type(element.SetResponder) ~= "function" then
+  if name == nil then
+    return nil
+  end
+  return function()
+    PopupUI.ShowManualCopyDialog(name, { prompt = NAME_PROMPT })
+  end
+end
+
+local function fixCopy(element, item)
+  local onCopy = ProtectedMenuEntries.CopyNameHandler(item)
+  if onCopy == nil or type(element.SetResponder) ~= "function" then
     disable(element)
     return
   end
-  element:SetResponder(function()
-    PopupUI.ShowManualCopyDialog(name, { prompt = NAME_PROMPT })
-  end)
+  element:SetResponder(onCopy)
 end
 
 -- Labels are the same globals Blizzard builds the entries from, so they match
