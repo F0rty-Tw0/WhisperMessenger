@@ -82,29 +82,58 @@ local function dropdownFactory()
   }
 end
 
--- Builds the Font Family dropdown under the Native look on the given flavor;
--- `keepHud` leaves the Native look on for the caller.
-local function buildIn(isForever, keepHud)
+-- Runs `fn` on the given flavor under the Native look, then switches the
+-- look off even when `fn` throws.
+local function withNativeLook(isForever, fn)
+  Flavor.With(true, isForever, function()
+    Hud.Configure("classic")
+    local ok, err = pcall(fn)
+    Hud.Configure("off")
+    if not ok then
+      error(err, 0)
+    end
+  end)
+end
+
+-- The Font Family dropdown, built under whatever look is on.
+local function create()
   local factory = dropdownFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
   local changes = {}
-  local dropdown
-  Flavor.With(true, isForever, function()
-    Hud.Configure("classic")
-    dropdown = DropdownSelector.Create(factory, parent, {
-      labelText = "Font Family",
-      optionsList = OPTIONS,
-      fallbackKey = "default",
-      initial = "open_sans",
-      onChange = function(key)
-        changes[#changes + 1] = key
-      end,
-    })
-    if not keepHud then
-      Hud.Configure("off")
-    end
+  local dropdown = DropdownSelector.Create(factory, parent, {
+    labelText = "Font Family",
+    optionsList = OPTIONS,
+    fallbackKey = "default",
+    initial = "open_sans",
+    onChange = function(key)
+      changes[#changes + 1] = key
+    end,
+  })
+  return dropdown, changes
+end
+
+-- Builds the Font Family dropdown under the Native look on the given flavor.
+local function buildIn(isForever)
+  local dropdown, changes
+  withNativeLook(isForever, function()
+    dropdown, changes = create()
   end)
   return dropdown, changes
+end
+
+-- Builds, opens and picks "Morpheus" on Forever under the Native look while
+-- the banned Blizzard menu APIs are spied on.
+local function pickUnderSpies()
+  local dd, changes, touchedNames
+  withBannedSpies(function(touched)
+    touchedNames = touched
+    withNativeLook(true, function()
+      dd, changes = create()
+      FindUI.click(dd.button)
+      FindUI.click(FindUI.dropdownOptions(dd.row)[3])
+    end)
+  end)
+  return dd, changes, touchedNames
 end
 
 return function()
@@ -120,16 +149,20 @@ return function()
 
   -- test_forever_dropdown_open_and_pick_touch_no_blizzard_menu
   do
-    withBannedSpies(function(touched)
-      Flavor.With(true, true, function()
-        local dd, changes = buildIn(true, true)
-        FindUI.click(dd.button)
-        FindUI.click(FindUI.dropdownOptions(dd.row)[3])
-        assert(changes[1] == "morpheus" and dd.button.label.text == "Morpheus", "pick works")
-      end)
-      Hud.Configure("off")
-      assert(#touched == 0, "banned Blizzard menu API touched: " .. table.concat(touched, ","))
-    end)
+    local _, _, touched = pickUnderSpies()
+    assert(#touched == 0, "banned Blizzard menu API touched: " .. table.concat(touched, ","))
+  end
+
+  -- test_forever_dropdown_pick_fires_on_change
+  do
+    local _, changes = pickUnderSpies()
+    assert(changes[1] == "morpheus", "pick fires onChange with the picked key")
+  end
+
+  -- test_forever_dropdown_pick_shows_the_picked_label
+  do
+    local dd = pickUnderSpies()
+    assert(dd.button.label.text == "Morpheus", "closed button shows the picked label")
   end
 
   -- test_forever_native_dropdown_create_returns_nil
@@ -137,10 +170,8 @@ return function()
     local factory = dropdownFactory()
     local parent = factory.CreateFrame("Frame", "UIParent", nil)
     local handle
-    Flavor.With(true, true, function()
-      Hud.Configure("classic")
+    withNativeLook(true, function()
       handle = NativeDropdown.Create(factory, parent, { optionsList = OPTIONS })
-      Hud.Configure("off")
     end)
     assert(handle == nil, "Forever + Native look: NativeDropdown.Create is nil")
   end
