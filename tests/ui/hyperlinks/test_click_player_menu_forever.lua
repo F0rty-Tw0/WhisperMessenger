@@ -2,6 +2,7 @@
 -- WM's own contact popup; Blizzard's chat-frame handler would open a Blizzard
 -- menu there, which taints from addon code. Every other click is unchanged.
 local FakeUI = require("tests.helpers.fake_ui")
+local World = require("tests.helpers.menu_popup_world")
 local BannedMenuApis = require("tests.helpers.banned_menu_apis")
 local Flavor = require("tests.helpers.flavor")
 local Localization = require("WhisperMessenger.Locale.Localization")
@@ -16,13 +17,13 @@ local GM_LINK = "addon:WhisperMessenger:playerGM:GM:1"
 local STUBBED = { "ChatFrameMixin", "IsModifiedClick" }
 
 -- Runs fn(opened) with ContextMenu.Open replaced by a spy that records each
--- { item, anchor } it gets, and IsModifiedClick answering false.
+-- { item, anchor, options } it gets, and IsModifiedClick answering false.
 local function withMenuSpy(fn)
   local savedOpen = rawget(ContactsContextMenu, "Open")
   local savedModified = rawget(_G, "IsModifiedClick")
   local opened = {}
-  rawset(ContactsContextMenu, "Open", function(item, anchor)
-    table.insert(opened, { item = item, anchor = anchor })
+  rawset(ContactsContextMenu, "Open", function(item, anchor, _onMarkUnread, _onUpdatePrefs, _rowActions, options)
+    table.insert(opened, { item = item, anchor = anchor, options = options })
     return true
   end)
   rawset(_G, "IsModifiedClick", function()
@@ -83,7 +84,7 @@ local function runSpyCases(factory)
   -- test_forever_right_click_on_player_link_opens_contact_menu
   Flavor.With(true, true, function()
     withMenuSpy(function(opened)
-      BannedMenuApis.With(function(calls)
+      BannedMenuApis.AssertNone(function()
         local frame = clickPlain(factory, LINK, "RightButton")
         assert(#opened == 1, "contact menu opens once, got " .. #opened)
         local entry = opened[1]
@@ -92,15 +93,23 @@ local function runSpyCases(factory)
         assert(item.channel == "WOW" and item.displayName == "Gurkan Warbringer-Realm", "name with a space kept, got " .. tostring(item.displayName))
         assert(item.lineID == 42 and item.chatType == "CHANNEL", "line and chat type for Report")
         assert(entry.anchor == frame, "anchored to the link's frame")
-        assert(#calls == 0, "touched " .. table.concat(calls, ", "))
       end)
+    end)
+  end)
+
+  -- test_forever_contact_menu_opens_at_the_cursor
+  Flavor.With(true, true, function()
+    withMenuSpy(function(opened)
+      clickPlain(factory, LINK, "RightButton")
+      local options = opened[1] and opened[1].options
+      assert(type(options) == "table" and options.atCursor == true, "the link frame is a whole transcript: open at the cursor")
     end)
   end)
 
   -- test_whisper_chat_type_is_dropped
   Flavor.With(true, true, function()
     withMenuSpy(function(opened)
-      BannedMenuApis.With(function(calls)
+      BannedMenuApis.AssertNone(function()
         clickPlain(factory, WHISPER_LINK, "RightButton")
         assert(#opened == 1, "contact menu opens once, got " .. #opened)
         local entry = opened[1]
@@ -108,7 +117,6 @@ local function runSpyCases(factory)
         assert(entry.item.displayName == "Arthas", "name, got " .. tostring(entry.item.displayName))
         assert(entry.item.chatType == nil, "a whisper chat type is dropped, got " .. tostring(entry.item.chatType))
         assert(entry.item.lineID == 7, "line ID kept, got " .. tostring(entry.item.lineID))
-        assert(#calls == 0, "touched " .. table.concat(calls, ", "))
       end)
     end)
   end)
@@ -116,14 +124,13 @@ local function runSpyCases(factory)
   -- test_secure_frame_post_hook_opens_contact_menu
   Flavor.With(true, true, function()
     withMenuSpy(function(opened)
-      BannedMenuApis.With(function(calls)
+      BannedMenuApis.AssertNone(function()
         local frame = newTemplatedFrame(factory)
         LinkClicks.BindClick(frame)
         assert(runPostHooks(frame, LINK, "[Gurkan Warbringer]", "RightButton") == 1, "BindClick post-hooks the template")
         assert(#opened == 1, "contact menu opens once, got " .. #opened)
         local entry = opened[1]
         assert(entry ~= nil and entry.anchor == frame, "anchored to the link's frame")
-        assert(#calls == 0, "touched " .. table.concat(calls, ", "))
       end)
     end)
   end)
@@ -162,43 +169,56 @@ local function runSpyCases(factory)
   end)
 end
 
--- test_forever_full_path_shows_own_popup
-local function runFullPath(factory)
-  local savedParent, savedCreateFrame, savedSpecial = _G.UIParent, rawget(_G, "CreateFrame"), _G.UISpecialFrames
-  local savedModified = rawget(_G, "IsModifiedClick")
-  Localization.Configure({ language = "enUS" })
-  _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
-  rawset(_G, "CreateFrame", factory.CreateFrame)
-  _G.UISpecialFrames = {}
+-- Runs fn(frame) on Forever in a popup world: frame is a shown link frame
+-- bound by BindClick, the cursor sits at 300, 500 and no click is modified.
+local function withFullPath(fn)
+  local saved = { IsModifiedClick = rawget(_G, "IsModifiedClick"), GetCursorPosition = rawget(_G, "GetCursorPosition") }
   rawset(_G, "IsModifiedClick", function()
     return false
   end)
-
-  local ok, err = pcall(function()
-    Flavor.With(true, true, function()
-      BannedMenuApis.With(function(calls)
-        local frame = factory.CreateFrame("Frame", nil, _G.UIParent)
-        frame:Show()
-        LinkClicks.BindClick(frame)
-        frame:GetScript("OnHyperlinkClick")(frame, LINK, "[Gurkan Warbringer]", "RightButton")
-        assert(MenuPopup.IsShown(), "WM's own popup opens")
-        assert(#calls == 0, "touched " .. table.concat(calls, ", "))
-      end)
+  rawset(_G, "GetCursorPosition", function()
+    return 300, 500
+  end)
+  local ok, err = pcall(Flavor.With, true, true, function()
+    World.With(function(factory)
+      local frame = factory.CreateFrame("Frame", nil, _G.UIParent)
+      frame:Show()
+      LinkClicks.BindClick(frame)
+      fn(frame)
     end)
   end)
-
-  MenuPopup.Close()
-  _G.UIParent = savedParent
-  rawset(_G, "CreateFrame", savedCreateFrame)
-  _G.UISpecialFrames = savedSpecial
-  rawset(_G, "IsModifiedClick", savedModified)
+  rawset(_G, "IsModifiedClick", saved.IsModifiedClick)
+  rawset(_G, "GetCursorPosition", saved.GetCursorPosition)
   if not ok then
     error(err, 0)
   end
 end
 
+local function rightClick(frame)
+  frame:GetScript("OnHyperlinkClick")(frame, LINK, "[Gurkan Warbringer]", "RightButton")
+end
+
+local function runFullPath()
+  Localization.Configure({ language = "enUS" })
+
+  -- test_forever_full_path_shows_own_popup
+  withFullPath(function(frame)
+    BannedMenuApis.AssertNone(function()
+      rightClick(frame)
+    end)
+    assert(MenuPopup.IsShown(), "WM's own popup opens")
+  end)
+
+  -- test_forever_full_path_popup_sits_at_the_cursor
+  withFullPath(function(frame)
+    rightClick(frame)
+    local _, relativeTo, _, x, y = MenuPopup.GetFrame():GetPoint(1)
+    assert(relativeTo == _G.UIParent and x == 300 and y == 500, "at the cursor, not beside the transcript")
+  end)
+end
+
 return function()
   local factory = FakeUI.NewFactory()
   runSpyCases(factory)
-  runFullPath(factory)
+  runFullPath()
 end

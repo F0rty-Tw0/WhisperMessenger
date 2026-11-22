@@ -156,11 +156,11 @@ end
 -- Group rows are not players, so they get a small menu of our own instead of
 -- Blizzard's player menu: WM's popup on WoW: Forever, MenuUtil elsewhere.
 -- Returns false (row click selects) without the modern menu API.
-local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
   if FlavorCompat.isForever then
     return MenuPopup.Open(anchorFrame, function(root)
       addGroupEntries(root, item, onMarkUnread, onUpdatePrefs, rowActions)
-    end)
+    end, options)
   end
   local menuUtil = _G.MenuUtil
   if type(menuUtil) ~= "table" or type(menuUtil.CreateContextMenu) ~= "function" then
@@ -256,7 +256,7 @@ local function openBlizzardPlayerMenu(item, name, onMarkUnread, onUpdatePrefs, r
   return false
 end
 
-local function openPlayerMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+local function openPlayerMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
   local name = resolveMenuName(item)
   if name == nil then
     return false
@@ -265,29 +265,30 @@ local function openPlayerMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, ro
   if FlavorCompat.isForever then
     return OwnMenu.Open(item, anchorFrame, name, rowActions, function(root)
       addSection(root, item, onMarkUnread, onUpdatePrefs, rowActions)
-    end)
+    end, options)
   end
 
   return openBlizzardPlayerMenu(item, name, onMarkUnread, onUpdatePrefs, rowActions)
 end
 
-local function openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+local function openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
   if type(item) ~= "table" then
     return false
   end
   if ContactsTabFilter.IsGroupChannel(item.channel) then
-    return openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+    return openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
   end
 
-  return openPlayerMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+  return openPlayerMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
 end
 
 -- onUpdatePrefs(item, changes): changes is { muted = bool } / { nickname =
 -- text } / { note = text } / { notifyOnline = bool } / { notifyZone = bool }.
 -- rowActions: { onPin(item), onRemove(item) } (the row's hover actions).
+-- options (optional, WoW: Forever only): MenuPopup.Open's options.
 -- An opened menu takes ESC before the window.
-function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
-  local opened = openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
+  local opened = openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
   if opened then
     PickerPopup.ReportMenuShown()
   end

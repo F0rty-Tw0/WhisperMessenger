@@ -21,7 +21,6 @@ local function safely(fn, ...)
   return ok and result or nil
 end
 
--- Same order as the game's player menu: the chat line first, else the GUID.
 local function chatLocation(item)
   local chatInfo = _G.C_ChatInfo
   if item.lineID == nil or type(chatInfo) ~= "table" or type(chatInfo.IsValidChatLine) ~= "function" then
@@ -33,6 +32,7 @@ local function chatLocation(item)
   return safely(_G.PlayerLocation.CreateFromChatLineID, _G.PlayerLocation, item.lineID)
 end
 
+-- Same order as the game's player menu: the chat line first, else the GUID.
 local function playerLocation(item)
   local playerLocationApi = _G.PlayerLocation
   if type(playerLocationApi) ~= "table" then
@@ -100,8 +100,8 @@ local function addChatRows(root, item, rowActions)
 end
 
 -- addWmSection(root) adds the divider, the gold title and the WM entries,
--- or nothing.
-function OwnMenu.Open(item, anchorFrame, name, rowActions, addWmSection)
+-- or nothing. options (optional) goes to MenuPopup.Open as is.
+function OwnMenu.Open(item, anchorFrame, name, rowActions, addWmSection, options)
   if type(item) ~= "table" then
     return false
   end
@@ -116,7 +116,7 @@ function OwnMenu.Open(item, anchorFrame, name, rowActions, addWmSection)
       root:CreateDivider()
       root:CreateButton(Localization.Text("Report"), onReport)
     end
-  end)
+  end, options)
 end
 
 ns.ContactsListOwnMenu = OwnMenu

@@ -11,6 +11,7 @@ local PlayerLinkCodec = ns.UIHyperlinksPlayerLinkCodec or require("WhisperMessen
 local LinkClicks = {}
 
 local INLINE_LINK_TEMPLATE = "InlineHyperlinkFrameTemplate"
+local CURSOR_MENU = { atCursor = true }
 
 -- Template for a frame that shows links. With InlineHyperlinkFrameTemplate
 -- the game runs its own secure click handler; flavors without it get
@@ -134,7 +135,9 @@ end
 -- On Forever a right-clicked player name opens WM's own contact menu:
 -- Blizzard's chat-frame handler would open a Blizzard menu, which taints from
 -- addon code there. The link is player:name:lineID:chatType:chatTarget, and a
--- name may hold spaces. Returns true when the menu took the click.
+-- name may hold spaces. The menu opens at the cursor: the frame can be a
+-- whole transcript, far taller than the name. Returns true when the menu
+-- took the click.
 local function openContactMenu(frame, link, button)
   if not FlavorCompat.isForever or button ~= "RightButton" or type(link) ~= "string" then
     return false
@@ -148,12 +151,14 @@ local function openContactMenu(frame, link, button)
     return false
   end
 
-  contactMenu.Open({
+  local keepsChatType = chatType ~= "" and chatType ~= "WHISPER"
+  local item = {
     channel = "WOW",
     displayName = name,
     lineID = tonumber(lineID),
-    chatType = (chatType ~= "" and chatType ~= "WHISPER") and chatType or nil,
-  }, frame)
+    chatType = keepsChatType and chatType or nil,
+  }
+  contactMenu.Open(item, frame, nil, nil, nil, CURSOR_MENU)
   return true
 end
 
