@@ -234,6 +234,32 @@ function SeparateMenuEntry.Add(rootDescription, item, rowActions)
   end
 end
 
+-- Pin/Unpin and Remove: the row's hover-button actions, through the same
+-- handlers, so they are reachable in the collapsed rail too (no hover
+-- buttons there). rowActions: { onPin(item), onRemove(item) }.
+local RowActionsMenuEntry = {}
+
+function RowActionsMenuEntry.Add(rootDescription, item, rowActions)
+  if type(rowActions) ~= "table" then
+    return
+  end
+  if type(rowActions.onPin) == "function" then
+    rootDescription:CreateButton(Localization.Text(item.pinned and "Unpin" or "Pin to top"), function()
+      rowActions.onPin(item)
+    end)
+  end
+  if type(rowActions.onRemove) == "function" then
+    rootDescription:CreateButton(Localization.Text("Remove"), function()
+      rowActions.onRemove(item)
+    end)
+  end
+end
+
+function RowActionsMenuEntry.Has(rowActions)
+  return type(rowActions) == "table"
+    and (type(rowActions.onPin) == "function" or type(rowActions.onRemove) == "function" or type(rowActions.onIgnorePlayer) == "function")
+end
+
 local MenuEntries = {
   Export = ExportMenuEntry,
   Notify = NotifyMenuEntries,
@@ -241,6 +267,7 @@ local MenuEntries = {
   Block = BlockMenuEntry,
   ProfileLinks = ProfileLinksMenuEntry,
   Separate = SeparateMenuEntry,
+  RowActions = RowActionsMenuEntry,
 }
 
 ns.ContactsListMenuEntries = MenuEntries

@@ -9,14 +9,18 @@ local Flavor = require("tests.helpers.flavor")
 
 local COMMAND_PROMPT = "Press Ctrl+C to copy the command, then paste it into chat."
 
-local function clickCopies(fixture, overrides)
+local function clickEntry(entry)
   local copied
   ManualCopyCapture.With(function(capture)
-    fixture.entry(overrides).callback()
+    entry.callback()
     local dialog = _G.StaticPopupDialogs.WHISPER_MESSENGER_BUBBLE_COPY_TEXT
     copied = { count = capture.count, text = capture.text, prompt = dialog and dialog.text }
   end)
   return copied
+end
+
+local function clickCopies(fixture, overrides)
+  return clickEntry(fixture.entry(overrides))
 end
 
 return function()
@@ -52,9 +56,14 @@ return function()
     -- test_click_drops_realm_on_forever
     -- WoW: Forever tags names with a realm, but /ginvite finds the player only
     -- by the bare name there (seen in game). Names can hold spaces.
+    -- The Retail menu builds the entry; the click reads the flavor itself.
     resetFixture()
+    local foreverEntry
+    Flavor.With(true, false, function()
+      foreverEntry = fixture.entry({ displayName = "Jurst Lule-CAMWOWEU5Realm2PvP" })
+    end)
     Flavor.With(true, true, function()
-      copied = clickCopies(fixture, { displayName = "Jurst Lule-CAMWOWEU5Realm2PvP" })
+      copied = clickEntry(foreverEntry)
     end)
     assert(copied.text == "/ginvite Jurst Lule", "drops the realm on Forever, got " .. tostring(copied.text))
 
