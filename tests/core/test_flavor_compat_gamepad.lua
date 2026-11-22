@@ -208,4 +208,48 @@ return function()
     assert(FlavorCompat.GamepadButtonAtlas(7) == nil, "number key, no picture")
     assert(lookups == 0, "the lookup is not asked about a bad key")
   end)
+
+  -- test_uses_own_menus_forever_pad_on
+  Flavor.With(true, true, function()
+    Flavor.WithPadUI(true, function()
+      assert(FlavorCompat.UsesOwnMenus() == true, "Forever with the pad: WM's own menus")
+    end)
+  end)
+
+  -- test_uses_own_menus_forever_pad_off
+  Flavor.With(true, true, function()
+    Flavor.WithPadUI(false, function()
+      assert(FlavorCompat.UsesOwnMenus() == false, "Forever with the mouse: Blizzard's menus")
+    end)
+  end)
+
+  -- test_uses_own_menus_retail_pad_on
+  Flavor.With(true, false, function()
+    Flavor.WithPadUI(true, function()
+      assert(FlavorCompat.UsesOwnMenus() == false, "Retail with the pad: Blizzard's menus")
+    end)
+  end)
+
+  -- test_uses_own_menus_retail_pad_off
+  Flavor.With(true, false, function()
+    Flavor.WithPadUI(false, function()
+      assert(FlavorCompat.UsesOwnMenus() == false, "Retail with the mouse: Blizzard's menus")
+    end)
+  end)
+
+  -- test_uses_own_menus_rereads_each_call
+  local padOn = true
+  Flavor.With(true, true, function()
+    withGlobals({
+      InputUtil = {
+        IsGamepadUIEnabled = function()
+          return padOn
+        end,
+      },
+    }, function()
+      assert(FlavorCompat.UsesOwnMenus() == true, "pad on first")
+      padOn = false
+      assert(FlavorCompat.UsesOwnMenus() == false, "the player put the pad down: Blizzard's menus, no reload")
+    end)
+  end)
 end

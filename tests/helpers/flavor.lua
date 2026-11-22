@@ -21,4 +21,20 @@ function Flavor.With(isRetail, isForever, fn)
   end
 end
 
+-- Runs fn with the game's gamepad UI check (InputUtil.IsGamepadUIEnabled)
+-- answering on, then restores the real InputUtil.
+function Flavor.WithPadUI(on, fn)
+  local savedInputUtil = rawget(_G, "InputUtil")
+  rawset(_G, "InputUtil", {
+    IsGamepadUIEnabled = function()
+      return on
+    end,
+  })
+  local ok, err = pcall(fn)
+  rawset(_G, "InputUtil", savedInputUtil)
+  if not ok then
+    error(err, 0)
+  end
+end
+
 return Flavor
