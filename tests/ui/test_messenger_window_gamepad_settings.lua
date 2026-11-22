@@ -92,6 +92,18 @@ return function()
     assert(nav.count("markFocusable") == 1 and nav.last("markFocusable")[1] == slider, "tagged later: handed over on the next scan")
   end
 
+  -- test_pad_buttons_are_marked_focusable_once
+  do
+    local nav, s = fakeNav(), fakeSettings()
+    local page = factory.CreateFrame("Frame", nil, parent)
+    local button = factory.CreateFrame("Button", nil, page)
+    button._wmPadButton = true
+    s.panels = { page }
+    local onTargetsChanged = GamepadSettings.Attach(nav, s)
+    onTargetsChanged()
+    assert(nav.count("markFocusable") == 1 and nav.last("markFocusable")[1] == button, "pad button marked once")
+  end
+
   -- test_missing_settings_parts_do_nothing
   do
     local nav = fakeNav()

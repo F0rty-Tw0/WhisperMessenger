@@ -5,8 +5,9 @@ end
 
 -- The settings pages' part of the WoW: Forever gamepad UI. The right stick
 -- scrolls the open page while settings show, the chat otherwise. Widgets
--- the settings builders tagged with _wmPadStep (a slider) go to the nav
--- once each as a D-pad stop. Page list and page are plain spatial nav.
+-- the settings builders tagged with _wmPadStep (a slider) or _wmPadButton
+-- (a − / + or ▲ / ▼ pad button) go to the nav once each as a D-pad stop.
+-- Page list and page are plain spatial nav.
 local GamepadSettings = {}
 
 local function scrollFrameOf(scrollView)
@@ -38,7 +39,7 @@ end
 
 -- True when the widget carried a tag (and so went to the nav).
 local function handOver(nav, widget)
-  if type(widget._wmPadStep) ~= "function" then
+  if type(widget._wmPadStep) ~= "function" and widget._wmPadButton ~= true then
     return false
   end
   nav.markFocusable(widget)
