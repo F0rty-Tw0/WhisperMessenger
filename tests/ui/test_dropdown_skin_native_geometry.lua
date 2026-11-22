@@ -43,7 +43,7 @@ local function build(native, count, initial, menuHeight)
   end
   if not native then
     create()
-    return dropdown
+    return dropdown, parent
   end
   Flavor.With(true, true, function()
     Hud.Configure("classic")
@@ -53,7 +53,20 @@ local function build(native, count, initial, menuHeight)
       error(err, 0)
     end
   end)
-  return dropdown
+  return dropdown, parent
+end
+
+-- WoW fires OnHide only on a visible -> hidden change; the fakes fire it on
+-- every Hide. Gives `frame` the WoW behaviour.
+local function hideLikeWoW(frame)
+  local hide = frame.Hide
+  frame.Hide = function(self)
+    if not self:IsVisible() then
+      self.shown = false
+      return
+    end
+    hide(self)
+  end
 end
 
 local function findPanel(root)
@@ -172,6 +185,32 @@ return function()
     FindUI.click(dd.button)
     DropdownSelector.HideShownMenu()
     assert(not panel:IsShown(), "controller B: panel hidden")
+  end
+
+  -- test_native_panel_hides_when_the_settings_close_with_the_list_open
+  for _, childrenFirst in ipairs({ false, true }) do
+    local dd, parent = build(true, 3)
+    local menu, panel = FindUI.dropdownMenu(dd.row), panelOf(dd)
+    hideLikeWoW(menu)
+    parent:Show()
+    dd.row:Show()
+    dd.button:Show()
+    FindUI.click(dd.button)
+    assert(panel:IsShown(), "open: panel shown")
+    parent.shown = false
+    if childrenFirst then
+      menu:GetScript("OnHide")(menu)
+    end
+    parent:GetScript("OnHide")(parent)
+    parent.shown = true
+    local order = childrenFirst and "children first" or "parent first"
+    assert(not menu:IsShown(), order .. ": list closed")
+    assert(not panel:IsShown(), order .. ": no empty panel left after the settings reopen")
+  end
+
+  -- test_native_panel_takes_clicks_on_the_border
+  do
+    assert(panelOf(build(true, 3)).mouseEnabled, "border clicks land on the panel")
   end
 
   -- test_modern_rows_fill_the_menu_edge_to_edge

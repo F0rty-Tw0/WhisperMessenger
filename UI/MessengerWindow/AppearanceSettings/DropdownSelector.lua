@@ -233,6 +233,9 @@ function DropdownSelector.Create(factory, parent, options)
         parentOnHide(...)
       end
       menu:Hide()
+      -- The menu is already invisible here, so WoW fires no OnHide for it:
+      -- sync the native panel by hand.
+      DropdownSkin.SyncPanel(menu, menuSkin)
     end)
   end
 
