@@ -24,6 +24,7 @@ local function fakeNav(active)
     "ignore",
     "markFocusable",
     "setJumpTarget",
+    "setOrder",
     "popupShown",
     "popupHidden",
     "setPopupCloseHandler",

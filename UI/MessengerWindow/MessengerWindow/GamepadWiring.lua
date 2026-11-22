@@ -14,8 +14,8 @@ local GamepadComposer = ns.MessengerWindowGamepadComposer or require("WhisperMes
 -- The messenger window's part of the WoW: Forever gamepad UI: register on
 -- show, B closes the topmost layer, the right stick scrolls the chat (the
 -- settings page while settings show), the D-pad skips grips and the
--- composer padding, stops on each message, and reaches every settings
--- control. Our popups
+-- composer padding, stops on each message, reaches every settings control,
+-- and walks the top bar and the tabs in on-screen order. Our popups
 -- take pad focus while open; B closes them and the composer pickers first.
 -- On a client without the gamepad UI API the nav does nothing, so neither
 -- does this.
@@ -116,6 +116,38 @@ local function attachPopups(nav)
   end, nav.popupHidden)
 end
 
+-- Left to right on screen in both views: in the compact chat view Back
+-- takes the first left slot while the left group hides.
+local TOP_BAR = { "newConversationButton", "patchNotesButton", "markAllReadButton", "backButton", "optionsButton", "closeButton" }
+
+-- The D-pad walks the top bar and the contact tabs left / right and the
+-- settings tabs (a vertical list) up / down, in on-screen order. Each frame
+-- seen gets an OnShow / OnHide hook once (memo `hooked`), so a button that
+-- hides, such as Mark all read, re-chains at once.
+local function orderStops(nav, shell, refs, hooked, reorder)
+  local chrome, layout = shell.chrome or {}, shell.layout or {}
+  local bar = {}
+  for _, name in ipairs(TOP_BAR) do
+    bar[#bar + 1] = chrome[name]
+  end
+  local tabToggle = refs.tabToggle
+  local orders = {
+    { "topBar", bar, "LEFT", "RIGHT" },
+    { "settingsTabs", layout.settingsTabs or {}, "UP", "DOWN" },
+    { "contactTabs", tabToggle and tabToggle.getTabButtons and tabToggle.getTabButtons() or {}, "LEFT", "RIGHT" },
+  }
+  for _, order in ipairs(orders) do
+    for _, stop in ipairs(order[2]) do
+      if not hooked[stop] and stop.HookScript then
+        hooked[stop] = true
+        stop:HookScript("OnShow", reorder)
+        stop:HookScript("OnHide", reorder)
+      end
+    end
+    nav.setOrder(order[1], order[2], order[3], order[4])
+  end
+end
+
 -- shell: WindowShell.Build's result. nav: for tests; defaults to the game's.
 -- refresh may run before attach: an unregistered nav ignores it.
 -- attach must run after LifecycleWiring.Setup: its SetScript on OnShow and
@@ -125,12 +157,22 @@ function GamepadWiring.Create(shell, nav)
   nav = nav or GamepadNav.New(frame)
 
   local wiring = { nav = nav }
+  local attachedRefs = nil
+  local hooked = setmetatable({}, { __mode = "k" })
+
+  -- Before attach (no refs yet) or without the gamepad UI API: nothing.
+  local function reorder()
+    if attachedRefs and nav.isActive() then
+      orderStops(nav, shell, attachedRefs, hooked, reorder)
+    end
+  end
 
   function wiring.refresh()
+    reorder()
     nav.refresh()
   end
 
-  -- refs: { composer, conversation, compactMode, windowVisibility }.
+  -- refs: { composer, conversation, compactMode, windowVisibility, tabToggle }.
   function wiring.attach(refs)
     frame:HookScript("OnShow", function()
       nav.onShow()
@@ -155,6 +197,8 @@ function GamepadWiring.Create(shell, nav)
     end
     ignoreDeadStops(nav, shell, refs)
     attachSettings(nav, shell, transcript)
+    attachedRefs = refs
+    reorder()
   end
 
   return wiring

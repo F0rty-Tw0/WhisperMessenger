@@ -141,7 +141,13 @@ function MessengerWindow.Create(factory, options)
     end,
   })
   panelWiring.hookWindowHide()
-  gamepadWiring.attach({ composer = composer, conversation = conversation, compactMode = compactMode, windowVisibility = windowVisibility })
+  gamepadWiring.attach({
+    composer = composer,
+    conversation = conversation,
+    compactMode = compactMode,
+    windowVisibility = windowVisibility,
+    tabToggle = contactsRuntime.tabToggle,
+  })
   contactsRail = ContactsRail.Create({
     frame = frame,
     layout = layout,
