@@ -49,6 +49,7 @@ local function handOver(nav, widget)
     return false
   end
   nav.markFocusable(widget)
+
   return true
 end
 

@@ -53,6 +53,7 @@ function PadButtons.Create(factory, parent, kind, onClick, onShownChanged)
   local entry = { onShownChanged = onShownChanged }
   created[button] = entry
   applyShown(button, entry)
+
   return button
 end
 

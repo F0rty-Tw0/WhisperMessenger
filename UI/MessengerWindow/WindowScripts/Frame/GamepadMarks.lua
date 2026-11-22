@@ -55,7 +55,8 @@ function GamepadMarks.New(deps)
       error("setJumpTarget: target must be a frame or nil")
     end
     local directions = deps.directions
-    if widget == nil or not deps.addJumpOverride or type(directions) ~= "table" or directions[dirName] == nil then
+    local unsupported = widget == nil or not deps.addJumpOverride or type(directions) ~= "table" or directions[dirName] == nil
+    if unsupported then
       return
     end
     targets[dirName] = targets[dirName] or weakSet()
