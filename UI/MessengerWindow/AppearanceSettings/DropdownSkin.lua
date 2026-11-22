@@ -79,6 +79,39 @@ local function levelPanel(menu, panel)
   end
 end
 
+-- RGB of the panel's fill as the template painted it; GameTooltip's default
+-- when the client can't report it.
+local function panelFillRgb(panel)
+  if panel.GetBackdropColor then
+    local r, g, b = panel:GetBackdropColor()
+    if r then
+      return r, g, b
+    end
+  end
+  local nineSlice = panel.NineSlice
+  if nineSlice and nineSlice.GetCenterColor then
+    local r, g, b = nineSlice:GetCenterColor()
+    if r then
+      return r, g, b
+    end
+  end
+  local fallback = PickerPopup.TOOLTIP_BACKGROUND_COLOR
+  return fallback[1], fallback[2], fallback[3]
+end
+
+-- The tooltip art is see-through, so the settings rows behind the open list
+-- showed through it. A solid fill in the panel's RGB sits under the art,
+-- inside the border; only this panel, not every tooltip frame.
+local function addSolidFill(panel, inset)
+  local r, g, b = panelFillRgb(panel)
+  local fill = panel:CreateTexture(nil, "BACKGROUND", nil, -8)
+  fill:SetPoint("TOPLEFT", panel, "TOPLEFT", inset, -inset)
+  fill:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -inset, inset)
+  fill:SetColorTexture(r, g, b, 1)
+  -- Kept on the panel so a test can find it.
+  panel._wmFill = fill
+end
+
 -- Hidden, scrollable open list under `button`; `content` is the scroll
 -- child. The look is decided here, once, so rows pooled later match:
 -- menuSkin = { native, bg, panel, inset }. Under the Native look the menu
@@ -111,6 +144,7 @@ function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
   local menuSkin = { native = native, bg = bg, inset = inset }
   if native then
     local panel = PickerPopup.CreateTooltipFrame(factory, row)
+    addSolidFill(panel, inset)
     panel:SetPoint("TOPLEFT", menu, "TOPLEFT", -inset, inset)
     panel:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", inset, -inset)
     -- Clicks on the border land on the panel, not the settings below.

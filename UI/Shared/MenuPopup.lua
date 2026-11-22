@@ -24,10 +24,10 @@ local DIVIDER_HEIGHT = 10
 local MIN_WIDTH = 120
 local MAX_WIDTH = 260
 local LABEL_PAD = 8
-local CHECK_LABEL_PAD = 24
+local CHECK_LABEL_PAD = PickerPopup.CHECK_LABEL_PAD
 local RIGHT_PAD = 12
-local CHECK_SIZE = 16
-local CHECK_TEXTURE = "Interface\\Buttons\\UI-CheckBox-Check"
+local CHECK_SIZE = PickerPopup.CHECK_SIZE
+local CHECK_TEXTURE = PickerPopup.CHECK_TEXTURE
 local DIVIDER_TEXTURE = "Interface\\Common\\UI-TooltipDivider-Transparent"
 local NATIVE_TEXT_COLOR = { 1, 1, 1, 1 }
 
@@ -112,7 +112,7 @@ local function createButtonRegion(kind)
     local check = button:CreateTexture(nil, "ARTWORK")
     check:SetTexture(CHECK_TEXTURE)
     check:SetSize(CHECK_SIZE, CHECK_SIZE)
-    check:SetPoint("LEFT", button, "LEFT", PAD, 0)
+    check:SetPoint("LEFT", button, "LEFT", PickerPopup.CHECK_INSET, 0)
     button._check = check
   end
   return button

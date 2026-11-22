@@ -1,6 +1,6 @@
 -- On WoW: Forever the Native look keeps WhisperMessenger's own dropdown list,
 -- drawn like the game's menus: a tooltip panel, Blizzard list hover art and
--- the quest log's selected-entry art. The modern look is unchanged.
+-- a check mark by the chosen option. The modern look is unchanged.
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local Flavor = require("tests.helpers.flavor")
@@ -37,6 +37,13 @@ local function hoverAlpha(row)
   local highlight = listHover(row)
   assert(highlight, "row has no NativeArt.LIST_HOVER highlight")
   return highlight:GetAlpha()
+end
+
+local function checkShown(row)
+  local check = FindUI.find(row, function(n)
+    return n.texturePath == PickerPopup.CHECK_TEXTURE
+  end)
+  return check ~= nil and check:IsShown()
 end
 
 -- The panel wraps the menu from outside: it hangs off the dropdown row.
@@ -167,24 +174,22 @@ return function()
     assert(rows[1].bg.color == nil, "native hover paints no colour fill")
   end
 
-  -- test_native_menu_marks_the_selected_row
+  -- test_native_menu_checks_the_selected_row
   do
     local dd = build(true)
-    local bg = FindUI.dropdownOptions(dd.row)[2].bg
-    assert(bg.texturePath == NativeArt.LIST_SELECTED and bg.shown == true, "selected row shows LIST_SELECTED")
+    assert(checkShown(FindUI.dropdownOptions(dd.row)[2]), "selected row shows the check")
   end
 
-  -- test_native_selected_art_is_dimmed
+  -- test_native_selected_row_draws_no_bar
   do
     local dd = build(true)
-    local bg = FindUI.dropdownOptions(dd.row)[2].bg
-    assert(bg.alpha == NativeArt.LIST_SELECTED_ALPHA, "selected art drawn at LIST_SELECTED_ALPHA, got " .. tostring(bg.alpha))
+    assert(not FindUI.dropdownOptions(dd.row)[2].bg:IsShown(), "selected row draws no selection bar")
   end
 
-  -- test_native_unselected_row_shows_no_selection_art
+  -- test_native_unselected_row_shows_no_check
   do
     local dd = build(true)
-    assert(FindUI.dropdownOptions(dd.row)[1].bg.shown == false, "unselected row shows no selection art")
+    assert(not checkShown(FindUI.dropdownOptions(dd.row)[1]), "unselected row shows no check")
   end
 
   -- test_native_rows_use_the_game_menu_font
@@ -201,11 +206,11 @@ return function()
     assert(sameColor(label.textColor, Theme.COLORS.text_secondary), "header text is text_secondary")
   end
 
-  -- test_native_selected_text_uses_the_active_colour
+  -- test_native_selected_text_is_gold
   do
     local dd = build(true)
     local label = FindUI.dropdownOptions(dd.row)[2].label
-    assert(sameColor(label.textColor, COLORS.textActive), "selected text is palette.textActive")
+    assert(sameColor(label.textColor, { 1, 0.82, 0 }), "selected text is the game's gold")
   end
 
   -- test_native_unselected_text_uses_the_text_colour
