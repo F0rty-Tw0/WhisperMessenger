@@ -172,32 +172,13 @@ local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, row
   return true
 end
 
-local function openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
-  if type(item) ~= "table" then
-    return false
-  end
-  if ContactsTabFilter.IsGroupChannel(item.channel) then
-    return openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
-  end
-
-  local name = resolveMenuName(item)
-  if name == nil then
-    return false
-  end
-  -- Blizzard's player menus taint when addon code opens them on Forever.
-  if FlavorCompat.isForever then
-    return OwnMenu.Open(item, anchorFrame, name, rowActions, function(root)
-      addSection(root, item, onMarkUnread, onUpdatePrefs, rowActions)
-    end)
-  end
-
+local function openBlizzardPlayerMenu(item, name, onMarkUnread, onUpdatePrefs, rowActions)
   local lineID = item.lineID
   local chatType = item.chatType
   local which = item.channel == "BN" and "BN_FRIEND" or "FRIEND"
 
-  -- Never pass anchorFrame as the menu's chatFrame: Blizzard's Whisper entry
-  -- sends to chatFrame.editBox, which our frames lack, so Whisper errors out.
-  -- Without one, Blizzard picks the player's own chat edit box.
+  -- No chatFrame: Blizzard's Whisper entry sends to chatFrame.editBox, which our
+  -- row frames lack. Without one, Blizzard picks the player's own chat edit box.
   if ensureModernMenu() and type(_G.UnitPopup_OpenMenu) == "function" then
     _G.UnitPopup_OpenMenu(which, {
       name = name,
@@ -273,6 +254,32 @@ local function openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActio
   end
 
   return false
+end
+
+local function openPlayerMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+  local name = resolveMenuName(item)
+  if name == nil then
+    return false
+  end
+  -- Blizzard's player menus taint when addon code opens them on Forever.
+  if FlavorCompat.isForever then
+    return OwnMenu.Open(item, anchorFrame, name, rowActions, function(root)
+      addSection(root, item, onMarkUnread, onUpdatePrefs, rowActions)
+    end)
+  end
+
+  return openBlizzardPlayerMenu(item, name, onMarkUnread, onUpdatePrefs, rowActions)
+end
+
+local function openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+  if type(item) ~= "table" then
+    return false
+  end
+  if ContactsTabFilter.IsGroupChannel(item.channel) then
+    return openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+  end
+
+  return openPlayerMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
 end
 
 -- onUpdatePrefs(item, changes): changes is { muted = bool } / { nickname =
