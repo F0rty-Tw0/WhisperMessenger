@@ -9,7 +9,6 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - On WoW: Forever, you can now use the messenger with a controller: move through your chats and buttons, scroll the chat, and press B to close.
 - On WoW: Forever, the settings pages now work with a controller, including picking a choice from a drop-down list with the D-pad.
 - On WoW: Forever, pop-up pickers and dialogs now work with a controller.
-- On WoW: Forever, the X button opens the right-click menu on contacts, messages and the chat header.
 - On WoW: Forever with a controller, press A on the message box to start typing and A again to send; B leaves the message box. A small hint shows both buttons. Typing itself still needs an on-screen keyboard or a real one.
 
 ## [2.1.9] - 2026-11-21

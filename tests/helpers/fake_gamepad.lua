@@ -4,8 +4,8 @@
 -- and fires the frame's panel-info-added callback (#L826-L845, #L839);
 -- the callback setter only stores it on the frame (#L1982-L1984).
 -- env.press mirrors how SmartNav runs a jump override (#L1503-L1520,
--- Utility.lua#L513-L524). Prompted bindings (the X button) come from
--- fake_gamepad_bindings.
+-- Utility.lua#L513-L524). Prompted bindings (the X button, which the addon
+-- must not use) and the game's right-click come from fake_gamepad_bindings.
 local FakeGamepadBindings = require("tests.helpers.fake_gamepad_bindings")
 
 local FakeGamepad = {}
@@ -190,11 +190,6 @@ function FakeGamepad.New()
   -- Fires PLAYER_REGEN_ENABLED; leaves env.combat as the test set it.
   function env.regen()
     fire("PLAYER_REGEN_ENABLED")
-  end
-
-  -- Fires PLAYER_REGEN_DISABLED (combat about to start); leaves env.combat.
-  function env.regenDisabled()
-    fire("PLAYER_REGEN_DISABLED")
   end
 
   function env.scrollFrameFor(frame)

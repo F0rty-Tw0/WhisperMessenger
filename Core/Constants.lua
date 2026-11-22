@@ -6,10 +6,6 @@ end
 local Constants = {
   VERSION = "v2.1.9",
 
-  -- WoW: Forever gamepad UI: targets carrying this buttonContext open
-  -- their right-click menu with the X button.
-  GAMEPAD_RIGHT_CLICK_CONTEXT = "WhisperMessenger_RightClick",
-
   LIVE_EVENT_NAMES = {
     "CHAT_MSG_WHISPER",
     "CHAT_MSG_WHISPER_INFORM",
