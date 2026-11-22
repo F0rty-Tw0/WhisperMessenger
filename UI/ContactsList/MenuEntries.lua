@@ -255,6 +255,8 @@ function RowActionsMenuEntry.Add(rootDescription, item, rowActions)
   end
 end
 
+-- Whether rowActions brings any row-level entry: Pin, Remove, or Block
+-- (onIgnorePlayer, added by BlockMenuEntry), not only the two above.
 function RowActionsMenuEntry.Has(rowActions)
   return type(rowActions) == "table"
     and (type(rowActions.onPin) == "function" or type(rowActions.onRemove) == "function" or type(rowActions.onIgnorePlayer) == "function")
