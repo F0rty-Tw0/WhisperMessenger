@@ -88,7 +88,6 @@ return function()
     for _, target in ipairs(navTargets(nav, content)) do
       if target._wmBubbleResult then
         bubbles = bubbles + 1
-        assert(target.buttonContext == GamepadNav.RIGHT_CLICK_CONTEXT, "X works on every bubble")
       elseif target == (target:GetParent() or {})._wmDeliveryButton then
         delivery = delivery + 1
       else
@@ -134,16 +133,28 @@ return function()
     LayoutMessages(FakeUI.NewFactory(), transcript.content, { incoming("late", 5) }, 400, {})
     transcript.onNavTargetsChanged()
     assert(nav.refreshes == 1, "a re-render asks for one re-scan")
-    local bubble = firstBubble(transcript.content)
-    assert(bubble and bubble.buttonContext == GamepadNav.RIGHT_CLICK_CONTEXT, "a bubble laid out later is tagged too")
   end
 
-  -- test_x_on_a_bubble_opens_its_menu_once
+  -- test_bubbles_have_no_button_context_at_attach_or_after_a_rerender
+  -- The game's buff refresh reads buttonContext on the focused frame; an
+  -- addon value there taints it.
+  do
+    local nav = recordingNav()
+    local transcript = { content = layout({ incoming("hi", 0) }) }
+    GamepadTranscript.Attach(nav, transcript)
+    local first = firstBubble(transcript.content)
+    LayoutMessages(FakeUI.NewFactory(), transcript.content, { incoming("late", 5) }, 400, {})
+    transcript.onNavTargetsChanged()
+    local later = firstBubble(transcript.content)
+    assert(first and later, "test precondition: bubbles were laid out")
+    assert(first.buttonContext == nil and later.buttonContext == nil, "no bubble carries a buttonContext")
+  end
+
+  -- test_game_right_click_on_a_bubble_opens_its_menu_once
   do
     local env = FakeGamepad.New()
     local window = FakeUI.NewFactory().CreateFrame("Frame", "WhisperMessengerWindow", nil)
     local nav = GamepadNav.New(window, env.deps())
-    nav.bindRightClick(GamepadNav.RIGHT_CLICK_CONTEXT, "Options")
     nav.onShow()
     local content = layout({ incoming("hi", 0) })
     GamepadTranscript.Attach(nav, { content = content })
@@ -152,21 +163,10 @@ return function()
       opened = opened + 1
       return true
     end)
-    local ok, err = pcall(env.pressX, firstBubble(content))
+    local ok, err = pcall(env.rightClick, firstBubble(content))
     rawset(ChatContextMenu, "Open", original)
     assert(ok, err)
     assert(opened == 1, "MouseDown opens the menu, MouseUp does not open it again; got " .. opened)
-  end
-
-  -- test_a_released_bubble_frame_is_not_tagged_for_x
-  do
-    local nav = recordingNav()
-    local factory = FakeUI.NewFactory()
-    local content = factory.CreateFrame("Frame", nil, nil)
-    local released = factory.CreateFrame("Button", nil, content)
-    released._wmBubbleResult = { frame = nil }
-    GamepadTranscript.Attach(nav, { content = content })
-    assert(released.buttonContext == nil, "a frame back in the pool keeps its result table but is no bubble")
   end
 
   _G.UIParent = savedUIParent

@@ -9,7 +9,6 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - On WoW: Forever, you can now use the messenger with a controller: move through your chats and buttons, scroll the chat, and press B to close.
 - On WoW: Forever, the settings pages now work with a controller, including picking a choice from a drop-down list with the D-pad.
 - On WoW: Forever, pop-up pickers and dialogs now work with a controller.
-- On WoW: Forever, the X button opens the right-click menu on contacts, messages and the chat header.
 - On WoW: Forever with a controller, press A on the message box to start typing and A again to send; B leaves the message box. A small hint shows both buttons. Typing itself still needs an on-screen keyboard or a real one.
 
 ## [2.1.9] - 2026-11-21
@@ -29,6 +28,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: party, raid and instance chats now clear out after your Message Retention time like whispers do. Before, leaving the group or logging back in counted as new activity, so an old group chat could stay in your list for days.
 - Fixed: notices in a chat, like "player is offline" or "Left party", no longer move that chat to the top of your list or keep it from clearing out after your Message Retention time, also after you remove an unsent message or when two chats with the same person are joined. Only real messages count.
 - Fixed: when two chats with the same person are joined into one, the chat list now shows the last line of the joined chat instead of an older message.
+- Fixed: an error from the buff icons ("secret number value") when the controller cursor sat on a messenger contact or message during a buff change.
 
 ## [2.1.8] - 2026-11-16
 
