@@ -46,7 +46,8 @@ return function()
     assert(call[2] == header, "menu should anchor to the header")
     assert(call[3] == opts.onMarkUnread, "menu should get onMarkUnread")
     assert(call[4] == opts.onUpdatePrefs, "menu should get onUpdatePrefs")
-    assert(call.n == 4, "menu should get no row actions, got " .. call.n .. " args")
+    assert(call[5] == nil, "menu should get no row actions")
+    assert(type(call[6]) == "table" and call[6].atCursor == true, "menu should open at the cursor")
   end
 
   -- test_right_click_menu_reads_the_row_actions_table
@@ -60,7 +61,7 @@ return function()
     fire(header, "OnMouseUp", "RightButton")
     local call = calls[1]
     assert(call[3] == rowActions.onMarkUnread and call[4] == rowActions.onUpdatePrefs, "menu gets both callbacks from the table")
-    assert(call.n == 4, "the header menu still gets no Pin or Remove, got " .. call.n .. " args")
+    assert(call[5] == nil, "the header menu still gets no Pin or Remove")
   end
 
   -- test_actions_outside_the_row_actions_table_are_not_read

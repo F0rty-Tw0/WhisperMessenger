@@ -16,6 +16,10 @@ local HeaderMenu = {}
 -- mouse swallows them, so these window scripts are forwarded.
 local FORWARDED_EVENTS = { "OnMouseDown", "OnDragStart", "OnDragStop" }
 
+-- The header spans the whole pane, so beside it is past the window's edge:
+-- WM's own popup (WoW: Forever) opens at the cursor instead.
+local CURSOR_MENU = { atCursor = true }
+
 -- Looked up when the event fires: the window binds its scripts after the
 -- pane is built.
 local function findScriptedAncestor(frame, eventName)
@@ -126,7 +130,7 @@ function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
     if type(cm) ~= "table" or type(cm.Open) ~= "function" then
       return
     end
-    cm.Open(contact, headerFrame, rowActions.onMarkUnread, rowActions.onUpdatePrefs)
+    cm.Open(contact, headerFrame, rowActions.onMarkUnread, rowActions.onUpdatePrefs, nil, CURSOR_MENU)
   end)
 
   bindForwarders(headerFrame, view)
