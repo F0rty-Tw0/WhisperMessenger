@@ -165,6 +165,12 @@ function EditBoxInterop.interceptEditBox(runtime, hooks, deps, editBox)
       if not accountInfo then
         return
       end
+      -- The game's chat keeps this whisper: mark an existing chat read, but
+      -- create nothing (a cancelled draft must not add or evict a chat).
+      if type(hooks.wouldRouteOutgoing) == "function" and not hooks.wouldRouteOutgoing() then
+        hooks.onOutgoingWhisper(deps.battleNetConversationKey(runtime, deps.identity, accountInfo))
+        return
+      end
       local conversationKey = deps.ensureBattleNetConversation(runtime, deps.identity, accountInfo)
       if conversationKey and hooks.onOutgoingWhisper(conversationKey) then
         opened = true
