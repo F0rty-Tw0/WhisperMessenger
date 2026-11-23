@@ -32,7 +32,6 @@ local roles = {
   text_timestamp = { 1.0, 1.0, 1.0, 0.40 },
   accent = withAlpha(jadeRgb, 1.0),
   toggle_on = withAlpha(jadeRgb, 1.0),
-  button_fill_hover = withAlpha(jadeRgb, 1.0),
   status_online = { 0.30, 0.82, 0.40, 1.0 },
   status_offline = { 0.45, 0.45, 0.45, 1.0 },
   status_away = { 0.90, 0.72, 0.20, 1.0 },
