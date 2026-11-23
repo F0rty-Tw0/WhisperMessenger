@@ -9,8 +9,9 @@ local PadButtons = ns.SettingsControlsPadButtons or require("WhisperMessenger.UI
 
 -- The settings pages' part of the WoW: Forever gamepad UI. The right stick
 -- scrolls the open page while settings show, the chat otherwise. Widgets
--- the settings builders tagged with _wmPadStep (a slider) or _wmPadButton
--- (a − / + or ▲ / ▼ pad button) go to the nav once each as a D-pad stop.
+-- the settings builders tagged with _wmPadButton (a − / + or ▲ / ▼ pad
+-- button) go to the nav once each as a D-pad stop; ones tagged with
+-- _wmPadStep (a slider) go once each as skipped.
 -- Page list and page are plain spatial nav. The pad buttons re-read the
 -- game's pad UI toggle when settings show, on each re-scan, and when the
 -- player flips the toggle (INPUT_DEVICE_INTERFACE_TRANSITION).
@@ -44,9 +45,15 @@ local function followSettingsPane(nav, settings)
   end
 end
 
--- True when the widget carried a tag (and so went to the nav).
+-- True when the widget carried a tag (and so went to the nav). A slider is
+-- skipped: A on it clicks the track and jumps the value, so its − / + pad
+-- buttons are the stops that step it.
 local function handOver(nav, widget)
-  if type(widget._wmPadStep) ~= "function" and widget._wmPadButton ~= true then
+  if type(widget._wmPadStep) == "function" then
+    nav.ignore(widget)
+    return true
+  end
+  if widget._wmPadButton ~= true then
     return false
   end
   nav.markFocusable(widget)

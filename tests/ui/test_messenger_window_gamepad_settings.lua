@@ -47,7 +47,7 @@ end
 local function fakeNav()
   ---@type table<string, any>
   local nav = { seen = {} }
-  for _, name in ipairs({ "markFocusable", "setScrollFrame", "refresh" }) do
+  for _, name in ipairs({ "markFocusable", "ignore", "setScrollFrame", "refresh" }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
     end
@@ -113,13 +113,27 @@ return function()
     local panels = { pageA, false }
     s.panels = panels
     local onTargetsChanged = GamepadSettings.Attach(nav, s)
-    assert(nav.count("markFocusable") == 1 and nav.last("markFocusable")[1] == sliderA, "built page scanned at attach")
+    assert(nav.count("ignore") == 1 and nav.last("ignore")[1] == sliderA, "built page scanned at attach")
     local pageB = factory.CreateFrame("Frame", nil, parent)
     local sliderB = factory.CreateFrame("Slider", nil, pageB)
     sliderB._wmPadStep = function() end
     panels[2] = pageB
     onTargetsChanged()
-    assert(nav.count("markFocusable") == 2 and nav.last("markFocusable")[1] == sliderB, "lazy page marked, page A not again")
+    assert(nav.count("ignore") == 2 and nav.last("ignore")[1] == sliderB, "lazy page marked, page A not again")
+  end
+
+  -- test_slider_is_skipped_by_the_pad_cursor
+  -- A on a slider stop clicks the track and jumps the value; the − / +
+  -- pad buttons step it instead.
+  do
+    local nav, s = fakeNav(), fakeSettings()
+    local page = factory.CreateFrame("Frame", nil, parent)
+    local slider = factory.CreateFrame("Slider", nil, page)
+    slider._wmPadStep = function() end
+    s.panels = { page }
+    GamepadSettings.Attach(nav, s)
+    assert(nav.count("markFocusable") == 0, "slider is not a D-pad stop")
+    assert(nav.count("ignore") == 1 and nav.last("ignore")[1] == slider, "slider skipped by the D-pad")
   end
 
   -- test_widget_tagged_after_its_first_scan_is_handed_over
@@ -129,10 +143,10 @@ return function()
     local slider = factory.CreateFrame("Slider", nil, page)
     s.panels = { page }
     local onTargetsChanged = GamepadSettings.Attach(nav, s)
-    assert(nav.count("markFocusable") == 0, "untagged: nothing to hand over yet")
+    assert(nav.count("ignore") == 0, "untagged: nothing to hand over yet")
     slider._wmPadStep = function() end
     onTargetsChanged()
-    assert(nav.count("markFocusable") == 1 and nav.last("markFocusable")[1] == slider, "tagged later: handed over on the next scan")
+    assert(nav.count("ignore") == 1 and nav.last("ignore")[1] == slider, "tagged later: handed over on the next scan")
   end
 
   -- test_pad_buttons_are_marked_focusable_once
