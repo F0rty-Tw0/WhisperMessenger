@@ -179,6 +179,13 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     return true
   end
 
+  -- "Show group chats" off: store nothing and alert nothing. Checked after
+  -- the filters so the Filters page still counts blocked group lines.
+  local settings = runtime.accountState and runtime.accountState.settings
+  if settings and settings.showGroupChats == false then
+    return true
+  end
+
   -- Resolve sender class/race/faction from guid so the chat bubble can
   -- render a class icon and class-colored name. BN_CONVERSATION events
   -- don't carry a guid (BNet identity instead) — skip for that surface.
