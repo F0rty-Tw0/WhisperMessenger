@@ -4,23 +4,14 @@ if type(ns) ~= "table" then
 end
 
 local CompactViewport = ns.MessengerWindowLayoutCompactViewport or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.CompactViewport")
+local GlideClock = ns.GlideClock or require("WhisperMessenger.UI.Shared.GlideClock")
 
 -- Moves the compact layout's strip between the list (0) and the chat (1).
 -- Clipping runs only during a slide, and at rest the off-screen pane hides:
 -- pop-ups inside the panes are never cut off, and nothing unseen takes clicks.
+-- GlideClock eases the slide and caps each frame's step, so a slow first
+-- frame pauses the slide instead of skipping it.
 local CompactSlide = {}
-
-local min = math.min
-
--- Longest step the clock takes in one frame, as in IconRide. Opening the window
--- does its heavy refresh just as the slide starts; a slow frame then pauses the
--- slide instead of skipping it.
-local MAX_STEP = 1 / 30
-
-local function easeOut(t)
-  local inverse = 1 - t
-  return 1 - inverse * inverse * inverse
-end
 
 -- options: layout, theme, isCovered() (settings or a panel hide the panes).
 function CompactSlide.Create(options)
@@ -33,7 +24,6 @@ function CompactSlide.Create(options)
 
   local target = layout.compactProgress or 0
   local from = target
-  local elapsed = 0
   local onDone = nil
   local sliding = false
 
@@ -52,7 +42,7 @@ function CompactSlide.Create(options)
 
   local function stopTicking()
     sliding = false
-    viewport:SetScript("OnUpdate", nil)
+    GlideClock.Stop(viewport)
     if viewport.SetClipsChildren then
       viewport:SetClipsChildren(false)
     end
@@ -72,13 +62,8 @@ function CompactSlide.Create(options)
     end
   end
 
-  local function tick(_self, delta)
-    elapsed = elapsed + min(delta, MAX_STEP)
-    if elapsed >= duration then
-      finishNow()
-      return
-    end
-    place(from + (target - from) * easeOut(elapsed / duration))
+  local function step(_t, p)
+    place(from + (target - from) * p)
   end
 
   local function snapTo(nextTarget)
@@ -100,13 +85,12 @@ function CompactSlide.Create(options)
     end
     from = layout.compactProgress or 0
     target = nextTarget
-    elapsed = 0
     onDone = done
     sliding = true
     contactsPane:Show()
     contentPane:Show()
     viewport:SetClipsChildren(true)
-    viewport:SetScript("OnUpdate", tick)
+    GlideClock.Run(viewport, duration, step, finishNow)
   end
 
   return {

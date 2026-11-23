@@ -10,7 +10,6 @@ local Header = ns.SettingsControlsHeader or require("WhisperMessenger.UI.Shared.
 local SectionLabel = ns.SettingsControlsSectionLabel or require("WhisperMessenger.UI.Shared.SettingsControls.SectionLabel")
 local SliderSkin = ns.SettingsControlsSliderSkin or require("WhisperMessenger.UI.Shared.SettingsControls.SliderSkin")
 local SliderPadStep = ns.SettingsControlsSliderPadStep or require("WhisperMessenger.UI.Shared.SettingsControls.SliderPadStep")
-local SliderTooltip = ns.SettingsControlsSliderTooltip or require("WhisperMessenger.UI.Shared.SettingsControls.SliderTooltip")
 local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
@@ -194,7 +193,7 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
     end)
   end
 
-  SliderTooltip.Attach(row, tooltip)
+  UIHelpers.attachTooltip(row, tooltip)
 
   return {
     row = row,

@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
+local PageFooter = ns.SettingsControlsPageFooter or require("WhisperMessenger.UI.Shared.SettingsControls.PageFooter")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ChannelPicker = ns.MessengerWindowChannelPicker or require("WhisperMessenger.UI.MessengerWindow.ChatsSettings.ChannelPicker")
 
@@ -13,7 +14,6 @@ local ChannelPicker = ns.MessengerWindowChannelPicker or require("WhisperMesseng
 -- collapse repeats, hide channels from Blizzard chat, and the channel picker.
 local ChatsSettings = {}
 
-local PADDING = Theme.CONTENT_PADDING
 local TITLE = "Chats"
 local HINT = "Choose which group chats and channels appear."
 local TIP = "To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."
@@ -100,26 +100,11 @@ function ChatsSettings.Create(factory, parent, config, options)
     lastAbove = tip
   end
 
-  local resetButton = panel:bind(
-    UIHelpers.createOptionButton(
-      factory,
-      frame,
-      text("Reset to Defaults"),
-      SettingsControls.OptionButtonColors(Theme),
-      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, ghost = true }
-    ),
-    { type = "optionButton" }
-  )
-  resetButton:SetPoint("TOPLEFT", lastAbove, "BOTTOMLEFT", 0, -24)
-  resetButton:SetScript("OnClick", function()
+  local resetButton = PageFooter.CreateResetButton(factory, frame, panel, text("Reset to Defaults"), function()
     panel:reset(onChange)
   end)
-
-  local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
-  bottomSpacer:SetSize(1, PADDING)
-  bottomSpacer:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, 0)
-  -- Marker the options scrollview reads to size the scroll content.
-  frame._wmBottomMarker = bottomSpacer
+  resetButton:SetPoint("TOPLEFT", lastAbove, "BOTTOMLEFT", 0, -24)
+  PageFooter.AddBottomMarker(factory, frame, resetButton)
 
   -- Channels joined since the page was built show up the next time it opens.
   frame:SetScript("OnShow", picker.refresh)
@@ -148,10 +133,10 @@ function ChatsSettings.Create(factory, parent, config, options)
   end
 
   local function refreshLayout(width)
-    if type(width) ~= "number" or width <= 0 then
+    local effective = PageFooter.ClampPanelWidth(width)
+    if not effective then
       return
     end
-    local effective = math.min(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, math.max(160, math.floor(width)))
     header.refreshLayout(effective)
     panel:refreshLayout(effective)
     picker.refreshLayout(effective)
