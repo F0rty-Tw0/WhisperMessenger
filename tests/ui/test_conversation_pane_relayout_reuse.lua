@@ -184,4 +184,17 @@ return function()
       assert(before[message] ~= nil, "test_theme_refresh_rebuilds_bubbles: same rows stay in view")
     end
   end
+
+  -- test_language_change_rebuilds_bubbles
+  -- Bubble labels ("You", "Seen", "New messages") are localized at build
+  -- time, so a language switch must rebuild them on its own, without
+  -- relying on a font change to mark the rows stale.
+  do
+    local view = makePane()
+    local builds = countBubbleBuilds(function()
+      ConversationPane.SetLanguage(view)
+    end)
+    local visible = visibleRowCount(view.transcript)
+    assert(builds >= visible, "test_language_change_rebuilds_bubbles: expected at least " .. visible .. " builds, got " .. builds)
+  end
 end

@@ -103,6 +103,12 @@ function ConversationPane.SetLanguage(view)
   if view._selectedContact ~= nil or view._conversation ~= nil then
     HeaderView.Refresh(view, view._selectedContact, view._conversation, view._status)
   end
+  -- Bubble labels ("You", "Seen", "New messages") are localized when a
+  -- bubble is built, so rebuild the visible ones in the new language.
+  local transcript = view.transcript
+  if transcript and transcript._allMessages then
+    TranscriptView.RenderTranscript(transcript, transcript._allMessages, FORCE_RENDER)
+  end
 end
 
 function ConversationPane.Create(factory, parent, selectedContact, conversation, options)
