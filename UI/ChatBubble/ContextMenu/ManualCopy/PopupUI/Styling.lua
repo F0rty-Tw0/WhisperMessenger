@@ -47,59 +47,17 @@ local function collectInputTemplateTextures(editBox)
   return found
 end
 
-local function suppressInputTemplateTextures(editBox)
-  if type(editBox) ~= "table" then
-    return
+-- The edit box's own regions plus the template borders, in one list: a border
+-- reached both ways is snapshotted once, before it is hidden.
+local function collectEditBoxTextures(editBox)
+  local regions = {}
+  if type(editBox.GetRegions) == "function" then
+    regions = { editBox:GetRegions() }
   end
-  if editBox._wmManualCopyTemplateSnapshots ~= nil then
-    return
+  for _, texture in ipairs(collectInputTemplateTextures(editBox)) do
+    regions[#regions + 1] = texture
   end
-  local snapshots = {}
-  for _, tex in ipairs(collectInputTemplateTextures(editBox)) do
-    local snap = { region = tex }
-    if type(tex.IsShown) == "function" then
-      snap.shown = tex:IsShown() == true
-    else
-      snap.shown = tex.shown == true
-    end
-    if type(tex.GetAlpha) == "function" then
-      snap.alpha = tex:GetAlpha()
-    else
-      snap.alpha = tex.alpha
-    end
-    if type(tex.SetAlpha) == "function" then
-      tex:SetAlpha(0)
-    end
-    if type(tex.Hide) == "function" then
-      tex:Hide()
-    end
-    snapshots[#snapshots + 1] = snap
-  end
-  editBox._wmManualCopyTemplateSnapshots = snapshots
-end
-
-local function restoreInputTemplateTextures(editBox)
-  if type(editBox) ~= "table" then
-    return
-  end
-  local snapshots = editBox._wmManualCopyTemplateSnapshots
-  if type(snapshots) ~= "table" then
-    return
-  end
-  for _, snap in ipairs(snapshots) do
-    local tex = snap.region
-    if type(tex) == "table" then
-      if snap.alpha ~= nil and type(tex.SetAlpha) == "function" then
-        tex:SetAlpha(snap.alpha)
-      end
-      if snap.shown and type(tex.Show) == "function" then
-        tex:Show()
-      elseif not snap.shown and type(tex.Hide) == "function" then
-        tex:Hide()
-      end
-    end
-  end
-  editBox._wmManualCopyTemplateSnapshots = nil
+  return regions
 end
 
 local function restoreManualCopyEditBox(editBox)
@@ -109,7 +67,6 @@ local function restoreManualCopyEditBox(editBox)
 
   StylingCommon.setPartsShown(editBox._wmManualCopyBackground, false)
   StylingCommon.restoreSuppressedFrameTextures(editBox, "_wmManualCopySuppressedRegions")
-  restoreInputTemplateTextures(editBox)
   editBox._wmManualCopyStyleActive = false
 
   local insets = editBox._wmManualCopyOriginalTextInsets
@@ -142,8 +99,7 @@ local function styleManualCopyEditBox(editBox)
 
   if editBox._wmManualCopyStyleActive ~= true then
     local skipSet = StylingCommon.collectTextureParts(editBox._wmManualCopyBackground, {})
-    StylingCommon.suppressFrameTextures(editBox, "_wmManualCopySuppressedRegions", skipSet)
-    suppressInputTemplateTextures(editBox)
+    StylingCommon.suppressRegions(editBox, "_wmManualCopySuppressedRegions", collectEditBoxTextures(editBox), skipSet)
 
     editBox._wmManualCopyOriginalTextColor = StylingCommon.captureTextColor(editBox)
     if type(editBox.GetHighlightColor) == "function" then
