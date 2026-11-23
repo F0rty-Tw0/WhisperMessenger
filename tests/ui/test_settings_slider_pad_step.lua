@@ -48,7 +48,7 @@ end
 local function fakeNav()
   ---@type table<string, any>
   local nav = { seen = {} }
-  for _, name in ipairs({ "markFocusable", "ignore", "setScrollFrame", "refresh" }) do
+  for _, name in ipairs({ "markFocusable", "ignore", "setScrollFrame", "refresh", "setJumpTarget" }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
     end
@@ -118,6 +118,32 @@ return function()
     local row = newRow(10)
     FindUI.click(padButton(row, PadButtons.ATLAS.plus))
     assert(#changes == 0 and row.slider:GetValue() == 10, "at max: nothing changes")
+  end)
+
+  -- test_dpad_left_on_plus_jumps_to_minus_and_right_on_minus_to_plus
+  -- The slider between them is skipped, so spatial nav would pick a nearer
+  -- control on the row above instead of the far button on the same row.
+  withPadUI(true, function()
+    local nav, page = fakeNav(), factory.CreateFrame("Frame", nil, parent)
+    local row = SettingsControls.CreateSliderRow(factory, page, { label = "N", min = 0, max = 10, step = 1, initial = 5, onChange = function() end })
+    local minus, plus = padButton(row, PadButtons.ATLAS.minus), padButton(row, PadButtons.ATLAS.plus)
+    GamepadSettings.Attach(nav, { panels = { page } })
+    local jumps = {}
+    for _, s in ipairs(nav.seen) do
+      if s.name == "setJumpTarget" then
+        jumps[#jumps + 1] = s.args
+      end
+    end
+    local function jumpOf(widget, dir)
+      for _, args in ipairs(jumps) do
+        if args[1] == widget and args[2] == dir then
+          return args[3]
+        end
+      end
+    end
+    assert(jumpOf(plus, "LEFT") == minus, "LEFT on + jumps to its −")
+    assert(jumpOf(minus, "RIGHT") == plus, "RIGHT on − jumps to its +")
+    assert(#jumps == 2, "only the pair link; UP/DOWN stay spatial, got " .. #jumps)
   end)
 
   -- test_inset_only_while_the_pad_ui_is_on
