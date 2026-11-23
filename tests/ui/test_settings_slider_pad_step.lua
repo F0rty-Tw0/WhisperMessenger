@@ -48,7 +48,7 @@ end
 local function fakeNav()
   ---@type table<string, any>
   local nav = { seen = {} }
-  for _, name in ipairs({ "markFocusable", "setScrollFrame", "refresh" }) do
+  for _, name in ipairs({ "markFocusable", "ignore", "setScrollFrame", "refresh" }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
     end
@@ -191,7 +191,7 @@ return function()
     assert(FindUI.text(padPage.frame, "105%") ~= nil, "label formatted as the drag shows it")
   end
 
-  -- test_every_settings_slider_becomes_a_focusable_stepper
+  -- test_every_settings_slider_is_skipped_by_the_pad_cursor
   do
     local created, nav = {}, fakeNav()
     local original = SettingsControls.CreateSliderRow
@@ -212,7 +212,8 @@ return function()
     SettingsControls.CreateSliderRow = original
     assert(ok, err)
     for _, row in ipairs(created) do
-      assert(nav.countFor("markFocusable", row.slider) == 1, "slider marked once")
+      assert(nav.countFor("ignore", row.slider) == 1, "slider skipped once")
+      assert(nav.countFor("markFocusable", row.slider) == 0, "slider is not a D-pad stop")
     end
   end
 end
