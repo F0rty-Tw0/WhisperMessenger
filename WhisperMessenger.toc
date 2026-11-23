@@ -554,6 +554,7 @@ Core/Bootstrap/LifecycleHandlers/ScanSignature.lua
 Core/Bootstrap/LifecycleHandlers/BNetRekey.lua
 Core/Bootstrap/CharacterMergeRemap.lua
 Core/Bootstrap/LifecycleHandlers/Presence.lua
+Core/Bootstrap/LifecycleHandlers/Logout.lua
 Core/Bootstrap/LifecycleHandlers/GroupMembership.lua
 Core/Bootstrap/LifecycleHandlers/RelationshipRefresh.lua
 Core/Bootstrap/LifecycleHandlers.lua
