@@ -1,6 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local EscapeOrder = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.EscapeOrder")
-local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = require("WhisperMessenger.UI.Shared.PopupEscape")
 
 -- A game menu the window opens (contact or bubble right-click menu, a
 -- settings dropdown) closes on ESC before the window, like its own popups.
@@ -48,7 +48,7 @@ local function withWindow(fn)
     local menu = factory.CreateFrame("Frame", nil, nil)
     rawset(menu, "HookScript", function() end)
     menu:Show()
-    PickerPopup.ReportMenuShown(menu)
+    PopupEscape.ReportMenuShown(menu)
     return menu
   end
 
@@ -59,7 +59,7 @@ local function withWindow(fn)
     env.order.claim()
     fn(env)
   end)
-  PickerPopup.SetEscapeFrameShownHandler(nil)
+  PopupEscape.SetEscapeFrameShownHandler(nil)
   for _, name in ipairs(SAVED_NAMES) do
     rawset(_G, name, saved[name])
   end

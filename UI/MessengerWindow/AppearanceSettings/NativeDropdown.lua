@@ -7,7 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
-local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 
 -- Native WoW HUD dropdown row. Prefers the game's dropdown
 -- (WowStyle1DropdownTemplate set up with SetupMenu); without it, a panel
@@ -75,7 +75,7 @@ local function reportOpenedMenus(dropdown, owner)
     return
   end
   dropdown:RegisterCallback(event, function()
-    PickerPopup.ReportMenuShown(dropdown.menu)
+    PopupEscape.ReportMenuShown(dropdown.menu)
   end, owner)
 end
 
@@ -206,7 +206,7 @@ function NativeDropdown.Create(factory, parent, options)
     control:SetScript("OnClick", function()
       local util = menuUtil()
       if util then
-        PickerPopup.ReportMenuShown(util.CreateContextMenu(control, generator))
+        PopupEscape.ReportMenuShown(util.CreateContextMenu(control, generator))
       end
     end)
   end

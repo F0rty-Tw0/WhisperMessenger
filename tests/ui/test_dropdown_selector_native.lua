@@ -8,7 +8,7 @@ local TemplateFactory = require("tests.helpers.template_factory")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local DropdownSelector = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
-local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = require("WhisperMessenger.UI.Shared.PopupEscape")
 
 local DROPDOWN_TEMPLATE = "WowStyle1DropdownTemplate"
 
@@ -263,11 +263,11 @@ return function()
     local reported = {}
     local savedMixin = rawget(_G, "DropdownButtonMixin")
     rawset(_G, "DropdownButtonMixin", { Event = { OnMenuOpen = "OnMenuOpen" } })
-    PickerPopup.SetEscapeFrameShownHandler(function(shown, isGameMenu)
+    PopupEscape.SetEscapeFrameShownHandler(function(shown, isGameMenu)
       reported[#reported + 1] = { frame = shown, isGameMenu = isGameMenu }
     end)
     local ok, err = pcall(fn)
-    PickerPopup.SetEscapeFrameShownHandler(nil)
+    PopupEscape.SetEscapeFrameShownHandler(nil)
     rawset(_G, "DropdownButtonMixin", savedMixin)
     assert(ok, err)
     return reported

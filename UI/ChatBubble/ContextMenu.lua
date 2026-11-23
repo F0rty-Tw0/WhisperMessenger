@@ -11,7 +11,7 @@ local ManualCopy = ns.ChatBubbleContextMenuManualCopyClipboard or require("Whisp
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local ReactionPicker = ns.ChatBubbleReactionPicker or require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local MenuPopup = ns.MenuPopup or require("WhisperMessenger.UI.Shared.MenuPopup")
 -- stylua: ignore end
@@ -56,7 +56,7 @@ end
 
 -- An opened menu takes ESC before the window.
 local function menuOpened(menu)
-  PickerPopup.ReportMenuShown(menu)
+  PopupEscape.ReportMenuShown(menu)
   return true
 end
 

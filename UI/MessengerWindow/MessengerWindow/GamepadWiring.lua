@@ -6,7 +6,7 @@ end
 local GamepadDeps = ns.MessengerWindowGamepadDeps or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadDeps")
 local GamepadNav = ns.MessengerWindowGamepadNav or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadCloseOrder = ns.MessengerWindowGamepadCloseOrder or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadCloseOrder")
-local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local GamepadSettings = ns.MessengerWindowGamepadSettings or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
 local GamepadTranscript = ns.MessengerWindowGamepadTranscript or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadTranscript")
@@ -58,7 +58,7 @@ local function buildCloseHandler(frame, refs, clearComposerFocus)
     isWindowShown = function()
       return frame:IsShown()
     end,
-    hideShownPopup = PickerPopup.HideShownEscapeFrame,
+    hideShownPopup = PopupEscape.HideShownEscapeFrame,
     hideComposerPopover = function()
       for _, picker in ipairs(composerPickers(refs.composer)) do
         if picker.frame:IsShown() then
@@ -109,7 +109,7 @@ local function attachPopups(nav)
   if not nav.isActive() then
     return
   end
-  PickerPopup.SetGamepadPopupHooks(function(popup)
+  PopupEscape.SetGamepadPopupHooks(function(popup)
     nav.setPopupCloseHandler(popup, function()
       popup:Hide()
       return true

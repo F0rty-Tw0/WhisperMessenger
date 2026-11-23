@@ -1,6 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local EscapeOrder = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.EscapeOrder")
-local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = require("WhisperMessenger.UI.Shared.PopupEscape")
 local MenuPopup = require("WhisperMessenger.UI.Shared.MenuPopup")
 
 -- MenuPopup takes part in the window's ESC order like the other popups.
@@ -81,8 +81,8 @@ local function withWorld(fn)
   end
   local ok, err = pcall(fn, env)
   MenuPopup.Close()
-  PickerPopup.SetEscapeFrameShownHandler(nil)
-  PickerPopup.SetGamepadPopupHooks(nil, nil)
+  PopupEscape.SetEscapeFrameShownHandler(nil)
+  PopupEscape.SetGamepadPopupHooks(nil, nil)
   for _, name in ipairs(SAVED_NAMES) do
     rawset(_G, name, saved[name])
   end
@@ -109,7 +109,7 @@ return function()
   -- test_gamepad_hooks_see_open_and_close
   withWorld(function(env)
     local shown, hidden = {}, {}
-    PickerPopup.SetGamepadPopupHooks(function(popup)
+    PopupEscape.SetGamepadPopupHooks(function(popup)
       table.insert(shown, popup)
     end, function(popup)
       table.insert(hidden, popup)
@@ -123,7 +123,7 @@ return function()
   -- test_reopen_fires_shown_again
   withWorld(function(env)
     local shown = 0
-    PickerPopup.SetGamepadPopupHooks(function()
+    PopupEscape.SetGamepadPopupHooks(function()
       shown = shown + 1
     end, function() end)
     env.open(childAnchor(env))
