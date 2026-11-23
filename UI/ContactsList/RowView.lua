@@ -20,6 +20,7 @@ local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.Con
 local RowCompact = ns.ContactsListRowCompact or require("WhisperMessenger.UI.ContactsList.RowCompact")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
+local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 
 local RowView = {}
 
@@ -31,26 +32,6 @@ local function mutedColor(base)
   end
   local MUTE = 0.85
   return { (base[1] or 0) * MUTE, (base[2] or 0) * MUTE, (base[3] or 0) * MUTE, base[4] or 1 }
-end
-
--- Resolve and cache the current player's class tag (e.g. "MAGE"). Group
--- rows tint their title by the player's class color rather than by the
--- last message sender's class, so the row reads as *yours*.
-local cachedPlayerClassTag = nil
-local function playerClassTag()
-  if cachedPlayerClassTag ~= nil then
-    return cachedPlayerClassTag
-  end
-  local unitClass = _G.UnitClass
-  if type(unitClass) ~= "function" then
-    return nil
-  end
-  local ok, _, tag = pcall(unitClass, "player")
-  if ok and type(tag) == "string" and tag ~= "" then
-    cachedPlayerClassTag = tag
-    return cachedPlayerClassTag
-  end
-  return nil
 end
 
 -- Icon art for a row: channel-type icon for group threads (no single
@@ -174,7 +155,7 @@ local function bindRow(factory, parent, row, index, item, options)
     -- item.classTag (= last sender's class), so re-apply here.
     local titleClassTag = item.ownerClassTag
     if titleClassTag == nil and not item.ownerProfileId then
-      titleClassTag = playerClassTag()
+      titleClassTag = LocalPlayer.ClassTag()
     end
     UIHelpers.applyClassColor(row.title, titleClassTag, Theme.COLORS.text_primary)
   end
