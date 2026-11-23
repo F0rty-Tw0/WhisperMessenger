@@ -34,6 +34,17 @@ function BottomBanner.ReservedHeight(view)
   return math.max(BottomBanner.HEIGHT, textHeight + 2 * TEXT_INSET)
 end
 
+-- Stores the strip's height; on a change, tells view.onBannerReservedChanged
+-- (the composer's controller hint sits above the strip). Returns the old one.
+function BottomBanner.StoreReserved(view, reserved)
+  local previous = view._bannerReserved or 0
+  view._bannerReserved = reserved
+  if reserved ~= previous and view.onBannerReservedChanged then
+    view.onBannerReservedChanged(reserved)
+  end
+  return previous
+end
+
 local function resizeTranscript(view, delta)
   local t = view.transcript
   if t == nil then
@@ -85,9 +96,8 @@ function BottomBanner.Refresh(view)
     view._activeStatusVisible = false
   end
 
-  local previous = view._bannerReserved or 0
   local reserved = BottomBanner.ReservedHeight(view)
-  view._bannerReserved = reserved
+  local previous = BottomBanner.StoreReserved(view, reserved)
   if reserved ~= previous then
     resizeTranscript(view, previous - reserved)
   end
