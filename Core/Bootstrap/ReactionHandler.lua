@@ -8,6 +8,7 @@ local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.M
 local SendHandler = ns.BootstrapSendHandler or require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
+local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 
 local ReactionHandler = {}
 
@@ -81,19 +82,9 @@ function ReactionHandler.HandleReact(runtime, selectedContact, message, reaction
     },
   }
 
-  local accepted = SendHandler.HandleSend(runtime, {
-    conversationKey = selectedContact.conversationKey,
-    target = selectedContact.displayName,
-    displayName = selectedContact.displayName,
-    battleTag = selectedContact.battleTag,
-    channel = selectedContact.channel,
-    bnetAccountID = selectedContact.bnetAccountID,
-    conversationID = selectedContact.conversationID,
-    guid = selectedContact.guid,
-    gameAccountName = selectedContact.gameAccountName,
-    text = fallback,
-    reactionControl = reactionControl,
-  }, refresh)
+  local payload = ConversationSnapshot.SendPayload(selectedContact, fallback)
+  payload.reactionControl = reactionControl
+  local accepted = SendHandler.HandleSend(runtime, payload, refresh)
   if accepted then
     -- Reacting answers a message request, like replying does.
     MessageRequests.Accept(runtime.store, selectedContact.conversationKey)
