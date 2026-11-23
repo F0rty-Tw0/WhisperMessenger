@@ -24,8 +24,8 @@ local function optionList(count)
 end
 
 -- Font dropdown of `count` options with `initial` selected; `native` builds
--- it on Forever under the Native look (switched off right after Create).
--- `menuHeight` defaults to MENU_HEIGHT.
+-- it on Forever with the gamepad UI on under the Native look (switched off
+-- right after Create). `menuHeight` defaults to MENU_HEIGHT.
 local function build(native, count, initial, menuHeight)
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
@@ -45,13 +45,15 @@ local function build(native, count, initial, menuHeight)
     create()
     return dropdown, parent
   end
-  Flavor.With(true, true, function()
-    Hud.Configure("classic")
-    local ok, err = pcall(create)
-    Hud.Configure("off")
-    if not ok then
-      error(err, 0)
-    end
+  Flavor.WithPadUI(true, function()
+    Flavor.With(true, true, function()
+      Hud.Configure("classic")
+      local ok, err = pcall(create)
+      Hud.Configure("off")
+      if not ok then
+        error(err, 0)
+      end
+    end)
   end)
   return dropdown, parent
 end

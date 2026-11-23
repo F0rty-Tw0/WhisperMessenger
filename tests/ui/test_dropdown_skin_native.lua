@@ -1,4 +1,5 @@
--- On WoW: Forever the Native look keeps WhisperMessenger's own dropdown list,
+-- On WoW: Forever with the gamepad UI on the Native look keeps
+-- WhisperMessenger's own dropdown list,
 -- drawn like the game's menus: a tooltip panel, Blizzard list hover art and
 -- a check mark by the chosen option. The modern look is unchanged.
 local FakeUI = require("tests.helpers.fake_ui")
@@ -65,16 +66,18 @@ local function sameColor(actual, expected)
   return true
 end
 
--- Runs `fn` on Forever under the Native look, then switches the look off
--- even when `fn` throws.
+-- Runs `fn` on Forever with the gamepad UI on under the Native look, then
+-- switches the look off even when `fn` throws.
 local function withNativeLook(fn)
-  Flavor.With(true, true, function()
-    Hud.Configure("classic")
-    local ok, err = pcall(fn)
-    Hud.Configure("off")
-    if not ok then
-      error(err, 0)
-    end
+  Flavor.WithPadUI(true, function()
+    Flavor.With(true, true, function()
+      Hud.Configure("classic")
+      local ok, err = pcall(fn)
+      Hud.Configure("off")
+      if not ok then
+        error(err, 0)
+      end
+    end)
   end)
 end
 
