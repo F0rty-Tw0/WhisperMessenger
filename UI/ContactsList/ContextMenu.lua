@@ -75,7 +75,7 @@ local function addPrefsButtons(rootDescription, item, onUpdatePrefs, isGroup)
 end
 
 -- The divider, gold title and WM entries of a contact menu: Blizzard's
--- player menu on Retail and Classic, WM's own popup on WoW: Forever.
+-- player menu, or WM's own popup on WoW: Forever with the gamepad UI on.
 local function addSection(rootDescription, item, onMarkUnread, onUpdatePrefs, rowActions)
   local profileLinks = ProfileLinksMenuEntry.Links(item)
   -- No entries: skip the section rather than show it empty.
@@ -285,7 +285,8 @@ end
 -- onUpdatePrefs(item, changes): changes is { muted = bool } / { nickname =
 -- text } / { note = text } / { notifyOnline = bool } / { notifyZone = bool }.
 -- rowActions: { onPin(item), onRemove(item) } (the row's hover actions).
--- options (optional, WoW: Forever only): MenuPopup.Open's options.
+-- options (optional, own popup only: WoW: Forever with the gamepad UI on):
+-- MenuPopup.Open's options.
 -- An opened menu takes ESC before the window.
 function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
   local opened = openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)

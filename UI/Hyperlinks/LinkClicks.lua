@@ -234,8 +234,8 @@ end
 -- item click in combat then made ShowUIPanel print "Interface action
 -- failed"). Clicks go to that handler, except a shift-clicked player name for
 -- the focused composer, a plain tooltip-link click in combat (CombatItemRef)
--- and, on Forever, a right-clicked player name (openContactMenu). Without the
--- handler, the click goes through HandleClick.
+-- and, on Forever with the gamepad UI on, a right-clicked player name
+-- (openContactMenu). Without the handler, the click goes through HandleClick.
 function LinkClicks.BindClick(frame, onLinkClick)
   if frame._wmSecureLinks then
     frame._wmOnLinkClick = onLinkClick
