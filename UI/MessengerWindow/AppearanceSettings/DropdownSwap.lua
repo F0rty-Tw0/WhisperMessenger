@@ -14,8 +14,9 @@ local NativeDropdown = ns.MessengerWindowNativeDropdown or require("WhisperMesse
 -- for every pair after the pad UI flips. One handle drives both sides.
 local DropdownSwap = {}
 
--- Keyed by the own row, so a pair lives as long as its row.
-local pairsByRow = setmetatable({}, { __mode = "k" })
+-- Keyed by the own row. Pairs live for the session: settings rows are built
+-- once.
+local pairsByRow = {}
 
 function DropdownSwap.Applies()
   return FlavorCompat.isForever == true and Hud.IsOn()

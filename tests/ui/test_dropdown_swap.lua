@@ -198,21 +198,6 @@ local function wrapTests()
     assert(ctx.wrapped.label:IsShown(), "label shown with the game dropdown")
     assert(ctx.wrapped.label:GetText() == "X", "label keeps its text")
   end
-
-  -- test_registry_drops_nothing_while_row_lives
-  do
-    -- Only the own row and button outlive this call; the handle does not.
-    local function wrapKeepingRow()
-      local ctx = wrapPair(true)
-      return ctx.own.row, ctx.own.button
-    end
-    local ownRow, ownButton = wrapKeepingRow()
-    collectgarbage()
-    collectgarbage()
-    refresh(false)
-    assert(ownRow ~= nil, "row kept by the test")
-    assert(not ownButton:IsShown(), "registered pair still swaps")
-  end
 end
 
 local function createTest()
