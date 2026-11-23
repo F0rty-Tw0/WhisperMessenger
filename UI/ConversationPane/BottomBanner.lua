@@ -50,8 +50,8 @@ local function resizeTranscript(view, delta)
   t.viewportHeight = newH
   if t._allMessages then
     t._virtualForceEnd = wasAtEnd
-    -- A height change must re-lay-out the bubbles.
-    TranscriptView.RenderTranscript(t, t._allMessages, TranscriptView.FORCE_RENDER)
+    -- A height change must re-lay-out the bubbles; their width is unchanged.
+    TranscriptView.RenderTranscript(t, t._allMessages, TranscriptView.RELAYOUT_RENDER)
   else
     ScrollView.RefreshMetrics(t, sizeValue(t.content, "GetHeight", "height", 0), false)
   end

@@ -176,8 +176,8 @@ return function()
   assert(runtime.activeConversationKey == conversationKey)
   -- Stored name keeps the full BattleTag; the header hides its number.
   assert(
-    runtime.window.conversation.header.text == "Jaina",
-    "header hides the BattleTag number: " .. tostring(runtime.window.conversation.header.text)
+    runtime.window.conversation.headerName.text == "Jaina",
+    "header hides the BattleTag number: " .. tostring(runtime.window.conversation.headerName.text)
   )
 
   runtime.window.composer.input:SetText("reply over bn")

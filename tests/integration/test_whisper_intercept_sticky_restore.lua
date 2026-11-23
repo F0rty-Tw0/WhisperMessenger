@@ -75,7 +75,7 @@ return function()
     assert(conversation ~= nil, "expected " .. caseLabel .. " whisper interception to select a conversation")
     assert(conversation.displayName == expected.displayName, "expected " .. caseLabel .. " whisper interception to target " .. expected.displayName)
     assert(
-      runtime.window.conversation.header.text == expected.displayName,
+      runtime.window.conversation.headerName.text == expected.displayName,
       "expected messenger header to update for " .. caseLabel .. " whisper target"
     )
     assert(runtime.window.composer.input:GetText() == expected.draftText, "expected " .. caseLabel .. " draft to transfer into composer")

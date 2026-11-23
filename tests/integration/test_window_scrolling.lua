@@ -160,8 +160,8 @@ return function()
   assert(transitionWindow.conversation.transcript.scrollBar.shown == false, "expected transcript scrollbar to stay hidden before overflow")
   local fullTranscriptWidth = transitionWindow.conversation.transcript.scrollFrame.width
   assert(
-    transitionWindow.conversation.transcript.text.width == fullTranscriptWidth,
-    "expected transcript text width to match the viewport before overflow"
+    transitionWindow.conversation.transcript.content.width == fullTranscriptWidth,
+    "expected transcript content width to match the viewport before overflow"
   )
 
   transitionWindow.refreshSelection({
@@ -178,8 +178,8 @@ return function()
     "expected transcript viewport to shrink when overflow begins"
   )
   assert(
-    transitionWindow.conversation.transcript.text.width == transitionWindow.conversation.transcript.scrollFrame.width,
-    "expected transcript text width to shrink with the viewport when overflow begins"
+    transitionWindow.conversation.transcript.content.width == transitionWindow.conversation.transcript.scrollFrame.width,
+    "expected transcript content width to shrink with the viewport when overflow begins"
   )
 
   transitionWindow.refreshSelection({
@@ -196,8 +196,8 @@ return function()
     "expected transcript viewport to expand when overflow clears"
   )
   assert(
-    transitionWindow.conversation.transcript.text.width == transitionWindow.conversation.transcript.scrollFrame.width,
-    "expected transcript text width to expand with the viewport when overflow clears"
+    transitionWindow.conversation.transcript.content.width == transitionWindow.conversation.transcript.scrollFrame.width,
+    "expected transcript content width to expand with the viewport when overflow clears"
   )
 
   local scrollHost = factory.CreateFrame("Frame", nil, _G.UIParent)

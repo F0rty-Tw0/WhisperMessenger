@@ -5,7 +5,6 @@ end
 
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 
-local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local TranscriptView = ns.ConversationPaneTranscriptView or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local HeaderView = ns.ConversationPaneHeaderView or require("WhisperMessenger.UI.ConversationPane.HeaderView")
 local TranscriptSetup = ns.ConversationPaneTranscriptSetup or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
@@ -29,8 +28,9 @@ local ConversationPane = {}
 local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
 
 -- Viewport-size and theme changes must re-lay-out the bubbles even though
--- no individual message changed.
+-- no individual message changed; only a theme change rebuilds them.
 local FORCE_RENDER = TranscriptView.FORCE_RENDER
+local RELAYOUT_RENDER = TranscriptView.RELAYOUT_RENDER
 
 ConversationPane.RenderTranscript = TranscriptView.RenderTranscript
 
@@ -62,7 +62,6 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   local isContextShown = view.isChannelContextShown == nil or view.isChannelContextShown() == true
   local messages = ChannelContextMerger.ForPane(conversation and conversation.messages or {}, selectedContact, conversation, isContextShown)
   ConversationPane.RenderTranscript(view.transcript, messages)
-  ConversationPane.SetStatus(view, status)
   ConversationPane.SetNotice(view, noticeText)
   ConversationPane.RefreshActiveStatus(view, conversation and conversation.activeStatus or nil)
   if InfoStrip.Apply(view, selectedContact) then
@@ -104,22 +103,12 @@ function ConversationPane.SetLanguage(view)
   if view._selectedContact ~= nil or view._conversation ~= nil then
     HeaderView.Refresh(view, view._selectedContact, view._conversation, view._status)
   end
-end
-
-function ConversationPane.SetStatus(view, status)
-  if view.statusBanner == nil then
-    return nil
+  -- Bubble labels ("You", "Seen", "New messages") are localized when a
+  -- bubble is built, so rebuild the visible ones in the new language.
+  local transcript = view.transcript
+  if transcript and transcript._allMessages then
+    TranscriptView.RenderTranscript(transcript, transcript._allMessages, FORCE_RENDER)
   end
-
-  local label = ""
-  if status and status.status and StatusLine and StatusLine.AVAILABILITY_DISPLAY then
-    local avail = StatusLine.AVAILABILITY_DISPLAY[status.status]
-    if avail then
-      label = avail.label
-    end
-  end
-  view.statusBanner:SetText(label)
-  return view.statusBanner.text
 end
 
 function ConversationPane.Create(factory, parent, selectedContact, conversation, options)
@@ -137,13 +126,6 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     onStartNewWhisper = options.onStartNewWhisper,
   })
   local headerFrame = header.headerFrame
-
-  -- Legacy statusBanner (hidden; status is shown in header status line)
-
-  local statusBanner = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  statusBanner:SetPoint("TOPLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
-  statusBanner:SetText("")
-  statusBanner:Hide()
 
   -- Transcript ScrollView (anchored below header)
 
@@ -190,8 +172,6 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
 
   view = {
     frame = pane,
-    -- Legacy header stub so any callers using view.header:SetText() don't crash
-    header = header.headerName,
     headerFrame = header.headerFrame,
     headerClassIcon = header.headerClassIcon,
     headerName = header.headerName,
@@ -209,7 +189,6 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     headerChannelChip = header.headerChannelChip,
     headerNote = header.headerNote,
     headerNoteHitArea = header.headerNoteHitArea,
-    statusBanner = statusBanner,
     activeStatusBanner = activeStatusBanner,
     requestBanner = requestBanner,
     replyBanner = ReplyBanner.Create(factory, pane, { nativeChrome = options.nativeChrome == true }),
@@ -221,8 +200,9 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     refreshTheme = function()
       ThemeRefresh.Apply(view)
       -- A font-size change resizes the header, so re-lay-out (which also
-      -- re-renders) instead of only re-rendering.
-      ConversationPane.Relayout(view, view._layoutWidth, view._layoutHeight)
+      -- re-renders) instead of only re-rendering. New colors and fonts
+      -- need every bubble rebuilt.
+      ConversationPane.Relayout(view, view._layoutWidth, view._layoutHeight, FORCE_RENDER)
     end,
   }
 
@@ -262,7 +242,9 @@ end
 
 -- Resize the transcript scroll view to match new thread pane dimensions.
 -- width, height: new threadPane dimensions
-function ConversationPane.Relayout(view, width, height)
+-- renderOptions: TranscriptView.FORCE_RENDER to rebuild every bubble;
+-- defaults to a relayout that keeps bubbles whose width did not change.
+function ConversationPane.Relayout(view, width, height, renderOptions)
   if view == nil then
     return
   end
@@ -285,13 +267,10 @@ function ConversationPane.Relayout(view, width, height)
   local t = view.transcript
   local wasAtEnd = transcriptIsAtEnd(t)
   ScrollView.Resize(t, transcriptW, transcriptH)
-  if t.text and t.text.SetWidth then
-    t.text:SetWidth(transcriptW)
-  end
-  -- Re-render bubbles at the new width
+  -- Re-render bubbles at the new size
   if t._allMessages then
     t._virtualForceEnd = wasAtEnd
-    TranscriptView.RenderTranscript(t, t._allMessages, FORCE_RENDER)
+    TranscriptView.RenderTranscript(t, t._allMessages, renderOptions or RELAYOUT_RENDER)
   end
 end
 

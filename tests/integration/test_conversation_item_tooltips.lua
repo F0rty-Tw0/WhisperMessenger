@@ -31,12 +31,17 @@ return function()
     },
   })
 
-  assert(pane.transcript.text:GetText() == itemLink)
-  assert(pane.transcript.text.fontObject ~= nil, "expected transcript text to configure a font object")
-  assert(pane.transcript.text.hyperlinksEnabled == true, "expected transcript text to enable hyperlinks")
-  assert(type(pane.transcript.text.scripts.OnHyperlinkClick) == "function", "expected transcript text to handle hyperlink clicks")
+  local bubble
+  for _, frame in ipairs(pane.transcript.content._activeFrames or {}) do
+    if frame._textFS and frame._wmMessage and frame._wmMessage.text == itemLink then
+      bubble = frame
+    end
+  end
+  assert(bubble ~= nil, "expected a bubble for the item link message")
+  assert(bubble._textFS:GetText() == itemLink, "expected the bubble to show the item link")
+  assert(type(bubble.scripts.OnHyperlinkClick) == "function", "expected the bubble to handle hyperlink clicks")
 
-  pane.transcript.text.scripts.OnHyperlinkClick(pane.transcript.text, "item:19019::::::::", itemLink, "LeftButton")
+  bubble.scripts.OnHyperlinkClick(bubble, "item:19019::::::::", itemLink, "LeftButton")
 
   assert(setItemRefCall ~= nil, "expected item link click to invoke SetItemRef")
   assert(setItemRefCall.link == "item:19019::::::::")
