@@ -236,6 +236,7 @@ return function()
       dd, changes = buildIn(true)
     end)
     local nd = FindUI.find(dd.row, isDropdownTemplate)
+    assert(nd, "pad UI off: the game's dropdown is built")
     for _, radio in ipairs(openMenu(nd.generator, nd)) do
       if radio.data == "morpheus" then
         radio.setSelected(radio.data)
