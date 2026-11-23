@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local SlashCommand = ns.ComposerSlashCommand or require("WhisperMessenger.UI.Composer.SlashCommand")
+local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 
 -- Sending what the player typed: a slash command runs through the chat box,
 -- anything else goes out as a whisper, and the composer clears on success.
@@ -45,18 +46,9 @@ function ComposerSubmit.Create(parts)
       return
     end
 
-    local accepted = parts.onSend({
-      conversationKey = selectedContact.conversationKey,
-      target = selectedContact.displayName,
-      displayName = selectedContact.displayName,
-      channel = selectedContact.channel,
-      bnetAccountID = selectedContact.bnetAccountID,
-      conversationID = selectedContact.conversationID,
-      guid = selectedContact.guid,
-      gameAccountName = selectedContact.gameAccountName,
-      text = text,
-      replyTo = parts.replies.current(),
-    })
+    local payload = ConversationSnapshot.SendPayload(selectedContact, text)
+    payload.replyTo = parts.replies.current()
+    local accepted = parts.onSend(payload)
 
     if accepted ~= false then
       clearAfterSend()

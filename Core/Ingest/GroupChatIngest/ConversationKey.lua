@@ -59,13 +59,9 @@ function ConversationKey.Resolve(state, channel)
     return nil
   end
   local contactKeyPrefix = CHANNEL_CONTACT_KEY[channel]
-  local guildName
-  if channel == ChannelType.GUILD and type(_G.GetGuildInfo) == "function" then
-    local ok, name = pcall(_G.GetGuildInfo, "player")
-    if ok and type(name) == "string" and name ~= "" then
-      guildName = name
-      contactKeyPrefix = "GUILD::" .. name
-    end
+  local guildName = channel == ChannelType.GUILD and Identity.PlayerGuildName() or nil
+  if guildName then
+    contactKeyPrefix = "GUILD::" .. guildName
   end
   local conversationKey, groupCategory, partyGUID = buildGroupSessionKey(state, channel)
   if conversationKey == nil then

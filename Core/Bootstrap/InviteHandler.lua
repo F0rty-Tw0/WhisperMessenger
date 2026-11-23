@@ -5,6 +5,7 @@ end
 
 local SendHandler = ns.BootstrapSendHandler or require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 
 local InviteHandler = {}
 
@@ -37,18 +38,8 @@ function InviteHandler.HandleInvite(runtime, selectedContact, refreshWindow)
   end
 
   local refresh = refreshWindow or function() end
-  local accepted = SendHandler.HandleSend(runtime, {
-    conversationKey = selectedContact.conversationKey,
-    target = selectedContact.displayName,
-    displayName = selectedContact.displayName,
-    battleTag = selectedContact.battleTag,
-    channel = selectedContact.channel,
-    bnetAccountID = selectedContact.bnetAccountID,
-    conversationID = selectedContact.conversationID,
-    guid = selectedContact.guid,
-    gameAccountName = selectedContact.gameAccountName,
-    text = Localization.Text(InviteHandler.INVITE_TEXT),
-  }, refresh)
+  local payload = ConversationSnapshot.SendPayload(selectedContact, Localization.Text(InviteHandler.INVITE_TEXT))
+  local accepted = SendHandler.HandleSend(runtime, payload, refresh)
 
   if accepted then
     conversation.inviteSent = true

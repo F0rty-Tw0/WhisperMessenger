@@ -75,24 +75,6 @@ function GroupLabel.OwnerShortName(profileId)
   return string.upper(string.sub(token, 1, 1)) .. string.sub(token, 2)
 end
 
--- Resolve the player's current guild name. Returns nil when the player is
--- not in a guild, the API is unavailable (Classic flavors before Wrath),
--- or the call errors.
-function GroupLabel.PlayerGuildName()
-  local getGuildInfo = _G.GetGuildInfo
-  if type(getGuildInfo) ~= "function" then
-    return nil
-  end
-  local ok, name = pcall(getGuildInfo, "player")
-  if not ok then
-    return nil
-  end
-  if type(name) == "string" and name ~= "" then
-    return name
-  end
-  return nil
-end
-
 -- LabelForChannelAndTitle returns the display label for a channel, using
 -- conversation.title when available for channels whose identity is not a
 -- singleton (BN_CONVERSATION with its conversationID, COMMUNITY with its
