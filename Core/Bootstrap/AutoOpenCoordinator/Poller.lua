@@ -157,6 +157,7 @@ function Poller.Install(runtime, hooks, deps)
     getNumFriends = deps.getNumFriends,
     deactivateChat = deps.deactivateChat,
     ensureBattleNetConversation = ConversationOps.ensureBattleNetConversation,
+    battleNetConversationKey = ConversationOps.battleNetConversationKey,
   }
 
   local function handleEditBox(editBox)

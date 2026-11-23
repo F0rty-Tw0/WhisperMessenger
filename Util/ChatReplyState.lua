@@ -28,6 +28,9 @@ local function readEditBoxState(editBox, key)
   return nil
 end
 
+-- An edit-box attribute, else the same-named field; "" counts as missing.
+ChatReplyState.ReadEditBoxState = readEditBoxState
+
 local function readEditBoxText(editBox)
   if type(editBox) ~= "table" or type(editBox.GetText) ~= "function" then
     return ""

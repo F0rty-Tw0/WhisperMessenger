@@ -16,6 +16,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: on WoW: Forever under the Native look, the settings drop-down lists are no longer see-through, and the chosen option is marked with a check in gold text.
 - Receiving whispers costs less performance when you have many saved conversations.
 - Fixed: with group chats turned off, guild, party and raid chat is no longer saved in the background and no longer pushes out older whisper conversations. Mention alerts from those chats also stay quiet while group chats are off.
+- Fixed: starting a Battle.net whisper in the game's chat no longer adds an empty conversation to the messenger or pushes out an older one.
 
 ## [2.1.9] - 2026-11-21
 

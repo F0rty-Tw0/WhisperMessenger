@@ -120,14 +120,19 @@ function StylingCommon.collectTextureParts(parts, out)
   return out
 end
 
-function StylingCommon.suppressFrameTextures(frame, stateKey, skipSet)
-  if type(frame) ~= "table" or type(frame.GetRegions) ~= "function" then
+-- Hides each texture in regions (skipping skipSet) and snapshots it under
+-- frame[stateKey]. A region listed twice is snapshotted once, before any
+-- hide, so the restore brings back its original state.
+function StylingCommon.suppressRegions(frame, stateKey, regions, skipSet)
+  if type(frame) ~= "table" then
     return
   end
 
   local snapshots = {}
-  for _, region in ipairs({ frame:GetRegions() }) do
-    if isTextureRegion(region) and not (skipSet and skipSet[region]) then
+  local seen = {}
+  for _, region in ipairs(regions) do
+    if isTextureRegion(region) and not seen[region] and not (skipSet and skipSet[region]) then
+      seen[region] = true
       local snapshot = {
         region = region,
         shown = regionShown(region),
@@ -149,6 +154,13 @@ function StylingCommon.suppressFrameTextures(frame, stateKey, skipSet)
   end
 
   frame[stateKey] = snapshots
+end
+
+function StylingCommon.suppressFrameTextures(frame, stateKey, skipSet)
+  if type(frame) ~= "table" or type(frame.GetRegions) ~= "function" then
+    return
+  end
+  StylingCommon.suppressRegions(frame, stateKey, { frame:GetRegions() }, skipSet)
 end
 
 function StylingCommon.restoreSuppressedFrameTextures(frame, stateKey)

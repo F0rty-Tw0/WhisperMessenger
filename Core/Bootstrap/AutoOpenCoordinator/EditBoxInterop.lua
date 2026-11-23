@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local ChatReplyState = ns.ChatReplyState or require("WhisperMessenger.Util.ChatReplyState")
+
 local EditBoxInterop = {}
 
 -- External tracking table: keyed by edit box reference, never written to the
@@ -10,21 +12,7 @@ local EditBoxInterop = {}
 -- taints them, causing their OnUpdate to run in a tainted context where
 -- SetText() with WoW's secret values then errors.
 local combatDraftBoxes = {}
-function EditBoxInterop.readEditBoxState(editBox, key)
-  if type(editBox.GetAttribute) == "function" then
-    local attribute = editBox:GetAttribute(key)
-    if attribute ~= nil and attribute ~= "" then
-      return attribute
-    end
-  end
-
-  local direct = editBox[key]
-  if direct ~= nil and direct ~= "" then
-    return direct
-  end
-
-  return nil
-end
+EditBoxInterop.readEditBoxState = ChatReplyState.ReadEditBoxState
 
 local function readEditBoxText(editBox)
   if type(editBox) == "table" and type(editBox.GetText) == "function" then
@@ -163,6 +151,12 @@ function EditBoxInterop.interceptEditBox(runtime, hooks, deps, editBox)
     pcall(function()
       local accountInfo = EditBoxInterop.findBattleNetAccountInfo(target, deps.bnetApi, deps.getNumFriends)
       if not accountInfo then
+        return
+      end
+      -- The game's chat keeps this whisper: mark an existing chat read, but
+      -- create nothing (a cancelled draft must not add or evict a chat).
+      if type(hooks.wouldRouteOutgoing) == "function" and not hooks.wouldRouteOutgoing() then
+        hooks.onOutgoingWhisper(deps.battleNetConversationKey(runtime, deps.identity, accountInfo))
         return
       end
       local conversationKey = deps.ensureBattleNetConversation(runtime, deps.identity, accountInfo)

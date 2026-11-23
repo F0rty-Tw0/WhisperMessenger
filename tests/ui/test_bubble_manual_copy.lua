@@ -358,6 +358,28 @@ return function()
         and s.buttonLabel.textColor[3] == s.originalButtonTextColor[3],
       "button label color should restore"
     )
+    for name, border in pairs(s.borders) do
+      assert(border.shown == true and border.alpha == 1, "InputBoxTemplate " .. name .. " border should restore on close")
+    end
+  end
+
+  -- test_on_hide_restores_template_borders_that_are_also_regions
+  --
+  -- In game the InputBoxTemplate borders are regions of the edit box too, so
+  -- both the region pass and the template pass reach them. Closing the copy
+  -- popup must still leave them visible for the next popup that uses the box.
+  do
+    local s = buildStyledPopupScaffold()
+    for _, border in pairs(s.borders) do
+      table.insert(s.editBox.children, border)
+    end
+    ContextMenu.CopyText("styled-regions")
+    assert(s.borders.left.shown == false, "border is hidden while the copy popup is open")
+    _G.StaticPopupDialogs["WHISPER_MESSENGER_BUBBLE_COPY_TEXT"].OnHide(s.dialog)
+    for name, border in pairs(s.borders) do
+      assert(border.shown == true, "InputBoxTemplate " .. name .. " border should be shown after close")
+      assert(border.alpha == 1, "InputBoxTemplate " .. name .. " border should be opaque after close")
+    end
   end
 
   -- A reused StaticPopup frame (re-shown for an unrelated dialog after we
