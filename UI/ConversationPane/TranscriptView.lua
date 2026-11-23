@@ -13,8 +13,12 @@ local sizeValue = UIHelpers.sizeValue
 local TranscriptView = {}
 
 TranscriptView.TRANSCRIPT_SCROLL_STEP = 24
--- Render option that re-lays-out every bubble. Shared, never mutated.
+-- Render option that rebuilds every bubble (theme or font change). Shared,
+-- never mutated.
 TranscriptView.FORCE_RENDER = { force = true }
+-- Render option for a viewport size change: a full layout pass that keeps
+-- the bubbles of rows whose width did not change. Shared, never mutated.
+TranscriptView.RELAYOUT_RENDER = { relayout = true }
 
 -- True when the transcript is scrolled to (within 1px of) its end.
 function TranscriptView.IsAtEnd(transcript)
@@ -74,8 +78,8 @@ local function reportNavTargets(transcript)
   end
 end
 
---- renderOptions may carry { force = true } for callers that change the
---- viewport size or theme colors, which the per-message row diff cannot see.
+--- renderOptions: FORCE_RENDER for theme changes, RELAYOUT_RENDER for
+--- viewport size changes; the per-message row diff sees neither.
 function TranscriptView.RenderTranscript(transcript, messages, renderOptions)
   local allMessages = messages or {}
   transcript._allMessages = allMessages

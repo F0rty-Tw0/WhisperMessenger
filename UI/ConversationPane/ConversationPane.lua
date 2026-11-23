@@ -28,8 +28,9 @@ local ConversationPane = {}
 local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
 
 -- Viewport-size and theme changes must re-lay-out the bubbles even though
--- no individual message changed.
+-- no individual message changed; only a theme change rebuilds them.
 local FORCE_RENDER = TranscriptView.FORCE_RENDER
+local RELAYOUT_RENDER = TranscriptView.RELAYOUT_RENDER
 
 ConversationPane.RenderTranscript = TranscriptView.RenderTranscript
 
@@ -193,8 +194,9 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     refreshTheme = function()
       ThemeRefresh.Apply(view)
       -- A font-size change resizes the header, so re-lay-out (which also
-      -- re-renders) instead of only re-rendering.
-      ConversationPane.Relayout(view, view._layoutWidth, view._layoutHeight)
+      -- re-renders) instead of only re-rendering. New colors and fonts
+      -- need every bubble rebuilt.
+      ConversationPane.Relayout(view, view._layoutWidth, view._layoutHeight, FORCE_RENDER)
     end,
   }
 
@@ -234,7 +236,9 @@ end
 
 -- Resize the transcript scroll view to match new thread pane dimensions.
 -- width, height: new threadPane dimensions
-function ConversationPane.Relayout(view, width, height)
+-- renderOptions: TranscriptView.FORCE_RENDER to rebuild every bubble;
+-- defaults to a relayout that keeps bubbles whose width did not change.
+function ConversationPane.Relayout(view, width, height, renderOptions)
   if view == nil then
     return
   end
@@ -257,10 +261,10 @@ function ConversationPane.Relayout(view, width, height)
   local t = view.transcript
   local wasAtEnd = transcriptIsAtEnd(t)
   ScrollView.Resize(t, transcriptW, transcriptH)
-  -- Re-render bubbles at the new width
+  -- Re-render bubbles at the new size
   if t._allMessages then
     t._virtualForceEnd = wasAtEnd
-    TranscriptView.RenderTranscript(t, t._allMessages, FORCE_RENDER)
+    TranscriptView.RenderTranscript(t, t._allMessages, renderOptions or RELAYOUT_RENDER)
   end
 end
 
