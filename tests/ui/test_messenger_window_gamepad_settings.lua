@@ -8,6 +8,7 @@ local MenuPopup = require("WhisperMessenger.UI.Shared.MenuPopup")
 local SettingsControls = require("WhisperMessenger.UI.Shared.SettingsControls")
 local PadButtons = require("WhisperMessenger.UI.Shared.SettingsControls.PadButtons")
 local GamepadSettings = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
+local DropdownSwap = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSwap")
 
 local TOGGLE_EVENT = "INPUT_DEVICE_INTERFACE_TRANSITION"
 
@@ -285,5 +286,29 @@ return function()
       error("no frames")
     end
     assert(type(GamepadSettings.Attach(fakeNav(), s)) == "function", "attach still returns the re-scan")
+  end)
+
+  -- test_swap_refresh_runs_before_pad_buttons_refresh
+  withPadUI(true, function(env, state)
+    local s = fakeSettings()
+    s.createFrame = env.createFrame
+    local onTargetsChanged = GamepadSettings.Attach(fakeNav(), s)
+    local calls = {}
+    local savedSwap, savedPad = DropdownSwap.Refresh, PadButtons.Refresh
+    DropdownSwap.Refresh = function()
+      calls[#calls + 1] = "swap"
+    end
+    PadButtons.Refresh = function()
+      calls[#calls + 1] = "pad"
+    end
+    local ok, err = pcall(function()
+      state.on = not state.on
+      env.fire(TOGGLE_EVENT)
+      onTargetsChanged()
+      s.optionsPanel:Show()
+    end)
+    DropdownSwap.Refresh, PadButtons.Refresh = savedSwap, savedPad
+    assert(ok, err)
+    assert(table.concat(calls, ",") == "swap,pad,swap,pad,swap,pad", "toggle, re-scan, settings shown: swap first, got " .. table.concat(calls, ","))
   end)
 end
