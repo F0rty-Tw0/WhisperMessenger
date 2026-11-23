@@ -1,5 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local GlobalWriteSpy = require("tests.helpers.global_write_spy")
 local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = require("WhisperMessenger.UI.Shared.PopupEscape")
 
 local NAME = "WhisperMessengerTestGamepadPopup"
 
@@ -87,4 +89,13 @@ return function()
     popup:Hide()
     assert(#seen == 0, "cleared")
   end)
+
+  -- test_register_escape_does_not_reassign_existing_ui_special_frames
+  do
+    local writes, special = GlobalWriteSpy.Writes("UISpecialFrames", function()
+      PopupEscape.RegisterEscape(NAME)
+    end)
+    assert(writes == 0, "the game's UISpecialFrames is never reassigned")
+    assert(special[1] == NAME, "the name still goes into it")
+  end
 end
