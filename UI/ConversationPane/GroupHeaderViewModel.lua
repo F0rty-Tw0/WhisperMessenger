@@ -6,6 +6,7 @@ end
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.ContactsList.GroupLabel")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 
 local GroupHeaderViewModel = {}
 
@@ -54,14 +55,14 @@ function GroupHeaderViewModel.Build(contact, conversation)
   -- GUILD: the conversation header shows the guild's name. Prefer the
   -- name stored on the conversation (always correct for account-wide
   -- guild keys, including ones that don't belong to the current login);
-  -- fall back to the live PlayerGuildName when the conversation doesn't
+  -- fall back to the live Identity.PlayerGuildName when the conversation doesn't
   -- carry one yet (legacy per-character key or not-yet-ingested).
   if channel == ChannelType.GUILD then
     local storedGuildName = contact.guildName or (conversation and conversation.guildName) or nil
     if storedGuildName and storedGuildName ~= "" then
       label = storedGuildName
     elseif not fromAnotherCharacter then
-      local guildName = GroupLabel.PlayerGuildName and GroupLabel.PlayerGuildName() or nil
+      local guildName = Identity.PlayerGuildName()
       if guildName then
         label = guildName
       end
