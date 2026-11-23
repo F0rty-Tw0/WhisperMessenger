@@ -8,6 +8,7 @@ local BNetRekey = ns.BootstrapLifecycleHandlersBNetRekey or require("WhisperMess
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
+local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
 local ZoneNotify = ns.BootstrapLifecycleHandlersZoneNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneNotify")
 -- stylua: ignore
 local ZoneRosterPoll = ns.BootstrapLifecycleHandlersZoneRosterPoll or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneRosterPoll")
@@ -134,7 +135,7 @@ local function refreshBNetConversations(Bootstrap, deps)
     ScanSignature.Prune(signatures, Bootstrap.runtime.store.conversations)
   end
 
-  refreshAfterBNetScan(Bootstrap, changedKeys, liveChanged, hidden)
+  PerfCounters.Attribute("snapshotBuilds", "bnetScan", refreshAfterBNetScan, Bootstrap, changedKeys, liveChanged, hidden)
 end
 
 function Presence.handleBNetFriendEvent(Bootstrap, deps)
