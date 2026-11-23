@@ -20,14 +20,6 @@ return function()
           target = target,
         })
       end,
-      SendWhisper = function(bnetAccountID, text)
-        table.insert(calls, {
-          fn = "SendWhisper",
-          bnetAccountID = bnetAccountID,
-          text = text,
-        })
-        return true
-      end,
       SendConversationMessage = function(conversationID, text)
         table.insert(calls, {
           fn = "SendConversationMessage",
@@ -40,34 +32,28 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 1. WHISPER dispatch delegates to WhisperGateway character send
+  -- 1. Whisper channels are not group chats: Send rejects them, CanSend is false
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
-    local conv = { channel = ChannelType.WHISPER, target = "Arthas-Area52" }
-    ChatGateway.Send(api, conv, "hello whisper")
-    assert(api._calls[1] ~= nil, "expected a call")
-    assert(api._calls[1].fn == "SendChatMessage", "expected SendChatMessage")
-    assert(api._calls[1].chatType == "WHISPER", "expected WHISPER chat type")
-    assert(api._calls[1].target == "Arthas-Area52", "expected target forwarded")
-    assert(api._calls[1].message == "hello whisper", "expected message forwarded")
+    for _, conv in ipairs({
+      { channel = ChannelType.WHISPER, target = "Arthas-Area52" },
+      { channel = ChannelType.BN_WHISPER, bnetAccountID = 99 },
+    }) do
+      local ok, err = pcall(ChatGateway.Send, api, conv, "hello whisper")
+      assert(ok == false, "expected Send to error for " .. conv.channel)
+      assert(
+        type(err) == "string" and err:find("Unknown channel") ~= nil,
+        "expected 'Unknown channel' for " .. conv.channel .. ", got: " .. tostring(err)
+      )
+      assert(ChatGateway.CanSend(api, conv) == false, "expected CanSend false for " .. conv.channel)
+    end
+    assert(#api._calls == 0, "a whisper channel is never sent through ChatGateway")
+    assert(ChatGateway.SendWhisper == nil and ChatGateway.SendBattleNetWhisper == nil, "whisper senders live in WhisperGateway only")
   end
 
   -- ---------------------------------------------------------------------------
-  -- 2. BN_WHISPER dispatch delegates to WhisperGateway BNet send
-  -- ---------------------------------------------------------------------------
-  do
-    local api = makeSpyApi()
-    local conv = { channel = ChannelType.BN_WHISPER, bnetAccountID = 99 }
-    ChatGateway.Send(api, conv, "hello bn")
-    assert(api._calls[1] ~= nil, "expected a call")
-    assert(api._calls[1].fn == "SendWhisper", "expected SendWhisper")
-    assert(api._calls[1].bnetAccountID == 99, "expected bnetAccountID forwarded")
-    assert(api._calls[1].text == "hello bn", "expected text forwarded")
-  end
-
-  -- ---------------------------------------------------------------------------
-  -- 3. BN_CONVERSATION dispatch calls SendConversationMessage
+  -- 2. BN_CONVERSATION dispatch calls SendConversationMessage
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
@@ -80,7 +66,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 4. PARTY dispatch calls SendChatMessage with "PARTY"
+  -- 3. PARTY dispatch calls SendChatMessage with "PARTY"
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
@@ -93,7 +79,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 5. RAID non-warning dispatch calls SendChatMessage with "RAID"
+  -- 4. RAID non-warning dispatch calls SendChatMessage with "RAID"
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
@@ -106,19 +92,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 6. RAID warning via SendRaid(api, text, true) uses "RAID_WARNING"
-  -- ---------------------------------------------------------------------------
-  do
-    local api = makeSpyApi()
-    ChatGateway.SendRaid(api, "warning!", true)
-    assert(api._calls[1] ~= nil, "expected a call")
-    assert(api._calls[1].fn == "SendChatMessage", "expected SendChatMessage")
-    assert(api._calls[1].chatType == "RAID_WARNING", "expected RAID_WARNING chat type")
-    assert(api._calls[1].message == "warning!", "expected message forwarded")
-  end
-
-  -- ---------------------------------------------------------------------------
-  -- 7. INSTANCE_CHAT dispatch calls SendChatMessage with "INSTANCE_CHAT"
+  -- 5. INSTANCE_CHAT dispatch calls SendChatMessage with "INSTANCE_CHAT"
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
@@ -131,7 +105,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 8. GUILD dispatch calls SendChatMessage with "GUILD"
+  -- 6. GUILD dispatch calls SendChatMessage with "GUILD"
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
@@ -144,7 +118,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 9. OFFICER dispatch calls SendChatMessage with "OFFICER"
+  -- 7. OFFICER dispatch calls SendChatMessage with "OFFICER"
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
@@ -157,7 +131,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 10. CHANNEL dispatch calls SendChatMessage with "CHANNEL" and channelIndex
+  -- 8. CHANNEL dispatch calls SendChatMessage with "CHANNEL" and channelIndex
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
@@ -170,7 +144,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 11. CHANNEL dispatch via Send(api, conv, text)
+  -- 9. CHANNEL dispatch via Send(api, conv, text)
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
@@ -191,7 +165,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 12. COMMUNITY via Send errors with "receive-only" message
+  -- 10. COMMUNITY via Send errors with "receive-only" message
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
@@ -201,7 +175,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 13. Unknown channel string errors with "Unknown channel"
+  -- 11. Unknown channel string errors with "Unknown channel"
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
@@ -211,7 +185,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 14. Missing channel field errors with "Unknown channel"
+  -- 12. Missing channel field errors with "Unknown channel"
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
@@ -221,15 +195,13 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 15. CanSend — true for sendable channels, false for COMMUNITY and no-sender
+  -- 13. CanSend — true for sendable channels, false for COMMUNITY and no-sender
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
 
     -- All sendable channels should return true with spy api injected
     local sendable = {
-      { channel = ChannelType.WHISPER, target = "X" },
-      { channel = ChannelType.BN_WHISPER, bnetAccountID = 1 },
       { channel = ChannelType.BN_CONVERSATION, conversationID = 1 },
       { channel = ChannelType.PARTY },
       { channel = ChannelType.RAID },
@@ -262,7 +234,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 16. Legacy fallback to _G.C_ChatInfo.SendChatMessage for group channels
+  -- 14. Legacy fallback to _G.C_ChatInfo.SendChatMessage for group channels
   -- ---------------------------------------------------------------------------
   do
     local savedCChatInfo = rawget(_G, "C_ChatInfo")
@@ -289,7 +261,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 17. Legacy fallback to _G.BNSendConversationMessage
+  -- 15. Legacy fallback to _G.BNSendConversationMessage
   -- ---------------------------------------------------------------------------
   do
     local savedGlobal = rawget(_G, "BNSendConversationMessage")

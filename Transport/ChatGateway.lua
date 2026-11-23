@@ -3,7 +3,6 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 local ChannelIndex = ns.ChannelIndex or require("WhisperMessenger.Transport.ChannelIndex")
 
@@ -43,16 +42,6 @@ end
 -- Per-channel send functions
 -- ---------------------------------------------------------------------------
 
--- Delegates to WhisperGateway.SendCharacterWhisper.
-function Gateway.SendWhisper(api, target, text)
-  return WhisperGateway.SendCharacterWhisper(api, target, text)
-end
-
--- Delegates to WhisperGateway.SendBattleNetWhisper.
-function Gateway.SendBattleNetWhisper(api, bnetAccountID, text)
-  return WhisperGateway.SendBattleNetWhisper(api, bnetAccountID, text)
-end
-
 -- Sends a BNet conversation message.
 function Gateway.SendBattleNetConversation(api, conversationID, text)
   local sender = resolveConversationSender(api)
@@ -71,15 +60,13 @@ function Gateway.SendParty(api, text)
   return sender(text, "PARTY")
 end
 
--- Sends to RAID or RAID_WARNING chat.
--- Pass warning=true to use RAID_WARNING.
-function Gateway.SendRaid(api, text, warning)
+-- Sends to RAID chat.
+function Gateway.SendRaid(api, text)
   local sender = resolveChatSender(api)
   if sender == nil then
     error("No chat sender available")
   end
-  local chatType = warning and "RAID_WARNING" or "RAID"
-  return sender(text, chatType)
+  return sender(text, "RAID")
 end
 
 -- Sends to INSTANCE_CHAT.
@@ -131,14 +118,9 @@ local function checkMembership(fn, ...)
 end
 
 -- Map from ChannelType constant to a resolver function.
--- COMMUNITY is intentionally absent — it is receive-only.
+-- COMMUNITY is intentionally absent — it is receive-only. Whispers (WOW/BN)
+-- go through WhisperGateway, never here.
 local senderAvailability = {
-  [ChannelType.WHISPER] = function(api)
-    return WhisperGateway.CanSendCharacterWhisper(api)
-  end,
-  [ChannelType.BN_WHISPER] = function(api)
-    return WhisperGateway.CanSendBattleNetWhisper(api)
-  end,
   [ChannelType.BN_CONVERSATION] = function(api, conversation)
     if resolveConversationSender(api) == nil then
       return false
@@ -229,16 +211,12 @@ end
 function Gateway.Send(api, conversation, text)
   local channel = conversation and conversation.channel
 
-  if channel == ChannelType.WHISPER then
-    return Gateway.SendWhisper(api, conversation.target, text)
-  elseif channel == ChannelType.BN_WHISPER then
-    return Gateway.SendBattleNetWhisper(api, conversation.bnetAccountID, text)
-  elseif channel == ChannelType.BN_CONVERSATION then
+  if channel == ChannelType.BN_CONVERSATION then
     return Gateway.SendBattleNetConversation(api, conversation.conversationID, text)
   elseif channel == ChannelType.PARTY then
     return Gateway.SendParty(api, text)
   elseif channel == ChannelType.RAID then
-    return Gateway.SendRaid(api, text, false)
+    return Gateway.SendRaid(api, text)
   elseif channel == ChannelType.INSTANCE_CHAT then
     return Gateway.SendInstance(api, text)
   elseif channel == ChannelType.GUILD then
