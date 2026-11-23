@@ -85,8 +85,8 @@ local function openModernMenu(normalized, anchorFrame, options)
   return menuOpened(menu)
 end
 
--- WoW: Forever: WM's own popup, since Blizzard's menus taint from addon code
--- there. Copies the text when the popup cannot open.
+-- WoW: Forever with the gamepad UI on: WM's own popup, since Blizzard's menus
+-- taint from addon code there. Copies the text when the popup cannot open.
 local function openForeverMenu(normalized, anchorFrame, options)
   local opened = MenuPopup.Open(anchorFrame, function(root)
     addMenuButtons(root, normalized, options)
@@ -123,7 +123,7 @@ function ContextMenu.Open(text, anchorFrame, options)
     end
   end
 
-  if FlavorCompat.isForever then
+  if FlavorCompat.UsesOwnMenus() then
     return openForeverMenu(normalized, anchorFrame, options)
   end
 

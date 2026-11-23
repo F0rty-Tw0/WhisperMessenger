@@ -7,19 +7,37 @@ local Localization = require("WhisperMessenger.Locale.Localization")
 local MenuPopup = require("WhisperMessenger.UI.Shared.MenuPopup")
 local ContextMenu = require("WhisperMessenger.UI.ChatBubble.ContextMenu")
 
--- On WoW: Forever the bubble right-click menu is WM's own popup; Blizzard's
--- menus (MenuUtil, EasyMenu, UIDropDownMenu) taint from addon code there.
+-- On WoW: Forever with the gamepad UI on the bubble right-click menu is WM's
+-- own popup; Blizzard's menus (MenuUtil, EasyMenu, UIDropDownMenu) taint
+-- from addon code there. With the mouse it is Blizzard's menu, as on Retail.
 
 local function noReactions()
   return false
 end
 
--- Runs fn(anchor) on Forever in a popup world; no Blizzard menu may be hit.
+-- Runs fn(anchor) on Forever with the pad UI on in a popup world; no
+-- Blizzard menu may be hit.
 local function onForever(fn)
   Flavor.With(true, true, function()
-    World.With(function(_factory, anchor)
-      BannedMenuApis.AssertNone(function()
-        fn(anchor)
+    Flavor.WithPadUI(true, function()
+      World.With(function(_factory, anchor)
+        BannedMenuApis.AssertNone(function()
+          fn(anchor)
+        end)
+      end)
+    end)
+  end)
+end
+
+-- Runs fn(anchor, calls) on Forever with the pad UI off in a popup world;
+-- calls lists every Blizzard menu API hit.
+local function onForeverMouse(fn)
+  Flavor.With(true, true, function()
+    Flavor.WithPadUI(false, function()
+      World.With(function(_factory, anchor)
+        BannedMenuApis.With(function(calls)
+          fn(anchor, calls)
+        end)
       end)
     end)
   end)
@@ -78,5 +96,19 @@ return function()
       assert(copied.text == "hello", "copies the text, got " .. tostring(copied.text))
       assert(not MenuPopup.IsShown(), "no popup without an anchor")
     end)
+  end)
+
+  -- test_forever_mouse_bubble_with_reply_and_block_opens_menu_util
+  onForeverMouse(function(anchor, calls)
+    ContextMenu.Open("hello", anchor, replyAndBlock(function() end))
+    assert(calls[1] == "MenuUtil.CreateContextMenu", "pad off: Blizzard's menu, got " .. tostring(calls[1]))
+    assert(not MenuPopup.IsShown(), "pad off: no WM popup")
+  end)
+
+  -- test_forever_mouse_bubble_without_handlers_opens_easy_menu
+  onForeverMouse(function(anchor, calls)
+    ContextMenu.Open("hello", anchor, { canReact = noReactions })
+    assert(calls[1] == "EasyMenu", "pad off: Blizzard's copy menu, got " .. tostring(calls[1]))
+    assert(not MenuPopup.IsShown(), "pad off: no WM popup")
   end)
 end

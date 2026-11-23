@@ -154,10 +154,10 @@ local function addGroupEntries(rootDescription, item, onMarkUnread, onUpdatePref
 end
 
 -- Group rows are not players, so they get a small menu of our own instead of
--- Blizzard's player menu: WM's popup on WoW: Forever, MenuUtil elsewhere.
--- Returns false (row click selects) without the modern menu API.
+-- Blizzard's player menu: WM's popup on Forever with the gamepad UI on,
+-- MenuUtil otherwise. False (row click selects) without the modern menu API.
 local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
-  if FlavorCompat.isForever then
+  if FlavorCompat.UsesOwnMenus() then
     return MenuPopup.Open(anchorFrame, function(root)
       addGroupEntries(root, item, onMarkUnread, onUpdatePrefs, rowActions)
     end, options)
@@ -261,8 +261,8 @@ local function openPlayerMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, ro
   if name == nil then
     return false
   end
-  -- Blizzard's player menus taint when addon code opens them on Forever.
-  if FlavorCompat.isForever then
+  -- Blizzard's player menus taint from addon code on Forever: own menu there with the gamepad UI on.
+  if FlavorCompat.UsesOwnMenus() then
     return OwnMenu.Open(item, anchorFrame, name, rowActions, function(root)
       addSection(root, item, onMarkUnread, onUpdatePrefs, rowActions)
     end, options)
