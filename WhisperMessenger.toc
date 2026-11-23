@@ -189,7 +189,6 @@ UI/Theme/EllesmereBridge.lua
 UI/Theme/EllesmereButtonLook.lua
 UI/Theme/Presets/Data/EllesmereUI.lua
 UI/Theme/Presets.lua
-UI/Theme/Colors.lua
 UI/Theme/BubbleColors.lua
 UI/Theme/FontFamilies.lua
 UI/Theme/FontColors.lua
@@ -248,7 +247,6 @@ UI/Shared/IgnorePrompt.lua
 UI/Shared/ReloadPrompt.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI.lua
 UI/ChatBubble/ContextMenu/ManualCopy/Clipboard.lua
-UI/ChatBubble/ContextMenu/ManualCopy.lua
 UI/ChatBubble/ContextMenu.lua
 UI/ChatBubble/HoverCopy.lua
 UI/ChatBubble/ReplyQuote.lua

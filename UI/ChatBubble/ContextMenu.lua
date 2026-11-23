@@ -7,7 +7,7 @@ local ContextMenu = {}
 -- stylua: ignore start
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local ManualCopy = ns.ChatBubbleContextMenuManualCopy or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
+local ManualCopy = ns.ChatBubbleContextMenuManualCopyClipboard or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.Clipboard")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local ReactionPicker = ns.ChatBubbleReactionPicker or require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")

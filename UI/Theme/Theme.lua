@@ -3,11 +3,11 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Colors = ns.ThemeColors or require("WhisperMessenger.UI.Theme.Colors")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local Layout = ns.ThemeLayout or require("WhisperMessenger.UI.Theme.Layout")
 local ThemeTextures = ns.ThemeTextures or require("WhisperMessenger.UI.Theme.Textures")
 local ThemePresets = ns.ThemePresets or require("WhisperMessenger.UI.Theme.Presets")
+local Colors = ThemePresets.Get(ThemePresets.WOW_DEFAULT) or {}
 local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
 
 local Theme = {}
