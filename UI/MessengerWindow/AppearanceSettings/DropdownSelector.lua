@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local DropdownSkin = ns.MessengerWindowDropdownSkin or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSkin")
 local NativeDropdown = ns.MessengerWindowNativeDropdown or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.NativeDropdown")
+local DropdownSwap = ns.MessengerWindowDropdownSwap or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSwap")
 local DropdownOptionRow = ns.MessengerWindowDropdownOptionRow or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownOptionRow")
 
 local DropdownSelector = {}
@@ -25,13 +26,7 @@ local function menuToggled()
   end
 end
 
-function DropdownSelector.Create(factory, parent, options)
-  options = options or {}
-  local native = NativeDropdown.Create(factory, parent, options)
-  if native then
-    return native
-  end
-
+local function buildOwn(factory, parent, options)
   local labelText = options.labelText
   local optionsList = type(options.optionsList) == "table" and options.optionsList or {}
   local getOptions = options.getOptions
@@ -270,7 +265,20 @@ function DropdownSelector.Create(factory, parent, options)
       repaintOptions()
       DropdownSkin.PaintMenu(menuSkin, palette)
     end,
-  }
+  },
+    menu
+end
+
+function DropdownSelector.Create(factory, parent, options)
+  options = options or {}
+  if DropdownSwap.Applies() then
+    return DropdownSwap.Create(factory, parent, options, buildOwn)
+  end
+  local native = NativeDropdown.Create(factory, parent, options)
+  if native then
+    return native
+  end
+  return (buildOwn(factory, parent, options))
 end
 
 -- Hides every open menu of WM's own (the game's dropdown menu closes

@@ -38,22 +38,24 @@ local function newFactory(decorate)
   return factory
 end
 
--- The native panel of a fresh dropdown menu, built on Forever under the
--- Native look.
+-- The native panel of a fresh dropdown menu, built on Forever with the
+-- gamepad UI on under the Native look.
 local function nativePanel(factory)
   local panel
-  Flavor.With(true, true, function()
-    Hud.Configure("classic")
-    local ok, err = pcall(function()
-      local row = factory.CreateFrame("Frame", nil, nil)
-      local button = factory.CreateFrame("Button", nil, row)
-      local _, _, menuSkin = DropdownSkin.CreateMenu(factory, row, button, 200, 24)
-      panel = menuSkin.panel
+  Flavor.WithPadUI(true, function()
+    Flavor.With(true, true, function()
+      Hud.Configure("classic")
+      local ok, err = pcall(function()
+        local row = factory.CreateFrame("Frame", nil, nil)
+        local button = factory.CreateFrame("Button", nil, row)
+        local _, _, menuSkin = DropdownSkin.CreateMenu(factory, row, button, 200, 24)
+        panel = menuSkin.panel
+      end)
+      Hud.Configure("off")
+      if not ok then
+        error(err, 0)
+      end
     end)
-    Hud.Configure("off")
-    if not ok then
-      error(err, 0)
-    end
   end)
   assert(panel, "native menu has a panel")
   return panel

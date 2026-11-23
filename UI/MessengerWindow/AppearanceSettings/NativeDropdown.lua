@@ -8,16 +8,16 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
-local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 
 -- Native WoW HUD dropdown row. Prefers the game's dropdown
 -- (WowStyle1DropdownTemplate set up with SetupMenu); without it, a panel
 -- button showing the current value opens MenuUtil's context menu. Each
 -- option is a radio either way; a { header = true, label } entry becomes a
 -- menu title (left out where the menu has no titles). Create returns nil
--- when the HUD is off, on WoW: Forever (the game's menus taint from addon
--- code there) or when the client has neither API; the caller then builds
--- the modern dropdown. Same handle contract as DropdownSelector.
+-- when the HUD is off or when the client has neither API; the caller then
+-- builds the modern dropdown. On WoW: Forever DropdownSwap decides when
+-- this one is built (only while the gamepad UI is off, as the game's menus
+-- taint from addon code under it). Same handle contract as DropdownSelector.
 local NativeDropdown = {}
 
 NativeDropdown.DROPDOWN_TEMPLATE = "WowStyle1DropdownTemplate"
@@ -96,7 +96,7 @@ local function createMenuButton(factory, row)
 end
 
 function NativeDropdown.Create(factory, parent, options)
-  if FlavorCompat.isForever or not Hud.IsOn() then
+  if not Hud.IsOn() then
     return nil
   end
   options = options or {}

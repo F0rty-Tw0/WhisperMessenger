@@ -6,15 +6,17 @@ end
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local MenuPopup = ns.MenuPopup or require("WhisperMessenger.UI.Shared.MenuPopup")
 local PadButtons = ns.SettingsControlsPadButtons or require("WhisperMessenger.UI.Shared.SettingsControls.PadButtons")
+local DropdownSwap = ns.MessengerWindowDropdownSwap or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSwap")
 
 -- The settings pages' part of the WoW: Forever gamepad UI. The right stick
 -- scrolls the open page while settings show, the chat otherwise. Widgets
 -- the settings builders tagged with _wmPadButton (a − / + or ▲ / ▼ pad
 -- button) go to the nav once each as a D-pad stop; ones tagged with
 -- _wmPadStep (a slider) go once each as skipped.
--- Page list and page are plain spatial nav. The pad buttons re-read the
--- game's pad UI toggle when settings show, on each re-scan, and when the
--- player flips the toggle (INPUT_DEVICE_INTERFACE_TRANSITION).
+-- Page list and page are plain spatial nav. The Native-look dropdowns
+-- (WM's list or the game's) and then the pad buttons re-read the game's pad
+-- UI toggle when settings show, on each re-scan, and when the player flips
+-- the toggle (INPUT_DEVICE_INTERFACE_TRANSITION).
 local GamepadSettings = {}
 
 local function scrollFrameOf(scrollView)
@@ -27,6 +29,7 @@ local function followSettingsPane(nav, settings)
     return
   end
   local function follow()
+    DropdownSwap.Refresh()
     PadButtons.Refresh()
     local target
     if optionsPanel:IsShown() then
@@ -63,7 +66,8 @@ end
 
 -- A popup shown under the other mode is not registered with the game's
 -- pad frame manager, so B would not reach it: close it on the toggle.
--- Then the pad buttons show or hide and the nav re-scans the new geometry.
+-- Then the dropdowns swap, the pad buttons show or hide and the nav
+-- re-scans the new geometry.
 -- The event also fires on a switch between mouse and pad input with the
 -- pad UI unchanged: that one does nothing, so an open menu stays open.
 -- A client without the event (or the frame) keeps the other refreshes only.
@@ -88,6 +92,7 @@ local function listenForPadToggle(nav, createFrame)
     if MenuPopup.IsShown() then
       MenuPopup.Close()
     end
+    DropdownSwap.Refresh()
     PadButtons.Refresh()
     nav.refresh()
   end)
@@ -125,6 +130,7 @@ function GamepadSettings.Attach(nav, settings)
   listenForPadToggle(nav, settings.createFrame)
   scan()
   return function()
+    DropdownSwap.Refresh()
     PadButtons.Refresh()
     scan()
     nav.refresh()
