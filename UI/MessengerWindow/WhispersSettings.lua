@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
+local PageFooter = ns.SettingsControlsPageFooter or require("WhisperMessenger.UI.Shared.SettingsControls.PageFooter")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ToggleSpecs = ns.MessengerWindowWhispersToggleSpecs or require("WhisperMessenger.UI.MessengerWindow.WhispersSettings.ToggleSpecs")
 local AddonGreetingsSelector = ns.MessengerWindowWhispersAddonGreetingsSelector
@@ -17,7 +18,6 @@ local AddonGreetings = ns.AddonGreetings or require("WhisperMessenger.Model.Addo
 -- message preview and replying from it, and addon greetings.
 local WhispersSettings = {}
 
-local PADDING = Theme.CONTENT_PADDING
 local TITLE = "Whispers"
 local HINT = "Control how whispers behave."
 
@@ -81,26 +81,11 @@ function WhispersSettings.Create(factory, parent, config, options)
   )
   greetingsSelector.row:SetPoint("TOPLEFT", toggles[#toggles].row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING)
 
-  local resetButton = panel:bind(
-    UIHelpers.createOptionButton(
-      factory,
-      frame,
-      text("Reset to Defaults"),
-      SettingsControls.OptionButtonColors(Theme),
-      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, ghost = true }
-    ),
-    { type = "optionButton" }
-  )
-  resetButton:SetPoint("TOPLEFT", greetingsSelector.row, "BOTTOMLEFT", 0, -24)
-  resetButton:SetScript("OnClick", function()
+  local resetButton = PageFooter.CreateResetButton(factory, frame, panel, text("Reset to Defaults"), function()
     panel:reset(onChange)
   end)
-
-  local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
-  bottomSpacer:SetSize(1, PADDING)
-  bottomSpacer:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, 0)
-  -- Marker the options scrollview reads to size the scroll content.
-  frame._wmBottomMarker = bottomSpacer
+  resetButton:SetPoint("TOPLEFT", greetingsSelector.row, "BOTTOMLEFT", 0, -24)
+  PageFooter.AddBottomMarker(factory, frame, resetButton)
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
@@ -120,10 +105,10 @@ function WhispersSettings.Create(factory, parent, config, options)
   end
 
   local function refreshLayout(width)
-    if type(width) ~= "number" or width <= 0 then
+    local effective = PageFooter.ClampPanelWidth(width)
+    if not effective then
       return
     end
-    local effective = math.min(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, math.max(160, math.floor(width)))
     header.refreshLayout(effective)
     panel:refreshLayout(effective)
   end

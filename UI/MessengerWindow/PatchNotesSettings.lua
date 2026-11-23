@@ -6,13 +6,13 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
+local PageFooter = ns.SettingsControlsPageFooter or require("WhisperMessenger.UI.Shared.SettingsControls.PageFooter")
 local Divider = ns.SettingsControlsDivider or require("WhisperMessenger.UI.Shared.SettingsControls.Divider")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local setTextColor = UIHelpers.setTextColor
 
 local PatchNotesSettings = {}
 
-local PADDING = Theme.CONTENT_PADDING
 local BODY_TOP_GAP = -24
 local MIN_BODY_WIDTH = 160
 local BULLET_PREFIX = "• "
@@ -91,10 +91,7 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
 
   -- A wrapped FontString's bottom tracks its rendered height in WoW, so
   -- anchoring the marker to the last note keeps the scroll measurement correct.
-  local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
-  bottomSpacer:SetSize(1, PADDING)
-  bottomSpacer:SetPoint("TOPLEFT", lastRegion, "BOTTOMLEFT", 0, 0)
-  frame._wmBottomMarker = bottomSpacer
+  PageFooter.AddBottomMarker(factory, frame, lastRegion)
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
