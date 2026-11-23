@@ -5,7 +5,6 @@ end
 
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 
-local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local TranscriptView = ns.ConversationPaneTranscriptView or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local HeaderView = ns.ConversationPaneHeaderView or require("WhisperMessenger.UI.ConversationPane.HeaderView")
 local TranscriptSetup = ns.ConversationPaneTranscriptSetup or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
@@ -62,7 +61,6 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   local isContextShown = view.isChannelContextShown == nil or view.isChannelContextShown() == true
   local messages = ChannelContextMerger.ForPane(conversation and conversation.messages or {}, selectedContact, conversation, isContextShown)
   ConversationPane.RenderTranscript(view.transcript, messages)
-  ConversationPane.SetStatus(view, status)
   ConversationPane.SetNotice(view, noticeText)
   ConversationPane.RefreshActiveStatus(view, conversation and conversation.activeStatus or nil)
   if InfoStrip.Apply(view, selectedContact) then
@@ -106,22 +104,6 @@ function ConversationPane.SetLanguage(view)
   end
 end
 
-function ConversationPane.SetStatus(view, status)
-  if view.statusBanner == nil then
-    return nil
-  end
-
-  local label = ""
-  if status and status.status and StatusLine and StatusLine.AVAILABILITY_DISPLAY then
-    local avail = StatusLine.AVAILABILITY_DISPLAY[status.status]
-    if avail then
-      label = avail.label
-    end
-  end
-  view.statusBanner:SetText(label)
-  return view.statusBanner.text
-end
-
 function ConversationPane.Create(factory, parent, selectedContact, conversation, options)
   options = options or {}
   local pane = factory.CreateFrame("Frame", nil, parent)
@@ -137,13 +119,6 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     onStartNewWhisper = options.onStartNewWhisper,
   })
   local headerFrame = header.headerFrame
-
-  -- Legacy statusBanner (hidden; status is shown in header status line)
-
-  local statusBanner = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  statusBanner:SetPoint("TOPLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
-  statusBanner:SetText("")
-  statusBanner:Hide()
 
   -- Transcript ScrollView (anchored below header)
 
@@ -190,8 +165,6 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
 
   view = {
     frame = pane,
-    -- Legacy header stub so any callers using view.header:SetText() don't crash
-    header = header.headerName,
     headerFrame = header.headerFrame,
     headerClassIcon = header.headerClassIcon,
     headerName = header.headerName,
@@ -209,7 +182,6 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     headerChannelChip = header.headerChannelChip,
     headerNote = header.headerNote,
     headerNoteHitArea = header.headerNoteHitArea,
-    statusBanner = statusBanner,
     activeStatusBanner = activeStatusBanner,
     requestBanner = requestBanner,
     replyBanner = ReplyBanner.Create(factory, pane, { nativeChrome = options.nativeChrome == true }),
@@ -285,9 +257,6 @@ function ConversationPane.Relayout(view, width, height)
   local t = view.transcript
   local wasAtEnd = transcriptIsAtEnd(t)
   ScrollView.Resize(t, transcriptW, transcriptH)
-  if t.text and t.text.SetWidth then
-    t.text:SetWidth(transcriptW)
-  end
   -- Re-render bubbles at the new width
   if t._allMessages then
     t._virtualForceEnd = wasAtEnd

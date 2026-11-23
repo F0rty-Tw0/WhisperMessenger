@@ -1,5 +1,4 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local ManualCopyCapture = require("tests.helpers.manual_copy_capture")
 local ScrollView = require("WhisperMessenger.UI.ScrollView")
 local TranscriptView = require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local TranscriptSetup = require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
@@ -20,108 +19,15 @@ return function()
     return transcript
   end
 
-  -- test_configure_creates_edit_box
+  -- test_configure_creates_no_text_mirror
 
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
     TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
 
-    assert(transcript.text ~= nil, "test_configure_creates_edit_box: transcript.text should be created")
-  end
-
-  -- test_edit_box_is_multiline
-
-  do
-    local factory = FakeUI.NewFactory()
-    local transcript = makeTranscript(factory)
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
-
-    assert(transcript.text.multiline == true, "test_edit_box_is_multiline: SetMultiLine(true) should be called")
-  end
-
-  -- test_edit_box_auto_focus_disabled
-
-  do
-    local factory = FakeUI.NewFactory()
-    local transcript = makeTranscript(factory)
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
-
-    assert(transcript.text.autoFocus == false, "test_edit_box_auto_focus_disabled: SetAutoFocus(false) should be called")
-  end
-
-  -- test_edit_box_hyperlinks_enabled
-
-  do
-    local factory = FakeUI.NewFactory()
-    local transcript = makeTranscript(factory)
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
-
-    assert(transcript.text.hyperlinksEnabled == true, "test_edit_box_hyperlinks_enabled: SetHyperlinksEnabled(true) should be called")
-  end
-
-  -- test_url_hyperlink_click_avoids_protected_launch_and_copies_link
-
-  ManualCopyCapture.With(function(copied)
-    local savedExternalEventURL = _G.C_ExternalEventURL
-    local savedLaunchURL = _G.LaunchURL
-
-    local launchAttempted = false
-
-    _G.C_ExternalEventURL = {
-      LaunchURL = function()
-        launchAttempted = true
-      end,
-    }
-    _G.LaunchURL = function()
-      launchAttempted = true
-    end
-
-    local factory = FakeUI.NewFactory()
-    local transcript = makeTranscript(factory)
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
-    transcript.text.scripts.OnHyperlinkClick(
-      transcript.text,
-      "addon:WhisperMessenger:url:https://example.com/help",
-      "https://example.com/help",
-      "LeftButton"
-    )
-
-    assert(launchAttempted == false, "expected transcript URL click to avoid protected LaunchURL APIs")
-    assert(copied.text == "https://example.com/help", "expected transcript URL click to copy URL as safe fallback")
-
-    _G.C_ExternalEventURL = savedExternalEventURL
-    _G.LaunchURL = savedLaunchURL
-  end)
-
-  -- test_transcript_link_clicks_reach_blizzard_chat_handler
-  do
-    local savedMixin = rawget(_G, "ChatFrameMixin")
-    local clicked = nil
-    rawset(_G, "ChatFrameMixin", {
-      OnHyperlinkClick = function(_self, link)
-        clicked = link
-      end,
-    })
-    local factory = FakeUI.NewFactory()
-    local transcript = makeTranscript(factory)
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
-    transcript.text.scripts.OnHyperlinkClick(transcript.text, "trade:Player-1:2259:171", "[Tailoring]", "LeftButton")
-    rawset(_G, "ChatFrameMixin", savedMixin)
-
-    assert(clicked == "trade:Player-1:2259:171", "transcript link clicks should reach Blizzard's chat click handler")
-  end
-
-  -- test_initial_layout_called
-
-  do
-    local factory = FakeUI.NewFactory()
-    local transcript = makeTranscript(factory)
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
-
-    -- After ConfigureTranscript, transcript.text should exist and have empty text
-    assert(transcript.text ~= nil, "test_initial_layout_called: transcript.text must exist after configure")
-    assert(transcript.text.text == "" or transcript.text.text == nil, "test_initial_layout_called: transcript.text should be set to empty string")
+    assert(transcript.text == nil, "test_configure_creates_no_text_mirror: no hidden text box")
+    assert(transcript.lines == nil, "test_configure_creates_no_text_mirror: no plain-text line copy")
   end
 
   -- test_scroll_wiring_preserves_original_mouse_wheel_handler
@@ -172,70 +78,5 @@ return function()
       valueSeen == TranscriptView.TRANSCRIPT_SCROLL_STEP,
       "test_scroll_wiring_preserves_original_value_changed_handler: original OnValueChanged handler should receive the scroll value"
     )
-  end
-
-  -- test_transcript_uses_link_template
-
-  do
-    local previous = rawget(_G, "C_XMLUtil")
-    rawset(_G, "C_XMLUtil", {
-      GetTemplateInfo = function()
-        return { type = "Frame" }
-      end,
-    })
-    local ok, err = pcall(function()
-      local factory = FakeUI.NewFactory()
-      local transcript = makeTranscript(factory)
-      TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
-      local text = transcript.text
-
-      assert(text.template == "InlineHyperlinkFrameTemplate", "test_transcript_uses_link_template: got template " .. tostring(text.template))
-      assert(text:GetScript("OnHyperlinkClick") == text.templateHyperlinkClick, "test_transcript_uses_link_template: template click script kept")
-      local hooks = (text._hookScripts or {}).OnHyperlinkClick or {}
-      assert(#hooks == 1, "test_transcript_uses_link_template: one click hook, got " .. #hooks)
-    end)
-    rawset(_G, "C_XMLUtil", previous)
-    if not ok then
-      error(err, 0)
-    end
-  end
-
-  -- test_transcript_link_template_has_no_blizzard_hover
-
-  do
-    local previous = rawget(_G, "C_XMLUtil")
-    rawset(_G, "C_XMLUtil", {
-      GetTemplateInfo = function()
-        return { type = "Frame" }
-      end,
-    })
-    local ok, err = pcall(function()
-      local factory = FakeUI.NewFactory()
-      local transcript = makeTranscript(factory)
-      TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
-      local text = transcript.text
-
-      assert(text:GetScript("OnHyperlinkEnter") == nil, "test_transcript_link_template_has_no_blizzard_hover: enter script cleared")
-      assert(text:GetScript("OnHyperlinkLeave") == nil, "test_transcript_link_template_has_no_blizzard_hover: leave script cleared")
-    end)
-    rawset(_G, "C_XMLUtil", previous)
-    if not ok then
-      error(err, 0)
-    end
-  end
-
-  -- test_transcript_without_template_keeps_old_click_script
-
-  do
-    local factory = FakeUI.NewFactory()
-    local transcript = makeTranscript(factory)
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
-    local text = transcript.text
-
-    assert(text.template == nil, "test_transcript_without_template_keeps_old_click_script: no template, got " .. tostring(text.template))
-    local script = text:GetScript("OnHyperlinkClick")
-    assert(type(script) == "function", "test_transcript_without_template_keeps_old_click_script: click script set")
-    assert(script ~= text.templateHyperlinkClick, "test_transcript_without_template_keeps_old_click_script: not the template script")
-    assert(((text._hookScripts or {}).OnHyperlinkClick or {})[1] == nil, "test_transcript_without_template_keeps_old_click_script: no click hooks")
   end
 end

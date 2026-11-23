@@ -11,7 +11,6 @@ local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI
 local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
 local AddonBadge = ns.ConversationPaneAddonBadge or require("WhisperMessenger.UI.ConversationPane.AddonBadge")
 local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel or require("WhisperMessenger.UI.ConversationPane.GroupHeaderViewModel")
-local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local HeaderContactExtras = ns.ConversationPaneHeaderContactExtras or require("WhisperMessenger.UI.ConversationPane.HeaderContactExtras")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local HeaderFit = ns.ConversationPaneHeaderFit or require("WhisperMessenger.UI.ConversationPane.HeaderFit")
@@ -40,14 +39,6 @@ local function playerClassTag()
     return cachedPlayerClassTag
   end
   return nil
-end
-
-local function headerTextFor(selectedContact)
-  if selectedContact and selectedContact.displayName then
-    return DisplayName.Format(selectedContact.displayName)
-  end
-
-  return Localization.Text("No conversation selected")
 end
 
 function HeaderView.Create(factory, pane, selectedContact, options)
@@ -274,11 +265,6 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     -- Native WoW HUD: no empty header strip above the welcome screen.
     if view.hideEmptyHeader then
       view.headerFrame:SetShown(hasContact)
-    end
-  else
-    -- Fallback: legacy header (should not happen after Create, but kept for safety)
-    if view.header then
-      view.header:SetText(headerTextFor(selectedContact))
     end
   end
 end

@@ -54,14 +54,17 @@ return function()
   runtime.window.contacts.rows[1].scripts.OnClick()
 
   assert(availabilityRequests[1] == guid)
-  assert(runtime.window.conversation.statusBanner.text == "Offline")
+  assert((runtime.window.conversation._headerStatusDetailFullText or ""):find("Offline", 1, true), "expected Offline in the header status line")
 
   runtime.window.composer.input:SetText("hello")
   runtime.window.composer.sendButton.scripts.OnClick()
 
   -- Enriched availability (Offline) takes precedence over sendStatusByConversation
-  -- in the header banner. The send status is still tracked in runtime for other uses.
-  assert(runtime.window.conversation.statusBanner.text == "Offline")
+  -- in the header status line. The send status is still tracked in runtime for other uses.
+  assert(
+    (runtime.window.conversation._headerStatusDetailFullText or ""):find("Offline", 1, true),
+    "expected Offline to stay in the header status line"
+  )
   local pending = runtime.pendingOutgoing["me::WOW::arthas-area52"]
   assert(pending == nil or #pending == 0)
 
