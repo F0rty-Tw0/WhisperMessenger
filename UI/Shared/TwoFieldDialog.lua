@@ -6,7 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 local DialogChrome = ns.DialogChrome or require("WhisperMessenger.UI.Shared.DialogChrome")
 local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
@@ -153,7 +153,7 @@ local function build(factory)
 
   wireKeys(dialog)
   -- Escape closes it even when neither field has focus.
-  PickerPopup.RegisterEscape(TwoFieldDialog.FRAME_NAME, dialog)
+  PopupEscape.RegisterEscape(TwoFieldDialog.FRAME_NAME, dialog)
   dialog:Hide()
   return dialog
 end

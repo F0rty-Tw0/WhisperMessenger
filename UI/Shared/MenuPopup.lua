@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 
 -- WM's own right-click popup. On WoW: Forever the game's menus taint when
 -- addon code opens them, so the window draws this instead. Callers fill it
@@ -265,7 +266,7 @@ function MenuPopup.Open(anchorFrame, build, options)
   assignRegions()
   layoutRows(fillTexts())
   place(anchorFrame, atCursor)
-  PickerPopup.RegisterEscape(MENU_NAME, frame)
+  PopupEscape.RegisterEscape(MENU_NAME, frame)
   hookAnchor(anchorFrame)
   currentAnchor = anchorFrame
   clickSafeAnchor = not atCursor and anchorFrame or nil

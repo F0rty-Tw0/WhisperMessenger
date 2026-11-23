@@ -96,7 +96,9 @@ local function confirmShorter(prompt, label, language, onAccept)
   if type(_G.StaticPopup_Show) ~= "function" then
     return
   end
-  _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
+  if type(_G.StaticPopupDialogs) ~= "table" then
+    _G.StaticPopupDialogs = {}
+  end
   _G.StaticPopupDialogs[RetentionRow.CONFIRM_DIALOG] = {
     text = string.format(Localization.Text(prompt, language), label),
     -- The game's own localized labels.

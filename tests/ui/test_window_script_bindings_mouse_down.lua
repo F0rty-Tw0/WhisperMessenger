@@ -180,7 +180,7 @@ return function()
   -- The reaction picker and dialogs are parented to UIParent, outside the
   -- window, but they belong to it: a click there is a click on the window.
   do
-    local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+    local PopupEscape = require("WhisperMessenger.UI.Shared.PopupEscape")
     local saved = { _G.UISpecialFrames, _G.GetMouseFoci, _G.WhisperMessengerTestOwnPopup }
     local factory = FakeUI.NewFactory()
     local frame = bindFrame(false, factory)
@@ -193,7 +193,7 @@ return function()
       return { factory.CreateFrame("Button", nil, popup) }
     end)
     local ok, err = pcall(function()
-      PickerPopup.RegisterEscape("WhisperMessengerTestOwnPopup")
+      PopupEscape.RegisterEscape("WhisperMessengerTestOwnPopup")
       frame:Show()
       frame.scripts.OnEvent(frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
       assert(frame.frameStrata == "HIGH", "a click on the window's own popup must keep it in front; got " .. tostring(frame.frameStrata))

@@ -5,6 +5,7 @@ end
 
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 local Assets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
@@ -150,7 +151,7 @@ local function createPicker(factory)
 
   frame._wmReactionPicker = true
   rawset(_G, PICKER_FRAME_NAME, frame)
-  PickerPopup.RegisterEscape(PICKER_FRAME_NAME, frame)
+  PopupEscape.RegisterEscape(PICKER_FRAME_NAME, frame)
   frame:Hide()
   return frame
 end

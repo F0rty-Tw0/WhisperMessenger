@@ -18,7 +18,9 @@ function ReloadPrompt.Show(text, onCancel, onAccept)
     end
     return
   end
-  _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
+  if type(_G.StaticPopupDialogs) ~= "table" then
+    _G.StaticPopupDialogs = {}
+  end
   _G.StaticPopupDialogs[ReloadPrompt.DIALOG] = {
     text = text,
     -- The game's own localized labels.

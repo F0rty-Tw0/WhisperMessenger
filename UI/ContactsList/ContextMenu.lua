@@ -11,7 +11,7 @@ local MenuEntries = ns.ContactsListMenuEntries or require("WhisperMessenger.UI.C
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local GuildInviteMenuEntry = ns.ContactsListGuildInviteMenuEntry or require("WhisperMessenger.UI.ContactsList.GuildInviteMenuEntry")
-local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 local ProtectedMenuEntries = ns.ContactsListProtectedMenuEntries or require("WhisperMessenger.UI.ContactsList.ProtectedMenuEntries")
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local MenuPopup = ns.MenuPopup or require("WhisperMessenger.UI.Shared.MenuPopup")
@@ -291,7 +291,7 @@ end
 function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
   local opened = openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
   if opened then
-    PickerPopup.ReportMenuShown()
+    PopupEscape.ReportMenuShown()
   end
   return opened
 end

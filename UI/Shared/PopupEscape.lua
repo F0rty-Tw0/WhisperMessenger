@@ -63,7 +63,9 @@ function PopupEscape.RegisterEscape(frameName, frame)
   if not known then
     table.insert(escapeFrameNames, frameName)
   end
-  _G.UISpecialFrames = _G.UISpecialFrames or {}
+  if type(_G.UISpecialFrames) ~= "table" then
+    _G.UISpecialFrames = {}
+  end
   for _, name in ipairs(_G.UISpecialFrames) do
     if name == frameName then
       return

@@ -2,7 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local TwoFieldDialog = require("WhisperMessenger.UI.Shared.TwoFieldDialog")
 local StyledTextInputPopup = require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
-local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = require("WhisperMessenger.UI.Shared.PopupEscape")
 
 -- A popup with two labelled inputs: an optional first field and a required
 -- second one. Enter and Tab move between them, Enter on the second accepts,
@@ -52,7 +52,7 @@ return function()
     local savedSpecial = _G.UISpecialFrames
     _G.UISpecialFrames = {}
     local reported = nil
-    PickerPopup.SetEscapeFrameShownHandler(function(shown)
+    PopupEscape.SetEscapeFrameShownHandler(function(shown)
       reported = shown
     end)
     local ok, err = pcall(function()
@@ -60,7 +60,7 @@ return function()
       assert(_G.UISpecialFrames[1] == TwoFieldDialog.FRAME_NAME, "dialog must close on ESC")
       assert(reported == dialog, "opening the dialog must take ESC from the messenger")
     end)
-    PickerPopup.SetEscapeFrameShownHandler(nil)
+    PopupEscape.SetEscapeFrameShownHandler(nil)
     _G.UISpecialFrames = savedSpecial
     assert(ok, err)
   end

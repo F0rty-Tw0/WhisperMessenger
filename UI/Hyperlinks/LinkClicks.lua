@@ -42,12 +42,12 @@ function LinkClicks.CreateLinkFrame(factory, frameType, name, parent, extraTempl
 end
 
 local function resolveManualCopy()
-  if type(ns.ChatBubbleContextMenuManualCopy) == "table" then
-    return ns.ChatBubbleContextMenuManualCopy
+  if type(ns.ChatBubbleContextMenuManualCopyClipboard) == "table" then
+    return ns.ChatBubbleContextMenuManualCopyClipboard
   end
 
   if type(require) == "function" then
-    local ok, loaded = pcall(require, "WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
+    local ok, loaded = pcall(require, "WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.Clipboard")
     if ok and type(loaded) == "table" then
       return loaded
     end
