@@ -158,6 +158,28 @@ local function wrapTests()
     assert(#ctx.native.calls == before, "a refresh with no flip calls nothing")
   end
 
+  -- test_theme_before_game_side_exists_is_replayed_on_build
+  do
+    local ctx = wrapPair(true)
+    ctx.wrapped.applyTheme("dark", COLORS)
+    refresh(false)
+    local themed
+    for _, call in ipairs(ctx.native.calls) do
+      if call.name == "applyTheme" then
+        themed = call
+      end
+    end
+    assert(themed and themed[1] == "dark" and themed[2] == COLORS, "theme and colors replayed on build")
+  end
+
+  -- test_options_list_with_pad_on_is_replayed_on_first_show
+  do
+    local ctx = wrapPair(true)
+    ctx.wrapped.setOptionsList(LIST)
+    refresh(false)
+    assert(called(ctx.native, "setOptionsList", LIST), "list replayed on the first show")
+  end
+
   -- test_native_build_failure_keeps_own
   do
     local ctx = wrapPair(false, { fail = true })
