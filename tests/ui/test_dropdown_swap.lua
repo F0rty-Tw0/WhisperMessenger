@@ -3,76 +3,15 @@
 -- pad UI is on, the game's while it is off.
 local FakeUI = require("tests.helpers.fake_ui")
 local Flavor = require("tests.helpers.flavor")
+local SwapPair = require("tests.helpers.dropdown_swap_pair")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local NativeDropdown = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.NativeDropdown")
 local DropdownSwap = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSwap")
 
-local function recorder(calls, name)
-  return function(...)
-    calls[#calls + 1] = { name = name, ... }
-  end
-end
-
--- Handle like DropdownSelector's and NativeDropdown's; setters record calls.
--- Fake frames start hidden, so show row, label and button as WoW would.
-local function fakeHandle(factory, parent)
-  local row = factory.CreateFrame("Frame", nil, parent)
-  local calls = {}
-  local handle = {
-    row = row,
-    label = row:CreateFontString(nil, "OVERLAY"),
-    button = factory.CreateFrame("Button", nil, row),
-    calls = calls,
-    setSelected = recorder(calls, "setSelected"),
-    setOptionsList = recorder(calls, "setOptionsList"),
-    setWidth = recorder(calls, "setWidth"),
-    applyTheme = recorder(calls, "applyTheme"),
-  }
-  handle.row:Show()
-  handle.label:Show()
-  handle.button:Show()
-  return handle
-end
-
-local function called(handle, name, value)
-  for _, call in ipairs(handle.calls) do
-    if call.name == name and call[1] == value then
-      return true
-    end
-  end
-  return false
-end
-
--- Wraps a fake own handle with the pad UI `padOn`; `opts.fail` makes the
--- game's dropdown fail to build.
-local function wrapPair(padOn, opts)
-  opts = opts or {}
-  local factory = FakeUI.NewFactory()
-  local parent = factory.CreateFrame("Frame", "UIParent", nil)
-  local ctx = { own = fakeHandle(factory, parent), builds = 0, closes = 0, changes = {} }
-  local function buildNative()
-    ctx.builds = ctx.builds + 1
-    if opts.fail then
-      return nil
-    end
-    ctx.native = fakeHandle(factory, ctx.own.row)
-    return ctx.native
-  end
-  local function onChange(key)
-    ctx.changes[#ctx.changes + 1] = key
-  end
-  local function closeOwnList()
-    ctx.closes = ctx.closes + 1
-  end
-  Flavor.WithPadUI(padOn, function()
-    ctx.wrapped = DropdownSwap.Wrap(ctx.own, buildNative, onChange, closeOwnList, opts.initial)
-  end)
-  return ctx
-end
-
-local function refresh(padOn)
-  Flavor.WithPadUI(padOn, DropdownSwap.Refresh)
-end
+local fakeHandle = SwapPair.FakeHandle
+local called = SwapPair.Called
+local wrapPair = SwapPair.Wrap
+local refresh = SwapPair.Refresh
 
 local function onForever(fn)
   Flavor.With(true, true, fn)
