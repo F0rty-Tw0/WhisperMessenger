@@ -1,6 +1,7 @@
--- On WoW: Forever a right-click on one of our encoded player name links opens
--- WM's own contact popup; Blizzard's chat-frame handler would open a Blizzard
--- menu there, which taints from addon code. Every other click is unchanged.
+-- On WoW: Forever with the gamepad UI on a right-click on one of our encoded
+-- player name links opens WM's own contact popup; Blizzard's chat-frame
+-- handler would open a Blizzard menu there, which taints from addon code.
+-- With the mouse, and for every other click, Blizzard's handler runs.
 local FakeUI = require("tests.helpers.fake_ui")
 local World = require("tests.helpers.menu_popup_world")
 local BannedMenuApis = require("tests.helpers.banned_menu_apis")
@@ -80,9 +81,16 @@ local function clickPlain(factory, link, button)
   return frame
 end
 
+-- Runs fn() on Forever with the gamepad UI on.
+local function onForeverPad(fn)
+  Flavor.With(true, true, function()
+    Flavor.WithPadUI(true, fn)
+  end)
+end
+
 local function runSpyCases(factory)
   -- test_forever_right_click_on_player_link_opens_contact_menu
-  Flavor.With(true, true, function()
+  onForeverPad(function()
     withMenuSpy(function(opened)
       BannedMenuApis.AssertNone(function()
         local frame = clickPlain(factory, LINK, "RightButton")
@@ -98,7 +106,7 @@ local function runSpyCases(factory)
   end)
 
   -- test_forever_contact_menu_opens_at_the_cursor
-  Flavor.With(true, true, function()
+  onForeverPad(function()
     withMenuSpy(function(opened)
       clickPlain(factory, LINK, "RightButton")
       local options = opened[1] and opened[1].options
@@ -107,7 +115,7 @@ local function runSpyCases(factory)
   end)
 
   -- test_whisper_chat_type_is_dropped
-  Flavor.With(true, true, function()
+  onForeverPad(function()
     withMenuSpy(function(opened)
       BannedMenuApis.AssertNone(function()
         clickPlain(factory, WHISPER_LINK, "RightButton")
@@ -122,7 +130,7 @@ local function runSpyCases(factory)
   end)
 
   -- test_secure_frame_post_hook_opens_contact_menu
-  Flavor.With(true, true, function()
+  onForeverPad(function()
     withMenuSpy(function(opened)
       BannedMenuApis.AssertNone(function()
         local frame = newTemplatedFrame(factory)
@@ -136,7 +144,7 @@ local function runSpyCases(factory)
   end)
 
   -- test_forever_left_click_unchanged
-  Flavor.With(true, true, function()
+  onForeverPad(function()
     withMenuSpy(function(opened)
       withChatHandler(function(mixinCalls)
         clickPlain(factory, LINK, "LeftButton")
@@ -157,8 +165,21 @@ local function runSpyCases(factory)
     end)
   end)
 
-  -- test_player_gm_link_falls_through
+  -- test_forever_mouse_right_click_falls_through
   Flavor.With(true, true, function()
+    Flavor.WithPadUI(false, function()
+      withChatHandler(function(mixinCalls)
+        withMenuSpy(function(opened)
+          clickPlain(factory, LINK, "RightButton")
+          assert(#opened == 0, "pad off: no contact menu, got " .. #opened)
+          assert(#mixinCalls == 1, "pad off: the chat handler runs, ran " .. #mixinCalls)
+        end)
+      end)
+    end)
+  end)
+
+  -- test_player_gm_link_falls_through
+  onForeverPad(function()
     withMenuSpy(function(opened)
       withChatHandler(function(mixinCalls)
         clickPlain(factory, GM_LINK, "RightButton")
@@ -169,8 +190,9 @@ local function runSpyCases(factory)
   end)
 end
 
--- Runs fn(frame) on Forever in a popup world: frame is a shown link frame
--- bound by BindClick, the cursor sits at 300, 500 and no click is modified.
+-- Runs fn(frame) on Forever with the gamepad UI on in a popup world: frame is
+-- a shown link frame bound by BindClick, the cursor sits at 300, 500 and no
+-- click is modified.
 local function withFullPath(fn)
   local saved = { IsModifiedClick = rawget(_G, "IsModifiedClick"), GetCursorPosition = rawget(_G, "GetCursorPosition") }
   rawset(_G, "IsModifiedClick", function()
@@ -179,7 +201,7 @@ local function withFullPath(fn)
   rawset(_G, "GetCursorPosition", function()
     return 300, 500
   end)
-  local ok, err = pcall(Flavor.With, true, true, function()
+  local ok, err = pcall(onForeverPad, function()
     World.With(function(factory)
       local frame = factory.CreateFrame("Frame", nil, _G.UIParent)
       frame:Show()

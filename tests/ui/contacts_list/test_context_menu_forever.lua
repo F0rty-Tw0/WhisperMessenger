@@ -6,8 +6,9 @@ local Localization = require("WhisperMessenger.Locale.Localization")
 local MenuPopup = require("WhisperMessenger.UI.Shared.MenuPopup")
 local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
 
--- On WoW: Forever the contact and group menus are WM's own popup; Retail
--- keeps Blizzard's player menu and MenuUtil.
+-- On WoW: Forever with the gamepad UI on the contact and group menus are
+-- WM's own popup; Retail, and Forever with the mouse, keep Blizzard's player
+-- menu and MenuUtil.
 
 local STUBBED = { "Menu", "MenuUtil", "UnitPopup_OpenMenu" }
 
@@ -30,26 +31,32 @@ local function hasTitle(labels)
   return false
 end
 
--- Runs fn(anchor) on Forever in a popup world; no Blizzard menu may be hit.
+-- Runs fn(anchor) on Forever with the pad UI on in a popup world; no Blizzard
+-- menu may be hit.
 local function onForever(fn)
   Flavor.With(true, true, function()
-    World.With(function(_factory, anchor)
-      BannedMenuApis.AssertNone(function()
-        fn(anchor)
+    Flavor.WithPadUI(true, function()
+      World.With(function(_factory, anchor)
+        BannedMenuApis.AssertNone(function()
+          fn(anchor)
+        end)
       end)
     end)
   end)
 end
 
--- Runs fn(anchor) on Retail in a popup world, restoring the menu globals.
-local function onRetail(fn)
+-- Runs fn(anchor) in a popup world on Retail (isForever false) or on Forever
+-- with the mouse (isForever true, pad UI off), restoring the menu globals.
+local function onBlizzardMenus(isForever, fn)
   local saved = {}
   for _, name in ipairs(STUBBED) do
     saved[name] = rawget(_G, name)
   end
-  local ok, err = pcall(Flavor.With, true, false, function()
-    World.With(function(_factory, anchor)
-      fn(anchor)
+  local ok, err = pcall(Flavor.With, true, isForever, function()
+    Flavor.WithPadUI(false, function()
+      World.With(function(_factory, anchor)
+        fn(anchor)
+      end)
     end)
   end)
   for _, name in ipairs(STUBBED) do
@@ -111,35 +118,36 @@ local function runForeverCases()
   end)
 end
 
-local function runRetailCases()
-  -- test_retail_contact_still_opens_unit_popup
-  onRetail(function(anchor)
+-- test_retail_contact_still_opens_unit_popup, test_forever_pad_off_contact_opens_unit_popup
+-- test_retail_group_still_uses_menu_util, test_forever_pad_off_group_uses_menu_util
+local function runBlizzardMenuCases(label, isForever)
+  onBlizzardMenus(isForever, function(anchor)
     local which
     rawset(_G, "Menu", { ModifyMenu = noop })
     rawset(_G, "UnitPopup_OpenMenu", function(menuName)
       which = menuName
     end)
-    assert(ContextMenu.Open(contact(), anchor, noop, noop) == true, "retail menu opens")
-    assert(which == "FRIEND", "retail opens the FRIEND player menu, got " .. tostring(which))
-    assert(not MenuPopup.IsShown(), "retail never shows WM's popup")
+    assert(ContextMenu.Open(contact(), anchor, noop, noop) == true, label .. ": menu opens")
+    assert(which == "FRIEND", label .. ": opens the FRIEND player menu, got " .. tostring(which))
+    assert(not MenuPopup.IsShown(), label .. ": never shows WM's popup")
   end)
 
-  -- test_retail_group_still_uses_menu_util
-  onRetail(function(anchor)
+  onBlizzardMenus(isForever, function(anchor)
     local created = 0
     rawset(_G, "MenuUtil", {
       CreateContextMenu = function()
         created = created + 1
       end,
     })
-    assert(ContextMenu.Open(group(), anchor, nil, noop) == true, "retail group menu opens")
-    assert(created == 1, "MenuUtil.CreateContextMenu called once, got " .. created)
-    assert(not MenuPopup.IsShown(), "retail never shows WM's popup")
+    assert(ContextMenu.Open(group(), anchor, nil, noop) == true, label .. ": group menu opens")
+    assert(created == 1, label .. ": MenuUtil.CreateContextMenu called once, got " .. created)
+    assert(not MenuPopup.IsShown(), label .. ": never shows WM's popup")
   end)
 end
 
 return function()
   Localization.Configure({ language = "enUS" })
   runForeverCases()
-  runRetailCases()
+  runBlizzardMenuCases("retail", false)
+  runBlizzardMenuCases("forever with the mouse", true)
 end

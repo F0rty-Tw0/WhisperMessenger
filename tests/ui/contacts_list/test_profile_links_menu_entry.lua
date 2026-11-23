@@ -123,10 +123,12 @@ return function()
 
   -- test_forever_hides_submenu
   Flavor.With(true, true, function()
-    World.With(function(_factory, popupAnchor)
-      ContextMenu.Open(arthas, popupAnchor, nil, onUpdatePrefs)
-      assert(MenuPopup.IsShown(), "WoW: Forever opens WM's own popup")
-      assert(Probe.Find(SUBMENU) == nil, "no submenu on WoW: Forever")
+    Flavor.WithPadUI(true, function()
+      World.With(function(_factory, popupAnchor)
+        ContextMenu.Open(arthas, popupAnchor, nil, onUpdatePrefs)
+        assert(MenuPopup.IsShown(), "WoW: Forever with the pad opens WM's own popup")
+        assert(Probe.Find(SUBMENU) == nil, "no submenu on WoW: Forever")
+      end)
     end)
   end)
 

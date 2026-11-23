@@ -8,21 +8,48 @@ local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
 local HeaderMenu = require("WhisperMessenger.UI.ConversationPane.HeaderMenu")
 local PlayerMenu = require("WhisperMessenger.UI.ChatBubble.PlayerMenu")
 
--- On WoW: Forever the conversation header and a chat bubble's sender open
--- WM's own popup too, never a Blizzard menu.
+-- On WoW: Forever with the gamepad UI on the conversation header and a chat
+-- bubble's sender open WM's own popup too, never a Blizzard menu. With the
+-- mouse they open Blizzard's player menu, as on Retail.
+
+local STUBBED = { "Menu", "UnitPopup_OpenMenu" }
 
 local function noop() end
 
--- Runs fn(factory, anchor) on Forever in a popup world with every Blizzard
--- menu API spied on; none may be hit.
+-- Runs fn(factory, anchor) on Forever with the pad UI on in a popup world
+-- with every Blizzard menu API spied on; none may be hit.
 local function onForever(fn)
   Flavor.With(true, true, function()
-    World.With(function(factory, anchor)
-      BannedMenuApis.AssertNone(function()
-        fn(factory, anchor)
+    Flavor.WithPadUI(true, function()
+      World.With(function(factory, anchor)
+        BannedMenuApis.AssertNone(function()
+          fn(factory, anchor)
+        end)
       end)
     end)
   end)
+end
+
+-- Runs fn(factory) on Forever with the pad UI off in a popup world,
+-- restoring the menu globals fn stubs.
+local function onForeverMouse(fn)
+  local saved = {}
+  for _, name in ipairs(STUBBED) do
+    saved[name] = rawget(_G, name)
+  end
+  local ok, err = pcall(Flavor.With, true, true, function()
+    Flavor.WithPadUI(false, function()
+      World.With(function(factory)
+        fn(factory)
+      end)
+    end)
+  end)
+  for _, name in ipairs(STUBBED) do
+    rawset(_G, name, saved[name])
+  end
+  if not ok then
+    error(err, 0)
+  end
 end
 
 -- A right-click on a shown conversation header bound to a whisper with Arthas.
@@ -57,6 +84,18 @@ return function()
     assert(Probe.Labels()[1] == "title:Arthas", "titled with the contact, got " .. tostring(Probe.Labels()[1]))
     assert(Probe.Find("Mute") ~= nil, "header popup has Mute")
     assert(Probe.Find("Open chat") == nil, "header popup has no Open chat")
+  end)
+
+  -- test_header_right_click_with_the_mouse_opens_blizzard_player_menu
+  onForeverMouse(function(factory)
+    local which
+    rawset(_G, "Menu", { ModifyMenu = noop })
+    rawset(_G, "UnitPopup_OpenMenu", function(menuName)
+      which = menuName
+    end)
+    rightClickHeader(factory)
+    assert(which == "FRIEND", "pad off: header opens the FRIEND player menu, got " .. tostring(which))
+    assert(not MenuPopup.IsShown(), "pad off: no WM popup")
   end)
 
   -- test_header_popup_opens_at_the_cursor

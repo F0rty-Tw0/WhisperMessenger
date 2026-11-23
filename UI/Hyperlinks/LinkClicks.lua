@@ -132,14 +132,14 @@ local function blizzardChatClickHandler()
   return mixin.OnHyperlinkClick
 end
 
--- On Forever a right-clicked player name opens WM's own contact menu:
--- Blizzard's chat-frame handler would open a Blizzard menu, which taints from
--- addon code there. The link is player:name:lineID:chatType:chatTarget, and a
+-- On Forever with the gamepad UI on a right-clicked player name opens WM's
+-- own contact menu: Blizzard's chat-frame handler would open a Blizzard menu,
+-- which taints from addon code there. The link is player:name:lineID:chatType:chatTarget, and a
 -- name may hold spaces. The menu opens at the cursor: the frame can be a
 -- whole transcript, far taller than the name. Returns true when the menu
 -- took the click.
 local function openContactMenu(frame, link, button)
-  if not FlavorCompat.isForever or button ~= "RightButton" or type(link) ~= "string" then
+  if not FlavorCompat.UsesOwnMenus() or button ~= "RightButton" or type(link) ~= "string" then
     return false
   end
   local name, lineID, chatType = string.match(link, "^player:([^:]+):?([^:]*):?([^:]*)")
@@ -234,8 +234,8 @@ end
 -- item click in combat then made ShowUIPanel print "Interface action
 -- failed"). Clicks go to that handler, except a shift-clicked player name for
 -- the focused composer, a plain tooltip-link click in combat (CombatItemRef)
--- and, on Forever, a right-clicked player name (openContactMenu). Without the
--- handler, the click goes through HandleClick.
+-- and, on Forever with the gamepad UI on, a right-clicked player name
+-- (openContactMenu). Without the handler, the click goes through HandleClick.
 function LinkClicks.BindClick(frame, onLinkClick)
   if frame._wmSecureLinks then
     frame._wmOnLinkClick = onLinkClick
