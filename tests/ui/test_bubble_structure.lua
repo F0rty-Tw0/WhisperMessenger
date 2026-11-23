@@ -23,6 +23,43 @@ return function()
     assert(#frame._bgCorners == 4, "expected 4 corners cached")
   end
 
+  -- test_apply_color_edges_the_native_backdrop_in_a_lighter_fill
+  do
+    local fill, border = {}, {}
+    local frame = {
+      _bgFills = {},
+      _bgCorners = {},
+      _nativeBackdrop = {
+        SetBackdropColor = function(_self, r, g, b, a)
+          fill = { r, g, b, a }
+        end,
+        SetBackdropBorderColor = function(_self, r, g, b, a)
+          border = { r, g, b, a }
+        end,
+      },
+    }
+
+    BubbleStructure.applyColor(frame, { 0.2, 0.4, 0, 1 }, 0.5)
+
+    assert(fill[1] == 0.2 and fill[2] == 0.4 and fill[3] == 0 and fill[4] == 0.5, "fill takes the colour and the alpha scale")
+    local function near(a, b)
+      return math.abs(a - b) < 1e-9
+    end
+    assert(near(border[1], 0.48) and near(border[2], 0.61) and near(border[3], 0.35), "border is the fill lightened by 0.35")
+    assert(border[4] == 0.5, "border keeps the fill alpha")
+  end
+
+  -- test_apply_color_tints_rounded_parts
+  do
+    local frame = factory.CreateFrame("Frame", nil, nil)
+    BubbleStructure.createStructure(frame)
+
+    BubbleStructure.applyColor(frame, { 0.1, 0.2, 0.3, 0.8 })
+
+    local color = frame._bgCorners[1].vertexColor or {}
+    assert(color[1] == 0.1 and color[2] == 0.2 and color[3] == 0.3 and color[4] == 0.8, "corners take the colour")
+  end
+
   -- test_create_structure_sets_hyperlink_scripts
   do
     local frame = factory.CreateFrame("Frame", nil, nil)
