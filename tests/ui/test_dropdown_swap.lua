@@ -12,6 +12,15 @@ local fakeHandle = SwapPair.FakeHandle
 local called = SwapPair.Called
 local wrapPair = SwapPair.Wrap
 local refresh = SwapPair.Refresh
+local last = SwapPair.Last
+
+-- An onChange that puts the pair back on `key`, like a setting that waits
+-- for the player to confirm.
+local function revertTo(key)
+  return function(ctx)
+    ctx.wrapped.setSelected(key)
+  end
+end
 
 local function onForever(fn)
   Flavor.With(true, true, fn)
@@ -88,6 +97,24 @@ local function wrapTests()
     ctx.wrapped.picked("native", "d")
     assert(#ctx.changes == 1 and ctx.changes[1] == "d", "onChange once with the picked key")
     assert(called(ctx.own, "setSelected", "d"), "own side mirrors the pick")
+  end
+
+  -- test_revert_in_on_change_after_game_pick_wins_on_both_sides
+  do
+    local ctx = wrapPair(false, { onChange = revertTo("keep") })
+    ctx.wrapped.picked("native", "d")
+    assert(last(ctx.own, "setSelected") == "keep", "own side keeps the reverted key")
+    assert(last(ctx.native, "setSelected") == "keep", "game side keeps the reverted key")
+  end
+
+  -- test_revert_in_on_change_after_own_pick_wins_on_both_sides
+  do
+    local ctx = wrapPair(false, { onChange = revertTo("keep") })
+    refresh(true)
+    ctx.wrapped.picked("own", "e")
+    refresh(false)
+    assert(last(ctx.own, "setSelected") == "keep", "own side keeps the reverted key")
+    assert(last(ctx.native, "setSelected") == "keep", "game side shows the reverted key")
   end
 
   -- test_mirror_does_not_show_hidden_side

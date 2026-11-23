@@ -107,19 +107,20 @@ function DropdownSwap.Wrap(ownHandle, buildNative, onChange, closeOwnList, initi
       pair.theme, pair.colors, pair.themed = theme, colors, true
       forward(pair, "applyTheme", theme, colors)
     end,
-    -- A pick on one side: report it once and mirror it on the other side,
-    -- which stays hidden.
+    -- A pick on one side: mirror it on the other side, which stays hidden,
+    -- then report it once. Mirroring first lets onChange put the handle back
+    -- on another key (setSelected) without the mirror overwriting it.
     picked = function(side, key)
       pair.key = key
-      if onChange then
-        onChange(key)
-      end
       local other = ownHandle
       if side == "own" then
         other = pair.native
       end
       if other then
         other.setSelected(key)
+      end
+      if onChange then
+        onChange(key)
       end
     end,
   }
