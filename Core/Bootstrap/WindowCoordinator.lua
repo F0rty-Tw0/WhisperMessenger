@@ -311,8 +311,12 @@ function WindowCoordinator.Create(options)
   }).schedule
   coordinator.scheduleWhisperRefresh = IncomingRefresh.NextFrame({
     cTimer = cTimer,
-    refreshWindow = function(focusKey)
-      return coordinator.refreshWindow(focusKey)
+    -- An owed Battle.net repaint needs every card redrawn, so it stays full.
+    refreshWindow = function(focusKey, dirtyKeys)
+      if runtime.bnetRepaintPending then
+        dirtyKeys = nil
+      end
+      return coordinator.refreshWindow(focusKey, dirtyKeys)
     end,
     getSelectedKey = getSelectedKey,
     guard = options.guardWhisperRefresh,
