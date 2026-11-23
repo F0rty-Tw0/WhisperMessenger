@@ -37,7 +37,7 @@ function SnapshotCache.Get(cache, conversationKey, conversation, settings, dirty
       entry = {}
       cache[conversationKey] = entry
     end
-    PerfCounters.Increment("snapshotBuilds")
+    PerfCounters.IncrementBySource("snapshotBuilds")
     entry.conversation = conversation
     entry.base = ConversationSnapshot.Build(conversationKey, conversation, settings)
     if entry.card == nil then
