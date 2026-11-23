@@ -194,6 +194,20 @@ return function()
     assert(point[5] > 0, "a gap above the holder")
   end
 
+  -- test_set_lift_raises_the_hint_by_the_lift
+  do
+    local r = rig()
+    local _, _, _, _, baseY = r.hint.label:GetPoint()
+    r.hint.setLift(24)
+    local point, anchor, anchorPoint, _, y = r.hint.label:GetPoint()
+    assert(point == "BOTTOMRIGHT" and anchor == r.box and anchorPoint == "TOPRIGHT", "still on the holder's corner")
+    assert(y == baseY + 24, "raised by the lift, got " .. tostring(y))
+    assert(#r.hint.label.points == 1, "one anchor, not a stack")
+    r.hint.setLift(0)
+    _, _, _, _, y = r.hint.label:GetPoint()
+    assert(y == baseY, "back in place with no lift, got " .. tostring(y))
+  end
+
   -- test_refresh_theme_repaints_the_hint
   do
     local r = rig()

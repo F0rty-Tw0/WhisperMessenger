@@ -11,7 +11,8 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 -- Controller hint above the message box: "<A> Send   <B> Back". It shows
 -- when the cursor enters the box with the gamepad UI on and hides when the
 -- cursor leaves; nothing else changes it. Focus is hooked, never set: the
--- window hooks the same events.
+-- window hooks the same events. setLift raises it over a strip shown just
+-- above the box.
 local ComposerPadHint = {}
 
 -- The chat's edge shadow sits 20 levels above its scroll frame, one level
@@ -67,7 +68,12 @@ function ComposerPadHint.Create(factory, pane, parts)
   local label = frame:CreateFontString(nil, "OVERLAY")
   UIHelpers.setFontObject(label, Theme.FONTS.icon_label)
   UIHelpers.setTextColor(label, Theme.COLORS.text_secondary)
-  label:SetPoint("BOTTOMRIGHT", box, "TOPRIGHT", 0, GAP_ABOVE_BOX)
+  -- lift: extra height to clear a strip drawn above the box (0 = none).
+  local function setLift(lift)
+    label:ClearAllPoints()
+    label:SetPoint("BOTTOMRIGHT", box, "TOPRIGHT", 0, GAP_ABOVE_BOX + lift)
+  end
+  setLift(0)
 
   local function hintText()
     local size = pictureSize(label)
@@ -96,7 +102,7 @@ function ComposerPadHint.Create(factory, pane, parts)
     frame:Hide()
   end)
 
-  local hint = { frame = frame, label = label, refreshTheme = refreshTheme }
+  local hint = { frame = frame, label = label, refreshTheme = refreshTheme, setLift = setLift }
 
   return hint
 end
