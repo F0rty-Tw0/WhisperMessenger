@@ -14,6 +14,9 @@ local wrapPair = SwapPair.Wrap
 local refresh = SwapPair.Refresh
 local last = SwapPair.Last
 
+local LIST = { { key = "a", label = "A" } }
+local COLORS = { text = { 1, 1, 1, 1 } }
+
 -- An onChange that puts the pair back on `key`, like a setting that waits
 -- for the player to confirm.
 local function revertTo(key)
@@ -117,13 +120,42 @@ local function wrapTests()
     assert(last(ctx.native, "setSelected") == "keep", "game side shows the reverted key")
   end
 
-  -- test_mirror_does_not_show_hidden_side
+  -- test_own_pick_reaches_game_side_when_it_shows
   do
     local ctx = wrapPair(false)
     refresh(true)
     ctx.wrapped.picked("own", "e")
-    assert(called(ctx.native, "setSelected", "e"), "game side mirrors the pick")
-    assert(not ctx.native.row:IsShown(), "mirror leaves the game dropdown hidden")
+    assert(not ctx.native.row:IsShown(), "the pick leaves the game dropdown hidden")
+    refresh(false)
+    assert(last(ctx.native, "setSelected") == "e", "game side shows the pick once it shows")
+  end
+
+  -- test_hidden_game_side_gets_no_calls
+  do
+    local ctx = wrapPair(false)
+    refresh(true)
+    local before = #ctx.native.calls
+    ctx.wrapped.setSelected("f")
+    ctx.wrapped.setOptionsList(LIST)
+    ctx.wrapped.setWidth(250)
+    ctx.wrapped.applyTheme("dark", COLORS)
+    ctx.wrapped.picked("own", "g")
+    assert(#ctx.native.calls == before, "no call reaches the hidden game dropdown")
+    assert(last(ctx.own, "setWidth") == 250, "own side still gets every call")
+    refresh(false)
+    assert(last(ctx.native, "setSelected") == "g", "shown game side gets the latest key")
+    assert(last(ctx.native, "setOptionsList") == LIST, "shown game side gets the latest list")
+    assert(last(ctx.native, "setWidth") == 250, "shown game side gets the latest width")
+    assert(last(ctx.native, "applyTheme") == "dark", "shown game side gets the latest theme")
+  end
+
+  -- test_shown_game_side_is_not_replayed_twice
+  do
+    local ctx = wrapPair(false)
+    ctx.wrapped.setWidth(260)
+    local before = #ctx.native.calls
+    refresh(false)
+    assert(#ctx.native.calls == before, "a refresh with no flip calls nothing")
   end
 
   -- test_native_build_failure_keeps_own

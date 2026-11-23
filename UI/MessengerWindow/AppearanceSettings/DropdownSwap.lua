@@ -23,7 +23,7 @@ end
 
 -- Builds the game's side once; a failed build marks the pair and never
 -- retries. The game's button takes the own button's place, under the own
--- label, and gets every value the handle was given so far.
+-- label.
 local function ensureNative(pair)
   if pair.native or pair.nativeFailed then
     return pair.native
@@ -36,6 +36,12 @@ local function ensureNative(pair)
   native.label:Hide()
   native.button:ClearAllPoints()
   native.button:SetPoint("TOPLEFT", pair.own.button, "TOPLEFT", 0, 0)
+  pair.native = native
+  return native
+end
+
+-- Gives the game's side every value the handle got while it was hidden.
+local function replay(pair, native)
   if pair.key ~= nil then
     native.setSelected(pair.key)
   end
@@ -48,10 +54,11 @@ local function ensureNative(pair)
   if pair.themed then
     native.applyTheme(pair.theme, pair.colors)
   end
-  pair.native = native
-  return native
 end
 
+-- With the gamepad UI on no game dropdown is driven: the game's side gets
+-- calls only while it shows (pair.nativeShown) and catches up each time it
+-- shows again.
 local function showSide(pair)
   local native = nil
   if not FlavorCompat.UsesOwnMenus() then
@@ -63,18 +70,23 @@ local function showSide(pair)
     end
     pair.own.button:Hide()
     native.row:Show()
+    if not pair.nativeShown then
+      pair.nativeShown = true
+      replay(pair, native)
+    end
     return
   end
+  pair.nativeShown = false
   pair.own.button:Show()
   if pair.native then
     pair.native.row:Hide()
   end
 end
 
--- Calls `method` on the own side and on the game's side if built.
+-- Calls `method` on the own side and on the game's side if it shows.
 local function forward(pair, method, ...)
   pair.own[method](...)
-  if pair.native then
+  if pair.nativeShown then
     pair.native[method](...)
   end
 end
@@ -107,17 +119,15 @@ function DropdownSwap.Wrap(ownHandle, buildNative, onChange, closeOwnList, initi
       pair.theme, pair.colors, pair.themed = theme, colors, true
       forward(pair, "applyTheme", theme, colors)
     end,
-    -- A pick on one side: mirror it on the other side, which stays hidden,
-    -- then report it once. Mirroring first lets onChange put the handle back
+    -- A pick on one side: mirror it on the other side, which stays hidden
+    -- (a hidden game side catches up when it shows), then report it once. Mirroring first lets onChange put the handle back
     -- on another key (setSelected) without the mirror overwriting it.
     picked = function(side, key)
       pair.key = key
-      local other = ownHandle
-      if side == "own" then
-        other = pair.native
-      end
-      if other then
-        other.setSelected(key)
+      if side ~= "own" then
+        ownHandle.setSelected(key)
+      elseif pair.nativeShown then
+        pair.native.setSelected(key)
       end
       if onChange then
         onChange(key)
