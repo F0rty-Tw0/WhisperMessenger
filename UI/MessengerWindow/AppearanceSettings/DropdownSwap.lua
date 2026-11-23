@@ -120,15 +120,14 @@ function DropdownSwap.Wrap(ownHandle, buildNative, onChange, closeOwnList, initi
       pair.theme, pair.colors, pair.themed = theme, colors, true
       forward(pair, "applyTheme", theme, colors)
     end,
-    -- A pick on one side: mirror it on the other side, which stays hidden
-    -- (a hidden game side catches up when it shows), then report it once. Mirroring first lets onChange put the handle back
-    -- on another key (setSelected) without the mirror overwriting it.
+    -- A game-side pick is mirrored on the own side, then reported once:
+    -- mirroring first lets onChange setSelected another key without the
+    -- mirror overwriting it. An own-side pick needs no mirror: the game
+    -- side is hidden then and catches up when it shows.
     picked = function(side, key)
       pair.key = key
       if side ~= "own" then
         ownHandle.setSelected(key)
-      elseif pair.nativeShown then
-        pair.native.setSelected(key)
       end
       if onChange then
         onChange(key)
