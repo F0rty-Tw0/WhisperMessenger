@@ -118,6 +118,30 @@ return function()
     assert(PerfCounters.GetSource("snapshotBuilds", "other") == 0, "reset clears source counts")
   end
 
+  -- test_reset_clears_a_source_left_set_by_an_error
+  do
+    PerfCounters.Reset()
+    local ok = pcall(PerfCounters.Attribute, "snapshotBuilds", "ticker", function()
+      error("boom")
+    end)
+    assert(not ok, "the error reaches the caller")
+    PerfCounters.Reset()
+    PerfCounters.IncrementBySource("snapshotBuilds")
+    assert(PerfCounters.GetSource("snapshotBuilds", "ticker") == 0, "reset drops the source the error left set")
+    assert(PerfCounters.GetSource("snapshotBuilds", "other") == 1, "after reset an increment counts as other")
+  end
+
+  -- test_attribute_returns_every_result
+  do
+    PerfCounters.Reset()
+    local function three()
+      return 1, nil, 3
+    end
+    assert(select("#", PerfCounters.Attribute("snapshotBuilds", "ticker", three)) == 3, "Attribute keeps every result")
+    local first, second, third = PerfCounters.Attribute("snapshotBuilds", "ticker", three)
+    assert(first == 1 and second == nil and third == 3, "Attribute returns the results in order")
+  end
+
   -- test_lines_break_a_counter_down_by_source
   do
     rawset(_G, "C_AddOnProfiler", nil)

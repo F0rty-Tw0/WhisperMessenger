@@ -35,18 +35,24 @@ function PerfCounters.IncrementBySource(name)
   sources[source] = (sources[source] or 0) + 1
 end
 
--- Runs fn(...) with source active for counter and returns its first result.
+-- Restores the counter's source, then passes fn's results through untouched
+-- (a vararg tail, so no table per call).
+local function finish(counter, previous, ...)
+  activeSources[counter] = previous
+  return ...
+end
+
+-- Runs fn(...) with source active for counter and returns all its results.
 -- The outermost call wins: a nested Attribute keeps the outer source, so the
 -- count names what triggered the work. No pcall, so an error keeps its own
--- stack; it leaves the source set, and later work counts under it.
+-- stack; it leaves the source set, and later work counts under it until the
+-- next Reset.
 function PerfCounters.Attribute(counter, source, fn, ...)
   local previous = activeSources[counter]
   if previous == nil then
     activeSources[counter] = source
   end
-  local result = fn(...)
-  activeSources[counter] = previous
-  return result
+  return finish(counter, previous, fn(...))
 end
 
 function PerfCounters.Get(name)
@@ -61,6 +67,7 @@ end
 function PerfCounters.Reset()
   counts = {}
   bySource = {}
+  activeSources = {}
 end
 
 -- " (ticker 2, other 1)", busiest source first; "" when none was counted.
