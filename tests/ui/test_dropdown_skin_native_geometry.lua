@@ -1,5 +1,5 @@
 -- Under the Native look the open list sits inside a tooltip panel: the
--- scrolling (clipping) list is inset by the panel's border on every side,
+-- scrolling list is inset by the panel's border on every side,
 -- so rows and their hover / selected art never draw on the border at any
 -- scroll offset. The modern list keeps its edge-to-edge rows.
 local FakeUI = require("tests.helpers.fake_ui")
@@ -113,11 +113,11 @@ local function rowBoxes(rows)
 end
 
 return function()
-  -- test_native_panel_is_outside_the_clipping_list
+  -- test_native_panel_is_outside_the_list
   do
     local dd = build(true, 3)
     panelOf(dd)
-    assert(findPanel(FindUI.dropdownMenu(dd.row)) == nil, "panel is not a child of the list, which clips its children")
+    assert(findPanel(FindUI.dropdownMenu(dd.row)) == nil, "panel is not a child of the list")
   end
 
   -- test_native_panel_wraps_the_list_by_the_border

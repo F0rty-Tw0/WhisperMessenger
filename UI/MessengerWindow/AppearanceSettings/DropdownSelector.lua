@@ -144,7 +144,7 @@ local function buildOwn(factory, parent, options)
     if menu.UpdateScrollChildRect then
       menu:UpdateScrollChildRect()
     end
-    menu:SetVerticalScroll(math.min(menu:GetVerticalScroll(), menu:GetVerticalScrollRange()))
+    DropdownSkin.ScrollRows(menu, optionButtons, buttonHeight, math.min(menu:GetVerticalScroll(), menu:GetVerticalScrollRange()))
   end
 
   local function setOptionsList(nextOptions)
@@ -157,16 +157,18 @@ local function buildOwn(factory, parent, options)
     for i, option in ipairs(optionsList) do
       local optionButton = buttonPool[i] or createOptionButton()
       optionButton._key = option.key
+      -- In the list, though ScrollRows may hide it while scrolled out.
+      optionButton._listed = true
       optionButton._header = option.header == true
       optionButton._hovered = false
       optionButton.label:SetText(option.label)
-      optionButton:Show()
       optionButtons[i] = optionButton
     end
     for i = #optionsList + 1, previousCount do
       optionButtons[i] = nil
     end
     for i = #optionsList + 1, #buttonPool do
+      buttonPool[i]._listed = false
       buttonPool[i]:Hide()
     end
 
@@ -187,13 +189,13 @@ local function buildOwn(factory, parent, options)
         break
       end
     end
-    menu:SetVerticalScroll(offset)
+    DropdownSkin.ScrollRows(menu, optionButtons, buttonHeight, offset)
   end
 
   menu:SetScript("OnMouseWheel", function(_, delta)
     local nextOffset = menu:GetVerticalScroll() - delta * buttonHeight
     local scrollRange = menu:GetVerticalScrollRange()
-    menu:SetVerticalScroll(math.max(0, math.min(scrollRange, nextOffset)))
+    DropdownSkin.ScrollRows(menu, optionButtons, buttonHeight, math.max(0, math.min(scrollRange, nextOffset)))
   end)
 
   button:SetScript("OnClick", function()
