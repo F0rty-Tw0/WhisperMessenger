@@ -11,8 +11,9 @@ local DropdownSwap = ns.MessengerWindowDropdownSwap or require("WhisperMessenger
 -- The settings pages' part of the WoW: Forever gamepad UI. The right stick
 -- scrolls the open page while settings show, the chat otherwise. Widgets
 -- the settings builders tagged with _wmPadButton (a − / + or ▲ / ▼ pad
--- button) go to the nav once each as a D-pad stop; ones tagged with
--- _wmPadStep (a slider) go once each as skipped.
+-- button) go to the nav once each as a D-pad stop, with any _wmPadJumps
+-- ({ [dirName] = frame }) as jump targets; ones tagged with _wmPadStep (a
+-- slider) go once each as skipped.
 -- Page list and page are plain spatial nav. The Native-look dropdowns
 -- (WM's list or the game's) and then the pad buttons re-read the game's pad
 -- UI toggle when settings show, on each re-scan, and when the player flips
@@ -60,6 +61,9 @@ local function handOver(nav, widget)
     return false
   end
   nav.markFocusable(widget)
+  for dirName, target in pairs(widget._wmPadJumps or {}) do
+    nav.setJumpTarget(widget, dirName, target)
+  end
 
   return true
 end

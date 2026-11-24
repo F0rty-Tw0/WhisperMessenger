@@ -42,6 +42,10 @@ function SliderPadStep.AddButtons(factory, row, slider, applyInset)
     applyInset(shown and PadButtons.SIZE + PadButtons.GAP or 0)
   end)
   plus:SetPoint("LEFT", slider, "RIGHT", PadButtons.GAP, 0)
+  -- The nav skips the slider, so spatial nav would leave the row for a
+  -- nearer control above: link the pair across it.
+  minus._wmPadJumps = { RIGHT = plus }
+  plus._wmPadJumps = { LEFT = minus }
 end
 
 ns.SettingsControlsSliderPadStep = SliderPadStep
