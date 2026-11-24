@@ -47,12 +47,19 @@ local function textWidth(fontString)
   return fontString:GetStringWidth() or 0
 end
 
--- Full title when it fits the page; otherwise the date goes. The title is
--- bounded and single-line, so anything still too wide ends in "...".
+-- Full title when it fits the page; otherwise the date goes. Only a title
+-- still too wide gets bounded (single-line, so it ends in "..."): a fitting
+-- one keeps its auto width, because the plain look's side hairlines hang
+-- off the title's edges. SetWidth(0) returns a FontString to auto width.
 local function fitTitle(title, config, width)
+  title:SetWidth(0)
   title:SetText(buildTitle(config, true))
-  if width and textWidth(title) > width then
-    title:SetText(buildTitle(config, false))
+  if textWidth(title) <= width then
+    return
+  end
+  title:SetText(buildTitle(config, false))
+  if textWidth(title) > width then
+    title:SetWidth(width)
   end
 end
 
@@ -114,9 +121,21 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
   -- anchoring the marker to the last note keeps the scroll measurement correct.
   PageFooter.AddBottomMarker(factory, frame, lastRegion)
 
+  -- No-op until the first layout gives the page a width. After the title
+  -- text settles, the plain header sizes its lines around it.
+  local function refitTitle()
+    if not layoutWidth then
+      return
+    end
+    fitTitle(header.title, config, layoutWidth)
+    header.refreshLayout(layoutWidth)
+  end
+
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
     header.refreshTheme(activeTheme)
+    -- A new font changes the title's width.
+    refitTitle()
     for _, note in ipairs(notes) do
       setTextColor(note, activeTheme.COLORS.text_primary)
     end
@@ -128,7 +147,11 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
   refreshTheme(Theme)
 
   local function setLanguage()
-    fitTitle(header.title, config, layoutWidth)
+    if layoutWidth then
+      refitTitle()
+    else
+      header.title:SetText(buildTitle(config, true))
+    end
     header.hint:SetText(hintText())
   end
 
@@ -140,10 +163,7 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
     end
     local effective = math.max(MIN_BODY_WIDTH, math.floor(width))
     layoutWidth = effective
-    header.title:SetWidth(effective)
-    fitTitle(header.title, config, effective)
-    -- After the title text settles: the plain header sizes its lines around it.
-    header.refreshLayout(effective)
+    refitTitle()
     for _, note in ipairs(notes) do
       note:SetWidth(effective)
     end

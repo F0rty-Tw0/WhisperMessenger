@@ -70,6 +70,38 @@ local function sameRgb(a, b)
   return a ~= nil and a[1] == b[1] and a[2] == b[2] and a[3] == b[3]
 end
 
+-- The plain look's side hairlines hang off the title's edges.
+local function headerLines(view)
+  local title = headerTitle(view)
+  local out = {}
+  for _, texture in ipairs(FindUI.ofType(view.frame, "Texture")) do
+    if texture.point and texture.point[2] == title then
+      out[#out + 1] = texture
+    end
+  end
+  return out
+end
+
+-- As in WoW: a FontString given a width reports at most that width.
+local function clampToBound(fontString)
+  fontString.GetStringWidth = function(self)
+    local width = self:GetUnboundedStringWidth()
+    if type(self.width) == "number" and self.width > 0 then
+      return math.min(width, self.width)
+    end
+    return width
+  end
+end
+
+-- Stands in for a bigger font: every byte measures `px` wide.
+local function setGlyphWidth(fontString, px)
+  fontString.GetUnboundedStringWidth = function(self)
+    return #tostring(self.text or "") * px
+  end
+end
+
+local LONG_VERSION = { version = "v9.9.9-nightly-build-42", date = "2026-01-02", lines = {} }
+
 return function()
   -- test_header_shows_version_and_date
 
@@ -178,14 +210,61 @@ return function()
     assert(headerTitle(view).text == "What's New v9.9.9 · 2026-01-02", "expected the date back once the page widens")
   end
 
-  -- test_title_is_bounded_to_the_page_width_so_it_truncates
+  -- test_title_is_bounded_only_when_the_short_title_still_overflows
+  -- "What's New v9.9.9-nightly-build-42" is 238 px, 329 px with the date.
+
+  do
+    local view = newView(LONG_VERSION)
+    local title = headerTitle(view)
+    clampToBound(title)
+    view.refreshLayout(200)
+    assert(title.text == "What's New v9.9.9-nightly-build-42", "expected the date dropped, got " .. tostring(title.text))
+    assert(title.width == 200, "expected the overflowing title bounded to the page width, got " .. tostring(title.width))
+    assert(title.wordWrap == false, "expected a single-line title that truncates instead of wrapping")
+    view.refreshLayout(400)
+    assert(title.text == "What's New v9.9.9-nightly-build-42 · 2026-01-02", "expected the full title once it fits")
+    assert((title.width or 0) == 0, "expected the bound lifted once the title fits, got " .. tostring(title.width))
+  end
+
+  -- test_plain_title_stays_unbounded_when_it_fits
+  -- A title bounded to the band would push the side hairlines off the page.
 
   do
     local view = newView(NOTES)
-    view.refreshLayout(200)
     local title = headerTitle(view)
-    assert(title.width == 200, "expected the title bounded to the page width, got " .. tostring(title.width))
-    assert(title.wordWrap == false, "expected a single-line title that truncates instead of wrapping")
+    view.refreshLayout(400)
+    assert((title.width or 0) == 0, "expected the fitting title left at auto width, got " .. tostring(title.width))
+    view.refreshLayout(200)
+    assert(title.text == "What's New v9.9.9", "expected the date dropped, got " .. tostring(title.text))
+    assert((title.width or 0) == 0, "expected the shorter title left at auto width, got " .. tostring(title.width))
+  end
+
+  -- test_refresh_theme_refits_the_title_for_the_new_font
+
+  do
+    local view = newView(NOTES)
+    local title = headerTitle(view)
+    view.refreshLayout(400)
+    setGlyphWidth(title, 14)
+    view.refreshTheme(Theme)
+    assert(title.text == "What's New v9.9.9", "expected a bigger font to drop the date, got " .. tostring(title.text))
+  end
+
+  -- test_set_language_resizes_the_header_lines_around_the_refit_title
+  -- At 14 px per byte the short title is 238 px: lines are (400 - 238) / 2 - 8.
+
+  do
+    local view = newView(NOTES)
+    local title = headerTitle(view)
+    view.refreshLayout(400)
+    clampToBound(title)
+    setGlyphWidth(title, 14)
+    view.setLanguage()
+    local lines = headerLines(view)
+    assert(#lines == 2, "expected the plain look's two header lines, got " .. #lines)
+    for _, line in ipairs(lines) do
+      assert(line.width == 73, "expected the header lines resized around the refit title, got " .. tostring(line.width))
+    end
   end
 
   -- test_native_look_title_also_drops_the_date
@@ -197,7 +276,7 @@ return function()
     view.refreshLayout(200)
     local title = headerTitle(view)
     assert(title.text == "What's New v9.9.9", "expected the Native look title to drop the date, got " .. tostring(title.text))
-    assert(title.width == 200 and title.wordWrap == false, "expected the Native look title bounded to one line")
+    assert(title.wordWrap == false, "expected the Native look title kept to one line")
   end
 
   -- test_missing_version_and_lines_do_not_error
