@@ -28,15 +28,39 @@ local function hintText()
   return text("See what changed in the latest update.") .. " (" .. text("English only") .. ")"
 end
 
-local function buildTitle(config)
+local function buildTitle(config, withDate)
   local title = text("What's New")
   if type(config.version) == "string" and config.version ~= "" then
     title = title .. " " .. config.version
   end
-  if type(config.date) == "string" and config.date ~= "" then
+  if withDate and type(config.date) == "string" and config.date ~= "" then
     title = title .. " · " .. config.date
   end
   return title
+end
+
+-- The text's own width, not the bounded box width.
+local function textWidth(fontString)
+  if fontString.GetUnboundedStringWidth then
+    return fontString:GetUnboundedStringWidth() or 0
+  end
+  return fontString:GetStringWidth() or 0
+end
+
+-- Full title when it fits the page; otherwise the date goes. Only a title
+-- still too wide gets bounded (single-line, so it ends in "..."): a fitting
+-- one keeps its auto width, because the plain look's side hairlines hang
+-- off the title's edges. SetWidth(0) returns a FontString to auto width.
+local function fitTitle(title, config, width)
+  title:SetWidth(0)
+  title:SetText(buildTitle(config, true))
+  if textWidth(title) <= width then
+    return
+  end
+  title:SetText(buildTitle(config, false))
+  if textWidth(title) > width then
+    title:SetWidth(width)
+  end
 end
 
 -- message_text follows the Options font size, so the notes read at the
@@ -83,9 +107,13 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
   frame:SetAllPoints(parent)
 
   local header = SettingsControls.CreateHeader(frame, {
-    title = buildTitle(config),
+    title = buildTitle(config, true),
     hint = hintText(),
   })
+  if header.title.SetWordWrap then
+    header.title:SetWordWrap(false)
+  end
+  local layoutWidth
 
   local notes, dividers, lastRegion = buildNotes(frame, header.hint, config.lines)
 
@@ -93,9 +121,21 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
   -- anchoring the marker to the last note keeps the scroll measurement correct.
   PageFooter.AddBottomMarker(factory, frame, lastRegion)
 
+  -- No-op until the first layout gives the page a width. After the title
+  -- text settles, the plain header sizes its lines around it.
+  local function refitTitle()
+    if not layoutWidth then
+      return
+    end
+    fitTitle(header.title, config, layoutWidth)
+    header.refreshLayout(layoutWidth)
+  end
+
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
     header.refreshTheme(activeTheme)
+    -- A new font changes the title's width.
+    refitTitle()
     for _, note in ipairs(notes) do
       setTextColor(note, activeTheme.COLORS.text_primary)
     end
@@ -107,7 +147,11 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
   refreshTheme(Theme)
 
   local function setLanguage()
-    header.title:SetText(buildTitle(config))
+    if layoutWidth then
+      refitTitle()
+    else
+      header.title:SetText(buildTitle(config, true))
+    end
     header.hint:SetText(hintText())
   end
 
@@ -118,7 +162,8 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
       return
     end
     local effective = math.max(MIN_BODY_WIDTH, math.floor(width))
-    header.refreshLayout(effective)
+    layoutWidth = effective
+    refitTitle()
     for _, note in ipairs(notes) do
       note:SetWidth(effective)
     end
