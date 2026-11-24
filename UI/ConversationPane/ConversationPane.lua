@@ -257,7 +257,7 @@ function ConversationPane.Relayout(view, width, height, renderOptions)
   end
   -- Re-measured here: a width or font change can re-wrap the notice.
   local bannerOffset = BottomBanner.ReservedHeight(view)
-  view._bannerReserved = bannerOffset
+  BottomBanner.StoreReserved(view, bannerOffset)
   -- The pane is dual-anchored in the live client, so its real height can
   -- differ from the window-derived metric; size the transcript to what the
   -- pane actually is so bubbles reach the composer instead of stopping short.

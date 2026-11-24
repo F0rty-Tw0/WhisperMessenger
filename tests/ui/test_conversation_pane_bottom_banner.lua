@@ -112,4 +112,33 @@ return function()
     local want = expectedH(BottomBanner.HEIGHT)
     assert(transcriptH(view) == want, "reply strip reserves the base height, got " .. transcriptH(view))
   end
+
+  -- test_reserved_change_tells_the_listener_each_new_height
+  do
+    local view = newPane(factory)
+    local heard = {}
+    view.onBannerReservedChanged = function(reserved)
+      heard[#heard + 1] = reserved
+    end
+    stubTextHeight(view, 12)
+    ConversationPane.SetNotice(view, "Paused")
+    ConversationPane.SetNotice(view, "Paused")
+    ConversationPane.SetNotice(view, "")
+    local got = table.concat(heard, ",")
+    assert(got == BottomBanner.HEIGHT .. ",0", "one call per change, got " .. got)
+  end
+
+  -- test_relayout_remeasure_tells_the_listener
+  do
+    local view = newPane(factory)
+    stubTextHeight(view, 54)
+    ConversationPane.SetNotice(view, NOTICE)
+    local heard
+    view.onBannerReservedChanged = function(reserved)
+      heard = reserved
+    end
+    stubTextHeight(view, 36)
+    ConversationPane.Relayout(view, PANE_W, PANE_H)
+    assert(heard == 36 + TEXT_PAD, "relayout reports the re-measured height, got " .. tostring(heard))
+  end
 end
