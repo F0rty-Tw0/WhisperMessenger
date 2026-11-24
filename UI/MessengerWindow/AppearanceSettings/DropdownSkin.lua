@@ -8,6 +8,9 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 
+-- Pixels of float noise allowed when ScrollRows decides a row is in view.
+local WINDOW_SLACK = 0.5
+
 -- Closed-dropdown look: the same softly rounded input surface as the
 -- contacts search field, a down chevron on the right (the bundled back glyph
 -- rotated a quarter turn via tex coords, no new media) and a faint wash on
@@ -168,8 +171,6 @@ end
 -- here, since the menu doesn't clip. Rows left in the pool past the list
 -- are not in `rows`, so they stay hidden. Scroll offsets are whole rows, so
 -- no row is cut in half; WINDOW_SLACK absorbs the client's float noise.
-local WINDOW_SLACK = 0.5
-
 function DropdownSkin.ScrollRows(menu, rows, rowHeight, offset)
   menu:SetVerticalScroll(offset)
   local top = menu:GetVerticalScroll() - WINDOW_SLACK
