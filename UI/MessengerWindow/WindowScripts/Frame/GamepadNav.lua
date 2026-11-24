@@ -134,10 +134,37 @@ function GamepadNav.New(frame, deps)
     end
   end
 
+  -- Combat about to start: leave the game's gamepad UI now. A frame it still
+  -- holds when combat starts gets Blizzard's own close hook on any Hide() in
+  -- combat, which then sets a secure attribute from our tainted call →
+  -- "Interface action blocked". Back on it after combat, through settle.
+  -- Already locked down: too late, leave it as it is.
+  local function leaveForCombat()
+    if inCombat() then
+      return
+    end
+    popups.leaveForCombat()
+    if registered then
+      fcm:FrameHidden(frame)
+      registered = false
+    end
+    pendingHide = false
+    if shown then
+      pendingRegister = true
+    end
+  end
+
   local eventFrame = createFrame and createFrame()
   if eventFrame then
+    eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-    eventFrame:SetScript("OnEvent", settle)
+    eventFrame:SetScript("OnEvent", function(_self, event)
+      if event == "PLAYER_REGEN_DISABLED" then
+        leaveForCombat()
+      else
+        settle()
+      end
+    end)
   end
 
   function nav.onShow()

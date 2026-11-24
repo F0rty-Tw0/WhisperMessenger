@@ -1,5 +1,5 @@
 -- Fake WoW: Forever gamepad UI: FrameControlsManager, SmartNavigation, the
--- combat check, next-frame timers and an event frame for PLAYER_REGEN_ENABLED.
+-- combat check, next-frame timers and event frames (env.fire, env.regen).
 -- Mirrors Blizzard's SmartNavigation.lua: FrameShown creates the panel info
 -- and fires the frame's panel-info-added callback (#L826-L845, #L839);
 -- the callback setter only stores it on the frame (#L1982-L1984).
