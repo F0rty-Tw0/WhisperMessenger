@@ -18,7 +18,6 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - The chat window feels smoother while you type long messages or resize it.
 - Fixed: with group chats turned off, guild, party and raid chat is no longer saved in the background and no longer pushes out older whisper conversations. Mention alerts from those chats also stay quiet while group chats are off.
 - Fixed: starting a Battle.net whisper in the game's chat no longer adds an empty conversation to the messenger or pushes out an older one.
-- Fixed: with a controller, the Send/Back hint above the message box no longer overlaps a read-only notice, reply strip or away status.
 
 ## [2.1.9] - 2026-11-21
 
