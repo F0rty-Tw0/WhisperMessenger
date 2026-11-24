@@ -8,6 +8,9 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 
+-- Pixels of float noise allowed when ScrollRows decides a row is in view.
+local WINDOW_SLACK = 0.5
+
 -- Closed-dropdown look: the same softly rounded input surface as the
 -- contacts search field, a down chevron on the right (the bundled back glyph
 -- rotated a quarter turn via tex coords, no new media) and a faint wash on
@@ -114,11 +117,13 @@ end
 
 -- Hidden, scrollable open list under `button`; `content` is the scroll
 -- child. The look is decided here, once, so rows pooled later match:
--- menuSkin = { native, bg, panel, inset }. Under the Native look the menu
--- (which clips its rows) sits `inset` inside a tooltip panel on every side,
--- so rows never draw on the panel's border; the panel is the row's child,
--- not the menu's, so the clipping doesn't cut its border off. `inset` is 0
--- in the modern look.
+-- menuSkin = { native, bg, panel, inset }. The menu does not clip its rows:
+-- on WoW: Forever a clipping scroll frame inside the settings page's own
+-- clipping scroll frame draws none of its children. ScrollRows hides the
+-- rows outside the view instead. Under the Native look the menu sits
+-- `inset` inside a tooltip panel on every side, so rows never draw on the
+-- panel's border; the panel is the row's child, not the menu's, so it
+-- shows and levels on its own. `inset` is 0 in the modern look.
 function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
   local native = Hud.IsOn()
   local inset = native and Theme.LAYOUT.NATIVE_BORDER_INSET or 0
@@ -128,7 +133,7 @@ function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
   menu:SetClampedToScreen(true)
   menu:EnableMouseWheel(true)
   if menu.SetClipsChildren then
-    menu:SetClipsChildren(true)
+    menu:SetClipsChildren(false)
   end
 
   local bg = menu:CreateTexture(nil, "BACKGROUND")
@@ -158,6 +163,22 @@ function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
   end
   menu:Hide()
   return menu, content, menuSkin
+end
+
+-- Scrolls the menu to `offset`, then shows only the listed `rows` (each
+-- `rowHeight` tall, stacked from the top of the scroll child) that lie
+-- wholly inside the view; the rest hide. Every scroll change goes through
+-- here, since the menu doesn't clip. Rows left in the pool past the list
+-- are not in `rows`, so they stay hidden. Scroll offsets are whole rows, so
+-- no row is cut in half; WINDOW_SLACK absorbs the client's float noise.
+function DropdownSkin.ScrollRows(menu, rows, rowHeight, offset)
+  menu:SetVerticalScroll(offset)
+  local top = menu:GetVerticalScroll() - WINDOW_SLACK
+  local bottom = menu:GetVerticalScroll() + menu:GetHeight() + WINDOW_SLACK
+  for i, optionRow in ipairs(rows) do
+    local rowTop = (i - 1) * rowHeight
+    optionRow:SetShown(rowTop >= top and rowTop + rowHeight <= bottom)
+  end
 end
 
 -- The native panel is not the menu's child, so it follows the menu's

@@ -80,7 +80,6 @@ return function()
     }
     menu:Hide()
     open(selector.button)
-    assert(menu.clipsChildren == true, "test_dropdown_scroll: menu should clip overflowing option buttons")
     assert(menu:GetHeight() == 52, "test_dropdown_scroll: menu should retain configured viewport height")
     assert(menu:GetVerticalScrollRange() > 0, "test_dropdown_scroll: overflowing options should create a scroll range")
     local wheel = menu:GetScript("OnMouseWheel")
