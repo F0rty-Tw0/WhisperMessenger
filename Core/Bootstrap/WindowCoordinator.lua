@@ -215,7 +215,8 @@ function WindowCoordinator.Create(options)
   end
 
   function coordinator.updateIconSurfaces()
-    IconSurfaces.Update(PerfCounters.Attribute(BUILDS, "iconSurfaces", buildContacts), iconSurfaces)
+    local contacts = PerfCounters.Attribute(BUILDS, "iconSurfaces", buildContacts)
+    IconSurfaces.Update(contacts, iconSurfaces)
   end
 
   -- dirtyKeys nil rebuilds every contact; a set rebuilds only those keys.
@@ -334,7 +335,8 @@ function WindowCoordinator.Create(options)
 
   -- accept(key), when given, limits the search (e.g. to the open tab).
   function coordinator.findLatestUnreadKey(accept)
-    for _, item in ipairs(PerfCounters.Attribute(BUILDS, "findUnread", buildContacts)) do
+    local contacts = PerfCounters.Attribute(BUILDS, "findUnread", buildContacts)
+    for _, item in ipairs(contacts) do
       if BadgeFilter.BadgeUnread(item) > 0 and (accept == nil or accept(item.conversationKey)) then
         return item.conversationKey
       end
