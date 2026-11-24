@@ -7,6 +7,7 @@ local ContactEnricher = ns.ContactEnricher or require("WhisperMessenger.Model.Co
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
 -- stylua: ignore start
 local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
@@ -18,6 +19,9 @@ local ZoneNotify = ns.BootstrapLifecycleHandlersZoneNotify or require("WhisperMe
 local STATUS_REFRESH_INTERVAL = 30
 local AVAILABILITY_THROTTLE_SECONDS = 10
 local AVAILABILITY_REFRESH_DEBOUNCE = 0.15
+-- Each entry point names itself as the source of the snapshot builds it
+-- causes, for the /wmsg perf breakdown.
+local BUILDS = "snapshotBuilds"
 
 local WindowCoordinator = {}
 
@@ -117,23 +121,27 @@ function WindowCoordinator.Create(options)
     return next(removed) ~= nil
   end
 
+  local function statusTick()
+    if not coordinator.isWindowVisible() then
+      return
+    end
+    -- bnetRepaintPending: a Battle.net friend event arrived since the last
+    -- full draw. Its scan redraws only for a change it can tell, so a
+    -- missed one (away and back before the scan ran, a scan that failed)
+    -- is drawn here, one tick later at most.
+    if applyRetention() or runtime.bnetRepaintPending then
+      coordinator.refreshWindow()
+    else
+      coordinator.refreshContacts()
+    end
+  end
+
   local function startStatusTicker()
     if statusTicker or cTimer == nil or type(cTimer.NewTicker) ~= "function" then
       return
     end
     statusTicker = cTimer.NewTicker(STATUS_REFRESH_INTERVAL, function()
-      if not coordinator.isWindowVisible() then
-        return
-      end
-      -- bnetRepaintPending: a Battle.net friend event arrived since the last
-      -- full draw. Its scan redraws only for a change it can tell, so a
-      -- missed one (away and back before the scan ran, a scan that failed)
-      -- is drawn here, one tick later at most.
-      if applyRetention() or runtime.bnetRepaintPending then
-        coordinator.refreshWindow()
-      else
-        coordinator.refreshContacts()
-      end
+      PerfCounters.Attribute(BUILDS, "ticker", statusTick)
     end)
   end
 
@@ -167,7 +175,7 @@ function WindowCoordinator.Create(options)
       applyRetention()
       -- Re-render after Show so scroll frame dimensions are settled,
       -- allowing snapToEnd to scroll to the latest message.
-      coordinator.refreshWindow()
+      PerfCounters.Attribute(BUILDS, "windowShow", coordinator.refreshWindow)
       startStatusTicker()
       return
     end
@@ -207,7 +215,8 @@ function WindowCoordinator.Create(options)
   end
 
   function coordinator.updateIconSurfaces()
-    IconSurfaces.Update(buildContacts(), iconSurfaces)
+    local contacts = PerfCounters.Attribute(BUILDS, "iconSurfaces", buildContacts)
+    IconSurfaces.Update(contacts, iconSurfaces)
   end
 
   -- dirtyKeys nil rebuilds every contact; a set rebuilds only those keys.
@@ -276,7 +285,7 @@ function WindowCoordinator.Create(options)
   end
 
   local function refreshAvailabilitySurfaces(changedGUIDs)
-    local nextState = coordinator.refreshContacts()
+    local nextState = PerfCounters.Attribute(BUILDS, "availability", coordinator.refreshContacts)
     local window = getWindow()
     if not coordinator.isWindowVisible() or window == nil then
       return
@@ -305,7 +314,7 @@ function WindowCoordinator.Create(options)
     cTimer = cTimer,
     isWindowVisible = isWindowVisible,
     refreshWindow = function(focusKey, dirtyKeys)
-      return coordinator.refreshWindow(focusKey, dirtyKeys)
+      return PerfCounters.Attribute(BUILDS, "incoming", coordinator.refreshWindow, focusKey, dirtyKeys)
     end,
     getSelectedKey = getSelectedKey,
   }).schedule
@@ -313,10 +322,12 @@ function WindowCoordinator.Create(options)
     cTimer = cTimer,
     -- An owed Battle.net repaint needs every card redrawn, so it stays full.
     refreshWindow = function(focusKey, dirtyKeys)
+      local source = "whisperFlush"
       if runtime.bnetRepaintPending then
         dirtyKeys = nil
+        source = "whisperBnetRepaint"
       end
-      return coordinator.refreshWindow(focusKey, dirtyKeys)
+      return PerfCounters.Attribute(BUILDS, source, coordinator.refreshWindow, focusKey, dirtyKeys)
     end,
     getSelectedKey = getSelectedKey,
     guard = options.guardWhisperRefresh,
@@ -324,7 +335,8 @@ function WindowCoordinator.Create(options)
 
   -- accept(key), when given, limits the search (e.g. to the open tab).
   function coordinator.findLatestUnreadKey(accept)
-    for _, item in ipairs(buildContacts()) do
+    local contacts = PerfCounters.Attribute(BUILDS, "findUnread", buildContacts)
+    for _, item in ipairs(contacts) do
       if BadgeFilter.BadgeUnread(item) > 0 and (accept == nil or accept(item.conversationKey)) then
         return item.conversationKey
       end
