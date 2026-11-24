@@ -6,7 +6,8 @@ end
 -- Our popups in the WoW: Forever gamepad UI, for GamepadNav: shown → the
 -- game focuses the popup and remembers the control to return to; hidden →
 -- focus goes back there. Asked for in combat → done when combat ends; a
--- popup shown and hidden within one combat leaves no trace.
+-- popup shown and hidden within one combat leaves no trace. Combat about to
+-- start → every listed popup is handed back, the open ones shown again after.
 local GamepadPopups = {}
 
 local function noop() end
@@ -28,7 +29,7 @@ end
 function GamepadPopups.New(deps)
   local fcm, inCombat = deps.fcm, deps.inCombat
   if type(fcm.HandlePopupShown) ~= "function" then
-    return { popupShown = noop, popupHidden = noop, setPopupCloseHandler = noop, settle = noop }
+    return { popupShown = noop, popupHidden = noop, setPopupCloseHandler = noop, leaveForCombat = noop, settle = noop }
   end
   -- HandlePopupShown returns nothing and refuses the popup while the gamepad
   -- UI is off: "listed" is our own record of what it took.
@@ -85,6 +86,17 @@ function GamepadPopups.New(deps)
     handlers[popup] = true
     popup.SmartNavigationCloseHandler = function()
       return fn()
+    end
+  end
+
+  -- Combat about to start: hand every listed popup back now, while we still
+  -- may, and queue the ones still open to be shown again after combat.
+  function popups.leaveForCombat()
+    for popup in pairs(listed) do
+      hide(popup)
+      if popup:IsShown() then
+        queue(popup, "show")
+      end
     end
   end
 

@@ -196,6 +196,32 @@ return function()
     assert(env.isListed(popup) and env.count("FrameHidden") == 1, "the late settle does not hide the open popup")
   end
 
+  -- test_combat_start_unlists_open_popup_and_reshows_it_after_the_window
+  do
+    local env, frame, nav, popup = setup()
+    nav.onShow()
+    open(nav, popup)
+    env.fire("PLAYER_REGEN_DISABLED")
+    assert(names(env) == "FrameShown,HandlePopupShown,FrameHidden,FrameHidden", "popup and window leave before lockdown")
+    assert(env.calls[3].args[1] == popup and env.calls[4].args[1] == frame and not env.isListed(popup), "popup first")
+    env.combat = true
+    endCombat(env)
+    assert(names(env) == "FrameShown,HandlePopupShown,FrameHidden,FrameHidden,FrameShown,HandlePopupShown", "window, then popup")
+    assert(env.isListed(popup), "popup listed again")
+  end
+
+  -- test_popup_closed_in_combat_after_combat_start_is_not_reshown
+  do
+    local env, _, nav, popup = setup()
+    nav.onShow()
+    open(nav, popup)
+    env.fire("PLAYER_REGEN_DISABLED")
+    env.combat = true
+    close(nav, popup)
+    endCombat(env)
+    assert(names(env) == "FrameShown,HandlePopupShown,FrameHidden,FrameHidden,FrameShown", "closed meanwhile: no popup call")
+  end
+
   -- test_popup_close_handler_reports_handled_once_per_popup
   do
     local _, _, nav, popup = setup()
