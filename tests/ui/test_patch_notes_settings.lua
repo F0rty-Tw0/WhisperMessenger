@@ -4,6 +4,7 @@ local PatchNotesSettings = require("WhisperMessenger.UI.MessengerWindow.PatchNot
 local Theme = require("WhisperMessenger.UI.Theme")
 local FindUI = require("tests.helpers.find_ui")
 local Shapes = require("WhisperMessenger.UI.Helpers.Shapes")
+local Hud = require("WhisperMessenger.UI.Theme.Hud")
 
 local NOTES = {
   version = "v9.9.9",
@@ -156,6 +157,47 @@ return function()
     assert(left.color ~= nil, "expected refreshTheme to repaint the dividers")
     view.setLanguage()
     assert(string.find(headerTitle(view).text, NOTES.version, 1, true), "expected setLanguage to keep the version in the title")
+  end
+
+  -- test_narrow_layout_drops_the_date_from_the_title
+  -- Fake FontStrings measure 7 px per byte: the full title is 217 px, the
+  -- title without the date 119 px.
+
+  do
+    local view = newView(NOTES)
+    view.refreshLayout(400)
+    assert(headerTitle(view).text == "What's New v9.9.9 · 2026-01-02", "expected the full title when it fits")
+    view.refreshLayout(200)
+    assert(
+      headerTitle(view).text == "What's New v9.9.9",
+      "expected the date dropped when the title is too wide, got " .. tostring(headerTitle(view).text)
+    )
+    view.setLanguage()
+    assert(headerTitle(view).text == "What's New v9.9.9", "expected setLanguage to keep the narrow title")
+    view.refreshLayout(400)
+    assert(headerTitle(view).text == "What's New v9.9.9 · 2026-01-02", "expected the date back once the page widens")
+  end
+
+  -- test_title_is_bounded_to_the_page_width_so_it_truncates
+
+  do
+    local view = newView(NOTES)
+    view.refreshLayout(200)
+    local title = headerTitle(view)
+    assert(title.width == 200, "expected the title bounded to the page width, got " .. tostring(title.width))
+    assert(title.wordWrap == false, "expected a single-line title that truncates instead of wrapping")
+  end
+
+  -- test_native_look_title_also_drops_the_date
+
+  do
+    Hud.Configure("classic")
+    local view = newView(NOTES)
+    Hud.Configure("off")
+    view.refreshLayout(200)
+    local title = headerTitle(view)
+    assert(title.text == "What's New v9.9.9", "expected the Native look title to drop the date, got " .. tostring(title.text))
+    assert(title.width == 200 and title.wordWrap == false, "expected the Native look title bounded to one line")
   end
 
   -- test_missing_version_and_lines_do_not_error
