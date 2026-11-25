@@ -16,6 +16,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: the What's New title no longer runs under the scrollbar when the window is narrow; it drops the date, and if it still doesn't fit it ends in "...".
 - Fixed: on WoW: Forever under the Native look, the settings drop-down lists are no longer see-through, and the chosen option is marked with a check in gold text.
 - Fixed: on WoW: Forever, some settings drop-down lists no longer open as an empty box.
+- Fixed: a drop-down list near the bottom of a settings page is no longer cut off: the page scrolls to show it, and where it can't, the list opens upward.
 - Fixed: scrolling through the Filters or Behavior settings page could make the game slow down more and more until the page was closed.
 - Receiving whispers costs less performance when you have many saved conversations.
 - The chat window feels smoother while you type long messages or resize it.

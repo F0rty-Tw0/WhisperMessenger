@@ -10,6 +10,8 @@ local NativeDropdown = ns.MessengerWindowNativeDropdown or require("WhisperMesse
 local DropdownSwap = ns.MessengerWindowDropdownSwap or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSwap")
 local DropdownOptionRow = ns.MessengerWindowDropdownOptionRow or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownOptionRow")
 
+local DropdownPlacement = ns.MessengerWindowDropdownPlacement or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownPlacement")
+
 local DropdownSelector = {}
 
 local DEFAULT_BUTTON_HEIGHT = 26
@@ -121,13 +123,17 @@ local function buildOwn(factory, parent, options)
     return optionButton
   end
 
+  local function listHeight()
+    return math.min(menuHeight, math.max(1, #optionButtons) * buttonHeight)
+  end
+
   -- Under the Native look the menu is menuSkin.inset narrower on each side
   -- (the tooltip panel's border around it), so the panel stays as wide as
   -- the button; the visible rows and scroll range match the modern look.
   local function layoutOptions()
     local listWidth = rowWidth - 2 * menuSkin.inset
     local contentHeight = #optionButtons * buttonHeight
-    local popupHeight = math.min(menuHeight, math.max(buttonHeight, contentHeight))
+    local popupHeight = listHeight()
 
     for i, optionButton in ipairs(optionButtons) do
       optionButton:ClearAllPoints()
@@ -210,6 +216,7 @@ local function buildOwn(factory, parent, options)
         setOptionsList(refreshed)
       end
     end
+    DropdownPlacement.Place(menu, button, menuSkin.inset, buttonHeight, listHeight())
     scrollToSelected()
     DropdownSkin.RaiseMenu(menu, menuSkin)
     menu:Show()

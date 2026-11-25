@@ -428,6 +428,7 @@ UI/MessengerWindow/AppearanceSettings/DropdownSkin.lua
 UI/MessengerWindow/AppearanceSettings/NativeDropdown.lua
 UI/MessengerWindow/AppearanceSettings/DropdownOptionRow.lua
 UI/MessengerWindow/AppearanceSettings/DropdownSwap.lua
+UI/MessengerWindow/AppearanceSettings/DropdownPlacement.lua
 UI/MessengerWindow/AppearanceSettings/DropdownSelector.lua
 UI/Shared/SettingsControls/PanelRegistry.lua
 UI/Shared/SettingsControls/Divider.lua
