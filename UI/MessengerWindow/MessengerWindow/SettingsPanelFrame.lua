@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local GamepadBuild = ns.GamepadBuild or require("WhisperMessenger.UI.Shared.GamepadBuild")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 
 local SettingsPanelFrame = {}
@@ -33,7 +34,10 @@ local function centerColumn(panel, settings, innerWidth)
 end
 
 local function createSettingsPanel(factory, parent, createSettingsView, config, onSettingChanged, extraOptions)
-  local panel = factory.CreateFrame("Frame", nil, parent)
+  -- The whole page is built outside the window, templates included, and
+  -- moved in below.
+  local buildParent = GamepadBuild.BuildParent(factory, parent)
+  local panel = factory.CreateFrame("Frame", nil, buildParent)
   panel:SetAllPoints(parent)
   local viewOptions = {
     onChange = onSettingChanged,
@@ -71,6 +75,9 @@ local function createSettingsPanel(factory, parent, createSettingsView, config, 
     if parent.GetWidth then
       relayout(parent:GetWidth())
     end
+  end
+  if buildParent ~= parent then
+    panel:SetParent(parent)
   end
   return panel, settings
 end

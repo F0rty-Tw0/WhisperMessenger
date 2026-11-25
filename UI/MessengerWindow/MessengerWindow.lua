@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local GamepadBuild = ns.GamepadBuild or require("WhisperMessenger.UI.Shared.GamepadBuild")
 local RowActions = ns.MessengerWindowRowActions or require("WhisperMessenger.UI.MessengerWindow.RowActions")
 local LifecycleSetup = ns.MessengerWindowLifecycleSetup or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleSetup")
 local WindowShell = ns.MessengerWindowWindowShell or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowShell")
@@ -25,6 +26,7 @@ local MessengerWindow = {}
 
 function MessengerWindow.Create(factory, options)
   options = options or {}
+  factory = GamepadBuild.WrapFactory(factory)
 
   local shell = WindowShell.Build(factory, options)
   local settingsConfig, compactLayout = shell.settingsConfig, shell.compactLayout
