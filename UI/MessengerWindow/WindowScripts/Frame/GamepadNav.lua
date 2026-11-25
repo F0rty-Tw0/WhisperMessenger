@@ -32,10 +32,12 @@ local function inert()
     ignore = noop,
     markFocusable = noop,
     setJumpTarget = noop,
+    onJump = noop,
     setOrder = noop,
     popupShown = noop,
     popupHidden = noop,
     setPopupCloseHandler = noop,
+    isStop = never,
     isActive = never,
     isRegistered = never,
   }
@@ -43,7 +45,8 @@ end
 
 -- frame: the messenger window. deps (all optional): gamepadMode,
 -- smartNavigation, markIgnored, markFocusable, addJumpOverride,
--- directions, inCombat, after, createFrame; default to the game's.
+-- registerNavCallback, canFocus, isIgnored, directions, inCombat, after,
+-- createFrame; default to the game's.
 function GamepadNav.New(frame, deps)
   deps = deps or {}
   local pick = GamepadDeps.pick
@@ -57,6 +60,9 @@ function GamepadNav.New(frame, deps)
   local markIgnored = pick(deps, "markIgnored", _G.SmartNavigation_MarkFrameIgnored)
   local markFocusable = pick(deps, "markFocusable", _G.SmartNavigation_MarkFrameFocusable)
   local addJumpOverride = pick(deps, "addJumpOverride", _G.SmartNavigation_AddJumpNavigationOverride)
+  local registerNavCallback = pick(deps, "registerNavCallback", _G.SmartNavigation_RegisterOutgoingDirNavCallback)
+  local canFocus = pick(deps, "canFocus", _G.SmartNavigation_CanFocusFrame)
+  local isIgnored = pick(deps, "isIgnored", _G.SmartNavigation_IsFrameIgnored)
   local directions = pick(deps, "directions", _G.SMART_NAV_INPUT_DIRECTION)
   local inCombat = pick(deps, "inCombat", GamepadDeps.defaultInCombat)
   local after = pick(deps, "after", GamepadDeps.defaultAfter)
@@ -72,6 +78,7 @@ function GamepadNav.New(frame, deps)
     markIgnored = markIgnored,
     markFocusable = markFocusable,
     addJumpOverride = addJumpOverride,
+    registerNavCallback = registerNavCallback,
     directions = directions,
   })
   local popups = GamepadPopups.New({ fcm = fcm, inCombat = inCombat })
@@ -240,10 +247,19 @@ function GamepadNav.New(frame, deps)
   nav.ignore = marks.ignore
   nav.markFocusable = marks.markFocusable
   nav.setJumpTarget = marks.setJumpTarget
+  nav.onJump = marks.onJump
   nav.setOrder = marks.setOrder
   nav.popupShown = popups.popupShown
   nav.popupHidden = popups.popupHidden
   nav.setPopupCloseHandler = popups.setPopupCloseHandler
+
+  -- True when the game's D-pad can stop on target (shown or not).
+  function nav.isStop(target)
+    if not canFocus or not isIgnored then
+      return false
+    end
+    return (canFocus(target) and not isIgnored(target)) == true
+  end
 
   function nav.isActive()
     return true

@@ -15,6 +15,9 @@ local GLOBALS = {
   "SmartNavigation_MarkFrameIgnored",
   "SmartNavigation_MarkFrameFocusable",
   "SmartNavigation_AddJumpNavigationOverride",
+  "SmartNavigation_RegisterOutgoingDirNavCallback",
+  "SmartNavigation_CanFocusFrame",
+  "SmartNavigation_IsFrameIgnored",
   "SMART_NAV_INPUT_DIRECTION",
   "InCombatLockdown",
   "C_RestrictedActions",
@@ -105,12 +108,26 @@ function FakeGamepad.New()
   env.smartNavigation = smartNav
   FakeGamepadBindings.Install(env, log, smartNav)
 
+  local ignoredFrames = setmetatable({}, { __mode = "k" })
+  local focusableFrames = setmetatable({}, { __mode = "k" })
+
   function env.markIgnored(widget, dontPropagate)
     log("MarkFrameIgnored", widget, dontPropagate)
+    ignoredFrames[widget] = true
   end
 
   function env.markFocusable(widget)
     log("MarkFrameFocusable", widget)
+    focusableFrames[widget] = true
+  end
+
+  -- Utility.lua#L263, shortened: a button, or a frame marked focusable.
+  function env.canFocus(frame)
+    return frame.frameType == "Button" or frame.frameType == "CheckButton" or focusableFrames[frame] == true
+  end
+
+  function env.isIgnored(frame)
+    return ignoredFrames[frame] == true
   end
 
   -- As Utility.lua#L6-L12.
@@ -135,6 +152,24 @@ function FakeGamepad.New()
   -- The frame SmartNav jumps to when the D-pad presses dirName on widget.
   function env.overrideFor(widget, dirName)
     return overrides[widget] and overrides[widget][env.directions[dirName].dirKey]
+  end
+
+  -- Utility.lua#L540: several callbacks per button and direction.
+  local outgoing = setmetatable({}, { __mode = "k" })
+  function env.registerNavCallback(button, direction, callback)
+    log("RegisterOutgoingDirNavCallback", button, direction, callback)
+    outgoing[button] = outgoing[button] or {}
+    local byDir = outgoing[button]
+    byDir[direction.dirKey] = byDir[direction.dirKey] or {}
+    table.insert(byDir[direction.dirKey], callback)
+  end
+
+  -- The D-pad left widget in dirName: runs its outgoing callbacks.
+  function env.left(widget, dirName)
+    local byDir = outgoing[widget] or {}
+    for _, callback in ipairs(byDir[env.directions[dirName].dirKey] or {}) do
+      callback()
+    end
   end
 
   function env.inCombat()
@@ -197,6 +232,9 @@ function FakeGamepad.New()
       markIgnored = env.markIgnored,
       markFocusable = env.markFocusable,
       addJumpOverride = env.addJumpOverride,
+      registerNavCallback = env.registerNavCallback,
+      canFocus = env.canFocus,
+      isIgnored = env.isIgnored,
       directions = env.directions,
       inCombat = env.inCombat,
       after = env.after,
@@ -227,6 +265,9 @@ function FakeGamepad.New()
     rawset(_G, "SmartNavigation_MarkFrameIgnored", env.markIgnored)
     rawset(_G, "SmartNavigation_MarkFrameFocusable", env.markFocusable)
     rawset(_G, "SmartNavigation_AddJumpNavigationOverride", env.addJumpOverride)
+    rawset(_G, "SmartNavigation_RegisterOutgoingDirNavCallback", env.registerNavCallback)
+    rawset(_G, "SmartNavigation_CanFocusFrame", env.canFocus)
+    rawset(_G, "SmartNavigation_IsFrameIgnored", env.isIgnored)
     rawset(_G, "SMART_NAV_INPUT_DIRECTION", env.directions)
     rawset(_G, "InCombatLockdown", env.inCombat)
     rawset(_G, "C_RestrictedActions", nil)

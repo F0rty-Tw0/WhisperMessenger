@@ -11,8 +11,9 @@ local function weakSet()
   return setmetatable({}, { __mode = "k" })
 end
 
--- deps: inCombat, markIgnored, markFocusable, addJumpOverride, directions
--- (SMART_NAV_INPUT_DIRECTION); a missing one = that mark does nothing.
+-- deps: inCombat, markIgnored, markFocusable, addJumpOverride,
+-- registerNavCallback, directions (SMART_NAV_INPUT_DIRECTION); a missing
+-- one = that mark does nothing.
 function GamepadMarks.New(deps)
   local inCombat = deps.inCombat
   local queue = {}
@@ -66,6 +67,24 @@ function GamepadMarks.New(deps)
     end
     memo[widget] = targetFrame
     apply(deps.addJumpOverride, widget, directions[dirName], targetFrame)
+  end
+
+  -- fn(target) runs after the D-pad left widget in dirName while it had a
+  -- jump target there. Once per widget and direction: a later fn is ignored.
+  local jumpCallbacks = {}
+  function marks.onJump(widget, dirName, fn)
+    local directions = deps.directions
+    local unsupported = widget == nil or not deps.registerNavCallback or type(directions) ~= "table" or directions[dirName] == nil
+    if unsupported then
+      return
+    end
+    jumpCallbacks[dirName] = jumpCallbacks[dirName] or weakSet()
+    mark(jumpCallbacks[dirName], deps.registerNavCallback, widget, directions[dirName], function()
+      local target = targets[dirName] and targets[dirName][widget]
+      if target then
+        fn(target)
+      end
+    end)
   end
 
   -- Last chain set under each setOrder key.
