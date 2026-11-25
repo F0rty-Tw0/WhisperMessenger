@@ -50,8 +50,16 @@ local function pxFormat(v)
 end
 
 function AppearanceSettings.Create(factory, parent, config, options)
-  local onChange = options.onChange or function(...)
+  local saveSetting = options.onChange or function(...)
     local _ = ...
+  end
+  local screenEdgeRows
+  -- Every Compact window change (its toggle, Reset to Defaults) shows or hides the edge rows.
+  local function onChange(key, value)
+    if key == "compactLayout" then
+      screenEdgeRows.setCompact(value ~= false)
+    end
+    saveSetting(key, value)
   end
 
   local frame = factory.CreateFrame("Frame", nil, parent)
@@ -113,7 +121,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
   local windowStyleToggles = SettingsControls.BuildToggleList(factory, frame, hudStyleSelector.row, windowStyleSpecs)
   SettingsControls.BindToggleSpecs(panel, windowStyleToggles, windowStyleSpecs, DEFAULTS)
 
-  local screenEdgeRows = ScreenEdgeRows.Create(sel, panel, config, onChange, windowStyleToggles, gap)
+  screenEdgeRows = ScreenEdgeRows.Create(sel, panel, config, onChange, windowStyleToggles, gap, options.onLayoutChanged)
 
   local themePresetSelector = panel:bind(
     sel(text("Theme Preset"), Options.BuildThemePresetOptions(), presetDefault, config.themePreset or presetDefault, function(v)
@@ -280,6 +288,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     -- Same, for the window style's toggle.
     setCompactLayout = function(enabled)
       windowStyleToggles[1].setValue(enabled)
+      screenEdgeRows.setCompact(enabled ~= false)
     end,
   }
 end

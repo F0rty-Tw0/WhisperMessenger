@@ -112,8 +112,10 @@ local function slotRow(row, above, below, gap)
 end
 
 -- sel: AppearanceSettings' ButtonSelector builder; toggles: the window style
--- toggles (Compact window, Edge glow, Window animation, ...).
-function ScreenEdgeRows.Create(sel, panel, config, onChange, toggles, gap)
+-- toggles (Compact window, Edge glow, Window animation, ...). config.compactLayout
+-- (nil reads as on, like the toggle) picks whether the rows start shown;
+-- onLayoutChanged (optional) remeasures the page after a later show or hide.
+function ScreenEdgeRows.Create(sel, panel, config, onChange, toggles, gap, onLayoutChanged)
   local screenEdge = panel:bind(
     sel(Localization.Text("Screen edge"), Options.BuildScreenEdgeOptions(), SCREEN_EDGE_DEFAULT, config.screenEdge or SCREEN_EDGE_DEFAULT, function(v)
       onChange("screenEdge", v)
@@ -123,8 +125,33 @@ function ScreenEdgeRows.Create(sel, panel, config, onChange, toggles, gap)
   slotRow(screenEdge.row, toggles[1], toggles[2], gap)
   local glowColor = createGlowColor(sel, panel, config, onChange)
   slotRow(glowColor.row, toggles[2], toggles[3], gap)
+  local rows = { screenEdge.row, toggles[2].row, glowColor.row }
+
+  -- The three rows do nothing without Compact window: hidden, the toggle below
+  -- them moves up under Compact window.
+  local function place(on)
+    for _, row in ipairs(rows) do
+      if on then
+        row:Show()
+      else
+        row:Hide()
+      end
+    end
+    local below = toggles[3].row
+    below:ClearAllPoints()
+    below:SetPoint("TOPLEFT", on and glowColor.row or toggles[1].row, "BOTTOMLEFT", 0, gap)
+  end
+  place(config.compactLayout ~= false)
+
+  local function setCompact(on)
+    place(on)
+    if onLayoutChanged then
+      onLayoutChanged()
+    end
+  end
 
   return {
+    setCompact = setCompact,
     setLanguage = function()
       screenEdge.label:SetText(Localization.Text("Screen edge"))
       screenEdge.setOptionsList(Options.BuildScreenEdgeOptions())
