@@ -93,14 +93,26 @@ local function attachSettings(nav, shell, transcript)
     return
   end
   local layout = shell.layout or {}
-  settingsPanels.onNavTargetsChanged = GamepadSettings.Attach(nav, {
+  local onTargetsChanged, onMenuToggled = GamepadSettings.Attach(nav, {
     contentScrollView = layout.optionsScrollView,
     chatScrollFrame = transcript and transcript.scrollFrame,
     optionsPanel = layout.optionsPanel,
     panels = settingsPanels,
     createFrame = GamepadDeps.defaultCreateFrame,
+    menuScrollView = layout.optionsMenuScrollView,
+    activeTab = function()
+      for _, tab in ipairs(layout.settingsTabs or {}) do
+        if tab._wmIsActiveTab then
+          return tab
+        end
+      end
+      return nil
+    end,
+    after = GamepadDeps.defaultAfter,
+    isMenuOpen = DropdownSelector.IsMenuShown,
   })
-  DropdownSelector.SetMenuToggledHook(nav.refresh)
+  settingsPanels.onNavTargetsChanged = onTargetsChanged
+  DropdownSelector.SetMenuToggledHook(onMenuToggled)
 end
 
 -- Our ESC-registered popups take pad focus while open; B hides the

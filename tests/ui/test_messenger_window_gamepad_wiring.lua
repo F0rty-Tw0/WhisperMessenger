@@ -3,6 +3,7 @@ local FakeGamepad = require("tests.helpers.fake_gamepad")
 local FindUI = require("tests.helpers.find_ui")
 local DropdownSelector = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
+local GamepadSettings = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
 local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
 local Localization = require("WhisperMessenger.Locale.Localization")
 
@@ -111,6 +112,18 @@ local function ignoredWith(nav, widget)
   return false
 end
 
+-- What the wiring hands GamepadSettings.Attach, and the setup's result.
+local function attachedSettings()
+  local saved, got = GamepadSettings.Attach, nil
+  rawset(GamepadSettings, "Attach", function(_nav, settings)
+    got = settings
+  end)
+  local ok, t = pcall(setup, { settings = true })
+  rawset(GamepadSettings, "Attach", saved)
+  assert(ok, t)
+  return assert(got, "attached"), t
+end
+
 return function()
   Localization.Configure({ language = "enUS" })
 
@@ -212,6 +225,23 @@ return function()
   do
     local t = setup({ settings = true })
     assert(type(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged) == "function", "tabs can report")
+  end
+
+  -- test_settings_rows_get_a_timer_and_the_open_menu_check
+  do
+    local settings = attachedSettings()
+    assert(type(settings.after) == "function" and settings.isMenuOpen == DropdownSelector.IsMenuShown, "row order can follow the page")
+  end
+
+  -- test_settings_rows_know_the_open_pages_tab_and_the_page_list
+  do
+    local settings, t = attachedSettings()
+    local closed, open = {}, {}
+    t.shell.layout.settingsTabs = { closed, open }
+    assert(settings.activeTab() == nil, "none marked open yet")
+    open._wmIsActiveTab = true
+    assert(settings.activeTab() == open, "the tab marked open, read at call time")
+    assert(settings.menuScrollView == t.shell.layout.optionsMenuScrollView, "the page list scrolls for it")
   end
 
   -- test_attach_leaves_the_chat_header_without_a_button_context

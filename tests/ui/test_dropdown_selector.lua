@@ -231,5 +231,20 @@ return function()
     assert(DropdownSelector.HideShownMenu() == false, "none open")
   end
 
+  -- test_is_menu_shown_follows_the_open_dropdown
+  do
+    DropdownSelector.HideShownMenu()
+    local selector = DropdownSelector.Create(factory, parent, {
+      labelText = "Font Family",
+      optionsList = { { key = "a", label = "A" } },
+      initial = "a",
+    })
+    assert(DropdownSelector.IsMenuShown() == false, "none open")
+    selector.button:GetScript("OnClick")(selector.button)
+    assert(DropdownSelector.IsMenuShown() == true, "one open")
+    DropdownSelector.HideShownMenu()
+    assert(DropdownSelector.IsMenuShown() == false, "closed again")
+  end
+
   print("  All dropdown selector tests passed")
 end

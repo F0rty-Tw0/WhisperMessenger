@@ -48,7 +48,7 @@ end
 local function fakeNav()
   ---@type table<string, any>
   local nav = { seen = {} }
-  for _, name in ipairs({ "markFocusable", "ignore", "setScrollFrame", "refresh", "setJumpTarget" }) do
+  for _, name in ipairs({ "markFocusable", "ignore", "setScrollFrame", "refresh" }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
     end

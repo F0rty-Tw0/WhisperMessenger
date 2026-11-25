@@ -304,6 +304,16 @@ function DropdownSelector.HideShownMenu()
   return hidden
 end
 
+-- True while a menu of WM's own is open.
+function DropdownSelector.IsMenuShown()
+  for menu in pairs(menus) do
+    if menu:IsShown() then
+      return true
+    end
+  end
+  return false
+end
+
 function DropdownSelector.SetMenuToggledHook(fn)
   onMenuToggled = fn
 end
