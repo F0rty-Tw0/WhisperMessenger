@@ -198,6 +198,7 @@ local function buildOwn(factory, parent, options)
     DropdownSkin.ScrollRows(menu, optionButtons, buttonHeight, offset)
   end
 
+  DropdownSkin.FollowScroll(menu, optionButtons, buttonHeight)
   menu:SetScript("OnMouseWheel", function(_, delta)
     local nextOffset = menu:GetVerticalScroll() - delta * buttonHeight
     local scrollRange = menu:GetVerticalScrollRange()

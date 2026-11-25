@@ -165,20 +165,39 @@ function DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
   return menu, content, menuSkin
 end
 
--- Scrolls the menu to `offset`, then shows only the listed `rows` (each
--- `rowHeight` tall, stacked from the top of the scroll child) that lie
--- wholly inside the view; the rest hide. Every scroll change goes through
--- here, since the menu doesn't clip. Rows left in the pool past the list
--- are not in `rows`, so they stay hidden. Scroll offsets are whole rows, so
--- no row is cut in half; WINDOW_SLACK absorbs the client's float noise.
-function DropdownSkin.ScrollRows(menu, rows, rowHeight, offset)
-  menu:SetVerticalScroll(offset)
+-- Shows only the listed `rows` (each `rowHeight` tall, stacked from the top
+-- of the scroll child) that lie wholly inside the view; the rest hide, since
+-- the menu doesn't clip. Rows left in the pool past the list are not in
+-- `rows`, so they stay hidden. WINDOW_SLACK absorbs the client's float noise.
+local function showRowsInView(menu, rows, rowHeight)
   local top = menu:GetVerticalScroll() - WINDOW_SLACK
   local bottom = menu:GetVerticalScroll() + menu:GetHeight() + WINDOW_SLACK
   for i, optionRow in ipairs(rows) do
     local rowTop = (i - 1) * rowHeight
     optionRow:SetShown(rowTop >= top and rowTop + rowHeight <= bottom)
   end
+end
+
+-- Scrolls the menu to `offset` (whole rows, so no row is cut in half) and
+-- shows the rows in view.
+function DropdownSkin.ScrollRows(menu, rows, rowHeight, offset)
+  menu:SetVerticalScroll(offset)
+  showRowsInView(menu, rows, rowHeight)
+end
+
+-- The controller's D-pad scrolls the menu itself, to centre the row it goes
+-- to: that lands on whole rows too (except at the list's end) and the rows
+-- in view follow it.
+function DropdownSkin.FollowScroll(menu, rows, rowHeight)
+  menu:SetScript("OnVerticalScroll", function(_, offset)
+    local whole = math.floor(offset / rowHeight + WINDOW_SLACK / rowHeight) * rowHeight
+    local atEnd = offset >= menu:GetVerticalScrollRange() - WINDOW_SLACK
+    if not atEnd and math.abs(offset - whole) > WINDOW_SLACK then
+      menu:SetVerticalScroll(whole)
+      return
+    end
+    showRowsInView(menu, rows, rowHeight)
+  end)
 end
 
 -- The native panel is not the menu's child, so it follows the menu's

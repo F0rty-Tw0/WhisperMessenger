@@ -111,5 +111,43 @@ return function()
     assert(shown == "1,2,3", "test_pooled_rows: a row scrolled back into view shows again, got " .. shown)
   end
 
+  -- test_the_games_scroll_shows_the_rows_it_moved_into_view
+  -- The controller's D-pad scrolls the list itself, with SetVerticalScroll.
+  do
+    local selector, menu = build(factory, parent, { optionsList = optionList(10) })
+    open(selector)
+    menu:SetVerticalScroll(2 * ROW)
+    local shown = shownIndices(selector)
+    assert(shown == "3,4,5", "test_the_games_scroll: got " .. shown)
+  end
+
+  -- test_the_games_half_row_scroll_lands_on_whole_rows
+  do
+    local selector, menu = build(factory, parent, { optionsList = optionList(10) })
+    open(selector)
+    menu:SetVerticalScroll(2.5 * ROW)
+    assert(menu:GetVerticalScroll() == 2 * ROW, "test_half_row: got " .. menu:GetVerticalScroll())
+    local shown = shownIndices(selector)
+    assert(shown == "3,4,5", "test_half_row: got " .. shown)
+  end
+
+  -- test_the_games_scroll_to_the_end_shows_the_last_row
+  -- A list as tall as 2.5 rows ends between two row tops.
+  do
+    local selector = DropdownSelector.Create(factory, parent, {
+      labelText = "Mention sound",
+      optionsList = optionList(10),
+      fallbackKey = "opt1",
+      initial = "opt1",
+      buttonHeight = ROW,
+      menuHeight = 2.5 * ROW,
+    })
+    open(selector)
+    local menu = FindUI.dropdownMenu(selector.row)
+    menu:SetVerticalScroll(menu:GetVerticalScrollRange())
+    local shown = shownIndices(selector)
+    assert(shown == "9,10", "test_scroll_to_end: got " .. shown)
+  end
+
   print("  All dropdown selector window tests passed")
 end
