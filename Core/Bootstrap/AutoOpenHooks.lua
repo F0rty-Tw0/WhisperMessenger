@@ -41,6 +41,9 @@ function AutoOpenHooks.Create(deps)
     return true
   end
 
+  -- Lets a caller skip creating a conversation the messenger won't take over.
+  hooks.wouldRouteOutgoing = shouldRouteOutgoingToMessenger
+
   local function openAndSelect(conversationKey, forceFocus)
     deps.ensureWindow()
     deps.setWindowVisible(true)

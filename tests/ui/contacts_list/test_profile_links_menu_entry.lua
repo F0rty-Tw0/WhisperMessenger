@@ -4,6 +4,10 @@ local PopupUI = require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.P
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local FakeUI = require("tests.helpers.fake_ui")
+local Probe = require("tests.helpers.menu_popup_probe")
+local Flavor = require("tests.helpers.flavor")
+local World = require("tests.helpers.menu_popup_world")
+local MenuPopup = require("WhisperMessenger.UI.Shared.MenuPopup")
 
 -- Right-clicking a contact offers "Copy profile link" with one entry per
 -- profile site of this game; picking one opens the copy popup with the URL.
@@ -118,11 +122,15 @@ return function()
   end
 
   -- test_forever_hides_submenu
-  do
-    FlavorCompat.isForever = true
-    assert(findButton(menuFor(arthas, onUpdatePrefs), SUBMENU) == nil, "no submenu on WoW: Forever")
-    FlavorCompat.isForever = false
-  end
+  Flavor.With(true, true, function()
+    Flavor.WithPadUI(true, function()
+      World.With(function(_factory, popupAnchor)
+        ContextMenu.Open(arthas, popupAnchor, nil, onUpdatePrefs)
+        assert(MenuPopup.IsShown(), "WoW: Forever with the pad opens WM's own popup")
+        assert(Probe.Find(SUBMENU) == nil, "no submenu on WoW: Forever")
+      end)
+    end)
+  end)
 
   -- test_classic_era_season_picks_warcraftlogs_site
   do

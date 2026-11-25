@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
+local PageFooter = ns.SettingsControlsPageFooter or require("WhisperMessenger.UI.Shared.SettingsControls.PageFooter")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local QuickRepliesSettings = ns.MessengerWindowQuickRepliesSettings or require("WhisperMessenger.UI.MessengerWindow.QuickRepliesSettings")
 local ToggleSpecs = ns.MessengerWindowBehaviorToggleSpecs or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings.ToggleSpecs")
@@ -13,8 +14,6 @@ local IntegrationList = ns.MessengerWindowBehaviorIntegrationList or require("Wh
 local KeybindRow = ns.MessengerWindowBehaviorKeybindRow or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings.KeybindRow")
 
 local BehaviorSettings = {}
-
-local PADDING = Theme.CONTENT_PADDING
 
 local function text(key)
   return Localization.Text(key)
@@ -87,28 +86,11 @@ function BehaviorSettings.Create(factory, parent, config, options)
     onLayoutChanged = options.onLayoutChanged,
   })
 
-  local resetButton = panel:bind(
-    UIHelpers.createOptionButton(
-      factory,
-      frame,
-      text("Reset to Defaults"),
-      SettingsControls.OptionButtonColors(Theme),
-      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, ghost = true }
-    ),
-    { type = "optionButton" }
-  )
-  resetButton:SetPoint("TOPLEFT", quickReplies.bottom, "BOTTOMLEFT", 0, -24)
-  resetButton:SetScript("OnClick", function()
+  local resetButton = PageFooter.CreateResetButton(factory, frame, panel, text("Reset to Defaults"), function()
     panel:reset(changed)
   end)
-
-  local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
-  bottomSpacer:SetSize(1, PADDING)
-  bottomSpacer:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, 0)
-  -- Marker the options scrollview reads to size the scroll content to this
-  -- tab's actual extent. Anchored to the very last control plus a padding
-  -- spacer, so its bottom = panel content bottom.
-  frame._wmBottomMarker = bottomSpacer
+  resetButton:SetPoint("TOPLEFT", quickReplies.bottom, "BOTTOMLEFT", 0, -24)
+  PageFooter.AddBottomMarker(factory, frame, resetButton)
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
@@ -140,11 +122,10 @@ function BehaviorSettings.Create(factory, parent, config, options)
   end
 
   local function refreshLayout(width)
-    if type(width) ~= "number" or width <= 0 then
+    local effective = PageFooter.ClampPanelWidth(width)
+    if not effective then
       return
     end
-    local maxWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
-    local effective = math.min(maxWidth, math.max(160, math.floor(width)))
     header.refreshLayout(effective)
     panel:refreshLayout(effective)
     if list then

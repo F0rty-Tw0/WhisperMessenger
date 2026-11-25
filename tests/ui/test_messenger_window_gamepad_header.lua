@@ -44,7 +44,7 @@ local function onFlavor(isRetail, isForever, fn, withoutApi)
 end
 
 return function()
-  -- test_x_on_the_header_opens_the_chat_menu
+  -- test_game_right_click_on_the_header_opens_the_chat_menu
   onFlavor(false, true, function(env)
     local window = build()
     window.frame:Show()
@@ -56,7 +56,7 @@ return function()
       opened[#opened + 1] = { target = target, anchor = anchor }
       return true
     end)
-    local ok, err = pcall(env.pressX, view.headerFrame)
+    local ok, err = pcall(env.rightClick, view.headerFrame)
     rawset(ContactsContextMenu, "Open", original)
     assert(ok, err)
     assert(#opened == 1 and opened[1].target == contact and opened[1].anchor == view.headerFrame, "same menu as a mouse right-click")
@@ -69,10 +69,12 @@ return function()
     assert(env.pressX(window.conversation.headerFrame) == false and #env.calls == 0, "no gamepad UI: unchanged")
   end, true)
 
-  -- test_retail_header_with_the_api_gets_the_binding
+  -- test_retail_window_with_the_api_leaves_x_unbound
   onFlavor(true, false, function(env)
     local window = build()
     window.frame:Show()
-    assert(#env.bindings == 1, "the API alone binds X, whatever the flavor")
+    assert(env.count("FrameShown") == 1, "the API alone registers the window, whatever the flavor")
+    assert(#env.bindings == 0 and #env.footers == 0, "no prompted binding or footer from the game's utility")
+    assert(env.pressX(window.conversation.headerFrame) == false, "X does nothing on the header")
   end)
 end

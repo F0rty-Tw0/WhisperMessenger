@@ -229,4 +229,15 @@ return function()
     env.flush()
     assert(env.count("RefreshButtonGroups") > before, "hiding the emoji button re-scans")
   end)
+
+  -- test_dpad_right_on_the_whispers_tab_reaches_the_groups_tab
+  onFlavor(false, true, function(env)
+    local window = build()
+    window.frame:Show()
+    env.flush()
+    local tabs = window.tabToggle.getTabButtons()
+    assert(#tabs >= 2, "Whispers and Groups tabs shown")
+    local target = env.overrideFor(tabs[1], "RIGHT")
+    assert(type(target) == "table" and target == tabs[2], "D-pad right on Whispers jumps to Groups")
+  end)
 end

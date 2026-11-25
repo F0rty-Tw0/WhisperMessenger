@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local FiltersSettingsUI = require("tests.helpers.filters_settings_ui")
+local GlobalWriteSpy = require("tests.helpers.global_write_spy")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local FiltersSettings = require("WhisperMessenger.UI.MessengerWindow.FiltersSettings")
 local KeywordRules = require("WhisperMessenger.Model.Filters.KeywordRules")
@@ -147,6 +148,20 @@ return function()
     assert(Localization.Text("Name (optional)") ~= "Name (optional)", "name label translated")
     assert(Localization.Text("Words") ~= "Words", "words label translated")
     Localization.Configure({ language = "enUS" })
+  end
+
+  -- test_reset_confirm_does_not_reassign_static_popup_dialogs
+  do
+    local result = create({ ignored = {}, rules = {} })
+    local shown = {}
+    rawset(_G, "StaticPopup_Show", function(name)
+      shown[#shown + 1] = name
+    end)
+    local writes, dialogs = GlobalWriteSpy.Writes("StaticPopupDialogs", function()
+      FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
+    end)
+    assert(#shown == 1 and dialogs[shown[1]] ~= nil, "the reset confirm is registered and shown")
+    assert(writes == 0, "the game's StaticPopupDialogs is never reassigned")
   end
 
   _G.StaticPopupDialogs = nil

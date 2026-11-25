@@ -136,7 +136,7 @@ return function()
   assert(runtime.activeConversationKey == "wow::WOW::arthas-area52")
   assert(runtime.characterState.activeConversationKey == "wow::WOW::arthas-area52")
   assert(conversation.unreadCount == 0)
-  assert(runtime.window.conversation.header.text == "Arthas-Area52")
+  assert(runtime.window.conversation.headerName.text == "Arthas-Area52")
 
   eventFrame.scripts.OnEvent(
     eventFrame,
@@ -156,7 +156,7 @@ return function()
   )
   assert(#conversation.messages == 2)
   assert(conversation.unreadCount == 0)
-  assert(runtime.window.conversation.transcript.lines[2] == "still there")
+  assert(runtime.window.conversation.transcript._allMessages[2].text == "still there")
 
   runtime.window.closeButton.scripts.OnClick(runtime.window.closeButton)
   assert(runtime.window.frame.shown == false)

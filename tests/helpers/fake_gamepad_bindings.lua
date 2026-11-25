@@ -62,6 +62,13 @@ function FakeGamepadBindings.Install(env, log, smartNav)
     end
   end
 
+  -- The game right-clicking target, as SmartNavigation:RightClick does on
+  -- the focused button.
+  function env.rightClick(target)
+    env.currentButton = target
+    smartNav:RightClick()
+  end
+
   -- X pressed with target focused: true when a shown footer's X binding
   -- is usable there (its contexts hold target.buttonContext) and ran.
   function env.pressX(target)

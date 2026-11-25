@@ -1,5 +1,4 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
-local Availability = require("WhisperMessenger.Transport.Availability")
 local ConversationPane = require("WhisperMessenger.UI.ConversationPane")
 local FakeUI = require("tests.helpers.fake_ui")
 
@@ -31,13 +30,10 @@ return function()
     displayName = "Arthas-Area52",
   }, conv)
 
-  ConversationPane.SetStatus(pane, Availability.FromStatus("Offline"))
-  assert(pane.statusBanner.text == "Offline")
-
   -- Active status banner shows AFK text
   assert(pane.activeStatusBanner.shown == true, "expected active status banner visible")
   assert(pane.activeStatusBanner.text == "I am away from keyboard.")
 
   -- Only the user message in transcript, no system message
-  assert(#pane.transcript.lines == 1, "expected 1 transcript line, got " .. #pane.transcript.lines)
+  assert(#pane.transcript._allMessages == 1, "expected 1 transcript message, got " .. #pane.transcript._allMessages)
 end

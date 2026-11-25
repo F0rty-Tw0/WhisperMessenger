@@ -1,18 +1,54 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local FakeGamepad = require("tests.helpers.fake_gamepad")
 local FindUI = require("tests.helpers.find_ui")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local Theme = require("WhisperMessenger.UI.Theme")
 local SettingsControls = require("WhisperMessenger.UI.Shared.SettingsControls")
 local AppearanceSettings = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
 local SettingsRuntime = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsRuntime")
-local GamepadNav = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadSettings = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
+local PadButtons = require("WhisperMessenger.UI.Shared.SettingsControls.PadButtons")
+local FakeGamepad = require("tests.helpers.fake_gamepad")
+
+local WIDTH = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
+local INSET = PadButtons.SIZE + PadButtons.GAP
+
+-- The pad button of the slider row with this glyph atlas, or nil.
+local function padButton(row, atlas)
+  for _, child in ipairs(row.row.children or {}) do
+    local glyph = child._wmPadButton == true and FindUI.ofType(child, "Texture")[1]
+    if glyph and glyph.atlas == atlas then
+      return child
+    end
+  end
+  return nil
+end
+
+local function sliderX(row)
+  return row.slider.point[4]
+end
+
+-- Runs fn(state) with the gamepad API installed and the pad UI toggle at
+-- state.on (fn may flip it), restoring the globals afterwards.
+local function withPadUI(on, fn)
+  local gamepad = FakeGamepad.New()
+  local state = { on = on }
+  local savedInputUtil = rawget(_G, "InputUtil")
+  gamepad.install()
+  rawset(_G, "InputUtil", {
+    IsGamepadUIEnabled = function()
+      return state.on
+    end,
+  })
+  local ok, err = pcall(fn, state)
+  rawset(_G, "InputUtil", savedInputUtil)
+  gamepad.uninstall()
+  assert(ok, err)
+end
 
 local function fakeNav()
   ---@type table<string, any>
   local nav = { seen = {} }
-  for _, name in ipairs({ "markFocusable", "setStepper", "setEdgeOverride", "setScrollFrame", "refresh" }) do
+  for _, name in ipairs({ "markFocusable", "ignore", "setScrollFrame", "refresh", "setJumpTarget" }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
     end
@@ -53,6 +89,111 @@ return function()
     assert(changes[2] == 9, "one step left")
   end
 
+  local changes = {}
+  local function newRow(initial)
+    changes = {}
+    return SettingsControls.CreateSliderRow(factory, parent, {
+      label = "N",
+      min = 0,
+      max = 10,
+      step = 1,
+      initial = initial,
+      onChange = function(v)
+        changes[#changes + 1] = v
+      end,
+    })
+  end
+
+  -- test_slider_row_minus_and_plus_step_one_value
+  withPadUI(true, function()
+    local row = newRow(5)
+    FindUI.click(padButton(row, PadButtons.ATLAS.plus))
+    assert(row.slider:GetValue() == 6 and changes[1] == 6, "plus: one step up, saved")
+    FindUI.click(padButton(row, PadButtons.ATLAS.minus))
+    assert(row.slider:GetValue() == 5 and changes[2] == 5, "minus: one step down, saved")
+  end)
+
+  -- test_plus_at_max_changes_nothing
+  withPadUI(true, function()
+    local row = newRow(10)
+    FindUI.click(padButton(row, PadButtons.ATLAS.plus))
+    assert(#changes == 0 and row.slider:GetValue() == 10, "at max: nothing changes")
+  end)
+
+  -- test_dpad_left_on_plus_jumps_to_minus_and_right_on_minus_to_plus
+  -- The slider between them is skipped, so spatial nav would pick a nearer
+  -- control on the row above instead of the far button on the same row.
+  withPadUI(true, function()
+    local nav, page = fakeNav(), factory.CreateFrame("Frame", nil, parent)
+    local row = SettingsControls.CreateSliderRow(factory, page, { label = "N", min = 0, max = 10, step = 1, initial = 5, onChange = function() end })
+    local minus, plus = padButton(row, PadButtons.ATLAS.minus), padButton(row, PadButtons.ATLAS.plus)
+    GamepadSettings.Attach(nav, { panels = { page } })
+    local jumps = {}
+    for _, s in ipairs(nav.seen) do
+      if s.name == "setJumpTarget" then
+        jumps[#jumps + 1] = s.args
+      end
+    end
+    local function jumpOf(widget, dir)
+      for _, args in ipairs(jumps) do
+        if args[1] == widget and args[2] == dir then
+          return args[3]
+        end
+      end
+    end
+    assert(jumpOf(plus, "LEFT") == minus, "LEFT on + jumps to its −")
+    assert(jumpOf(minus, "RIGHT") == plus, "RIGHT on − jumps to its +")
+    assert(#jumps == 2, "only the pair link; UP/DOWN stay spatial, got " .. #jumps)
+  end)
+
+  -- test_inset_only_while_the_pad_ui_is_on
+  withPadUI(true, function()
+    local row = newRow(5)
+    assert(padButton(row, PadButtons.ATLAS.minus):IsShown() and padButton(row, PadButtons.ATLAS.plus):IsShown(), "on: buttons shown")
+    assert(sliderX(row) == INSET and row.slider:GetWidth() == WIDTH - 2 * INSET, "on: space reserved")
+  end)
+  withPadUI(false, function()
+    local row = newRow(5)
+    assert(not padButton(row, PadButtons.ATLAS.minus):IsShown() and not padButton(row, PadButtons.ATLAS.plus):IsShown(), "off: buttons hidden")
+    assert(sliderX(row) == 0 and row.slider:GetWidth() == WIDTH, "off: full layout")
+    assert(#row.slider.points == 1, "one anchor, never stacked")
+  end)
+
+  -- test_toggle_relayouts_the_slider
+  withPadUI(true, function(state)
+    local row = newRow(5)
+    state.on = false
+    PadButtons.Refresh()
+    assert(sliderX(row) == 0 and row.slider:GetWidth() == WIDTH, "toggled off: full width")
+    state.on = true
+    PadButtons.Refresh()
+    assert(sliderX(row) == INSET and row.slider:GetWidth() == WIDTH - 2 * INSET, "toggled on: inset back")
+    assert(#changes == 0, "a re-layout saves nothing")
+  end)
+
+  -- test_set_width_keeps_the_current_inset
+  withPadUI(true, function(state)
+    local row = newRow(5)
+    row.setWidth(400)
+    assert(row.slider:GetWidth() == 400 - 2 * INSET and sliderX(row) == INSET, "on: inset kept")
+    state.on = false
+    PadButtons.Refresh()
+    row.setWidth(400)
+    assert(row.slider:GetWidth() == 400 and sliderX(row) == 0, "off: full width")
+    state.on = true
+    PadButtons.Refresh()
+    assert(row.slider:GetWidth() == 400 - 2 * INSET, "toggle on after setWidth uses the new row width")
+  end)
+
+  -- test_no_gamepad_api_no_pad_buttons_full_width
+  do
+    local row = newRow(5)
+    for _, child in ipairs(row.row.children or {}) do
+      assert(child._wmPadButton == nil, "no pad button without the API")
+    end
+    assert(row.slider:GetWidth() == WIDTH and sliderX(row) == 0, "full width")
+  end
+
   -- test_window_scale_pad_step_saves_like_a_mouse_drag
   do
     local dragged, padded = {}, {}
@@ -76,7 +217,7 @@ return function()
     assert(FindUI.text(padPage.frame, "105%") ~= nil, "label formatted as the drag shows it")
   end
 
-  -- test_every_settings_slider_becomes_a_focusable_stepper
+  -- test_every_settings_slider_is_skipped_by_the_pad_cursor
   do
     local created, nav = {}, fakeNav()
     local original = SettingsControls.CreateSliderRow
@@ -97,29 +238,8 @@ return function()
     SettingsControls.CreateSliderRow = original
     assert(ok, err)
     for _, row in ipairs(created) do
-      assert(nav.countFor("markFocusable", row.slider) == 1 and nav.countFor("setStepper", row.slider) == 1, "slider marked once and steps")
+      assert(nav.countFor("ignore", row.slider) == 1, "slider skipped once")
+      assert(nav.countFor("markFocusable", row.slider) == 0, "slider is not a D-pad stop")
     end
-  end
-
-  -- test_pad_right_on_a_slider_at_max_stays_and_changes_nothing
-  do
-    local env = FakeGamepad.New()
-    local nav = GamepadNav.New(factory.CreateFrame("Frame", nil, parent), env.deps())
-    local changes = 0
-    local page = factory.CreateFrame("Frame", nil, parent)
-    local row = SettingsControls.CreateSliderRow(factory, page, {
-      label = "N",
-      min = 0,
-      max = 2,
-      step = 1,
-      initial = 1,
-      onChange = function()
-        changes = changes + 1
-      end,
-    })
-    GamepadSettings.Attach(nav, { panels = { page } })
-    assert(env.press(row.slider, "RIGHT") == "stay" and row.slider:GetValue() == 2 and changes == 1, "right steps, focus stays")
-    assert(env.press(row.slider, "RIGHT") == "stay" and changes == 1, "at max: stays, no change")
-    assert(env.press(row.slider, "DOWN") == "move", "down leaves the slider")
   end
 end

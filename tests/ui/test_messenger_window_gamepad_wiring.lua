@@ -20,12 +20,11 @@ local function fakeNav(active)
     "setScrollFrame",
     "ignore",
     "markFocusable",
-    "setStepper",
-    "setEdgeOverride",
+    "setJumpTarget",
+    "setOrder",
     "popupShown",
     "popupHidden",
     "setPopupCloseHandler",
-    "bindRightClick",
   }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })
@@ -143,9 +142,8 @@ return function()
       end
     end
     assert(
-      table.concat(order, ",")
-        == "MarkFrameIgnored,FrameShown,SetScrollFrameForFrame,CreatePromptedBinding,CreatePromptedBindingFooter,ShowAndActivateBindings",
-      "ignores, then register, then scroll frame, then the X footer"
+      table.concat(order, ",") == "MarkFrameIgnored,FrameShown,SetScrollFrameForFrame",
+      "ignores, then register, then scroll frame; nothing for X"
     )
     assert(env.count("FrameShown") == 1, "one registration")
     assert(env.scrollFrameFor(t.frame) == t.refs.conversation.transcript.scrollFrame, "right stick scrolls the chat")
@@ -216,23 +214,12 @@ return function()
     assert(type(t.shell.settingsRuntime.settingsPanels.onNavTargetsChanged) == "function", "tabs can report")
   end
 
-  -- test_attach_binds_x_to_the_right_click_context
+  -- test_attach_leaves_the_chat_header_without_a_button_context
+  -- The game's buff refresh reads buttonContext on the focused frame; an
+  -- addon value there taints it.
   do
     local t = setup()
-    local seen
-    for _, s in ipairs(t.nav.seen) do
-      if s.name == "bindRightClick" then
-        seen = s.args
-      end
-    end
-    assert(t.nav.count("bindRightClick") == 1, "bound once")
-    assert(seen[1] == GamepadNav.RIGHT_CLICK_CONTEXT and seen[2] == "Options", "our context, the existing Options label")
-  end
-
-  -- test_attach_tags_the_chat_header_for_x
-  do
-    local t = setup()
-    assert(t.refs.conversation.headerFrame.buttonContext == GamepadNav.RIGHT_CLICK_CONTEXT, "X opens the header menu")
+    assert(t.refs.conversation.headerFrame.buttonContext == nil, "the chat header carries no buttonContext")
   end
 
   -- test_inactive_nav_skips_the_settings_walk

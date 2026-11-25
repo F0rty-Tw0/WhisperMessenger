@@ -7,11 +7,13 @@ local ContextMenu = {}
 -- stylua: ignore start
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local ManualCopy = ns.ChatBubbleContextMenuManualCopy or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
+local ManualCopy = ns.ChatBubbleContextMenuManualCopyClipboard or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.Clipboard")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local ReactionPicker = ns.ChatBubbleReactionPicker or require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local MenuPopup = ns.MenuPopup or require("WhisperMessenger.UI.Shared.MenuPopup")
 -- stylua: ignore end
 
 local MENU_FRAME_NAME = "WhisperMessengerBubbleContextMenu"
@@ -54,29 +56,45 @@ end
 
 -- An opened menu takes ESC before the window.
 local function menuOpened(menu)
-  PickerPopup.ReportMenuShown(menu)
+  PopupEscape.ReportMenuShown(menu)
   return true
 end
 
--- Retail's menu API: Reply, Copy text and Ignore sender (the first and last
--- only with a handler). False when the API is missing.
+-- Reply, Copy text and Block sender (the first and last only with a handler).
+local function addMenuButtons(rootDescription, normalized, options)
+  if type(options.onReply) == "function" then
+    rootDescription:CreateButton(Localization.Text("Reply"), options.onReply)
+  end
+  rootDescription:CreateButton(Localization.Text("Copy text"), function()
+    ContextMenu.CopyText(normalized)
+  end)
+  if type(options.onIgnoreSender) == "function" then
+    rootDescription:CreateButton(Localization.Text("Block sender…"), options.onIgnoreSender)
+  end
+end
+
+-- Retail's menu API. False when the API is missing.
 local function openModernMenu(normalized, anchorFrame, options)
   local menuUtil = _G.MenuUtil
   if type(menuUtil) ~= "table" or type(menuUtil.CreateContextMenu) ~= "function" then
     return false
   end
   local menu = menuUtil.CreateContextMenu(anchorFrame, function(_owner, rootDescription)
-    if type(options.onReply) == "function" then
-      rootDescription:CreateButton(Localization.Text("Reply"), options.onReply)
-    end
-    rootDescription:CreateButton(Localization.Text("Copy text"), function()
-      ContextMenu.CopyText(normalized)
-    end)
-    if type(options.onIgnoreSender) == "function" then
-      rootDescription:CreateButton(Localization.Text("Block sender…"), options.onIgnoreSender)
-    end
+    addMenuButtons(rootDescription, normalized, options)
   end)
   return menuOpened(menu)
+end
+
+-- WoW: Forever with the gamepad UI on: WM's own popup, since Blizzard's menus
+-- taint from addon code there. Copies the text when the popup cannot open.
+local function openForeverMenu(normalized, anchorFrame, options)
+  local opened = MenuPopup.Open(anchorFrame, function(root)
+    addMenuButtons(root, normalized, options)
+  end)
+  if opened then
+    return menuOpened()
+  end
+  return ContextMenu.CopyText(normalized)
 end
 
 -- options.onReply() / options.onIgnoreSender(): optional; add "Reply" /
@@ -103,6 +121,10 @@ function ContextMenu.Open(text, anchorFrame, options)
     then
       return true
     end
+  end
+
+  if FlavorCompat.UsesOwnMenus() then
+    return openForeverMenu(normalized, anchorFrame, options)
   end
 
   local hasMenuActions = type(options.onReply) == "function" or type(options.onIgnoreSender) == "function"

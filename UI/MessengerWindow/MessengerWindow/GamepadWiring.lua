@@ -3,20 +3,20 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local GamepadDeps = ns.MessengerWindowGamepadDeps or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadDeps")
 local GamepadNav = ns.MessengerWindowGamepadNav or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadNav")
 local GamepadCloseOrder = ns.MessengerWindowGamepadCloseOrder or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.GamepadCloseOrder")
-local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local GamepadSettings = ns.MessengerWindowGamepadSettings or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
-local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local GamepadTranscript = ns.MessengerWindowGamepadTranscript or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadTranscript")
 local GamepadComposer = ns.MessengerWindowGamepadComposer or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadComposer")
 
 -- The messenger window's part of the WoW: Forever gamepad UI: register on
 -- show, B closes the topmost layer, the right stick scrolls the chat (the
 -- settings page while settings show), the D-pad skips grips and the
--- composer padding, stops on each message, and reaches every settings
--- control. Our popups
+-- composer padding, stops on each message, reaches every settings control,
+-- and walks the top bar and the tabs in on-screen order. Our popups
 -- take pad focus while open; B closes them and the composer pickers first.
 -- On a client without the gamepad UI API the nav does nothing, so neither
 -- does this.
@@ -58,7 +58,7 @@ local function buildCloseHandler(frame, refs, clearComposerFocus)
     isWindowShown = function()
       return frame:IsShown()
     end,
-    hideShownPopup = PickerPopup.HideShownEscapeFrame,
+    hideShownPopup = PopupEscape.HideShownEscapeFrame,
     hideComposerPopover = function()
       for _, picker in ipairs(composerPickers(refs.composer)) do
         if picker.frame:IsShown() then
@@ -98,6 +98,7 @@ local function attachSettings(nav, shell, transcript)
     chatScrollFrame = transcript and transcript.scrollFrame,
     optionsPanel = layout.optionsPanel,
     panels = settingsPanels,
+    createFrame = GamepadDeps.defaultCreateFrame,
   })
   DropdownSelector.SetMenuToggledHook(nav.refresh)
 end
@@ -108,13 +109,47 @@ local function attachPopups(nav)
   if not nav.isActive() then
     return
   end
-  PickerPopup.SetGamepadPopupHooks(function(popup)
+  PopupEscape.SetGamepadPopupHooks(function(popup)
     nav.setPopupCloseHandler(popup, function()
       popup:Hide()
       return true
     end)
     nav.popupShown(popup)
   end, nav.popupHidden)
+end
+
+-- Left to right on screen in both views: in the compact chat view Back
+-- takes the first left slot while the left group hides.
+local TOP_BAR = { "newConversationButton", "patchNotesButton", "markAllReadButton", "backButton", "optionsButton", "closeButton" }
+
+-- The D-pad walks the top bar and the contact tabs left / right and the
+-- settings tabs (a vertical list) up / down, in on-screen order. Each frame
+-- seen gets an OnShow / OnHide hook once (memo `hooked`), so a button that
+-- hides, such as Mark all read, re-chains at once; contact tabs shown later
+-- re-chain through the toggle's tabs-changed handler (see attach).
+local function orderStops(nav, shell, refs, hooked, reorder)
+  local chrome, layout = shell.chrome or {}, shell.layout or {}
+  local bar = {}
+  for _, name in ipairs(TOP_BAR) do
+    bar[#bar + 1] = chrome[name]
+  end
+  local tabToggle = refs.tabToggle
+  local contactTabs = tabToggle and tabToggle.getTabButtons and tabToggle.getTabButtons() or {}
+  local orders = {
+    { "topBar", bar, "LEFT", "RIGHT" },
+    { "settingsTabs", layout.settingsTabs or {}, "UP", "DOWN" },
+    { "contactTabs", contactTabs, "LEFT", "RIGHT" },
+  }
+  for _, order in ipairs(orders) do
+    for _, stop in ipairs(order[2]) do
+      if not hooked[stop] and stop.HookScript then
+        hooked[stop] = true
+        stop:HookScript("OnShow", reorder)
+        stop:HookScript("OnHide", reorder)
+      end
+    end
+    nav.setOrder(order[1], order[2], order[3], order[4])
+  end
 end
 
 -- shell: WindowShell.Build's result. nav: for tests; defaults to the game's.
@@ -126,12 +161,22 @@ function GamepadWiring.Create(shell, nav)
   nav = nav or GamepadNav.New(frame)
 
   local wiring = { nav = nav }
+  local attachedRefs = nil
+  local hooked = setmetatable({}, { __mode = "k" })
+
+  -- Before attach (no refs yet) or without the gamepad UI API: nothing.
+  local function reorder()
+    if attachedRefs and nav.isActive() then
+      orderStops(nav, shell, attachedRefs, hooked, reorder)
+    end
+  end
 
   function wiring.refresh()
+    reorder()
     nav.refresh()
   end
 
-  -- refs: { composer, conversation, compactMode, windowVisibility }.
+  -- refs: { composer, conversation, compactMode, windowVisibility, tabToggle }.
   function wiring.attach(refs)
     frame:HookScript("OnShow", function()
       nav.onShow()
@@ -144,12 +189,6 @@ function GamepadWiring.Create(shell, nav)
     local clearComposerFocus = GamepadComposer.Attach(nav, refs.composer)
     nav.setCloseHandler(buildCloseHandler(frame, refs, clearComposerFocus))
     attachPopups(nav)
-    -- X opens the right-click menu of a focused target that carries the
-    -- context (contact rows, messages, the chat header).
-    nav.bindRightClick(GamepadNav.RIGHT_CLICK_CONTEXT, Localization.Text("Options"))
-    if refs.conversation then
-      refs.conversation.headerFrame.buttonContext = GamepadNav.RIGHT_CLICK_CONTEXT
-    end
     -- The pickers live inside the window: a re-scan makes their buttons
     -- D-pad stops. Their own SetScript calls ran at build, before this.
     for _, picker in ipairs(composerPickers(refs.composer)) do
@@ -162,6 +201,14 @@ function GamepadWiring.Create(shell, nav)
     end
     ignoreDeadStops(nav, shell, refs)
     attachSettings(nav, shell, transcript)
+    -- A tab shown later (a mode turned on, an addon panel's tab) has no
+    -- OnShow hook yet: the toggle reports the change instead.
+    local tabToggle = refs.tabToggle
+    if tabToggle and tabToggle.setTabsChangedHandler then
+      tabToggle.setTabsChangedHandler(reorder)
+    end
+    attachedRefs = refs
+    reorder()
   end
 
   return wiring

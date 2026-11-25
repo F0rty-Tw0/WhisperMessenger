@@ -189,7 +189,6 @@ UI/Theme/EllesmereBridge.lua
 UI/Theme/EllesmereButtonLook.lua
 UI/Theme/Presets/Data/EllesmereUI.lua
 UI/Theme/Presets.lua
-UI/Theme/Colors.lua
 UI/Theme/BubbleColors.lua
 UI/Theme/FontFamilies.lua
 UI/Theme/FontColors.lua
@@ -215,6 +214,7 @@ UI/Badge.lua
 UI/Shared/PickerStyles.lua
 UI/Shared/PopupEscape.lua
 UI/Shared/PickerPopup.lua
+UI/Shared/MenuPopup.lua
 UI/Shared/KeybindHints.lua
 UI/Shared/UnreadSummary.lua
 UI/Shared/PanelBadge.lua
@@ -247,7 +247,6 @@ UI/Shared/IgnorePrompt.lua
 UI/Shared/ReloadPrompt.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI.lua
 UI/ChatBubble/ContextMenu/ManualCopy/Clipboard.lua
-UI/ChatBubble/ContextMenu/ManualCopy.lua
 UI/ChatBubble/ContextMenu.lua
 UI/ChatBubble/HoverCopy.lua
 UI/ChatBubble/ReplyQuote.lua
@@ -255,6 +254,7 @@ UI/ChatBubble/ReactionBadge.lua
 UI/ChatBubble/PlainText.lua
 UI/ChatBubble/AddonGreetingText.lua
 UI/ChatBubble/MentionHighlight.lua
+UI/ChatBubble/BubbleCensor.lua
 UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
 UI/ChatBubble/FramePool.lua
@@ -280,6 +280,7 @@ UI/ContactsList/ContactPrefsDialog.lua
 UI/ContactsList/MenuEntries.lua
 UI/ContactsList/GuildInviteMenuEntry.lua
 UI/ContactsList/ProtectedMenuEntries.lua
+UI/ContactsList/OwnMenu.lua
 UI/ContactsList/ContextMenu.lua
 UI/ContactsList/HoverPointer.lua
 UI/ContactsList/RowHoverOverlay.lua
@@ -421,7 +422,6 @@ UI/MessengerWindow/WindowScripts/Frame/GamepadCloseOrder.lua
 UI/MessengerWindow/WindowScripts/Frame/GamepadMarks.lua
 UI/MessengerWindow/WindowScripts/Frame/GamepadPopups.lua
 UI/MessengerWindow/WindowScripts/Frame/GamepadDeps.lua
-UI/MessengerWindow/WindowScripts/Frame/GamepadRightClick.lua
 UI/MessengerWindow/WindowScripts/Frame/GamepadNav.lua
 UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua
@@ -430,6 +430,7 @@ UI/MessengerWindow/AppearanceSettings/ButtonSelector.lua
 UI/MessengerWindow/AppearanceSettings/DropdownSkin.lua
 UI/MessengerWindow/AppearanceSettings/NativeDropdown.lua
 UI/MessengerWindow/AppearanceSettings/DropdownOptionRow.lua
+UI/MessengerWindow/AppearanceSettings/DropdownSwap.lua
 UI/MessengerWindow/AppearanceSettings/DropdownSelector.lua
 UI/Shared/SettingsControls/PanelRegistry.lua
 UI/Shared/SettingsControls/Divider.lua
@@ -437,8 +438,10 @@ UI/Shared/SettingsControls/Banner.lua
 UI/Shared/SettingsControls/Header.lua
 UI/Shared/SettingsControls/SectionLabel.lua
 UI/Shared/SettingsControls/SliderSkin.lua
+UI/Shared/SettingsControls/PadButtons.lua
 UI/Shared/SettingsControls/SliderPadStep.lua
 UI/Shared/SettingsControls.lua
+UI/Shared/SettingsControls/PageFooter.lua
 UI/Shared/DialogChrome.lua
 UI/Shared/TwoFieldDialog.lua
 UI/MessengerWindow/GeneralSettings/RetentionRow.lua
@@ -557,6 +560,7 @@ Core/Bootstrap/LifecycleHandlers/ScanSignature.lua
 Core/Bootstrap/LifecycleHandlers/BNetRekey.lua
 Core/Bootstrap/CharacterMergeRemap.lua
 Core/Bootstrap/LifecycleHandlers/Presence.lua
+Core/Bootstrap/LifecycleHandlers/Logout.lua
 Core/Bootstrap/LifecycleHandlers/GroupMembership.lua
 Core/Bootstrap/LifecycleHandlers/RelationshipRefresh.lua
 Core/Bootstrap/LifecycleHandlers.lua

@@ -4,12 +4,11 @@ if type(ns) ~= "table" then
 end
 
 local Common = ns.BootstrapLifecycleHandlersCommon or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
-local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
-local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 local BNetRekey = ns.BootstrapLifecycleHandlersBNetRekey or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.BNetRekey")
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
+local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
 local ZoneNotify = ns.BootstrapLifecycleHandlersZoneNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneNotify")
 -- stylua: ignore
 local ZoneRosterPoll = ns.BootstrapLifecycleHandlersZoneRosterPoll or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneRosterPoll")
@@ -21,34 +20,6 @@ local ScanSignature = ns.BootstrapLifecycleHandlersScanSignature or require("Whi
 local StaleRestrictions = ns.BootstrapLifecycleHandlersStaleRestrictions or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.StaleRestrictions")
 
 local Presence = {}
-
--- "Clear on logout" leaves no chat history in the saved variables.
-function Presence.handlePlayerLogout(Bootstrap)
-  local runtime = Bootstrap.runtime
-  local settings = runtime and runtime.accountState and runtime.accountState.settings
-  if not (settings and settings.clearOnLogout) then
-    return true
-  end
-
-  -- The removal hook clears a selection together with its chat; a saved
-  -- selection can also name a chat that expired while offline.
-  runtime.activeConversationKey = nil
-  if runtime.characterState then
-    runtime.characterState.activeConversationKey = nil
-  end
-  -- Channel lines kept to show above a new whisper are saved history too.
-  if runtime.channelMessageStore then
-    ChannelMessageStore.Clear(runtime.channelMessageStore)
-  end
-  -- The hook runs session cleanup per chat. If any of it fails, the chats
-  -- must still not reach the saved variables, so drop what is left.
-  pcall(Store.RemoveAll, runtime.store)
-  local conversations = runtime.store.conversations
-  for key in pairs(conversations) do
-    conversations[key] = nil
-  end
-  return true
-end
 
 local function isWindowHidden(runtime)
   return runtime.refreshWindow ~= nil and runtime.isWindowVisible ~= nil and not runtime.isWindowVisible()
@@ -164,7 +135,7 @@ local function refreshBNetConversations(Bootstrap, deps)
     ScanSignature.Prune(signatures, Bootstrap.runtime.store.conversations)
   end
 
-  refreshAfterBNetScan(Bootstrap, changedKeys, liveChanged, hidden)
+  PerfCounters.Attribute("snapshotBuilds", "bnetScan", refreshAfterBNetScan, Bootstrap, changedKeys, liveChanged, hidden)
 end
 
 function Presence.handleBNetFriendEvent(Bootstrap, deps)

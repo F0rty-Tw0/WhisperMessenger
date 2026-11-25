@@ -241,4 +241,14 @@ return function()
     DataBuilder.BuildItemsForProfile(state, "me", cache, { ["party::me"] = true })
     assert(PerfCounters.Get("snapshotBuilds") == 7, "6 full builds plus 1 dirty build, got " .. PerfCounters.Get("snapshotBuilds"))
   end
+
+  -- test_snapshot_builds_count_under_the_active_source
+  do
+    local state = newState()
+    local cache = SnapshotCache.New()
+    PerfCounters.Reset()
+    PerfCounters.Attribute("snapshotBuilds", "ticker", DataBuilder.BuildItemsForProfile, state, "me", cache, nil)
+    local builds = PerfCounters.GetSource("snapshotBuilds", "ticker")
+    assert(builds == 6, "6 builds under ticker, got " .. builds)
+  end
 end

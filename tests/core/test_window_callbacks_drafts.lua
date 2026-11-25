@@ -1,6 +1,6 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local WindowCallbacks = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
-local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
+local Logout = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Logout")
 
 local KEY = "wow::WOW::jaina"
 
@@ -45,7 +45,7 @@ return function()
     local callbacks, runtime = build()
     callbacks.onDraftChanged(KEY, "pending")
     runtime.accountState = { settings = { clearOnLogout = true } }
-    Presence.handlePlayerLogout({ runtime = runtime })
+    Logout.handlePlayerLogout({ runtime = runtime })
     assert(callbacks.getDraft(KEY) == nil, "clear on logout removes drafts")
   end
 end

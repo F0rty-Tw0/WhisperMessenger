@@ -11,8 +11,11 @@ local MenuEntries = ns.ContactsListMenuEntries or require("WhisperMessenger.UI.C
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local GuildInviteMenuEntry = ns.ContactsListGuildInviteMenuEntry or require("WhisperMessenger.UI.ContactsList.GuildInviteMenuEntry")
-local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 local ProtectedMenuEntries = ns.ContactsListProtectedMenuEntries or require("WhisperMessenger.UI.ContactsList.ProtectedMenuEntries")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local MenuPopup = ns.MenuPopup or require("WhisperMessenger.UI.Shared.MenuPopup")
+local OwnMenu = ns.ContactsListOwnMenu or require("WhisperMessenger.UI.ContactsList.OwnMenu")
 
 local ExportMenuEntry = MenuEntries.Export
 local NotifyMenuEntries = MenuEntries.Notify
@@ -20,6 +23,7 @@ local AddFriendMenuEntry = MenuEntries.AddFriend
 local BlockMenuEntry = MenuEntries.Block
 local ProfileLinksMenuEntry = MenuEntries.ProfileLinks
 local SeparateMenuEntry = MenuEntries.Separate
+local RowActionsMenuEntry = MenuEntries.RowActions
 
 local ContextMenu = {}
 
@@ -70,48 +74,12 @@ local function addPrefsButtons(rootDescription, item, onUpdatePrefs, isGroup)
   NotifyMenuEntries.Add(rootDescription, item, onUpdatePrefs)
 end
 
--- Pin/Unpin and Remove: the row's hover-button actions, through the same
--- handlers, so they are reachable in the collapsed rail too (no hover
--- buttons there). rowActions: { onPin(item), onRemove(item) }.
-local function addRowActionButtons(rootDescription, item, rowActions)
-  if type(rowActions) ~= "table" then
-    return
-  end
-  if type(rowActions.onPin) == "function" then
-    rootDescription:CreateButton(Localization.Text(item.pinned and "Unpin" or "Pin to top"), function()
-      rowActions.onPin(item)
-    end)
-  end
-  if type(rowActions.onRemove) == "function" then
-    rootDescription:CreateButton(Localization.Text("Remove"), function()
-      rowActions.onRemove(item)
-    end)
-  end
-end
-
-local function hasRowActions(rowActions)
-  return type(rowActions) == "table"
-    and (type(rowActions.onPin) == "function" or type(rowActions.onRemove) == "function" or type(rowActions.onIgnorePlayer) == "function")
-end
-
--- Menu.ModifyMenu hook on Blizzard's FRIEND / BN_FRIEND player menus. Only
--- acts when the menu was opened from one of our rows (contextData carries
--- our item).
-local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
-  if rootDescription == nil or type(rootDescription.CreateButton) ~= "function" then
-    return
-  end
-  if type(contextData) ~= "table" or type(contextData.whisperMessengerItem) ~= "table" then
-    return
-  end
-  local item = contextData.whisperMessengerItem
-  ProtectedMenuEntries.Fix(rootDescription, item)
-  local onMarkUnread = contextData.whisperMessengerOnMarkUnread
-  local onUpdatePrefs = contextData.whisperMessengerOnUpdatePrefs
-  local rowActions = contextData.whisperMessengerRowActions
+-- The divider, gold title and WM entries of a contact menu: Blizzard's
+-- player menu, or WM's own popup on WoW: Forever with the gamepad UI on.
+local function addSection(rootDescription, item, onMarkUnread, onUpdatePrefs, rowActions)
   local profileLinks = ProfileLinksMenuEntry.Links(item)
   -- No entries: skip the section rather than show it empty.
-  if type(onMarkUnread) ~= "function" and type(onUpdatePrefs) ~= "function" and not hasRowActions(rowActions) and #profileLinks == 0 then
+  if type(onMarkUnread) ~= "function" and type(onUpdatePrefs) ~= "function" and not RowActionsMenuEntry.Has(rowActions) and #profileLinks == 0 then
     return
   end
   -- Divider + gold title mark our entries apart from Blizzard's.
@@ -129,7 +97,25 @@ local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
   BlockMenuEntry.Add(rootDescription, item, rowActions)
   ProfileLinksMenuEntry.Add(rootDescription, profileLinks)
   SeparateMenuEntry.Add(rootDescription, item, rowActions)
-  addRowActionButtons(rootDescription, item, rowActions)
+  RowActionsMenuEntry.Add(rootDescription, item, rowActions)
+end
+
+-- Menu.ModifyMenu hook on Blizzard's FRIEND / BN_FRIEND player menus. Only
+-- acts when the menu was opened from one of our rows (contextData carries
+-- our item).
+local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
+  if rootDescription == nil or type(rootDescription.CreateButton) ~= "function" then
+    return
+  end
+  if type(contextData) ~= "table" or type(contextData.whisperMessengerItem) ~= "table" then
+    return
+  end
+  local item = contextData.whisperMessengerItem
+  ProtectedMenuEntries.Fix(rootDescription, item)
+  local onMarkUnread = contextData.whisperMessengerOnMarkUnread
+  local onUpdatePrefs = contextData.whisperMessengerOnUpdatePrefs
+  local rowActions = contextData.whisperMessengerRowActions
+  addSection(rootDescription, item, onMarkUnread, onUpdatePrefs, rowActions)
 end
 
 local function ensureModernMenu()
@@ -160,43 +146,39 @@ local function resolveMenuName(item)
   return name
 end
 
+local function addGroupEntries(rootDescription, item, onMarkUnread, onUpdatePrefs, rowActions)
+  addMarkUnreadButton(rootDescription, item, onMarkUnread)
+  ExportMenuEntry.Add(rootDescription, item)
+  addPrefsButtons(rootDescription, item, onUpdatePrefs, true)
+  RowActionsMenuEntry.Add(rootDescription, item, rowActions)
+end
+
 -- Group rows are not players, so they get a small menu of our own instead of
--- Blizzard's player menu. Returns false (row click selects) without the
--- modern menu API.
-local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+-- Blizzard's player menu: WM's popup on Forever with the gamepad UI on,
+-- MenuUtil otherwise. False (row click selects) without the modern menu API.
+local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
+  if FlavorCompat.UsesOwnMenus() then
+    return MenuPopup.Open(anchorFrame, function(root)
+      addGroupEntries(root, item, onMarkUnread, onUpdatePrefs, rowActions)
+    end, options)
+  end
   local menuUtil = _G.MenuUtil
   if type(menuUtil) ~= "table" or type(menuUtil.CreateContextMenu) ~= "function" then
     return false
   end
   menuUtil.CreateContextMenu(anchorFrame, function(_owner, rootDescription)
-    addMarkUnreadButton(rootDescription, item, onMarkUnread)
-    ExportMenuEntry.Add(rootDescription, item)
-    addPrefsButtons(rootDescription, item, onUpdatePrefs, true)
-    addRowActionButtons(rootDescription, item, rowActions)
+    addGroupEntries(rootDescription, item, onMarkUnread, onUpdatePrefs, rowActions)
   end)
   return true
 end
 
-local function openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
-  if type(item) ~= "table" then
-    return false
-  end
-  if ContactsTabFilter.IsGroupChannel(item.channel) then
-    return openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
-  end
-
-  local name = resolveMenuName(item)
-  if name == nil then
-    return false
-  end
-
+local function openBlizzardPlayerMenu(item, name, onMarkUnread, onUpdatePrefs, rowActions)
   local lineID = item.lineID
   local chatType = item.chatType
   local which = item.channel == "BN" and "BN_FRIEND" or "FRIEND"
 
-  -- Never pass anchorFrame as the menu's chatFrame: Blizzard's Whisper entry
-  -- sends to chatFrame.editBox, which our frames lack, so Whisper errors out.
-  -- Without one, Blizzard picks the player's own chat edit box.
+  -- No chatFrame: Blizzard's Whisper entry sends to chatFrame.editBox, which our
+  -- row frames lack. Without one, Blizzard picks the player's own chat edit box.
   if ensureModernMenu() and type(_G.UnitPopup_OpenMenu) == "function" then
     _G.UnitPopup_OpenMenu(which, {
       name = name,
@@ -274,14 +256,42 @@ local function openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActio
   return false
 end
 
+local function openPlayerMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
+  local name = resolveMenuName(item)
+  if name == nil then
+    return false
+  end
+  -- Blizzard's player menus taint from addon code on Forever: own menu there with the gamepad UI on.
+  if FlavorCompat.UsesOwnMenus() then
+    return OwnMenu.Open(item, anchorFrame, name, rowActions, function(root)
+      addSection(root, item, onMarkUnread, onUpdatePrefs, rowActions)
+    end, options)
+  end
+
+  return openBlizzardPlayerMenu(item, name, onMarkUnread, onUpdatePrefs, rowActions)
+end
+
+local function openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
+  if type(item) ~= "table" then
+    return false
+  end
+  if ContactsTabFilter.IsGroupChannel(item.channel) then
+    return openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
+  end
+
+  return openPlayerMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
+end
+
 -- onUpdatePrefs(item, changes): changes is { muted = bool } / { nickname =
 -- text } / { note = text } / { notifyOnline = bool } / { notifyZone = bool }.
 -- rowActions: { onPin(item), onRemove(item) } (the row's hover actions).
+-- options (optional, own popup only: WoW: Forever with the gamepad UI on):
+-- MenuPopup.Open's options.
 -- An opened menu takes ESC before the window.
-function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
-  local opened = openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
+  local opened = openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions, options)
   if opened then
-    PickerPopup.ReportMenuShown()
+    PopupEscape.ReportMenuShown()
   end
   return opened
 end

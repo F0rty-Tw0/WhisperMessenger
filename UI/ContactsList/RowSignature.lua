@@ -11,6 +11,7 @@ local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
 local AddonGreetingText = ns.ChatBubbleAddonGreetingText or require("WhisperMessenger.UI.ChatBubble.AddonGreetingText")
 local RowElements = ns.ContactsListRowElements or require("WhisperMessenger.UI.ContactsList.RowElements")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 local sizeValue = UIHelpers.sizeValue
 local pairs = pairs
 local type = type
@@ -36,16 +37,6 @@ local TIME_SLOT = 15
 local PREVIEW_SLOT = 16
 
 local context = {}
-
--- Group titles take the player's class color.
-local function playerClassTag()
-  local fn = _G.UnitClass
-  if type(fn) ~= "function" then
-    return nil
-  end
-  local ok, _, classTag = pcall(fn, "player")
-  return ok and classTag or nil
-end
 
 -- Same-faction contacts hide their faction icon.
 
@@ -74,7 +65,8 @@ function RowSignature.Context(parent, options)
   context[8] = Hud.IsOn()
   context[9] = timeFormat
   context[10] = timeSource
-  context[11] = playerClassTag()
+  -- Group titles take the player's class color.
+  context[11] = LocalPlayer.ClassTag()
   context[12] = playerFaction()
   -- Shown names follow the "Hide BattleTag numbers" option and name clashes.
   context[13] = DisplayName.Revision()

@@ -6,12 +6,11 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
+local PageFooter = ns.SettingsControlsPageFooter or require("WhisperMessenger.UI.Shared.SettingsControls.PageFooter")
 local SoundSelector = ns.NotificationSettingsSoundSelector or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings.SoundSelector")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local NotificationSettings = {}
-
-local PADDING = Theme.CONTENT_PADDING
 
 local DEFAULTS = {
   muteAllSounds = false,
@@ -218,25 +217,11 @@ function NotificationSettings.Create(factory, parent, config, options)
   )
   flashToggle.row:SetPoint("TOPLEFT", sentSoundSelector.row, "BOTTOMLEFT", 0, rowSpacing)
 
-  local resetButton = panel:bind(
-    UIHelpers.createOptionButton(
-      factory,
-      frame,
-      text("Reset to Defaults"),
-      SettingsControls.OptionButtonColors(Theme),
-      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, ghost = true }
-    ),
-    { type = "optionButton" }
-  )
-  resetButton:SetPoint("TOPLEFT", flashToggle.row, "BOTTOMLEFT", 0, -24)
-  resetButton:SetScript("OnClick", function()
+  local resetButton = PageFooter.CreateResetButton(factory, frame, panel, text("Reset to Defaults"), function()
     panel:reset(changed)
   end)
-
-  local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
-  bottomSpacer:SetSize(1, PADDING)
-  bottomSpacer:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, 0)
-  frame._wmBottomMarker = bottomSpacer
+  resetButton:SetPoint("TOPLEFT", flashToggle.row, "BOTTOMLEFT", 0, -24)
+  PageFooter.AddBottomMarker(factory, frame, resetButton)
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
@@ -267,11 +252,10 @@ function NotificationSettings.Create(factory, parent, config, options)
   end
 
   local function refreshLayout(width)
-    if type(width) ~= "number" or width <= 0 then
+    local effective = PageFooter.ClampPanelWidth(width)
+    if not effective then
       return
     end
-    local maxWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
-    local effective = math.min(maxWidth, math.max(160, math.floor(width)))
     header.refreshLayout(effective)
     panel:refreshLayout(effective)
   end

@@ -23,12 +23,11 @@ local function fakeNav(active)
     "setScrollFrame",
     "ignore",
     "markFocusable",
-    "setStepper",
-    "setEdgeOverride",
+    "setJumpTarget",
+    "setOrder",
     "popupShown",
     "popupHidden",
     "setPopupCloseHandler",
-    "bindRightClick",
   }) do
     nav[name] = function(...)
       table.insert(nav.seen, { name = name, args = { ... } })

@@ -644,7 +644,14 @@ local function makeCreateFrame(options)
       return unpackValues(frames)
     end
 
+    -- 7 px per byte, ignoring any SetWidth bound (several suites rely on that).
     function frame:GetStringWidth()
+      local text = tostring(self.text or "")
+      return #text * 7
+    end
+
+    -- The text's own width even when a bound truncates it.
+    function frame:GetUnboundedStringWidth()
       local text = tostring(self.text or "")
       return #text * 7
     end

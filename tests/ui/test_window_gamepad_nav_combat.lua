@@ -161,6 +161,38 @@ return function()
     assert(env.count("SetScrollFrameForFrame") == 1, "unregistered by the settle: no scroll frame")
   end
 
+  -- test_combat_start_unregisters_shown_window
+  do
+    local env, _, nav = setup()
+    nav.onShow()
+    env.fire("PLAYER_REGEN_DISABLED")
+    assert(names(env) == "FrameShown,FrameHidden" and not nav.isRegistered(), "off the nav before lockdown")
+    env.combat = true
+    nav.onHide()
+    endCombat(env)
+    assert(names(env) == "FrameShown,FrameHidden", "closed in combat: nothing left to undo")
+  end
+
+  -- test_window_open_through_combat_reregisters_on_regen
+  do
+    local env, _, nav = setup()
+    nav.onShow()
+    env.fire("PLAYER_REGEN_DISABLED")
+    env.combat = true
+    endCombat(env)
+    assert(names(env) == "FrameShown,FrameHidden,FrameShown" and nav.isRegistered(), "back on the nav after combat")
+  end
+
+  -- test_combat_start_after_lockdown_makes_no_call
+  do
+    local env, _, nav = setup()
+    nav.onShow()
+    env.combat = true
+    env.fire("PLAYER_REGEN_DISABLED")
+    endCombat(env)
+    assert(names(env) == "FrameShown" and nav.isRegistered(), "already locked down: too late, leave it")
+  end
+
   -- test_regen_with_nothing_pending_makes_no_call
   do
     local env, _, nav = setup()

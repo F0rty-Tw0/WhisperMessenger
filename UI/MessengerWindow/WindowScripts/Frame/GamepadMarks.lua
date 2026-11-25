@@ -4,7 +4,7 @@ if type(ns) ~= "table" then
 end
 
 -- SmartNavigation marks on single widgets for GamepadNav: each kind once
--- per widget. Asked for in combat → one queue, run in call order by settle.
+-- per widget, a jump target once per change. Asked for in combat → one queue, run in call order by settle.
 local GamepadMarks = {}
 
 local function weakSet()
@@ -17,13 +17,9 @@ function GamepadMarks.New(deps)
   local inCombat = deps.inCombat
   local queue = {}
   local ignored, focusable = weakSet(), weakSet()
-  local overridden = {}
+  local targets = {}
 
-  local function mark(memo, fn, widget, a, b)
-    if widget == nil or not fn or memo[widget] then
-      return
-    end
-    memo[widget] = true
+  local function apply(fn, widget, a, b)
     if inCombat() then
       table.insert(queue, { fn = fn, widget = widget, a = a, b = b })
       return
@@ -31,15 +27,12 @@ function GamepadMarks.New(deps)
     fn(widget, a, b)
   end
 
-  -- fn runs when the D-pad presses dirName on widget; SmartNav stays on
-  -- widget when it returns true, else moves as usual.
-  local function jumpOverride(widget, dirName, fn)
-    local directions = deps.directions
-    if type(directions) ~= "table" or directions[dirName] == nil then
+  local function mark(memo, fn, widget, a, b)
+    if widget == nil or not fn or memo[widget] then
       return
     end
-    overridden[dirName] = overridden[dirName] or weakSet()
-    mark(overridden[dirName], deps.addJumpOverride, widget, directions[dirName], fn)
+    memo[widget] = true
+    apply(fn, widget, a, b)
   end
 
   local marks = {}
@@ -54,28 +47,53 @@ function GamepadMarks.New(deps)
     mark(focusable, deps.markFocusable, widget)
   end
 
-  -- D-pad left/right on widget call step(-1) / step(1); focus stays on it,
-  -- even when step changed nothing (a slider at its limit).
-  function marks.setStepper(widget, step)
-    jumpOverride(widget, "LEFT", function()
-      step(-1)
-      return true
-    end)
-    jumpOverride(widget, "RIGHT", function()
-      step(1)
-      return true
-    end)
+  -- D-pad dirName ("UP"/"DOWN"/"LEFT"/"RIGHT") on widget jumps to
+  -- targetFrame; nil clears a target set earlier. SmartNav only ever gets
+  -- a frame or nil; it is called only when the target changes.
+  function marks.setJumpTarget(widget, dirName, targetFrame)
+    if targetFrame ~= nil and type(targetFrame) ~= "table" then
+      error("setJumpTarget: target must be a frame or nil")
+    end
+    local directions = deps.directions
+    local unsupported = widget == nil or not deps.addJumpOverride or type(directions) ~= "table" or directions[dirName] == nil
+    if unsupported then
+      return
+    end
+    targets[dirName] = targets[dirName] or weakSet()
+    local memo = targets[dirName]
+    if memo[widget] == targetFrame then
+      return
+    end
+    memo[widget] = targetFrame
+    apply(deps.addJumpOverride, widget, directions[dirName], targetFrame)
   end
 
-  -- D-pad direction ("UP"/"DOWN") on widget calls onPress(); true = it
-  -- handled the press and focus stays, else SmartNav moves as usual.
-  function marks.setEdgeOverride(widget, direction, onPress)
-    jumpOverride(widget, direction, function()
-      if onPress() == true then
-        return true
+  -- Last chain set under each setOrder key.
+  local chains = {}
+
+  -- Chains the shown frames of `frames`, in the given order: backDir on
+  -- each jumps to the one before, forwardDir to the one after; the ends
+  -- get nil. A frame of the key's previous chain that is not in the new
+  -- one loses both targets.
+  function marks.setOrder(key, frames, backDir, forwardDir)
+    local chain, inChain = {}, {}
+    for _, frame in ipairs(frames) do
+      if frame:IsShown() then
+        chain[#chain + 1] = frame
+        inChain[frame] = true
       end
-      return nil
-    end)
+    end
+    for _, frame in ipairs(chains[key] or {}) do
+      if not inChain[frame] then
+        marks.setJumpTarget(frame, backDir, nil)
+        marks.setJumpTarget(frame, forwardDir, nil)
+      end
+    end
+    for i, frame in ipairs(chain) do
+      marks.setJumpTarget(frame, backDir, chain[i - 1])
+      marks.setJumpTarget(frame, forwardDir, chain[i + 1])
+    end
+    chains[key] = chain
   end
 
   -- Out of combat only: runs what combat held back, in call order.

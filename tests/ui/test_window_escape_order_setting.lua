@@ -1,6 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local EscapeOrder = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.EscapeOrder")
-local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = require("WhisperMessenger.UI.Shared.PopupEscape")
 
 local WINDOW_NAME = "WhisperMessengerWindow"
 local POPUP_NAME = "WhisperMessengerSettingTestPopup"
@@ -135,7 +135,7 @@ return function()
     order.claim()
     local popup = env.factory.CreateFrame("Frame", POPUP_NAME, nil)
     popup:Hide()
-    PickerPopup.RegisterEscape(POPUP_NAME, popup)
+    PopupEscape.RegisterEscape(POPUP_NAME, popup)
     popup:Show()
     popup:Hide()
     env.nextFrame()

@@ -71,5 +71,23 @@ function ConversationSnapshot.Build(conversationKey, conversation, settings)
   }
 end
 
+-- The one send payload built from a contact snapshot. The composer, the
+-- preview reply, invites and reactions add their own extras (replyTo,
+-- reactionControl) on top, so every path routes to the same recipient.
+function ConversationSnapshot.SendPayload(contact, text)
+  return {
+    conversationKey = contact.conversationKey,
+    target = contact.displayName,
+    displayName = contact.displayName,
+    battleTag = contact.battleTag,
+    channel = contact.channel,
+    bnetAccountID = contact.bnetAccountID,
+    conversationID = contact.conversationID,
+    guid = contact.guid,
+    gameAccountName = contact.gameAccountName,
+    text = text,
+  }
+end
+
 ns.ConversationSnapshot = ConversationSnapshot
 return ConversationSnapshot

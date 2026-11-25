@@ -35,7 +35,8 @@ function ConversationOps.ensureConversation(runtime, conversationKey, displayNam
   })
 end
 
-function ConversationOps.ensureBattleNetConversation(runtime, identity, accountInfo)
+-- The Battle.net friend's conversation key, read only: nothing is created.
+function ConversationOps.battleNetConversationKey(runtime, identity, accountInfo)
   local bnetAccountID = accountInfo and accountInfo.bnetAccountID
   if not bnetAccountID then
     return nil
@@ -50,7 +51,16 @@ function ConversationOps.ensureBattleNetConversation(runtime, identity, accountI
     return nil
   end
 
-  local conversationKey = identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
+  return identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
+end
+
+function ConversationOps.ensureBattleNetConversation(runtime, identity, accountInfo)
+  local conversationKey = ConversationOps.battleNetConversationKey(runtime, identity, accountInfo)
+  if conversationKey == nil then
+    return nil
+  end
+
+  local bnetAccountID = accountInfo.bnetAccountID
   local now = type(runtime.now) == "function" and runtime.now() or 0
   Store.EnsureConversation(runtime.store, conversationKey, {
     channel = "BN",

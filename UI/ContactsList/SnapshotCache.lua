@@ -5,6 +5,7 @@ end
 
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
+local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 
 -- Contact snapshots kept between incoming-line refreshes. Contact enrichers
 -- write status onto the returned card in place, so each entry also keeps an
@@ -14,14 +15,6 @@ local SnapshotCache = {}
 
 function SnapshotCache.New()
   return {}
-end
-
-local function shallowCopy(source)
-  local copy = {}
-  for key, value in pairs(source) do
-    copy[key] = value
-  end
-  return copy
 end
 
 local function restore(card, base)
@@ -44,11 +37,11 @@ function SnapshotCache.Get(cache, conversationKey, conversation, settings, dirty
       entry = {}
       cache[conversationKey] = entry
     end
-    PerfCounters.Increment("snapshotBuilds")
+    PerfCounters.IncrementBySource("snapshotBuilds")
     entry.conversation = conversation
     entry.base = ConversationSnapshot.Build(conversationKey, conversation, settings)
     if entry.card == nil then
-      entry.card = shallowCopy(entry.base)
+      entry.card = TableUtils.copyState(entry.base)
     else
       restore(entry.card, entry.base)
     end

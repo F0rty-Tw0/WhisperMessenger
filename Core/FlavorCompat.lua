@@ -147,6 +147,13 @@ function FlavorCompat.IsGamepadUIEnabled()
   return ok and enabled == true
 end
 
+-- True when WM opens its own right-click menus and drop-down lists instead
+-- of Blizzard's: on WoW: Forever, while the gamepad UI is on. Read on every
+-- call, so picking up or putting down the pad switches at once.
+function FlavorCompat.UsesOwnMenus()
+  return FlavorCompat.isForever == true and FlavorCompat.IsGamepadUIEnabled()
+end
+
 -- The atlas name of the game's picture for pad button key ("PAD1", ...) on
 -- the pad in use, or nil. Read on every call, so a pad swap shows at once.
 -- Blizzard's lookup throws when the active icon set has no entry for the

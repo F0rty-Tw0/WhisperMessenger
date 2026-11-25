@@ -23,6 +23,12 @@ PickerPopup.ICON_CHECKED = "Interface\\Buttons\\CheckButtonHilight"
 
 -- Same size as the modern label font (WM_Highlight is built from it).
 PickerPopup.MENU_FONT = "GameFontHighlight"
+-- Check mark of a checked menu entry: art, size, its left inset, and where
+-- the entry's label starts so it clears the check.
+PickerPopup.CHECK_TEXTURE = "Interface\\Buttons\\UI-CheckBox-Check"
+PickerPopup.CHECK_SIZE = 16
+PickerPopup.CHECK_INSET = 4
+PickerPopup.CHECK_LABEL_PAD = 24
 local TOOLTIP_TEMPLATE = "TooltipBackdropTemplate"
 -- Fallback when the client lacks TooltipBackdropTemplate: GameTooltip's
 -- backdrop and default colours.
@@ -35,6 +41,7 @@ local TOOLTIP_BACKDROP = {
   insets = { left = 4, right = 4, top = 4, bottom = 4 },
 }
 local TOOLTIP_BACKGROUND_COLOR = { 0.09, 0.09, 0.19, 0.9 }
+PickerPopup.TOOLTIP_BACKGROUND_COLOR = TOOLTIP_BACKGROUND_COLOR
 local TOOLTIP_BORDER_COLOR = { 1, 1, 1, 1 }
 
 -- The ESC registry lives in PopupEscape; these names stay for callers.
@@ -93,6 +100,23 @@ function PickerPopup.HandleEvent(frame, event, close, anchor)
   if event == "GLOBAL_MOUSE_DOWN" and frame._dismissArmed and not isMouseOver(frame) and not (anchor and isMouseOver(anchor)) then
     close()
   end
+end
+
+-- Puts frame's top-left corner on the cursor. Returns false, with no point
+-- set, when the game can't say where the cursor is.
+function PickerPopup.PlaceAtCursor(frame)
+  local parent = _G.UIParent
+  if parent == nil or type(_G.GetCursorPosition) ~= "function" or type(parent.GetEffectiveScale) ~= "function" then
+    return false
+  end
+  local x, y = _G.GetCursorPosition()
+  local scale = parent:GetEffectiveScale()
+  local known = type(x) == "number" and type(y) == "number" and type(scale) == "number" and scale > 0
+  if not known then
+    return false
+  end
+  frame:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", x / scale, y / scale)
+  return true
 end
 
 local function applyColor(setter, frame, color)

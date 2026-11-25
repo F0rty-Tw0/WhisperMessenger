@@ -11,44 +11,16 @@ local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI
 local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
 local AddonBadge = ns.ConversationPaneAddonBadge or require("WhisperMessenger.UI.ConversationPane.AddonBadge")
 local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel or require("WhisperMessenger.UI.ConversationPane.GroupHeaderViewModel")
-local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local HeaderContactExtras = ns.ConversationPaneHeaderContactExtras or require("WhisperMessenger.UI.ConversationPane.HeaderContactExtras")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local HeaderFit = ns.ConversationPaneHeaderFit or require("WhisperMessenger.UI.ConversationPane.HeaderFit")
 local HeaderRelationship = ns.ConversationPaneHeaderRelationship or require("WhisperMessenger.UI.ConversationPane.HeaderRelationship")
+local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 
 -- Top inset of the name row; the two status rows hang below it.
 local HEADER_NAME_TOP_INSET = 7
 
 local HeaderView = {}
-
--- Resolve and cache the current player's class tag for group-chat headers.
--- Groups are tinted with the player's own class color so the conversation
--- reads as yours rather than being colored by a sender's class.
-local cachedPlayerClassTag = nil
-local function playerClassTag()
-  if cachedPlayerClassTag ~= nil then
-    return cachedPlayerClassTag
-  end
-  local unitClass = _G.UnitClass
-  if type(unitClass) ~= "function" then
-    return nil
-  end
-  local ok, _, tag = pcall(unitClass, "player")
-  if ok and type(tag) == "string" and tag ~= "" then
-    cachedPlayerClassTag = tag
-    return cachedPlayerClassTag
-  end
-  return nil
-end
-
-local function headerTextFor(selectedContact)
-  if selectedContact and selectedContact.displayName then
-    return DisplayName.Format(selectedContact.displayName)
-  end
-
-  return Localization.Text("No conversation selected")
-end
 
 function HeaderView.Create(factory, pane, selectedContact, options)
   options = options or {}
@@ -181,8 +153,10 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
         view.headerName:SetText(GlyphCoverage.Apply(view.headerName, HeaderContactExtras.Title(selectedContact, title, vm and vm.isGroup)))
         if vm and vm.isGroup then
           local groupClassTag = selectedContact.ownerClassTag
+          -- Groups take the player's own class color: the chat reads as
+          -- yours rather than colored by a sender's class.
           if groupClassTag == nil and not selectedContact.ownerProfileId then
-            groupClassTag = playerClassTag()
+            groupClassTag = LocalPlayer.ClassTag()
           end
           UIHelpers.applyClassColor(view.headerName, groupClassTag, Theme.COLORS.text_primary)
         else
@@ -274,11 +248,6 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     -- Native WoW HUD: no empty header strip above the welcome screen.
     if view.hideEmptyHeader then
       view.headerFrame:SetShown(hasContact)
-    end
-  else
-    -- Fallback: legacy header (should not happen after Create, but kept for safety)
-    if view.header then
-      view.header:SetText(headerTextFor(selectedContact))
     end
   end
 end

@@ -28,6 +28,7 @@ local function makeCoordinator()
     activeConversationKey = "sel",
     store = { conversations = { sel = { messages = {} }, other = { messages = {} } } },
   }
+  h.runtime = runtime
   h.coordinator = WindowCoordinator.Create({
     runtime = runtime,
     buildContacts = function(dirtyKeys)
@@ -44,6 +45,23 @@ local function makeCoordinator()
     },
   })
   return h
+end
+
+local function isKeySet(actual, expected)
+  if type(actual) ~= "table" then
+    return false
+  end
+  for key in pairs(actual) do
+    if expected[key] ~= true then
+      return false
+    end
+  end
+  for key in pairs(expected) do
+    if actual[key] ~= true then
+      return false
+    end
+  end
+  return true
 end
 
 return function()
@@ -77,7 +95,8 @@ return function()
     assert(#h.builds == 0, "whispers must not refresh synchronously")
     assert(#h.timers == 1, "two whispers arm one timer, got " .. #h.timers)
     h.timers[1]()
-    assert(#h.builds == 1 and h.builds[1] == false, "one full contact build per frame")
+    assert(#h.builds == 1, "one contact build per frame, got " .. #h.builds)
+    assert(isKeySet(h.builds[1], { other = true, sel = true }), "the build receives exactly the whispered keys")
     assert(h.selectionRefreshes == 1 and h.contactRefreshes == 0, "the open conversation is redrawn")
   end
 
@@ -89,6 +108,25 @@ return function()
     assert(#h.timers == 1, "a hidden window still arms the whisper refresh")
     h.timers[1]()
     assert(#h.builds == 1, "the hidden refresh rebuilds contacts for the icon badges")
+  end
+
+  -- test_whisper_refresh_hidden_passes_dirty_keys
+  do
+    local h = makeCoordinator()
+    h.shown = false
+    h.coordinator.scheduleWhisperRefresh("other")
+    h.timers[1]()
+    assert(isKeySet(h.builds[1], { other = true }), "the hidden refresh rebuilds only the whispered key")
+  end
+
+  -- test_whisper_refresh_full_while_bnet_repaint_pending
+  do
+    local h = makeCoordinator()
+    h.runtime.bnetRepaintPending = true
+    h.coordinator.scheduleWhisperRefresh("sel")
+    h.timers[1]()
+    assert(h.builds[1] == false, "an owed Battle.net repaint makes the whisper refresh full")
+    assert(h.runtime.bnetRepaintPending == nil, "the full redraw pays the owed repaint")
   end
 
   -- test_direct_refresh_stays_full_and_synchronous

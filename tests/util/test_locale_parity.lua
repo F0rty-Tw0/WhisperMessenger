@@ -128,6 +128,7 @@ local SCREEN_EDGE_KEYS = {
 }
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 local SEPARATE_KEY = "Separate %s"
+local OWN_MENU_KEYS = { "Open chat", "Copy name", "Report" }
 
 -- "%s|%d" for "Last seen %s ... %d"; "%%" is a literal percent, not a slot.
 local function formatSlots(text)
@@ -299,5 +300,10 @@ return function()
       string.find(catalog[BORDER_REASON_KEY], catalog["Show border"], 1, true),
       code .. " border reason should name the translated Show border toggle"
     )
+
+    -- test_own_menu_strings_are_translated
+    for _, key in ipairs(OWN_MENU_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
   end
 end

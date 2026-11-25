@@ -12,8 +12,17 @@ local SeenLevelEvents = ns.SeenLevelEvents or require("WhisperMessenger.Core.See
 -- Builds the stored message for one group chat line.
 local Message = {}
 
+-- Shared stand-in for a line without player info; only ever read.
+local NO_PLAYER_INFO = {}
+
+local function setIfPresent(message, field, value)
+  if value ~= nil then
+    message[field] = value
+  end
+end
+
 function Message.Build(payload, direction, channel, sentAt, isLeader)
-  local playerInfo = payload.playerInfo or {}
+  local playerInfo = payload.playerInfo or NO_PLAYER_INFO
   local senderClassTag
   local senderName
   if direction == "out" then
@@ -32,19 +41,22 @@ function Message.Build(payload, direction, channel, sentAt, isLeader)
     kind = "user",
     text = payload.text,
     sentAt = sentAt,
-    lineID = payload.lineID,
-    guid = payload.guid,
-    playerName = payload.playerName,
     channel = channel,
-    bnetAccountID = payload.bnSenderID,
-    className = playerInfo.className,
-    classTag = playerInfo.classTag,
-    senderClassTag = senderClassTag,
-    senderName = senderName,
-    raceName = playerInfo.raceName,
-    raceTag = playerInfo.raceTag,
-    factionName = playerInfo.factionName,
   }
+  -- The optional fields go on one at a time: a table constructor reserves a
+  -- slot for every field it names, nil or not, which doubled the table of
+  -- every group line kept in the session.
+  setIfPresent(msg, "lineID", payload.lineID)
+  setIfPresent(msg, "guid", payload.guid)
+  setIfPresent(msg, "playerName", payload.playerName)
+  setIfPresent(msg, "bnetAccountID", payload.bnSenderID)
+  setIfPresent(msg, "className", playerInfo.className)
+  setIfPresent(msg, "classTag", playerInfo.classTag)
+  setIfPresent(msg, "senderClassTag", senderClassTag)
+  setIfPresent(msg, "senderName", senderName)
+  setIfPresent(msg, "raceName", playerInfo.raceName)
+  setIfPresent(msg, "raceTag", playerInfo.raceTag)
+  setIfPresent(msg, "factionName", playerInfo.factionName)
   -- Only attach isLeader for PARTY/INSTANCE messages that have the concept
   if isLeader ~= nil then
     msg.isLeader = isLeader

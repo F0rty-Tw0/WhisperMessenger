@@ -36,7 +36,7 @@ Luacheck handles semantics (unused vars, undefined globals, shadowing). StyLua h
 
 Missing tools on Windows: `powershell -ExecutionPolicy Bypass -File scripts/setup-lint-tools.ps1` installs them into `.tools/`.
 
-When adding new WoW API globals, add them to `.luacheckrc` under `read_globals`.
+Reach WoW API globals through `_G.X`: luacheck fails on bare global reads (`.luacheckrc` allows only `_G`, `date` and `time`).
 
 ## Tests
 

@@ -5,6 +5,7 @@ local RetentionRow = require("WhisperMessenger.UI.MessengerWindow.GeneralSetting
 local Retention = require("WhisperMessenger.Model.Retention")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local ReloadPopups = require("tests.helpers.reload_popups")
+local GlobalWriteSpy = require("tests.helpers.global_write_spy")
 
 local LABEL = "Message Retention"
 local CONFIRM = "WHISPER_MESSENGER_CONFIRM_SHORTER_RETENTION"
@@ -203,6 +204,16 @@ return function()
     end
     assert(#retentionChanges(changes) == 0, "cancel saves nothing")
     assert(closedLabel(settings) == "48 hours", "closed dropdown keeps the old value, got " .. tostring(closedLabel(settings)))
+  end)
+
+  -- test_shorter_choice_does_not_reassign_static_popup_dialogs
+  ReloadPopups.With(function(popups)
+    local settings = create(factory, parent, { messageMaxAge = 90 * DAY }, {})
+    local writes, dialogs = GlobalWriteSpy.Writes("StaticPopupDialogs", function()
+      pick(settings, "1 day")
+    end)
+    assert(popups.shown[1] == CONFIRM and dialogs[CONFIRM] ~= nil, "the confirm is registered and shown")
+    assert(writes == 0, "the game's StaticPopupDialogs is never reassigned")
   end)
 
   -- test_longer_choice_saves_without_asking

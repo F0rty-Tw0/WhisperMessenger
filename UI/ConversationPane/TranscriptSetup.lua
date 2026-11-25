@@ -3,15 +3,13 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
 local TranscriptView = ns.ConversationPaneTranscriptView or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
-local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
 local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 local PlayerMenu = ns.ChatBubblePlayerMenu or require("WhisperMessenger.UI.ChatBubble.PlayerMenu")
 local IgnorePrompt = ns.IgnorePrompt or require("WhisperMessenger.UI.Shared.IgnorePrompt")
-local sizeValue = UIHelpers.sizeValue
 
 local TranscriptSetup = {}
 
@@ -93,44 +91,8 @@ function TranscriptSetup.BindPlayerMenu(transcript, view, rowActions)
   end
 end
 
-function TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth)
-  transcript.text = Hyperlinks.CreateLinkFrame(factory, "EditBox", nil, transcript.content)
-  transcript.text:SetPoint("TOPLEFT", transcript.content, "TOPLEFT", 0, 0)
-  if transcript.text._wmSecureLinks then
-    -- The template's hover scripts show raw links; the transcript has no hover tooltip.
-    transcript.text:SetScript("OnHyperlinkEnter", nil)
-    transcript.text:SetScript("OnHyperlinkLeave", nil)
-  end
-  if transcript.text.SetMultiLine then
-    transcript.text:SetMultiLine(true)
-  end
-  if transcript.text.SetAutoFocus then
-    transcript.text:SetAutoFocus(false)
-  end
-  if transcript.text.EnableMouse then
-    transcript.text:EnableMouse(true)
-  end
-  if transcript.text.SetHyperlinksEnabled then
-    transcript.text:SetHyperlinksEnabled(true)
-  end
-  if transcript.text.SetFontObject then
-    transcript.text:SetFontObject(_G[Theme.FONTS.system_text] or Theme.FONTS.system_text)
-  end
-  if transcript.text.SetWidth then
-    transcript.text:SetWidth(sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32))
-  end
-  if transcript.text.SetScript then
-    Hyperlinks.BindClick(transcript.text)
-    transcript.text:SetScript("OnEditFocusGained", function(self)
-      if self.ClearFocus then
-        self:ClearFocus()
-      end
-    end)
-  end
-  transcript.text:SetText("")
-  transcript.lines = {}
-
-  TranscriptView._updateTranscriptLayout(transcript, false)
+function TranscriptSetup.ConfigureTranscript(_factory, transcript, _parentWidth)
+  ScrollView.RefreshMetrics(transcript, 0, false)
 
   local function refreshViewport()
     TranscriptView.RefreshViewport(transcript)
