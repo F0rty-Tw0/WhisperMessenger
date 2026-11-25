@@ -53,7 +53,13 @@ return function()
       runtime = { store = { config = {} } },
       accountSettings = settings,
       onScreenEdgeSetting = function(key, value)
-        ScreenEdgeSetting.Apply({ runtime = {}, ensureSurface = function() end, updateIconSurfaces = surface.refresh }, key, value)
+        ScreenEdgeSetting.Apply({
+          runtime = {},
+          ensureSurface = function()
+            return surface
+          end,
+          updateIconSurfaces = surface.refresh,
+        }, key, value)
       end,
     })
     local function vc()

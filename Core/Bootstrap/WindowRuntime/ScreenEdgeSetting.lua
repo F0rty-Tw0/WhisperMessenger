@@ -4,10 +4,12 @@ if type(ns) ~= "table" then
 end
 
 -- The live reaction to the screen edge settings. ctx: runtime,
--- ensureSurface(), updateIconSurfaces(), readCompactSlot().
+-- ensureSurface() (returns the surface), updateIconSurfaces(), readCompactSlot().
 local ScreenEdgeSetting = {}
 
 local KEYS = { screenEdge = true, edgeGlow = true, edgeGlowColor = true, edgeGlowCustom = true }
+-- A colour change only repaints: the picker sends one on every drag step.
+local COLOUR_KEYS = { edgeGlowColor = true, edgeGlowCustom = true }
 
 function ScreenEdgeSetting.Apply(ctx, key, _value)
   if not KEYS[key] then
@@ -18,7 +20,13 @@ function ScreenEdgeSetting.Apply(ctx, key, _value)
   if key == "screenEdge" and window and window.applyScreenEdge then
     window.applyScreenEdge(ctx.readCompactSlot())
   end
-  ctx.ensureSurface()
+  local surface = ctx.ensureSurface()
+  if COLOUR_KEYS[key] then
+    if surface then
+      surface.refresh()
+    end
+    return
+  end
   ctx.updateIconSurfaces()
 end
 

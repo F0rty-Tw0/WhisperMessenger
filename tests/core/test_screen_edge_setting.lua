@@ -3,7 +3,7 @@ local ScreenEdgeSetting = require("WhisperMessenger.Core.Bootstrap.WindowRuntime
 local SLOT = { x = 1 }
 
 local function build(withWindow)
-  local case = { applied = {}, ensured = 0, updated = 0 }
+  local case = { applied = {}, ensured = 0, updated = 0, refreshed = 0 }
   local runtime = {}
   if withWindow then
     runtime.window = {
@@ -16,6 +16,11 @@ local function build(withWindow)
     runtime = runtime,
     ensureSurface = function()
       case.ensured = case.ensured + 1
+      return {
+        refresh = function()
+          case.refreshed = case.refreshed + 1
+        end,
+      }
     end,
     updateIconSurfaces = function()
       case.updated = case.updated + 1
@@ -35,11 +40,19 @@ return function()
     assert(#case.applied == 1 and case.applied[1] == SLOT, "applyScreenEdge got the saved compact slot")
   end
 
-  -- test_each_key_builds_and_refreshes_the_surface
-  for _, key in ipairs({ "screenEdge", "edgeGlow", "edgeGlowColor", "edgeGlowCustom" }) do
+  -- test_side_and_glow_keys_build_the_surface_and_update_the_counts
+  for _, key in ipairs({ "screenEdge", "edgeGlow" }) do
     local case = build(true)
     ScreenEdgeSetting.Apply(case.ctx, key, key == "screenEdge" and "right" or false)
-    assert(case.ensured == 1 and case.updated == 1, key .. " builds and refreshes the surface")
+    assert(case.ensured == 1 and case.updated == 1, key .. " builds the surface and updates the counts")
+  end
+
+  -- test_colour_keys_only_repaint_the_surface_without_rebuilding_contacts
+  for _, key in ipairs({ "edgeGlowColor", "edgeGlowCustom" }) do
+    local case = build(true)
+    ScreenEdgeSetting.Apply(case.ctx, key, "custom")
+    assert(case.updated == 0, key .. " does not rebuild the contact list")
+    assert(case.ensured == 1 and case.refreshed == 1, key .. " refreshes the surface once")
   end
 
   -- test_glow_does_not_move_the_window
