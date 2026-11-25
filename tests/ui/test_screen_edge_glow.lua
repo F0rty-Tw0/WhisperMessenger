@@ -65,10 +65,11 @@ return function()
   local function test_glow_covers_the_full_left_edge()
     local surface, _, _, parent = build()
     local frame = surface.glow.frame
-    local p = frame.point
-    assert(p[1] == "LEFT" and p[2] == parent and p[3] == "LEFT", "anchored LEFT to the parent's LEFT")
+    local top, bottom = frame.points[1], frame.points[2]
+    assert(#frame.points == 2, "two anchors, got " .. #frame.points)
+    assert(top[1] == "TOPLEFT" and top[2] == parent and top[3] == "TOPLEFT", "top pinned to the parent's top left")
+    assert(bottom[1] == "BOTTOMLEFT" and bottom[2] == parent and bottom[3] == "BOTTOMLEFT", "bottom pinned to the parent's bottom left")
     assert(frame.width == 48, "48 px deep, got " .. tostring(frame.width))
-    assert(frame.height == 1080, "the full 1080, got " .. tostring(frame.height))
     assert(frame.mouseEnabled == false, "the glow takes no mouse")
     assert(frame.frameStrata == "HIGH", "above action bars and trackers")
     assert(frame:GetFrameLevel() == 0, "under the floating button and its preview")
@@ -79,7 +80,8 @@ return function()
     state.side = "right"
     surface.refresh()
     local frame = surface.glow.frame
-    assert(frame.point[1] == "RIGHT" and frame.point[3] == "RIGHT", "anchored RIGHT")
+    local top, bottom = frame.points[1], frame.points[2]
+    assert(top[1] == "TOPRIGHT" and top[3] == "TOPRIGHT" and bottom[1] == "BOTTOMRIGHT" and bottom[3] == "BOTTOMRIGHT", "anchored to the right edge")
     local c = surface.glow.pulse.glowTexture.texCoords
     assert(c[1] == 1 and c[2] == 0 and c[3] == 0 and c[4] == 1, "mirrored texture coordinates")
   end
@@ -96,11 +98,10 @@ return function()
     assert(pcall(require, "WhisperMessenger.UI.ToggleIcon.ScreenEdgeHandle") == false, "no handle module")
   end
 
-  local function test_glow_follows_a_parent_height_change()
-    local surface, _, _, parent = build()
-    parent:SetSize(1920, 900)
-    surface.refresh()
-    assert(surface.glow.frame.height == 900, "the full 900, got " .. tostring(surface.glow.frame.height))
+  -- A UI-scale change resizes the parent without any refresh: the height comes from the anchors alone.
+  local function test_glow_height_comes_from_the_anchors_not_a_size()
+    local surface = build()
+    assert(surface.glow.frame.height == nil, "no fixed height, got " .. tostring(surface.glow.frame.height))
   end
 
   local function test_glow_uses_the_edge_texture_and_the_slow_cycle()
@@ -131,7 +132,7 @@ return function()
   test_glow_covers_the_full_left_edge()
   test_right_edge_glow_is_mirrored()
   test_left_edge_glow_is_not_mirrored()
-  test_glow_follows_a_parent_height_change()
+  test_glow_height_comes_from_the_anchors_not_a_size()
   test_glow_uses_the_edge_texture_and_the_slow_cycle()
   test_theme_change_recolours_the_glow()
 end

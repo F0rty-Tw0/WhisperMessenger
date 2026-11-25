@@ -62,15 +62,16 @@ function ScreenEdgeGlow.Create(factory, parent, options)
   })
   pulse.glowTexture:SetTexture(ScreenEdgeGlow.TEXTURE)
 
-  -- The height is read every time: a UI-scale change moves the parent's height.
+  -- Pinned top and bottom, so a UI-scale change resizes it with no refresh.
   local function setSide(side)
     frame:ClearAllPoints()
     if side == nil then
       return
     end
     local point = side == "right" and "RIGHT" or "LEFT"
-    frame:SetPoint(point, parent, point)
-    frame:SetSize(theme.LAYOUT.SCREEN_EDGE_GLOW_DEPTH, parent:GetHeight())
+    frame:SetPoint("TOP" .. point, parent, "TOP" .. point)
+    frame:SetPoint("BOTTOM" .. point, parent, "BOTTOM" .. point)
+    frame:SetWidth(theme.LAYOUT.SCREEN_EDGE_GLOW_DEPTH)
     if side == "right" then
       pulse.glowTexture:SetTexCoord(1, 0, 0, 1)
     else
