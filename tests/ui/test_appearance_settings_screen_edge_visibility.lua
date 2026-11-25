@@ -3,6 +3,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local AppearanceSettings = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
+local Theme = require("WhisperMessenger.UI.Theme")
 
 local EDGE_ROWS = { "Screen edge", "Edge glow", "Glow color" }
 
@@ -32,6 +33,10 @@ local function assertEdgeRows(case, shown, why)
   end
   local above = shown and "Glow color" or "Compact window"
   assert(anchorOf(case, "Window animation") == FindUI.byLabel(frame, above), "Window animation sits under " .. above .. ": " .. why)
+  -- Under a selector the slider gap; under Compact window the usual toggle-to-toggle gap.
+  local spacing = shown and Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING or Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  local offsetY = select(5, FindUI.byLabel(frame, "Window animation"):GetPoint())
+  assert(offsetY == -spacing, "gap " .. spacing .. " under " .. above .. ", got " .. tostring(offsetY) .. ": " .. why)
 end
 
 return function()

@@ -139,7 +139,11 @@ function ScreenEdgeRows.Create(sel, panel, config, onChange, toggles, gap, onLay
     end
     local below = toggles[3].row
     below:ClearAllPoints()
-    below:SetPoint("TOPLEFT", on and glowColor.row or toggles[1].row, "BOTTOMLEFT", 0, gap)
+    if on then
+      below:SetPoint("TOPLEFT", glowColor.row, "BOTTOMLEFT", 0, gap)
+    else
+      below:SetPoint("TOPLEFT", toggles[1].row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING)
+    end
   end
   place(config.compactLayout ~= false)
 
