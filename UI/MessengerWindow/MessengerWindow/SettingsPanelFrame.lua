@@ -8,6 +8,9 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 
 local SettingsPanelFrame = {}
 
+-- Less than this is float noise from the scroll view's own width math.
+local MIN_WIDTH_CHANGE = 0.5
+
 -- Controls start CONTENT_PADDING in from the left; the same gap on the right
 -- keeps right-aligned values and button art clear of the scroll clip. The
 -- scroll view already narrows its viewport for its own bar.
@@ -60,15 +63,23 @@ local function createSettingsPanel(factory, parent, createSettingsView, config, 
     panel._wmBottomMarker = settings.frame._wmBottomMarker
   end
   if settings and settings.refreshLayout then
+    local laidOutWidth
     local function relayout(outerWidth)
       local inner = paneInnerWidth(outerWidth)
       if inner then
+        laidOutWidth = outerWidth
         settings.refreshLayout(centerColumn(panel, settings, inner))
       end
     end
     panel._wmRelayout = relayout
+    -- A page lays out by width alone. A height-only change is the tab's own
+    -- remeasure: laying out on it makes pages that ask for a remeasure while
+    -- they lay out (Filters, integrations) feed themselves every frame.
     if panel.SetScript then
       panel:SetScript("OnSizeChanged", function(_, w)
+        if laidOutWidth and type(w) == "number" and math.abs(w - laidOutWidth) < MIN_WIDTH_CHANGE then
+          return
+        end
         relayout(w)
       end)
     end

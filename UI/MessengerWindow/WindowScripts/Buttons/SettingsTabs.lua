@@ -103,8 +103,11 @@ function SettingsTabs.Wire(options)
     return true
   end
 
+  -- Panels with a remeasure waiting: one timer per panel and frame.
+  local remeasureScheduled = {}
+
   local function scheduleVisibleTabRemeasure(visiblePanel)
-    if not visiblePanel then
+    if not visiblePanel or remeasureScheduled[visiblePanel] then
       return
     end
     -- WoW resolves frame geometry on the next render frame, so a
@@ -113,7 +116,9 @@ function SettingsTabs.Wire(options)
     -- absent in fake_ui — the synchronous attempt above is the only
     -- path the tests exercise.
     if _G.C_Timer and type(_G.C_Timer.After) == "function" then
+      remeasureScheduled[visiblePanel] = true
       _G.C_Timer.After(0, function()
+        remeasureScheduled[visiblePanel] = nil
         applyVisibleTabContentHeight(visiblePanel)
       end)
     end
