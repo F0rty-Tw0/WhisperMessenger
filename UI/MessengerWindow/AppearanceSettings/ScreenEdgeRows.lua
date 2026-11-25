@@ -11,12 +11,13 @@ local ScreenEdgeGlow = ns.ToggleIconScreenEdgeGlow or require("WhisperMessenger.
 
 -- The Screen edge rows on Appearance, slotted into the window style toggles:
 -- "Screen edge" under Compact window, "Glow color" under Edge glow. Glow color
--- is a theme preset's accent or a custom colour from the game's picker;
--- nothing saved follows the active preset, which shows as picked.
+-- is Theme (nothing saved: the active preset's accent), a theme preset's accent
+-- or a custom colour from the game's picker.
 local ScreenEdgeRows = {}
 
 local SCREEN_EDGE_DEFAULT = "off"
 local CUSTOM = "custom"
+local THEME = "theme"
 local SWATCH_SIZE = 10
 local SWATCH_INSET = 6
 
@@ -29,7 +30,7 @@ local function createGlowColor(sel, panel, config, onChange)
     if key == CUSTOM and not ScreenEdgeGlow.CustomColor(saved.edgeGlowCustom) then
       key = nil -- a broken saved colour glows in the active preset's accent
     end
-    return key or Theme.GetPreset()
+    return key or THEME
   end
 
   local function paintSwatch()
@@ -76,6 +77,9 @@ local function createGlowColor(sel, panel, config, onChange)
       openPicker()
       return
     end
+    if key == THEME then
+      key = nil -- the custom colour stays saved for the swatch
+    end
     saved.edgeGlowColor = key
     onChange("edgeGlowColor", key)
   end)
@@ -86,13 +90,6 @@ local function createGlowColor(sel, panel, config, onChange)
   swatch:SetPoint("RIGHT", customButton, "RIGHT", -SWATCH_INSET, 0)
   customButton.swatch = swatch
   paintSwatch()
-
-  -- A theme preset change moves the pick while nothing is saved.
-  local applyTheme = selector.applyTheme
-  selector.applyTheme = function(...)
-    applyTheme(...)
-    selector.setSelected(shownKey())
-  end
 
   function selector.setLanguage()
     selector.label:SetText(Localization.Text("Glow color"))

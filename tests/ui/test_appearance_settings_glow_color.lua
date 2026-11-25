@@ -1,5 +1,5 @@
--- "Glow color" on Appearance: one button per theme preset plus Custom (the
--- game's colour picker), right under Edge glow.
+-- "Glow color" on Appearance: Theme (follow the active preset), one button per
+-- theme preset, then Custom (the game's colour picker), right under Edge glow.
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local AppearanceSettings = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
@@ -72,21 +72,22 @@ return function()
     assert(select(2, FindUI.byLabel(result.frame, "Window animation"):GetPoint()) == selector, "Window animation under it")
   end
 
-  -- test_one_button_per_preset_then_custom
+  -- test_theme_then_one_button_per_preset_then_custom
   do
     local result = create()
     local buttons = FindUI.selectorButtons(result.frame, LABEL)
     local keys = Theme.ListPresets()
-    assert(#buttons == #keys + 1, "presets + Custom, got " .. #buttons)
+    assert(#buttons == #keys + 2, "Theme + presets + Custom, got " .. #buttons)
+    assert(buttons[1]._key == "theme" and buttons[1].label.text == "Theme", "Theme first")
     for i, key in ipairs(keys) do
-      assert(buttons[i]._key == key, "button " .. i .. " is " .. key)
+      assert(buttons[i + 1]._key == key, "button " .. (i + 1) .. " is " .. key)
     end
     assert(buttons[#buttons]._key == "custom" and buttons[#buttons].label.text == "Custom", "Custom last")
   end
 
-  -- test_nothing_saved_shows_the_active_preset
+  -- test_nothing_saved_shows_theme
   do
-    assert(selectedKey(create()) == Theme.GetPreset(), "the active preset is picked")
+    assert(selectedKey(create()) == "theme", "Theme is picked")
     assert(selectedKey(create({ edgeGlowColor = "plumber_warm" })) == "plumber_warm", "a saved preset is picked")
   end
 
@@ -96,6 +97,26 @@ return function()
     local btn = FindUI.selectorButtons(result.frame, LABEL)[2]
     btn.scripts.OnClick(btn)
     assert(lastChange(changes, "edgeGlowColor").value == btn._key, "saves the preset key")
+  end
+
+  -- test_theme_after_a_preset_clears_the_saved_choice
+  do
+    local result, changes = create({ edgeGlowColor = "jade_dark" })
+    local theme = FindUI.selectorButtons(result.frame, LABEL)[1]
+    theme.scripts.OnClick(theme)
+    local color = lastChange(changes, "edgeGlowColor")
+    assert(color ~= nil and color.value == nil, "nothing saved: follows the theme again")
+    assert(selectedKey(result) == "theme", "Theme picked")
+  end
+
+  -- test_theme_after_custom_keeps_the_custom_colour_on_the_swatch
+  do
+    local result, changes = create({ edgeGlowColor = "custom", edgeGlowCustom = { 0.3, 0.2, 0.1 } })
+    local theme = FindUI.selectorButtons(result.frame, LABEL)[1]
+    theme.scripts.OnClick(theme)
+    assert(lastChange(changes, "edgeGlowColor").value == nil, "custom no longer chosen")
+    assert(lastChange(changes, "edgeGlowCustom") == nil, "the custom colour is kept")
+    assert(customButton(result).swatch.color[1] == 0.3, "still on the swatch")
   end
 
   -- test_custom_previews_while_dragging_and_saves
@@ -167,7 +188,7 @@ return function()
     local result = create({ edgeGlowColor = "custom", edgeGlowCustom = { "red", 1, 1 } })
     local custom = customButton(result)
     assert(custom.swatch.shown == false, "no swatch for a broken colour")
-    assert(selectedKey(result) == Theme.GetPreset(), "the active preset shows")
+    assert(selectedKey(result) == "theme", "Theme shows")
     custom.scripts.OnClick(custom)
     assert(picker.info.r == Theme.COLORS.accent[1], "picker starts at the active accent")
   end)
@@ -184,7 +205,7 @@ return function()
     custom.scripts.OnClick(custom)
     picker.info.cancelFunc({ r = 0, g = 0, b = 0 })
     assert(lastChange(changes, "edgeGlowColor").value == nil and lastChange(changes, "edgeGlowCustom").value == nil, "both back to nil")
-    assert(selectedKey(result) == Theme.GetPreset(), "the active preset shows again")
+    assert(selectedKey(result) == "theme", "Theme shows again")
   end)
 
   -- test_saved_custom_colour_shows_on_the_swatch_and_seeds_the_picker
@@ -203,11 +224,11 @@ return function()
     reset.scripts.OnClick(reset)
     local color, custom = lastChange(changes, "edgeGlowColor"), lastChange(changes, "edgeGlowCustom")
     assert(color ~= nil and color.value == nil and custom ~= nil and custom.value == nil, "both cleared")
-    assert(selectedKey(result) == Theme.GetPreset(), "the active preset shows again")
+    assert(selectedKey(result) == "theme", "Theme shows again")
     assert(customButton(result).swatch.shown == false, "swatch hidden")
   end
 
-  -- test_unset_follows_a_theme_preset_change
+  -- test_theme_stays_picked_across_a_theme_preset_change
   do
     local result = create()
     local before = Theme.GetPreset()
@@ -215,7 +236,7 @@ return function()
     result.refreshTheme(Theme)
     local picked = selectedKey(result)
     Theme.SetPreset(before)
-    assert(picked == "plumber_warm", "the new preset shows, got " .. tostring(picked))
+    assert(picked == "theme", "Theme still picked, got " .. tostring(picked))
   end
 
   -- test_label_survives_a_language_refresh
@@ -224,5 +245,6 @@ return function()
     result.setLanguage()
     assert(FindUI.byLabel(result.frame, LABEL) ~= nil, "relabelled")
     assert(customButton(result).label.text == "Custom", "Custom relabelled")
+    assert(FindUI.selectorButtons(result.frame, LABEL)[1].label.text == "Theme", "Theme relabelled")
   end
 end
