@@ -140,6 +140,7 @@ function WindowRuntime.Create(options)
     getMinimapIcon = surfaces.getMinimapIcon,
     getLdbObject = surfaces.getLdbObject,
     getCompartment = surfaces.getCompartment,
+    getEdgeSurface = surfaces.getEdgeSurface,
     getDetachedPreview = surfaces.getDetachedPreview,
     previewDetached = surfaces.isPreviewDetached,
     isMythicRestricted = isMythicRestricted,
@@ -264,6 +265,7 @@ function WindowRuntime.Create(options)
     coordinator.updateIconSurfaces()
   end
   surfaces.createCompartment()
+  surfaces.ensureEdgeSurface()
 
   RuntimeBindings.Apply({
     runtime = runtime,

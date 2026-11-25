@@ -267,6 +267,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     setIconSlotOccupied = setIconSlotOccupied,
     iconSlot = iconSlot,
     titleBar = chrome.titleBar,
+    windowEdges = chrome.edges,
   }
 end
 

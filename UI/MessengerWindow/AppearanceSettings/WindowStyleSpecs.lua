@@ -21,6 +21,20 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     anchorOffsetY = gap,
   }
 
+  local edgeGlowSpec = {
+    key = "edgeGlow",
+    label = text("Edge glow"),
+    labelKey = "Edge glow",
+    initial = config.edgeGlow ~= false,
+    onChange = function(value)
+      onChange("edgeGlow", value)
+    end,
+    tooltipLines = {
+      text("Edge glow"),
+      text("While the window is closed, the screen edge glows softly when you have unread whispers. Only while Screen edge is on."),
+    },
+  }
+
   local windowAnimationSpec = {
     key = "windowAnimation",
     label = text("Window animation"),
@@ -81,7 +95,7 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     },
   }
 
-  return { compactLayoutSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec, showEmojiButtonSpec }
+  return { compactLayoutSpec, edgeGlowSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec, showEmojiButtonSpec }
 end
 
 ns.AppearanceSettingsWindowStyleSpecs = WindowStyleSpecs

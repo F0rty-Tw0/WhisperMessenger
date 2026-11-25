@@ -15,6 +15,7 @@ local function fakeSurfaces()
     applyIconMode = noop,
     refreshTheme = noop,
     ensureDetachedPreview = noop,
+    ensureEdgeSurface = noop,
   }
 end
 
@@ -175,6 +176,16 @@ return function()
     assert(built.captured.windowOptions.settingsConfig == accountState.settings, "the window edits the same table")
   end
 
+  -- The window reads screenEdge from the table the settings handler writes it into.
+  local function test_a_screen_edge_change_lands_in_the_table_the_window_reads()
+    local built = build({ accountState = { settings = {} } })
+    local settings = built.captured.windowOptions.settingsConfig
+
+    built.captured.onSettingChanged("screenEdge", "right")
+
+    assert(settings.screenEdge == "right", "the window's table sees the change")
+  end
+
   -- Set after the build: the window reads the saved chats when asked.
   local function test_the_window_reads_sent_history_from_the_saved_chats()
     local built = build()
@@ -195,5 +206,6 @@ return function()
   test_window_callbacks_pass_straight_through()
   test_the_window_style_picks_the_position_slot()
   test_missing_settings_are_created_and_shared_with_the_window()
+  test_a_screen_edge_change_lands_in_the_table_the_window_reads()
   test_the_window_reads_sent_history_from_the_saved_chats()
 end

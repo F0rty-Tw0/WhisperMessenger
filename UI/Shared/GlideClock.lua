@@ -18,10 +18,15 @@ local function easeOut(t)
   return 1 - inverse * inverse * inverse
 end
 
+local function easeIn(t)
+  return t * t * t
+end
+
 -- onTick(t, p): linear time and eased path, both under 1. The end belongs to
 -- onDone (optional), called once after the script is cleared. A new Run on the
--- same frame replaces the old one.
-function GlideClock.Run(frame, duration, onTick, onDone)
+-- same frame replaces the old one. ease(t) shapes p; none means ease-out.
+function GlideClock.Run(frame, duration, onTick, onDone, ease)
+  local shape = ease or easeOut
   local elapsed = 0
   frame:SetScript("OnUpdate", function(_self, delta)
     elapsed = elapsed + mathMin(delta, MAX_STEP)
@@ -33,9 +38,11 @@ function GlideClock.Run(frame, duration, onTick, onDone)
       return
     end
     local t = elapsed / duration
-    onTick(t, easeOut(t))
+    onTick(t, shape(t))
   end)
 end
+
+GlideClock.EaseIn = easeIn
 
 -- Never calls onDone.
 function GlideClock.Stop(frame)

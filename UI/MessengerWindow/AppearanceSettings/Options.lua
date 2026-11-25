@@ -40,6 +40,20 @@ local HUD_STYLE_SPECS = {
   { key = "retail", label = "Modern", tooltip = "Uses the modern game window style. Requires /reload to apply." },
 }
 
+local SCREEN_EDGE_SPECS = {
+  { key = "off", label = "Off", tooltip = "The compact window stays where you move it." },
+  {
+    key = "left",
+    label = "Left",
+    tooltip = "Holds the compact window against this edge of the screen at full height. It slides out when it opens and back in when it closes. Only while Compact window is on.",
+  },
+  {
+    key = "right",
+    label = "Right",
+    tooltip = "Holds the compact window against this edge of the screen at full height. It slides out when it opens and back in when it closes. Only while Compact window is on.",
+  },
+}
+
 local BUBBLE_COLOR_LABELS = {
   default = { label = "Default", tooltip = "Uses your theme's bubble colors." },
   shadow = { label = "Shadow", tooltip = "Muted dark tones." },
@@ -105,11 +119,29 @@ function Options.BuildHudStyleOptions()
   return options
 end
 
+function Options.BuildScreenEdgeOptions()
+  return localizeOptionSpecs(SCREEN_EDGE_SPECS)
+end
+
 function Options.BuildThemePresetOptions()
   local keys = Theme.ListPresets and Theme.ListPresets() or { "wow_default", "elvui_dark", "plumber_warm" }
   return SettingsControls.ProjectLabeledOptions(keys, PRESET_LABELS, function(key)
     return { label = key, tooltip = "Theme preset" }
   end, Localization.Text)
+end
+
+local GLOW_THEME_SPEC = { key = "theme", label = "Theme", tooltip = "Follows the active theme's accent color." }
+local GLOW_CUSTOM_SPEC = { key = "custom", label = "Custom", tooltip = "Pick your own glow color." }
+
+-- Theme (nothing saved), the theme presets (each meaning that preset's accent), then Custom.
+function Options.BuildGlowColorOptions()
+  local options = { localizeOptionSpecs({ GLOW_THEME_SPEC })[1] }
+  for _, opt in ipairs(Options.BuildThemePresetOptions()) do
+    opt.tooltip = Localization.Text("Glows in this theme's accent color.")
+    options[#options + 1] = opt
+  end
+  options[#options + 1] = localizeOptionSpecs({ GLOW_CUSTOM_SPEC })[1]
+  return options
 end
 
 function Options.BuildBubbleColorOptions()

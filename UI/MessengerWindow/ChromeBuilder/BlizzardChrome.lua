@@ -35,11 +35,17 @@ end
 -- The addon-owned frame every pane parents to, inside the active HUD
 -- template's border and below its title bar.
 function BlizzardChrome.CreateContentArea(factory, frame, layout)
-  local insets = Hud.ContentInsets(layout)
   local contentArea = factory.CreateFrame("Frame", nil, frame)
+  BlizzardChrome.PlaceContentArea(contentArea, frame, layout, nil)
+  return contentArea
+end
+
+-- screenEdge: see Hud.ContentInsets.
+function BlizzardChrome.PlaceContentArea(contentArea, frame, layout, screenEdge)
+  local insets = Hud.ContentInsets(layout, screenEdge)
+  contentArea:ClearAllPoints()
   contentArea:SetPoint("TOPLEFT", frame, "TOPLEFT", insets.left, -insets.top)
   contentArea:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -insets.right, insets.bottom)
-  return contentArea
 end
 
 -- Builds the Blizzard-template chrome branch. The outer frame is already

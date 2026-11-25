@@ -2,6 +2,7 @@
 -- object, the detached preview and the addon compartment entry: which of them
 -- exist, which one a caller gets in each icon mode, and their theme repaint.
 
+local AnimatedFactory = require("tests.helpers.animated_factory")
 local FakeUI = require("tests.helpers.fake_ui")
 local PanelRegistry = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelRegistry")
 local PositionSlots = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PositionSlots")
@@ -60,9 +61,11 @@ local function fakeUiParent(factory)
 end
 
 -- Surfaces as Create returns them: no handlers bound yet.
-local function buildUnbound(settings)
+-- extra.factory and extra.buildContacts stand in for the defaults.
+local function buildUnbound(settings, extra)
+  extra = extra or {}
   local calls = { iconCreates = 0, minimapCreates = 0, iconTheme = 0, minimapTheme = 0, detachedTheme = 0, ldbObject = {} }
-  local factory = FakeUI.NewFactory()
+  local factory = extra.factory or FakeUI.NewFactory()
   local accountState = { settings = settings }
   local characterState = { window = {}, icon = {} }
   local runtime = { accountState = accountState, panelRegistry = PanelRegistry.New(), store = { conversations = {}, config = {} } }
@@ -76,7 +79,7 @@ local function buildUnbound(settings)
     positionSlots = PositionSlots.Create({ accountState = accountState, characterState = characterState, tableUtils = TableUtils }),
     toggleIcon = fakeToggleIcon(calls),
     minimapIconRuntime = fakeMinimapIconRuntime(calls),
-    buildContacts = function()
+    buildContacts = extra.buildContacts or function()
       return {}
     end,
     buildLatestIncomingPreview = noop,
@@ -84,8 +87,8 @@ local function buildUnbound(settings)
   return surfaces, calls, runtime
 end
 
-local function build(settings)
-  local surfaces, calls, runtime = buildUnbound(settings)
+local function build(settings, extra)
+  local surfaces, calls, runtime = buildUnbound(settings, extra)
   local handlers = {
     onToggle = noop,
     onOpenPreview = noop,
@@ -269,6 +272,57 @@ return function()
     assert(runtime.icon ~= nil and runtime.icon == surfaces.getIcon(), "runtime.icon is the widget icon")
   end
 
+  local function edgeBuild(settings, unread)
+    return build(settings, {
+      factory = AnimatedFactory.newAnimatedFactory(),
+      buildContacts = function()
+        return unread and { { channel = "WOW", unreadCount = unread } } or {}
+      end,
+    })
+  end
+
+  local function test_built_surface_is_seeded_with_current_counts()
+    local surfaces = edgeBuild({ compactLayout = true, screenEdge = "left" }, 1)
+    local edge = surfaces.ensureEdgeSurface()
+    assert(edge ~= nil, "a side builds the edge surface")
+    assert(edge.glow.pulse.animation.playing == true, "an unread whisper lights the glow at once")
+    assert(surfaces.getEdgeSurface() == edge, "getEdgeSurface hands out the built one")
+  end
+
+  local function test_no_surface_without_a_side()
+    local surfaces = edgeBuild({ compactLayout = true, screenEdge = "off" })
+    assert(surfaces.ensureEdgeSurface() == nil, "screenEdge off builds nothing")
+    assert(surfaces.getEdgeSurface() == nil, "and none is handed out")
+  end
+
+  local function test_no_surface_without_compact_layout()
+    local surfaces = edgeBuild({ compactLayout = false, screenEdge = "left" })
+    assert(surfaces.ensureEdgeSurface() == nil, "no compact window, no edge surface")
+  end
+
+  local function test_built_once()
+    local surfaces = edgeBuild({ compactLayout = true, screenEdge = "left" })
+    assert(surfaces.ensureEdgeSurface() == surfaces.ensureEdgeSurface(), "the second call returns the same table")
+  end
+
+  local function test_theme_refresh_reaches_the_edge_surface()
+    local surfaces = edgeBuild({ compactLayout = true, screenEdge = "left" })
+    local edge = surfaces.ensureEdgeSurface()
+    local repaints = 0
+    local original = edge.refreshTheme
+    edge.refreshTheme = function(...)
+      repaints = repaints + 1
+      return original(...)
+    end
+    surfaces.refreshTheme()
+    assert(repaints == 1, "the edge surface repaints once, got " .. repaints)
+  end
+
+  test_built_surface_is_seeded_with_current_counts()
+  test_no_surface_without_a_side()
+  test_no_surface_without_compact_layout()
+  test_built_once()
+  test_theme_refresh_reaches_the_edge_surface()
   test_widget_icon_is_nil_in_minimap_mode()
   test_minimap_icon_is_nil_in_widget_mode()
   test_ldb_object_is_nil_when_icons_are_off()

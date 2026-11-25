@@ -100,6 +100,7 @@ function LifecycleWiring.Setup(options)
     getEscapeClosesWindow = options.getEscapeClosesWindow,
     onStrataChanged = options.onStrataChanged,
     isWindowPart = options.isWindowPart,
+    isPinned = options.isPinned,
     isContactsCollapsed = options.isContactsCollapsed,
     setContactsCollapsed = options.setContactsCollapsed,
   })

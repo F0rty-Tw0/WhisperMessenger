@@ -93,12 +93,21 @@ local function makeCreateFrame(options)
       self.points[#self.points + 1] = pt
     end
 
-    function frame:GetPoint()
-      if self.point == nil then
+    -- GetPoint(i) reads the i-th point set; with no index, the last one.
+    function frame:GetPoint(index)
+      local pt = self.point
+      if index ~= nil then
+        pt = self.points and self.points[index]
+      end
+      if pt == nil then
         return nil
       end
 
-      return unpackValues(self.point, 1, self.point.n or #self.point)
+      return unpackValues(pt, 1, pt.n or #pt)
+    end
+
+    function frame:GetNumPoints()
+      return self.points and #self.points or 0
     end
 
     function frame:ClearAllPoints()

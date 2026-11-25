@@ -74,6 +74,28 @@ function NativeArt.SetAtlas(texture, atlas, useAtlasSize)
   return true
 end
 
+-- The template inset border's horizontal bevels (SharedUIPanelTemplates.xml
+-- _UI-Frame-InnerTopTile / InnerBotTile: 256 x 3, horizTile).
+NativeArt.INSET_TOP_BEVEL = "_UI-Frame-InnerTopTile"
+NativeArt.INSET_BOTTOM_BEVEL = "_UI-Frame-InnerBotTile"
+NativeArt.INSET_BEVEL_HEIGHT = 3
+
+-- Paints `texture` with a horizontal inset bevel, tiled, at its own height.
+-- False when the client lacks SetAtlas or the atlas (Classic flavours). The
+-- atlas is looked up first: SetAtlas returns nothing on the live client.
+function NativeArt.SetBevel(texture, atlas)
+  if type(texture.SetAtlas) ~= "function" or NativeArt.AtlasInfo(atlas) == nil then
+    return false
+  end
+  texture:SetAtlas(atlas)
+  if type(texture.SetHorizTile) == "function" then
+    texture:SetHorizTile(true)
+  end
+  texture:SetHeight(NativeArt.INSET_BEVEL_HEIGHT)
+  mark(texture, "BLEND")
+  return true
+end
+
 -- The client's info table for `atlas` (width, height, ...), or nil when the
 -- client can't report it.
 function NativeArt.AtlasInfo(atlas)

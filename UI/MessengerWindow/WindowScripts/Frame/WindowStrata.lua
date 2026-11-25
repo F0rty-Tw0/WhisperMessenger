@@ -22,6 +22,7 @@ local WINDOW_FRAME_LEVEL = 2000
 -- options.onStrataChanged(strata), when given, runs after each change.
 -- options.isWindowPart(frame), when given, claims frames outside the window
 -- that count as clicks on it.
+-- options.isPinned(), when given and true, keeps the window from going back.
 function WindowStrata.New(frame, options, escapeOrder)
   local function composerHasFocus()
     local input = options.composerInput
@@ -94,7 +95,7 @@ function WindowStrata.New(frame, options, escapeOrder)
   end
 
   local function demoteIfIdle()
-    if composerHasFocus() or isPointerOnWindow() then
+    if (options.isPinned and options.isPinned()) or composerHasFocus() or isPointerOnWindow() then
       return
     end
     preserveComposerFocusAround(function()

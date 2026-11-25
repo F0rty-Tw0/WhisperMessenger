@@ -95,6 +95,7 @@ function IconSurfaces.Update(contacts, surfaces)
   local minimap = surfaces.getMinimapIcon()
   IconSurfaces.ShowCounts(total, unread, icon, minimap, surfaces.getLdbObject())
   setCount(surfaces.getCompartment and surfaces.getCompartment(), total, unread)
+  setCount(surfaces.getEdgeSurface and surfaces.getEdgeSurface(), total, unread)
   local detachedCard = surfaces.getDetachedPreview and surfaces.getDetachedPreview() or nil
   local detached = surfaces.previewDetached and surfaces.previewDetached() and detachedCard or nil
   if detached then

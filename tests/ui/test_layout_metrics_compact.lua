@@ -24,6 +24,24 @@ return function()
     assert(result.contactsWidth == expected, "HUD list width, got " .. tostring(result.contactsWidth))
   end
 
+  -- test_compact_panes_reach_the_screen_side_at_the_edge
+  do
+    Hud.Configure("classic")
+    local insets = Hud.ContentInsets(L)
+    local docked = Hud.ContentInsets(L, "right")
+    local result = Metrics.CalculateRelayout({ compactLayout = true, nativeChrome = true, screenEdge = "right" }, 360, 640, 180, Theme)
+    Hud.Configure("off")
+    assert(result.contactsWidth == 360 - insets.left - EDGES, "only the inner border is cleared, got " .. tostring(result.contactsWidth))
+    assert(result.contactsHeight == 640 - docked.top, "no bottom border, below the docked title row, got " .. tostring(result.contactsHeight))
+  end
+
+  -- test_bottom_reserve_shortens_the_panes
+  do
+    local plain = Metrics.CalculateRelayout({ compactLayout = true }, 360, 640, 180, Theme)
+    local result = Metrics.CalculateRelayout({ compactLayout = true, bottomReserve = 24 }, 360, 640, 180, Theme)
+    assert(result.contactsHeight == plain.contactsHeight - 24, "panes end above the strip, got " .. tostring(result.contactsHeight))
+  end
+
   -- test_wide_compact_window_lays_settings_out_like_the_classic_window
   do
     local wide = Metrics.CalculateRelayout({ compactLayout = true, compactWide = true }, 900, 640, 180, Theme)

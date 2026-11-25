@@ -7,6 +7,7 @@ local SettingsHandler = ns.BootstrapWindowRuntimeSettingsHandler or require("Whi
 local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DetachedPreviewRuntime")
 local GrowSource = ns.BootstrapWindowRuntimeGrowSource or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GrowSource")
+local ScreenEdgeSetting = ns.BootstrapWindowRuntimeScreenEdgeSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ScreenEdgeSetting")
 local IconMode = ns.BootstrapWindowRuntimeIconMode or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconMode")
 local PanelPulse = ns.BootstrapWindowRuntimePanelPulse or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelPulse")
 local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
@@ -37,6 +38,16 @@ local function createSettingsHandler(options, settingsState)
         accountState = options.accountState,
         ensureSurface = surfaces.ensureDetachedPreview,
         updateIconSurfaces = options.coordinator.updateIconSurfaces,
+      }, key, value)
+    end,
+    onScreenEdgeSetting = function(key, value)
+      ScreenEdgeSetting.Apply({
+        runtime = options.runtime,
+        ensureSurface = surfaces.ensureEdgeSurface,
+        updateIconSurfaces = options.coordinator.updateIconSurfaces,
+        readCompactSlot = function()
+          return options.positionSlots.read("compactWindow")
+        end,
       }, key, value)
     end,
   })
@@ -103,13 +114,22 @@ local function hideAndHook(window, options)
   if window.frame.Hide then
     window.frame:Hide()
   end
+  -- The edge glow stops while the window shows and returns when it hides.
+  local function refreshEdgeSurface()
+    local edge = options.surfaces.getEdgeSurface and options.surfaces.getEdgeSurface()
+    if edge then
+      edge.refresh()
+    end
+  end
   -- ESC and the game's close-all hide the frame without setWindowVisible:
   -- acknowledge on every hide so a whisper read in the pane never pops on
   -- the widget after the window closes.
   if window.frame.HookScript then
     window.frame:HookScript("OnHide", function()
       options.acknowledgeLatestWidgetPreview(options.buildContacts())
+      refreshEdgeSurface()
     end)
+    window.frame:HookScript("OnShow", refreshEdgeSurface)
   end
 end
 
