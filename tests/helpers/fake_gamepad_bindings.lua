@@ -1,6 +1,6 @@
 -- Fake prompted bindings for FakeGamepad: GamepadSharedUtility's
 -- CreatePromptedBinding / CreatePromptedBindingFooter, PromptedBindingMixin
--- and SmartNavigation:RightClick. Mirrors PromptedBinding.lua#L703-L725
+-- SmartNavigation:RightClick, GetCurrentButton and GetActiveFrame. Mirrors PromptedBinding.lua#L703-L725
 -- (key, function, label; button contexts; visibility type),
 -- PromptedBindingFooter.lua#L366-L392 (show/hide idempotent through
 -- isShown) and SmartNavigation.lua#L1655-L1659 (right-click = mouse down,
@@ -60,6 +60,20 @@ function FakeGamepadBindings.Install(env, log, smartNav)
         script(button, "RightButton")
       end
     end
+  end
+
+  -- SmartNavigation's getters for the pad cursor's button and its frame.
+  function smartNav:GetCurrentButton()
+    return env.currentButton
+  end
+  function smartNav:GetActiveFrame()
+    return env.activeFrame
+  end
+
+  -- The pad cursor on frame, inside activeFrame (the game's active frame).
+  function env.focus(frame, activeFrame)
+    env.currentButton = frame
+    env.activeFrame = activeFrame
   end
 
   -- The game right-clicking target, as SmartNavigation:RightClick does on

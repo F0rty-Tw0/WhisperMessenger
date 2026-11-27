@@ -38,6 +38,7 @@ local function inert()
     popupHidden = noop,
     setPopupCloseHandler = noop,
     isStop = never,
+    currentStop = noop,
     isActive = never,
     isRegistered = never,
   }
@@ -259,6 +260,23 @@ function GamepadNav.New(frame, deps)
       return false
     end
     return (canFocus(target) and not isIgnored(target)) == true
+  end
+
+  -- The pad cursor's button while our window is the active frame, or nil.
+  -- The game keeps a hidden button as current, so a hidden one is nil.
+  function nav.currentStop()
+    if not registered or inCombat() then
+      return nil
+    end
+    local sn = smartNavigation
+    if type(sn.GetCurrentButton) ~= "function" or type(sn.GetActiveFrame) ~= "function" or sn:GetActiveFrame() ~= frame then
+      return nil
+    end
+    local button = sn:GetCurrentButton()
+    if type(button) == "table" and type(button.IsVisible) == "function" and button:IsVisible() then
+      return button
+    end
+    return nil
   end
 
   function nav.isActive()
