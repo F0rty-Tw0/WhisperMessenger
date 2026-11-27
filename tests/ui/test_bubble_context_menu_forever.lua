@@ -6,6 +6,7 @@ local World = require("tests.helpers.menu_popup_world")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local MenuPopup = require("WhisperMessenger.UI.Shared.MenuPopup")
 local ContextMenu = require("WhisperMessenger.UI.ChatBubble.ContextMenu")
+local BubbleFrame = require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
 
 -- On WoW: Forever with the gamepad UI on the bubble right-click menu is WM's
 -- own popup; Blizzard's menus (MenuUtil, EasyMenu, UIDropDownMenu) taint
@@ -110,5 +111,18 @@ return function()
     ContextMenu.Open("hello", anchor, { canReact = noReactions })
     assert(calls[1] == "EasyMenu", "pad off: Blizzard's copy menu, got " .. tostring(calls[1]))
     assert(not MenuPopup.IsShown(), "pad off: no WM popup")
+  end)
+
+  -- test_forever_bubble_opener_opens_own_popup
+  Flavor.With(true, true, function()
+    Flavor.WithPadUI(true, function()
+      World.With(function(factory, anchor)
+        BannedMenuApis.AssertNone(function()
+          local bubble = BubbleFrame.CreateBubble(factory, anchor, { text = "hello", kind = "user", direction = "in" }, {})
+          bubble.frame._wmOpenMenu(bubble.frame)
+          assert(MenuPopup.IsShown(), "the bubble's own menu opens")
+        end)
+      end)
+    end)
   end)
 end

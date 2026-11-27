@@ -229,6 +229,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     frame:SetScript("OnMouseDown", bubbleOnMouseDown)
     frame:SetScript("OnMouseUp", bubbleOnMouseUp)
     frame:SetScript("OnDoubleClick", nil)
+    frame._wmOpenMenu = openBubbleMenu
     if type(options.onReact) == "function" and kind == "user" and direction == "in" and message.delivery ~= "blocked" then
       frame:SetScript("OnDoubleClick", bubbleOnDoubleClick)
     end

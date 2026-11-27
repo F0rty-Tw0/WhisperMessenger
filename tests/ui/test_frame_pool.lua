@@ -260,4 +260,14 @@ return function()
     local other = plain.CreateFrame("Button", nil, contentFrame, "InlineHyperlinkFrameTemplate")
     assert(other ~= iconFrame, "a frame from another role must not reuse the icon frame")
   end
+
+  -- test_release_drops_the_menu_opener
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(contentFrame)
+    local frame = FramePool.acquireFrame(FakeUI.NewFactory(), contentFrame, "Frame", contentFrame)
+    frame._wmOpenMenu = function() end
+    FramePool.releaseAll(contentFrame)
+    assert(frame._wmOpenMenu == nil, "a reused frame carries no opener from its old role")
+  end
 end
