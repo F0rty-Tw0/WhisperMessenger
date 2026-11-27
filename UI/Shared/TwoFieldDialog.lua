@@ -69,13 +69,25 @@ local function layout(dialog)
   dialog.title:SetPoint("TOP", body, "TOP", 0, -PADDING)
   dialog.firstLabel:SetPoint("TOPLEFT", body, "TOPLEFT", PADDING, -(PADDING + TITLE_SPACE))
   dialog.firstInput:SetPoint("TOPLEFT", dialog.firstLabel, "BOTTOMLEFT", dialog.firstInput.inset, -LABEL_GAP)
-  dialog.secondLabel:SetPoint("TOPLEFT", dialog.firstLabel, "BOTTOMLEFT", 0, -(LABEL_GAP + INPUT_HEIGHT + FIELD_GAP))
   dialog.secondInput:SetPoint("TOPLEFT", dialog.secondLabel, "BOTTOMLEFT", dialog.secondInput.inset, -LABEL_GAP)
   dialog.hint:SetPoint("TOPLEFT", dialog.secondLabel, "BOTTOMLEFT", 0, -(LABEL_GAP * 2 + INPUT_HEIGHT))
   dialog.hint:SetWidth(WIDTH - PADDING * 2)
   dialog.hint:SetWordWrap(true)
   dialog.acceptButton:SetPoint("BOTTOMRIGHT", body, "BOTTOM", -BUTTON_GAP / 2, PADDING)
   dialog.cancelButton:SetPoint("BOTTOMLEFT", body, "BOTTOM", BUTTON_GAP / 2, PADDING)
+end
+
+-- One-field mode hides the first field and moves the second up into its place.
+local function showFirstField(dialog, shown)
+  dialog.firstLabel:SetShown(shown)
+  dialog.firstInput:SetShown(shown)
+  local label = dialog.secondLabel
+  label:ClearAllPoints()
+  if shown then
+    label:SetPoint("TOPLEFT", dialog.firstLabel, "BOTTOMLEFT", 0, -(LABEL_GAP + INPUT_HEIGHT + FIELD_GAP))
+  else
+    label:SetPoint("TOPLEFT", dialog.firstLabel, "TOPLEFT", 0, 0)
+  end
 end
 
 local function wireKeys(dialog)
@@ -95,7 +107,11 @@ local function wireKeys(dialog)
     GlyphCoverage.UpdateInput(self)
   end)
   second:SetScript("OnEnterPressed", dialog.accept)
-  second:SetScript("OnTabPressed", focus(first))
+  second:SetScript("OnTabPressed", function()
+    if not dialog.oneField then
+      first:SetFocus()
+    end
+  end)
   second:SetScript("OnEscapePressed", close)
   second:SetScript("OnTextChanged", dialog.refreshAccept)
   dialog.acceptButton:SetScript("OnClick", dialog.accept)
@@ -186,13 +202,18 @@ end
 
 -- spec: title, accept (localized labels), firstLabel / secondLabel, hint,
 -- firstValue / secondValue, firstMaxLetters / secondMaxLetters, and
--- onAccept(firstText, secondText) with both trimmed. Returns the dialog.
+-- onAccept(firstText, secondText) with both trimmed. oneField = true shows
+-- only the second (required) field; onAccept then gets "" first. Returns
+-- the dialog.
 function TwoFieldDialog.Show(factory, spec)
   local dialog = dialogs[factory]
   if dialog == nil then
     dialog = build(factory)
     dialogs[factory] = dialog
   end
+  local oneField = spec.oneField == true
+  dialog.oneField = oneField
+  showFirstField(dialog, not oneField)
   dialog.onAccept = spec.onAccept
   dialog.title:SetText(spec.title or "")
   dialog.firstLabel:SetText(spec.firstLabel or "")
@@ -203,12 +224,17 @@ function TwoFieldDialog.Show(factory, spec)
   fill(dialog.firstInput, spec.firstValue, spec.firstMaxLetters)
   fill(dialog.secondInput, spec.secondValue, spec.secondMaxLetters)
   local hintHeight = spec.hint and (dialog.hint:GetStringHeight() or 0) + LABEL_GAP or 0
-  local fieldsHeight = (LABEL_HEIGHT + LABEL_GAP + INPUT_HEIGHT) * 2 + FIELD_GAP
+  local fieldHeight = LABEL_HEIGHT + LABEL_GAP + INPUT_HEIGHT
+  local fieldsHeight = oneField and fieldHeight or fieldHeight * 2 + FIELD_GAP
   dialog:SetSize(WIDTH, PADDING * 3 + TITLE_SPACE + fieldsHeight + hintHeight + Theme.LAYOUT.OPTION_BUTTON_HEIGHT)
   paint(dialog)
   dialog.refreshAccept()
   dialog:Show()
-  dialog.firstInput:SetFocus()
+  if oneField then
+    dialog.secondInput:SetFocus()
+  else
+    dialog.firstInput:SetFocus()
+  end
   return dialog
 end
 

@@ -159,5 +159,31 @@ return function()
     StyledTextInputPopup.nativeChrome = false
   end
 
+  -- test_one_field_mode_shows_and_focuses_only_the_required_field
+  do
+    local factory = FakeUI.NewFactory()
+    show(factory)
+    local accepted = nil
+    local dialog = TwoFieldDialog.Show(factory, {
+      oneField = true,
+      title = "Start a new conversation",
+      accept = "Start",
+      onAccept = function(_first, second)
+        accepted = second
+      end,
+    })
+    assert(not dialog.firstLabel:IsShown() and not dialog.firstInput:IsShown(), "first field hidden")
+    assert(dialog.secondInput:HasFocus(), "the one field takes focus")
+    -- The fake keeps focus on several boxes at once; the game moves it.
+    dialog.firstInput:ClearFocus()
+    press(dialog.secondInput, "OnTabPressed")
+    assert(not dialog.firstInput:HasFocus(), "Tab never focuses the hidden field")
+    typeInto(dialog.secondInput, " Jaina ")
+    press(dialog.secondInput, "OnEnterPressed")
+    assert(accepted == "Jaina", "Enter accepts the one field")
+    local twoFields = show(factory).dialog
+    assert(twoFields.firstLabel:IsShown() and twoFields.firstInput:IsShown(), "two-field use shows the first field again")
+  end
+
   StyledTextInputPopup.nativeChrome = savedNative
 end
