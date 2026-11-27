@@ -14,6 +14,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: on WoW: Forever with the game's controller mode on, right-clicking a contact, a message or a player name in a chat no longer causes "Interface action failed" in combat or blocks the Group Finder afterwards. Whisper Messenger shows its own menu there while controller mode is on; with the mouse, the game's usual menus are back.
 - Fixed: on WoW: Forever with the game's controller mode on, settings drop-down lists open WhisperMessenger's own list (in the game's style under the Native look), so they no longer interfere with other game menus or the controller's back button. Under the Native look, the game's usual drop-down lists come back when you play with the mouse.
 - Fixed: the What's New title no longer runs under the scrollbar when the window is narrow; it drops the date, and if it still doesn't fit it ends in "...".
+- Fixed: on WoW: Forever with the game's controller mode on, the New Whisper button no longer stops the controller from working or causes "Interface action failed" until a reload. It asks for the name in Whisper Messenger's own pop-up there.
 - Fixed: on WoW: Forever under the Native look, the settings drop-down lists are no longer see-through, and the chosen option is marked with a check in gold text.
 - Fixed: on WoW: Forever, some settings drop-down lists no longer open as an empty box.
 - Fixed: a drop-down list near the bottom of a settings page is no longer cut off: the page scrolls to show it, and where it can't, the list opens upward.

@@ -6,10 +6,21 @@ end
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 
 local StartConversationDialog = {}
 
 local DIALOG_NAME = "WHISPER_MESSENGER_START_CONVERSATION"
+local MAX_NAME_LETTERS = 255
+
+-- The own popup's frames are made with the game's CreateFrame, read per
+-- call; one table, so the popup is built once and reused.
+local ownPopupFactory = {
+  CreateFrame = function(...)
+    return _G.CreateFrame(...)
+  end,
+}
+local onStartConversation = nil
 
 local function L(key)
   return Localization.Text(key)
@@ -55,9 +66,32 @@ local function applyDialogText(dialog)
   dialog.button2 = L("Cancel")
 end
 
+-- WoW: Forever with the gamepad UI on: the game's gamepad code hooks
+-- StaticPopup1:Show, and a show from addon code taints its bindings (the
+-- controller stops until /reload). Ask for the name in our own popup there.
+local function openOwnPopup()
+  -- Loads after this file in the TOC: looked up on use.
+  local TwoFieldDialog = ns.TwoFieldDialog or require("WhisperMessenger.UI.Shared.TwoFieldDialog")
+  TwoFieldDialog.Show(ownPopupFactory, {
+    oneField = true,
+    title = L("Start a new conversation"),
+    accept = L("Start"),
+    secondMaxLetters = MAX_NAME_LETTERS,
+    onAccept = function(_first, playerName)
+      if onStartConversation then
+        onStartConversation(playerName)
+      end
+    end,
+  })
+end
+
 -- Every opener (title-bar button, empty-state button) goes through here: the
 -- input is sized after the popup is laid out, which OnShow alone runs too early for.
 function StartConversationDialog.Open()
+  if FlavorCompat.UsesOwnMenus() then
+    openOwnPopup()
+    return
+  end
   if type(_G.StaticPopup_Show) ~= "function" then
     return
   end
@@ -90,7 +124,7 @@ function StartConversationDialog.Wire(newConversationButton, options)
   local dialog = _G.StaticPopupDialogs[DIALOG_NAME]
   if type(dialog) ~= "table" then
     dialog = StyledTextInputPopup.NewDialog()
-    dialog.maxLetters = 255
+    dialog.maxLetters = MAX_NAME_LETTERS
     _G.StaticPopupDialogs[DIALOG_NAME] = dialog
   end
   applyDialogText(dialog)
@@ -103,6 +137,7 @@ function StartConversationDialog.Wire(newConversationButton, options)
     end
   end
   dialog._wmOnStartConversation = options.onStartConversation
+  onStartConversation = options.onStartConversation
   dialog.OnShow = function(popup, data)
     local value = tostring((popup and popup.data) or data or "")
     styleStartConversationDialog(popup, DIALOG_NAME, value)
