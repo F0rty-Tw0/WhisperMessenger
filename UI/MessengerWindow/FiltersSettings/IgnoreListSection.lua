@@ -12,6 +12,8 @@ local TextInputDialog = ns.TextInputDialog or require("WhisperMessenger.UI.Share
 local IgnorePrompt = ns.IgnorePrompt or require("WhisperMessenger.UI.Shared.IgnorePrompt")
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 local IgnoreRow = ns.FiltersSettingsIgnoreRow or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.IgnoreRow")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local PadButtons = ns.SettingsControlsPadButtons or require("WhisperMessenger.UI.Shared.SettingsControls.PadButtons")
 
 -- "Blocked players" section of the Filters page: a scrolling list that only ever builds VISIBLE_ROWS row frames (re-bound on scroll), the
 -- "Block for" choice and an "Add player…" button.
@@ -79,6 +81,24 @@ local function countEntries(filters)
   return count
 end
 
+-- The list's ▲ / ▼ scroll buttons, or nil, nil without the gamepad UI.
+-- onShownChanged(shown) runs on each pad UI flip; the first call comes from
+-- inside PadButtons.Create, before padUp is returned.
+local function createPadButtons(factory, frame, list, scrollBy, onShownChanged)
+  if not FlavorCompat.HasGamepadUI() then
+    return nil, nil
+  end
+  local padDown = PadButtons.Create(factory, frame, "down", function()
+    scrollBy(1)
+  end)
+  padDown:SetPoint("TOP", list, "BOTTOM", 0, -PadButtons.GAP)
+  local padUp = PadButtons.Create(factory, frame, "up", function()
+    scrollBy(-1)
+  end, onShownChanged)
+
+  return padUp, padDown
+end
+
 -- options = { filters, panel, onLayoutChanged, onFiltersChanged }. Returns
 -- the section with `bottom` (the frame the next control anchors below) and
 -- `redraw`.
@@ -93,7 +113,6 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   titleSection.region:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local list = factory.CreateFrame("Frame", nil, frame)
-  list:SetPoint("TOPLEFT", titleSection.region, "BOTTOMLEFT", 0, -GAP)
 
   local function changed()
     section.redraw()
@@ -105,7 +124,21 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
     changed()
   end
 
-  local function bindRows()
+  local bindRows
+
+  -- Moves the list by steps rows; false when it is already at that end.
+  local function scrollBy(steps)
+    local maxOffset = math.max(0, #entries - IgnoreListSection.VISIBLE_ROWS)
+    local nextOffset = math.min(maxOffset, math.max(0, offset + steps))
+    if nextOffset == offset then
+      return false
+    end
+    offset = nextOffset
+    bindRows()
+    return true
+  end
+
+  bindRows = function()
     local rowHeight = Theme.FilterRowHeight()
     for index = 1, IgnoreListSection.VISIBLE_ROWS do
       local entry = entries[offset + index]
@@ -126,9 +159,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   end
 
   list:SetScript("OnMouseWheel", function(_self, delta)
-    local maxOffset = math.max(0, #entries - IgnoreListSection.VISIBLE_ROWS)
-    offset = math.min(maxOffset, math.max(0, offset - delta))
-    bindRows()
+    scrollBy(-delta)
   end)
 
   local durationSelector = options.panel:bind(
@@ -145,7 +176,41 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
     }),
     { type = "selector" }
   )
-  durationSelector.row:SetPoint("TOPLEFT", list, "BOTTOMLEFT", 0, -GAP)
+
+  -- With the pad UI on, ▲ sits centred between the title and the list and ▼
+  -- between the list and "Block for"; off (or no gamepad API), the list and
+  -- "Block for" keep their plain anchors.
+  local padUp, padDown
+  local padShown = false
+
+  local function anchorList()
+    list:ClearAllPoints()
+    durationSelector.row:ClearAllPoints()
+    if not padShown or padUp == nil then
+      list:SetPoint("TOPLEFT", titleSection.region, "BOTTOMLEFT", 0, -GAP)
+      durationSelector.row:SetPoint("TOPLEFT", list, "BOTTOMLEFT", 0, -GAP)
+
+      return
+    end
+    local centre = (width - PadButtons.SIZE) / 2
+    padUp:ClearAllPoints()
+    padUp:SetPoint("TOPLEFT", titleSection.region, "BOTTOMLEFT", centre, -GAP)
+    list:SetPoint("TOPLEFT", padUp, "BOTTOMLEFT", -centre, -PadButtons.GAP)
+    durationSelector.row:SetPoint("TOPLEFT", padDown, "BOTTOMLEFT", -centre, -GAP)
+  end
+
+  padUp, padDown = createPadButtons(factory, frame, list, scrollBy, function(shown)
+    padShown = shown
+    -- The first call comes from inside Create, before padUp is set.
+    -- A later flip moves everything below, so the page re-lays out.
+    if padUp then
+      anchorList()
+      if options.onLayoutChanged then
+        options.onLayoutChanged()
+      end
+    end
+  end)
+  anchorList()
 
   local addButton = options.panel:bind(
     UIHelpers.createOptionButton(
@@ -204,6 +269,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   function section.refreshLayout(nextWidth)
     width = nextWidth
     titleSection.refreshLayout(nextWidth)
+    anchorList()
     section.redraw()
   end
 

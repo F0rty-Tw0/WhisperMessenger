@@ -56,6 +56,7 @@ local UIHelpers = {
   createRoundedBackground = Shapes.createRoundedBackground,
   createOptionButton = Controls.createOptionButton,
   createToggleRow = Controls.createToggleRow,
+  attachTooltip = Controls.attachTooltip,
   attachDisabledState = DisabledState.Attach,
   isShiftDown = isShiftDown,
   isOn = isOn,

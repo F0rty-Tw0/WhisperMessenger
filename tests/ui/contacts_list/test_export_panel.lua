@@ -1,7 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local Localization = require("WhisperMessenger.Locale.Localization")
-local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = require("WhisperMessenger.UI.Shared.PopupEscape")
 local StyledTextInputPopup = require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ExportPanel = require("WhisperMessenger.UI.ContactsList.ExportPanel")
@@ -233,7 +233,7 @@ return function()
     local savedSpecial = _G.UISpecialFrames
     _G.UISpecialFrames = {}
     local reported = nil
-    PickerPopup.SetEscapeFrameShownHandler(function(shown)
+    PopupEscape.SetEscapeFrameShownHandler(function(shown)
       reported = shown
     end)
     local ok, err = pcall(function()
@@ -241,7 +241,7 @@ return function()
       assert(_G.UISpecialFrames[1] == ExportPanel.FRAME_NAME, "panel closes on ESC")
       assert(reported == panel, "opening the panel takes ESC from the messenger")
     end)
-    PickerPopup.SetEscapeFrameShownHandler(nil)
+    PopupEscape.SetEscapeFrameShownHandler(nil)
     _G.UISpecialFrames = savedSpecial
     assert(ok, err)
   end

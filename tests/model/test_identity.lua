@@ -138,4 +138,50 @@ return function()
     Identity.BuildConversationKey(profileId, "UNKNOWN::something") == "arthas-area52::UNKNOWN::something",
     "unknown contactKey should fall back to profileId::contactKey"
   )
+
+  local function withGuildInfo(getGuildInfo, fn)
+    local saved = rawget(_G, "GetGuildInfo")
+    rawset(_G, "GetGuildInfo", getGuildInfo)
+    local ok, err = pcall(fn)
+    rawset(_G, "GetGuildInfo", saved)
+    assert(ok, err)
+  end
+
+  local function test_player_guild_name_returns_the_guild_name()
+    withGuildInfo(function(unit)
+      assert(unit == "player", "asks for the player's guild")
+      return "Moonwatch"
+    end, function()
+      assert(Identity.PlayerGuildName() == "Moonwatch", "expected the player's guild name")
+    end)
+  end
+
+  local function test_player_guild_name_is_nil_without_a_guild()
+    for _, result in ipairs({ "", false }) do
+      withGuildInfo(function()
+        return result or nil
+      end, function()
+        assert(Identity.PlayerGuildName() == nil, "no guild -> nil, got " .. tostring(Identity.PlayerGuildName()))
+      end)
+    end
+  end
+
+  local function test_player_guild_name_is_nil_when_the_api_errors()
+    withGuildInfo(function()
+      error("boom")
+    end, function()
+      assert(Identity.PlayerGuildName() == nil, "API error -> nil")
+    end)
+  end
+
+  local function test_player_guild_name_is_nil_without_the_api()
+    withGuildInfo(nil, function()
+      assert(Identity.PlayerGuildName() == nil, "missing API -> nil")
+    end)
+  end
+
+  test_player_guild_name_returns_the_guild_name()
+  test_player_guild_name_is_nil_without_a_guild()
+  test_player_guild_name_is_nil_when_the_api_errors()
+  test_player_guild_name_is_nil_without_the_api()
 end

@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 local ChatGateway = ns.ChatGateway or require("WhisperMessenger.Transport.ChatGateway")
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
+local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
@@ -23,20 +24,6 @@ end
 
 local function isSupportedGroupChannel(channel)
   return ChannelType.ADDON_GROUP_CHANNELS[channel] == true
-end
-
-local function defaultPlayerGuildName()
-  local getGuildInfo = _G.GetGuildInfo
-  if type(getGuildInfo) ~= "function" then
-    return nil
-  end
-
-  local ok, name = pcall(getGuildInfo, "player")
-  if not ok or type(name) ~= "string" or name == "" then
-    return nil
-  end
-
-  return name
 end
 
 local function isWhisperChannel(channel)
@@ -85,7 +72,7 @@ function GroupSendPolicy.Create(options)
   options = options or {}
   local runtime = options.runtime or {}
   local chatGateway = options.chatGateway or ChatGateway
-  local getPlayerGuildName = options.getPlayerGuildName or defaultPlayerGuildName
+  local getPlayerGuildName = options.getPlayerGuildName or Identity.PlayerGuildName
   local addonComm = options.addonComm or AddonComm
 
   local function getNotice(conversation)

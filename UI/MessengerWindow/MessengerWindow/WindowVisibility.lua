@@ -17,6 +17,7 @@ function WindowVisibility.Create(options)
   local onPanelVisibilityChanged = options.onPanelVisibilityChanged
   local onConversationUncovered = options.onConversationUncovered
   local onPanesShown = options.onPanesShown
+  local onNavTargetsChanged = options.onNavTargetsChanged
   local openPanel = nil
   local closing = false
 
@@ -35,6 +36,13 @@ function WindowVisibility.Create(options)
     end
     if isConversationPaneShown() then
       onConversationUncovered()
+    end
+  end
+
+  -- The visible panes changed: the gamepad UI re-scans its buttons.
+  local function reportNavTargetsChanged()
+    if type(onNavTargetsChanged) == "function" then
+      onNavTargetsChanged()
     end
   end
 
@@ -99,6 +107,7 @@ function WindowVisibility.Create(options)
     local wasCovered = not isConversationPaneShown()
     applyOptionsVisible(nextVisible)
     reportIfUncovered(wasCovered, quiet)
+    reportNavTargetsChanged()
   end
 
   -- key opens that panel (closing options or another panel first); nil
@@ -149,6 +158,7 @@ function WindowVisibility.Create(options)
     local wasCovered = not isConversationPaneShown()
     local result = applyPanelVisible(key)
     reportIfUncovered(wasCovered, quiet)
+    reportNavTargetsChanged()
     return result
   end
 

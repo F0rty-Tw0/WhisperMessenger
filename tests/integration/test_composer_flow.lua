@@ -56,9 +56,9 @@ return function()
   window.contacts.rows[1].scripts.OnClick()
 
   -- After selecting Arthas: header should show name
-  assert(window.conversation.header.text == "Arthas-Area52")
-  assert(window.conversation.transcript.lines[1] == "Need help?")
-  assert(window.conversation.transcript.text.text == "Need help?")
+  assert(window.conversation.headerName.text == "Arthas-Area52")
+  assert(window.conversation.transcript._allMessages[1].text == "Need help?")
+  assert(window.conversation.transcript._virtualState.rows[1].message.text == "Need help?")
   assert(window.contacts.rows[1].selected == true)
   assert(window.contacts.rows[2].selected == false)
   assert(window.composer.sendButton.disabled == false)
@@ -70,16 +70,17 @@ return function()
   assert(sent[1].target == "Arthas-Area52")
   assert(sent[1].text == "On my way")
   assert(window.composer.input.text == "")
-  assert(#window.conversation.transcript.lines == 1)
+  assert(#window.conversation.transcript._allMessages == 1)
 
   window.refreshSelection({
     selectedContact = contacts[2],
     conversation = conversations[contacts[2].conversationKey],
   })
 
-  assert(window.conversation.header.text == "Jaina-Proudmoore")
-  assert(window.conversation.transcript.lines[1] == "You: On my way.")
-  assert(window.conversation.transcript.text.text == "You: On my way.")
+  assert(window.conversation.headerName.text == "Jaina-Proudmoore")
+  assert(window.conversation.transcript._allMessages[1].text == "On my way.")
+  assert(window.conversation.transcript._allMessages[1].direction == "out")
+  assert(window.conversation.transcript._virtualState.rows[1].message.text == "On my way.")
   assert(window.contacts.rows[1].selected == false)
   assert(window.contacts.rows[2].selected == true)
 
@@ -89,11 +90,11 @@ return function()
   assert(sent[2].target == "Jaina-Proudmoore")
   assert(sent[2].conversationKey == "me::WOW::jaina-proudmoore")
   assert(sent[2].text == "Meet at the bank")
-  assert(#window.conversation.transcript.lines == 1)
+  assert(#window.conversation.transcript._allMessages == 1)
 
   window.refreshSelection()
   -- After deselecting: header should be empty again
-  assert(window.conversation.header.text == "")
+  assert(window.conversation.headerName.text == "")
   assert(window.conversation.headerEmpty.shown == true, "expected empty state after deselecting")
   assert(window.composer.sendButton.disabled == true)
 end

@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
+local PageFooter = ns.SettingsControlsPageFooter or require("WhisperMessenger.UI.Shared.SettingsControls.PageFooter")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local HelpSection = ns.FiltersSettingsHelpSection or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.HelpSection")
 local IgnoreListSection = ns.FiltersSettingsIgnoreListSection or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.IgnoreListSection")
@@ -14,7 +15,6 @@ local RulesSection = ns.FiltersSettingsRulesSection or require("WhisperMessenger
 -- keyword rules. Both edit `config.filters` (the saved filters table) in place.
 local FiltersSettings = {}
 
-local PADDING = Theme.CONTENT_PADDING
 local TITLE = "Filters"
 local HINT = "Silently hide messages from players and lines you don't want to see."
 
@@ -49,11 +49,7 @@ function FiltersSettings.Create(factory, parent, config, options)
   local ignoreSection = IgnoreListSection.Create(factory, frame, helpSection.bottom, sectionOptions)
   local rulesSection = RulesSection.Create(factory, frame, ignoreSection.bottom, sectionOptions)
 
-  local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
-  bottomSpacer:SetSize(1, PADDING)
-  bottomSpacer:SetPoint("TOPLEFT", rulesSection.bottom, "BOTTOMLEFT", 0, 0)
-  -- Marker the options scrollview reads to size the scroll content.
-  frame._wmBottomMarker = bottomSpacer
+  PageFooter.AddBottomMarker(factory, frame, rulesSection.bottom)
 
   -- Blocked counts move while the page is closed.
   frame:SetScript("OnShow", function()
@@ -81,10 +77,10 @@ function FiltersSettings.Create(factory, parent, config, options)
   end
 
   local function refreshLayout(width)
-    if type(width) ~= "number" or width <= 0 then
+    local effective = PageFooter.ClampPanelWidth(width)
+    if not effective then
       return
     end
-    local effective = math.min(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, math.max(160, math.floor(width)))
     header.refreshLayout(effective)
     panel:refreshLayout(effective)
     helpSection.refreshLayout(effective)

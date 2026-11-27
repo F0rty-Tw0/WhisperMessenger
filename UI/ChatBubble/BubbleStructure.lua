@@ -26,8 +26,38 @@ function BubbleStructure.measureTextHeight(fontString, text, maxWidth)
   return fontString:GetStringHeight() or 14
 end
 
+-- How far a HUD bubble's border moves from its fill colour toward white.
+local NATIVE_BORDER_LIGHTEN = 0.35
+
+-- Paints the bubble background built by createStructure: the rounded fill
+-- and corners, or the native backdrop and its border.
+function BubbleStructure.applyColor(frame, colorTable, alphaScale)
+  local r, g, b = colorTable[1], colorTable[2], colorTable[3]
+  local a = (colorTable[4] or 1) * (alphaScale or 1)
+  for _, part in ipairs(frame._bgFills) do
+    if part.SetColorTexture then
+      part:SetColorTexture(r, g, b, a)
+    end
+  end
+  for _, part in ipairs(frame._bgCorners) do
+    if part.SetVertexColor then
+      part:SetVertexColor(r, g, b, a)
+    end
+  end
+  local backdrop = frame._nativeBackdrop
+  if backdrop and backdrop.SetBackdropColor then
+    backdrop:SetBackdropColor(r, g, b, a)
+  end
+  -- The stock tooltip edge is near-white and glares; edge the bubble in its
+  -- own fill colour, lightened, so it follows the preset.
+  if backdrop and backdrop.SetBackdropBorderColor then
+    local k = NATIVE_BORDER_LIGHTEN
+    backdrop:SetBackdropBorderColor(r + (1 - r) * k, g + (1 - g) * k, b + (1 - b) * k, a)
+  end
+end
+
 -- Native WoW HUD bubble background: a tooltip-bordered child frame, so it
--- hides with the bubble. Filled by BubbleFrame's applyBubbleColor.
+-- hides with the bubble. Filled by applyColor.
 local function createNativeBackdrop(factory, frame)
   local backdrop = PickerPopup.CreateTooltipFrame(factory, frame)
   backdrop:SetAllPoints(frame)

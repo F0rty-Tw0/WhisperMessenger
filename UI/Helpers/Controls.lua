@@ -153,6 +153,32 @@ function Controls.createOptionButton(factory, parent, label, colors, layout)
   return button
 end
 
+-- Hover tooltip for a settings row. tooltip: one line (string) or an array
+-- of lines; the first is the title. nil sets no scripts.
+function Controls.attachTooltip(row, tooltip)
+  if not tooltip or not row.SetScript then
+    return
+  end
+  local lines = type(tooltip) == "table" and tooltip or { tooltip }
+  row:SetScript("OnEnter", function()
+    if _G.GameTooltip and _G.GameTooltip.SetOwner then
+      _G.GameTooltip:SetOwner(row, "ANCHOR_TOP")
+      _G.GameTooltip:SetText(lines[1])
+      for i = 2, #lines do
+        if _G.GameTooltip.AddLine then
+          pcall(_G.GameTooltip.AddLine, _G.GameTooltip, lines[i], 1, 1, 1)
+        end
+      end
+      _G.GameTooltip:Show()
+    end
+  end)
+  row:SetScript("OnLeave", function()
+    if _G.GameTooltip and _G.GameTooltip.Hide then
+      _G.GameTooltip:Hide()
+    end
+  end)
+end
+
 function Controls.createToggleRow(factory, parent, label, initial, colors, layout, onChange, tooltip)
   local toggleWidth = layout.width or 280
   local toggleHeight = layout.height or 24
@@ -218,6 +244,12 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
   updateVisual()
 
   dot:SetScript("OnClick", function()
+    -- Greyed out (DisabledState): a controller or scripted click gets past
+    -- the cover; repaint to undo a native checkbox's own toggle.
+    if row._wmDisabled then
+      updateVisual()
+      return
+    end
     enabled = not enabled
     updateVisual()
     if onChange then
@@ -225,26 +257,7 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
     end
   end)
 
-  if tooltip and row.SetScript then
-    local lines = type(tooltip) == "table" and tooltip or { tooltip }
-    row:SetScript("OnEnter", function()
-      if _G.GameTooltip and _G.GameTooltip.SetOwner then
-        _G.GameTooltip:SetOwner(row, "ANCHOR_TOP")
-        _G.GameTooltip:SetText(lines[1])
-        for i = 2, #lines do
-          if _G.GameTooltip.AddLine then
-            pcall(_G.GameTooltip.AddLine, _G.GameTooltip, lines[i], 1, 1, 1)
-          end
-        end
-        _G.GameTooltip:Show()
-      end
-    end)
-    row:SetScript("OnLeave", function()
-      if _G.GameTooltip and _G.GameTooltip.Hide then
-        _G.GameTooltip:Hide()
-      end
-    end)
-  end
+  Controls.attachTooltip(row, tooltip)
 
   return {
     row = row,

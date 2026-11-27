@@ -88,7 +88,6 @@ return function()
       colorsMatch(Theme.COLORS.contacts_border_right, { 1.0, 1.0, 1.0, 0.10 }),
       "test_set_jade_dark: contacts_border_right should be a neutral white-plus-alpha hairline"
     )
-    assert(colorsMatch(Theme.COLORS.send_button_hover, { 0.047, 0.824, 0.616, 1.0 }), "test_set_jade_dark: send_button_hover should be full jade")
     assert(
       colorsMatch(Theme.COLORS.composer_pane_border, { 1.0, 1.0, 1.0, 0.08 }),
       "test_set_jade_dark: composer_pane_border should be a neutral white-plus-alpha hairline (accent is reserved)"
@@ -181,6 +180,7 @@ return function()
   for _, token in ipairs({
     "send_button",
     "send_button_disabled",
+    "send_button_hover",
     "send_button_text",
     "send_button_text_disabled",
     "unread_badge_classic",

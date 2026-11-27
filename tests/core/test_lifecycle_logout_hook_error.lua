@@ -1,5 +1,5 @@
 local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
-local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
+local Logout = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Logout")
 local ChannelMessageStore = require("WhisperMessenger.Model.ChannelMessageStore")
 
 -- "Clear on logout" is a privacy promise: an error in the cleanup that runs
@@ -32,7 +32,7 @@ return function()
       error("cleanup failed")
     end
 
-    local ok = pcall(Presence.handlePlayerLogout, { runtime = runtime })
+    local ok = pcall(Logout.handlePlayerLogout, { runtime = runtime })
 
     assert(ok, "logout does not raise when a cleanup fails")
     assert(next(accountState.conversations) == nil, "no chat is left to save")

@@ -303,4 +303,17 @@ return function()
     assert(widgetCount < 60, "test_pool_stays_bounded_across_traversals_and_appends: widget pool grew to " .. widgetCount)
     assert(widgetCount * 4 < #messages, "test_pool_stays_bounded_across_traversals_and_appends: pool must not scale with history")
   end
+
+  -- test_render_and_scroll_keep_no_plain_text_copy
+  do
+    local transcript = makeTranscript(400, 120)
+    local messages = makeMessages(200)
+    TranscriptView.RenderTranscript(transcript, messages)
+    local lastIndex = transcript._virtualLastIndex
+    ScrollView.SetVerticalScroll(transcript, 0)
+
+    assert(transcript._virtualLastIndex ~= lastIndex, "test_render_and_scroll_keep_no_plain_text_copy: scroll should change the visible range")
+    assert(transcript._visibleLegacyLines == nil, "test_render_and_scroll_keep_no_plain_text_copy: no visible-line copy")
+    assert(transcript.lines == nil, "test_render_and_scroll_keep_no_plain_text_copy: no per-message line copy")
+  end
 end

@@ -156,6 +156,60 @@ return function()
     assert(frame._wmPlayerMenuOpener == nil, "released player-menu state must not retain callback")
   end
 
+  -- test_release_all_resets_the_reaction_badge
+  do
+    local savedTooltip = rawget(_G, "GameTooltip")
+    local tooltipHidden = false
+    rawset(_G, "GameTooltip", {
+      Hide = function()
+        tooltipHidden = true
+      end,
+    })
+    local ok, err = pcall(function()
+      local contentFrame = factory.CreateFrame("Frame", nil, nil)
+      FramePool.initPool(contentFrame)
+      local frame = FramePool.acquireFrame(FakeUI.NewFactory(), contentFrame, "Button", contentFrame)
+      local badge = factory.CreateFrame("Frame", nil, frame)
+      badge:SetScript("OnEnter", function() end)
+      badge:SetScript("OnLeave", function() end)
+      badge:Show()
+      badge._reactionTooltipOwned = true
+      badge._wmReactionKey = "heart"
+      local texture = badge:CreateTexture()
+      texture:SetTexture("Interface\\Icons\\heart")
+      texture:Show()
+      frame._reactionFrame = badge
+      frame._reactionTexture = texture
+      frame._reactionKey = "heart"
+
+      FramePool.releaseAll(contentFrame)
+
+      assert(badge.shown == false, "released badge must be hidden")
+      assert(badge:GetScript("OnEnter") == nil and badge:GetScript("OnLeave") == nil, "released badge must drop its hover scripts")
+      assert(badge._reactionTooltipOwned == nil and badge._wmReactionKey == nil, "released badge must drop its tooltip and key state")
+      assert(tooltipHidden, "released badge must hide the tooltip it owned")
+      assert(texture.texturePath == nil and texture.shown == false, "released badge texture must be cleared and hidden")
+      assert(frame._reactionKey == nil, "released bubble must drop its reaction key")
+    end)
+    rawset(_G, "GameTooltip", savedTooltip)
+    if not ok then
+      error(err, 0)
+    end
+  end
+
+  -- test_release_all_keeps_the_bubble_result_table_for_reuse
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(contentFrame)
+    local frame = FramePool.acquireFrame(FakeUI.NewFactory(), contentFrame, "Button", contentFrame)
+    local result = { frame = frame }
+    frame._wmBubbleResult = result
+
+    FramePool.releaseAll(contentFrame)
+
+    assert(frame._wmBubbleResult == result, "the next render reuses the same result table")
+  end
+
   -- test_pooled_factory_forwards_template
   do
     local contentFrame = factory.CreateFrame("Frame", nil, nil)
@@ -205,5 +259,15 @@ return function()
     FramePool.releaseAll(contentFrame)
     local other = plain.CreateFrame("Button", nil, contentFrame, "InlineHyperlinkFrameTemplate")
     assert(other ~= iconFrame, "a frame from another role must not reuse the icon frame")
+  end
+
+  -- test_release_drops_the_menu_opener
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(contentFrame)
+    local frame = FramePool.acquireFrame(FakeUI.NewFactory(), contentFrame, "Frame", contentFrame)
+    frame._wmOpenMenu = function() end
+    FramePool.releaseAll(contentFrame)
+    assert(frame._wmOpenMenu == nil, "a reused frame carries no opener from its old role")
   end
 end

@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.ConversationPane")
 local Composer = ns.Composer or require("WhisperMessenger.UI.Composer")
 local AlphaController = ns.MessengerWindowAlphaController or require("WhisperMessenger.UI.MessengerWindow.AlphaController")
@@ -12,6 +13,24 @@ local SelectionController = ns.MessengerWindowSelectionController
 local WindowAlpha = ns.MessengerWindowWindowAlpha or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowAlpha")
 
 local ComposerRuntime = {}
+
+-- The conversation's bottom strip (notice, reply, request, away text) starts
+-- at its pane's bottom edge, a divider above the composer; the message box
+-- starts a gutter below the composer's top.
+local STRIP_BASE_ABOVE_BOX = Theme.LAYOUT.COMPOSER_GUTTER + Theme.DIVIDER_THICKNESS
+
+-- Keeps the controller hint over the message box clear of that strip, now
+-- and whenever the strip's height changes.
+local function liftPadHintOverStrip(padHint, conversation)
+  if padHint == nil then
+    return
+  end
+  local function lift(reserved)
+    padHint.setLift(reserved > 0 and reserved + STRIP_BASE_ABOVE_BOX or 0)
+  end
+  conversation.onBannerReservedChanged = lift
+  lift(conversation._bannerReserved or 0)
+end
 
 -- The composer plus what follows it: the window alpha tied to its input,
 -- the selection that feeds it, and the held-back focus on a quiet show.
@@ -53,6 +72,8 @@ function ComposerRuntime.Create(factory, options)
   end, windowOptions.onTyping, composerOptions)
   options.settingsRuntime.setThemeTargets(conversation, composer)
   messageActions.bind(conversation, composer)
+
+  liftPadHintOverStrip(composer.padHint, conversation)
 
   -- Alpha helpers (capture composer.input now that composer exists)
   local windowAlpha = WindowAlpha.Create({

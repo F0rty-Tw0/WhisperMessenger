@@ -5,7 +5,7 @@ end
 
 local PointerFocus = ns.MessengerWindowWindowScriptsFramePointerFocus
   or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.PointerFocus")
-local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 
 local EscapeOrder = {}
 
@@ -233,7 +233,7 @@ function EscapeOrder.New(frame, escapeKey, isEnabled)
     end
   end
 
-  PickerPopup.SetEscapeFrameShownHandler(function(shown, isGameMenu)
+  PopupEscape.SetEscapeFrameShownHandler(function(shown, isGameMenu)
     if not yieldTo(shown, true) then
       return
     end

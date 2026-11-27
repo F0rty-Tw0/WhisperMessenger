@@ -92,13 +92,16 @@ function FindUI.dropdownMenu(row)
   return FindUI.ofType(row, "ScrollFrame")[1]
 end
 
--- Listed (shown) option buttons of a DropdownSelector row, in order; pooled
--- buttons left over from a longer list stay hidden and are skipped.
+-- Listed option buttons of a DropdownSelector row, in order, shown or
+-- scrolled out of view; pooled buttons left over from a longer list are
+-- skipped. Rows live in the menu's scroll child (first Frame child when none
+-- is set).
 function FindUI.dropdownOptions(row)
-  local content = FindUI.ofType(FindUI.dropdownMenu(row), "Frame")[1]
+  local menu = FindUI.dropdownMenu(row)
+  local content = menu.scrollChild or FindUI.ofType(menu, "Frame")[1]
   local listed = {}
   for _, button in ipairs(FindUI.ofType(content, "Button")) do
-    if button:IsShown() then
+    if button._listed then
       listed[#listed + 1] = button
     end
   end

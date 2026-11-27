@@ -9,6 +9,7 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 
 -- Behaviour shared by the small popups (reaction picker, delivery menu,
 -- composer popovers): panel, text buttons, Escape to close, close on an
@@ -22,6 +23,12 @@ PickerPopup.ICON_CHECKED = "Interface\\Buttons\\CheckButtonHilight"
 
 -- Same size as the modern label font (WM_Highlight is built from it).
 PickerPopup.MENU_FONT = "GameFontHighlight"
+-- Check mark of a checked menu entry: art, size, its left inset, and where
+-- the entry's label starts so it clears the check.
+PickerPopup.CHECK_TEXTURE = "Interface\\Buttons\\UI-CheckBox-Check"
+PickerPopup.CHECK_SIZE = 16
+PickerPopup.CHECK_INSET = 4
+PickerPopup.CHECK_LABEL_PAD = 24
 local TOOLTIP_TEMPLATE = "TooltipBackdropTemplate"
 -- Fallback when the client lacks TooltipBackdropTemplate: GameTooltip's
 -- backdrop and default colours.
@@ -34,85 +41,16 @@ local TOOLTIP_BACKDROP = {
   insets = { left = 4, right = 4, top = 4, bottom = 4 },
 }
 local TOOLTIP_BACKGROUND_COLOR = { 0.09, 0.09, 0.19, 0.9 }
+PickerPopup.TOOLTIP_BACKGROUND_COLOR = TOOLTIP_BACKGROUND_COLOR
 local TOOLTIP_BORDER_COLOR = { 1, 1, 1, 1 }
 
-local escapeFrameNames = {}
-local hookedEscapeFrames = setmetatable({}, { __mode = "k" })
-local escapeFrameShownHandler = nil
-
-local function reportEscapeFrameShown(popup)
-  if escapeFrameShownHandler then
-    escapeFrameShownHandler(popup)
-  end
-end
-
--- `handler(popup)` runs whenever a popup registered with its frame opens,
--- `handler(menu, true)` for a game menu reported with ReportMenuShown.
-function PickerPopup.SetEscapeFrameShownHandler(handler)
-  escapeFrameShownHandler = handler
-end
-
--- Escape closes the named frame. Pass `frame` to report its opening to the
--- handler set with SetEscapeFrameShownHandler.
-function PickerPopup.RegisterEscape(frameName, frame)
-  if frame and not hookedEscapeFrames[frame] and type(frame.HookScript) == "function" then
-    hookedEscapeFrames[frame] = true
-    frame:HookScript("OnShow", reportEscapeFrameShown)
-  end
-  local known = false
-  for _, name in ipairs(escapeFrameNames) do
-    known = known or name == frameName
-  end
-  if not known then
-    table.insert(escapeFrameNames, frameName)
-  end
-  _G.UISpecialFrames = _G.UISpecialFrames or {}
-  for _, name in ipairs(_G.UISpecialFrames) do
-    if name == frameName then
-      return
-    end
-  end
-  table.insert(_G.UISpecialFrames, frameName)
-end
-
--- The game menu open now: the Menu system's (Retail, Classic, WoW:
--- Forever) or the old dropdown list.
-local function openGameMenu()
-  local menuApi = _G["Menu"]
-  if type(menuApi) == "table" and type(menuApi.GetManager) == "function" then
-    local manager = menuApi.GetManager()
-    local open = manager and type(manager.GetOpenMenu) == "function" and manager:GetOpenMenu() or nil
-    if open ~= nil then
-      return open
-    end
-  end
-  local dropDownList = _G["DropDownList1"]
-  if dropDownList ~= nil and dropDownList:IsShown() then
-    return dropDownList
-  end
-  return nil
-end
-
--- Call right after the window opens a game menu (MenuUtil, UnitPopup, a
--- dropdown): ESC must close it first. Pass the menu frame when known.
--- The handler gets (menu, true).
-function PickerPopup.ReportMenuShown(menu)
-  menu = menu or openGameMenu()
-  if menu ~= nil and escapeFrameShownHandler then
-    escapeFrameShownHandler(menu, true)
-  end
-end
-
--- True when `frame` is one of the popups registered here.
-function PickerPopup.IsEscapeFrame(frame)
-  local name = type(frame.GetName) == "function" and frame:GetName() or nil
-  for _, known in ipairs(escapeFrameNames) do
-    if name ~= nil and known == name then
-      return true
-    end
-  end
-  return false
-end
+-- The ESC registry lives in PopupEscape; these names stay for callers.
+PickerPopup.SetEscapeFrameShownHandler = PopupEscape.SetEscapeFrameShownHandler
+PickerPopup.RegisterEscape = PopupEscape.RegisterEscape
+PickerPopup.HideShownEscapeFrame = PopupEscape.HideShownEscapeFrame
+PickerPopup.ReportMenuShown = PopupEscape.ReportMenuShown
+PickerPopup.IsEscapeFrame = PopupEscape.IsEscapeFrame
+PickerPopup.SetGamepadPopupHooks = PopupEscape.SetGamepadPopupHooks
 
 local function isMouseOver(frame)
   if type(frame.IsMouseOver) ~= "function" then
@@ -162,6 +100,23 @@ function PickerPopup.HandleEvent(frame, event, close, anchor)
   if event == "GLOBAL_MOUSE_DOWN" and frame._dismissArmed and not isMouseOver(frame) and not (anchor and isMouseOver(anchor)) then
     close()
   end
+end
+
+-- Puts frame's top-left corner on the cursor. Returns false, with no point
+-- set, when the game can't say where the cursor is.
+function PickerPopup.PlaceAtCursor(frame)
+  local parent = _G.UIParent
+  if parent == nil or type(_G.GetCursorPosition) ~= "function" or type(parent.GetEffectiveScale) ~= "function" then
+    return false
+  end
+  local x, y = _G.GetCursorPosition()
+  local scale = parent:GetEffectiveScale()
+  local known = type(x) == "number" and type(y) == "number" and type(scale) == "number" and scale > 0
+  if not known then
+    return false
+  end
+  frame:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", x / scale, y / scale)
+  return true
 end
 
 local function applyColor(setter, frame, color)

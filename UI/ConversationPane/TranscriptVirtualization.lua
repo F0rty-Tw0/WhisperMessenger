@@ -171,14 +171,16 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
   -- dropped or edited messages) rebuilds only the rows it marked stale.
   local rebuild = (renderOptions and renderOptions.force == true)
     or not hadRows
-    or forceSnapToEnd
     or state.fallbackClassTag ~= fallbackClassTag
     or state.senderFallbackClassTag ~= senderFallbackClassTag
     or state.conversationChannel ~= conversationChannel
     or state.conversationDisplayName ~= conversationDisplayName
     or state.displayNameRevision ~= displayNameRevision
     or state.chatLocked ~= (options and options.chatLocked)
-  local force = rebuild or anyChanged
+  -- A viewport resize (relayout, or a snap to the end after one) needs a
+  -- full layout pass, but rows of unchanged width keep their bubbles.
+  local relayout = renderOptions ~= nil and renderOptions.relayout == true
+  local force = rebuild or anyChanged or forceSnapToEnd or relayout
   state.fallbackClassTag = fallbackClassTag
   state.senderFallbackClassTag = senderFallbackClassTag
   state.conversationChannel = conversationChannel

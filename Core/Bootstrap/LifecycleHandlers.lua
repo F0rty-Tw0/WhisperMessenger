@@ -5,6 +5,7 @@ end
 
 local Competitive = ns.BootstrapLifecycleHandlersCompetitive or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Competitive")
 local Presence = ns.BootstrapLifecycleHandlersPresence or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
+local Logout = ns.BootstrapLifecycleHandlersLogout or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Logout")
 local RestrictionState = ns.BootstrapLifecycleHandlersRestrictionState
   or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.RestrictionState")
 local GroupMembership = ns.BootstrapLifecycleHandlersGroupMembership or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.GroupMembership")
@@ -54,7 +55,7 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
     -- Group chats (party, raid, instance) are persisted across /reload and
     -- logout so the user can keep recent history. Membership transitions
     -- are tracked separately via GROUP_ROSTER_UPDATE.
-    return Presence.handlePlayerLogout(Bootstrap)
+    return Logout.handlePlayerLogout(Bootstrap)
   end
 
   if event == "GROUP_FORMED" or event == "GROUP_JOINED" then

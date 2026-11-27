@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local BubbleStructure = ns.ChatBubbleBubbleStructure or require("WhisperMessenger.UI.ChatBubble.BubbleStructure")
+local BubbleCensor = ns.ChatBubbleBubbleCensor or require("WhisperMessenger.UI.ChatBubble.BubbleCensor")
 local BubbleIcon = ns.ChatBubbleBubbleIcon or require("WhisperMessenger.UI.ChatBubble.BubbleIcon")
 local ContextMenu = ns.ChatBubbleContextMenu or require("WhisperMessenger.UI.ChatBubble.ContextMenu")
 local HoverCopy = ns.ChatBubbleHoverCopy or require("WhisperMessenger.UI.ChatBubble.HoverCopy")
@@ -36,54 +37,27 @@ local function reactionsAllowed(message, canReact)
   return MessageReactions.IsEligible(message)
 end
 
--- How far a HUD bubble's border moves from its fill colour toward white.
-local NATIVE_BORDER_LIGHTEN = 0.35
-
-local function applyBubbleColor(frame, colorTable, alphaScale)
-  local r, g, b = colorTable[1], colorTable[2], colorTable[3]
-  local a = (colorTable[4] or 1) * (alphaScale or 1)
-  for _, part in ipairs(frame._bgFills) do
-    if part.SetColorTexture then
-      part:SetColorTexture(r, g, b, a)
-    end
-  end
-  for _, part in ipairs(frame._bgCorners) do
-    if part.SetVertexColor then
-      part:SetVertexColor(r, g, b, a)
-    end
-  end
-  local backdrop = frame._nativeBackdrop
-  if backdrop and backdrop.SetBackdropColor then
-    backdrop:SetBackdropColor(r, g, b, a)
-  end
-  -- The stock tooltip edge is near-white and glares; edge the bubble in its
-  -- own fill colour, lightened, so it follows the preset.
-  if backdrop and backdrop.SetBackdropBorderColor then
-    local k = NATIVE_BORDER_LIGHTEN
-    backdrop:SetBackdropBorderColor(r + (1 - r) * k, g + (1 - g) * k, b + (1 - b) * k, a)
-  end
-end
-
-local function revealCensored(frame)
-  local message = frame._wmMessage
-  if message == nil or message.isCensored ~= true then
-    return
-  end
-  local chatApi = _G.C_ChatInfo
-  if chatApi and message.lineID then
-    if type(chatApi.UncensorChatLine) == "function" then
-      pcall(chatApi.UncensorChatLine, message.lineID)
-    end
-    if type(chatApi.GetChatLineText) == "function" then
-      local ok, uncensoredText = pcall(chatApi.GetChatLineText, message.lineID)
-      if ok and type(uncensoredText) == "string" and uncensoredText ~= "" then
-        message.text = uncensoredText
-      end
-    end
-  end
-  message.isCensored = nil
-  if type(frame._wmOnRevealCensored) == "function" then
-    frame._wmOnRevealCensored()
+-- Font, text colour and fill by message kind and direction.
+local function applyKindStyle(frame, textFS, message, kind, direction)
+  local applyColor = BubbleStructure.applyColor
+  local fontColorOverride = Fonts.GetFontColorRGBA and Fonts.GetFontColorRGBA() or nil
+  if kind == "system" then
+    setFontObject(textFS, Theme.FONTS.system_text)
+    setTextColor(textFS, Theme.COLORS.text_system)
+    applyColor(frame, Theme.COLORS.bg_bubble_system)
+  elseif kind == "channel_context" then
+    -- Channel context: muted version of incoming bubble
+    setFontObject(textFS, Theme.FONTS.message_text)
+    setTextColor(textFS, fontColorOverride or Theme.COLORS.text_received)
+    applyColor(frame, Theme.COLORS.bg_bubble_in, 0.55)
+  elseif direction == "out" then
+    setFontObject(textFS, Theme.FONTS.message_text)
+    setTextColor(textFS, fontColorOverride or Theme.COLORS.text_sent)
+    applyColor(frame, Theme.COLORS.bg_bubble_out, OutgoingDelivery.Status(message) and UNSENT_BUBBLE_ALPHA or nil)
+  else
+    setFontObject(textFS, Theme.FONTS.message_text)
+    setTextColor(textFS, fontColorOverride or Theme.COLORS.text_received)
+    applyColor(frame, message.mention and BubbleColors.MentionColor() or Theme.COLORS.bg_bubble_in)
   end
 end
 
@@ -120,7 +94,7 @@ end
 
 local function bubbleOnMouseDown(self, button)
   if button == "LeftButton" and self._wmMessage and self._wmMessage.isCensored == true then
-    revealCensored(self)
+    BubbleCensor.Reveal(self)
     return
   end
   if button ~= "RightButton" then
@@ -212,27 +186,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end
   end
   BubbleStructure.showNativeBackdrop(frame)
-
-  local fontColorOverride = Fonts.GetFontColorRGBA and Fonts.GetFontColorRGBA() or nil
-
-  if kind == "system" then
-    setFontObject(textFS, Theme.FONTS.system_text)
-    setTextColor(textFS, Theme.COLORS.text_system)
-    applyBubbleColor(frame, Theme.COLORS.bg_bubble_system)
-  elseif kind == "channel_context" then
-    -- Channel context: muted version of incoming bubble
-    setFontObject(textFS, Theme.FONTS.message_text)
-    setTextColor(textFS, fontColorOverride or Theme.COLORS.text_received)
-    applyBubbleColor(frame, Theme.COLORS.bg_bubble_in, 0.55)
-  elseif direction == "out" then
-    setFontObject(textFS, Theme.FONTS.message_text)
-    setTextColor(textFS, fontColorOverride or Theme.COLORS.text_sent)
-    applyBubbleColor(frame, Theme.COLORS.bg_bubble_out, OutgoingDelivery.Status(message) and UNSENT_BUBBLE_ALPHA or nil)
-  else
-    setFontObject(textFS, Theme.FONTS.message_text)
-    setTextColor(textFS, fontColorOverride or Theme.COLORS.text_received)
-    applyBubbleColor(frame, message.mention and BubbleColors.MentionColor() or Theme.COLORS.bg_bubble_in)
-  end
+  applyKindStyle(frame, textFS, message, kind, direction)
 
   local textAvailWidth = maxBubbleWidth - pH * 2
 
@@ -254,46 +208,16 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
   local quoteWidth = ReplyQuote.Apply(options.persistentFactory or factory, frame, message, textAvailWidth, pH, pV, options.onQuoteClick)
   local quoteHeight = quoteWidth > 0 and ReplyQuote.HEIGHT or 0
-  local bubbleInnerWidth = math.max(textColumnWidth, quoteWidth)
-  local bubbleInnerHeight = textHeight + quoteHeight
-  local bubbleWidth = bubbleInnerWidth + pH * 2
-  local bubbleHeight = bubbleInnerHeight + pV * 2
 
   textFS:ClearAllPoints()
   textFS:SetWidth(textColumnWidth)
   textFS:SetJustifyH("LEFT")
   textFS:SetText(displayText)
   textFS:SetPoint("TOPLEFT", frame, "TOPLEFT", pH, -pV - quoteHeight)
+  local censorHeight = BubbleCensor.ApplyLabel(frame, textFS, message)
 
-  -- Censored message indicator
-  local CENSORED_LABEL_HEIGHT = 12
-  local censoredLabel = frame._censoredLabel
-  if message.isCensored == true then
-    if not censoredLabel then
-      censoredLabel = frame:CreateFontString(nil, "OVERLAY")
-      if censoredLabel.SetWordWrap then
-        censoredLabel:SetWordWrap(false)
-      end
-      frame._censoredLabel = censoredLabel
-    end
-    setFontObject(censoredLabel, Theme.FONTS.system_text)
-    setTextColor(censoredLabel, Theme.COLORS.text_system)
-    censoredLabel:SetText("(click to reveal)")
-    censoredLabel:ClearAllPoints()
-    censoredLabel:SetPoint("TOPLEFT", textFS, "BOTTOMLEFT", 0, -2)
-    if censoredLabel.SetAlpha then
-      censoredLabel:SetAlpha(0.7)
-    end
-    if censoredLabel.Show then
-      censoredLabel:Show()
-    end
-    bubbleInnerHeight = bubbleInnerHeight + CENSORED_LABEL_HEIGHT
-    bubbleHeight = bubbleInnerHeight + pV * 2
-  elseif censoredLabel then
-    if censoredLabel.Hide then
-      censoredLabel:Hide()
-    end
-  end
+  local bubbleWidth = math.max(textColumnWidth, quoteWidth) + pH * 2
+  local bubbleHeight = textHeight + quoteHeight + censorHeight + pV * 2
 
   if kind ~= "system" then
     HoverCopy.Attach(options.persistentFactory or factory, frame, message, options.copyText or ContextMenu.CopyText)
@@ -305,6 +229,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     frame:SetScript("OnMouseDown", bubbleOnMouseDown)
     frame:SetScript("OnMouseUp", bubbleOnMouseUp)
     frame:SetScript("OnDoubleClick", nil)
+    frame._wmOpenMenu = openBubbleMenu
     if type(options.onReact) == "function" and kind == "user" and direction == "in" and message.delivery ~= "blocked" then
       frame:SetScript("OnDoubleClick", bubbleOnDoubleClick)
     end

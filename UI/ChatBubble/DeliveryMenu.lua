@@ -6,6 +6,7 @@ end
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 
 -- Small popup under a "(Not sent)" / "(Queued)" label: one row per action
 -- (Send now / Retry / Discard). Looks and closes like the reaction picker.
@@ -52,7 +53,7 @@ local function createMenu(factory)
     self._onAction = nil
   end)
   rawset(_G, MENU_FRAME_NAME, frame)
-  PickerPopup.RegisterEscape(MENU_FRAME_NAME, frame)
+  PopupEscape.RegisterEscape(MENU_FRAME_NAME, frame)
   return frame
 end
 

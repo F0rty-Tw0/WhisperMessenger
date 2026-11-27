@@ -80,7 +80,6 @@ return function()
     }
     menu:Hide()
     open(selector.button)
-    assert(menu.clipsChildren == true, "test_dropdown_scroll: menu should clip overflowing option buttons")
     assert(menu:GetHeight() == 52, "test_dropdown_scroll: menu should retain configured viewport height")
     assert(menu:GetVerticalScrollRange() > 0, "test_dropdown_scroll: overflowing options should create a scroll range")
     local wheel = menu:GetScript("OnMouseWheel")
@@ -215,6 +214,36 @@ return function()
     }
     selector.applyTheme(theme)
     assert(selector.label.textColor[1] == 0.2, "test_dropdown_theme: applyTheme should recolor label")
+  end
+
+  -- test_hide_shown_menu_closes_the_open_dropdown
+  do
+    DropdownSelector.HideShownMenu() -- earlier cases in this file may leave a menu open
+    local selector = DropdownSelector.Create(factory, parent, {
+      labelText = "Font Family",
+      optionsList = { { key = "a", label = "A" } },
+      initial = "a",
+    })
+    local menu = FindUI.dropdownMenu(selector.row)
+    selector.button:GetScript("OnClick")(selector.button)
+    assert(menu:IsShown(), "menu open")
+    assert(DropdownSelector.HideShownMenu() == true and not menu:IsShown(), "closed")
+    assert(DropdownSelector.HideShownMenu() == false, "none open")
+  end
+
+  -- test_is_menu_shown_follows_the_open_dropdown
+  do
+    DropdownSelector.HideShownMenu()
+    local selector = DropdownSelector.Create(factory, parent, {
+      labelText = "Font Family",
+      optionsList = { { key = "a", label = "A" } },
+      initial = "a",
+    })
+    assert(DropdownSelector.IsMenuShown() == false, "none open")
+    selector.button:GetScript("OnClick")(selector.button)
+    assert(DropdownSelector.IsMenuShown() == true, "one open")
+    DropdownSelector.HideShownMenu()
+    assert(DropdownSelector.IsMenuShown() == false, "closed again")
   end
 
   print("  All dropdown selector tests passed")

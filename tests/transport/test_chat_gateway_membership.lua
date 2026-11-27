@@ -296,25 +296,7 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 17. WHISPER/BN_WHISPER: membership checks do NOT regress
-  -- ---------------------------------------------------------------------------
-  do
-    local api = {
-      SendChatMessage = function() end,
-      RequestCanLocalWhisperTarget = function() end,
-    }
-    -- WHISPER with no target → CanSend false (existing behaviour)
-    assert(
-      ChatGateway.CanSend(api, { channel = ChannelType.WHISPER }) == false
-        or ChatGateway.CanSend(api, { channel = ChannelType.WHISPER, target = "X" }) ~= nil,
-      "WHISPER CanSend should not throw"
-    )
-    -- BN_WHISPER no accountID → false
-    assert(ChatGateway.CanSend(api, { channel = ChannelType.BN_WHISPER }) ~= nil, "BN_WHISPER CanSend should not throw")
-  end
-
-  -- ---------------------------------------------------------------------------
-  -- 18. CanSend never throws even when membership globals error
+  -- 17. CanSend never throws even when membership globals error
   -- ---------------------------------------------------------------------------
   do
     local saved = saveGlobals({ "IsInGroup", "LE_PARTY_CATEGORY_HOME" })

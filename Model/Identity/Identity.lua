@@ -20,6 +20,21 @@ function Identity.ShortName(name)
   return name
 end
 
+-- The player's current guild name. Returns nil when the player is not in a
+-- guild, the API is unavailable (Classic flavors before Wrath), or the call
+-- errors.
+function Identity.PlayerGuildName()
+  local getGuildInfo = _G.GetGuildInfo
+  if type(getGuildInfo) ~= "function" then
+    return nil
+  end
+  local ok, name = pcall(getGuildInfo, "player")
+  if ok and type(name) == "string" and name ~= "" then
+    return name
+  end
+  return nil
+end
+
 local function normalizeName(name)
   if name == nil then
     return ""

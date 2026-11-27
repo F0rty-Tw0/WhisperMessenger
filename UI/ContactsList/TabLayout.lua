@@ -74,7 +74,7 @@ local NO_PANEL_TAB = {
 -- Mode and unread controller shared by both tab skins. Sets setMode,
 -- getMode, setModes, setShown, setOptionsShown, setUnreadCounts,
 -- setLanguage, addPanelTab, setPanelTabShown, setSelectedPanel,
--- getSelectedPanel, setModeClickHandler and setCurrentModeClickHandler on
+-- getSelectedPanel, getTabButtons, setTabsChangedHandler, setModeClickHandler and setCurrentModeClickHandler on
 -- toggle, binds each tab's OnClick, and returns the paint function (for hover
 -- handlers). The strip shows while more than one tab is visible and the
 -- options page is closed; setModes, addPanelTab, setPanelTabShown and
@@ -101,6 +101,7 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   local currentModeClickHandler = nil
   local optionsShown = false
   local lastActive = nil
+  local tabsChangedHandler = nil
   -- Set while a mode click's panel handler runs (see the tab OnClick).
   local holdAnchor = false
 
@@ -149,6 +150,9 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
       end
     end
     anchor()
+    if tabsChangedHandler then
+      tabsChangedHandler()
+    end
   end
 
   relayout()
@@ -257,6 +261,20 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   end
   toggle.getSelectedPanel = function()
     return selectedPanel
+  end
+  -- The visible tabs' buttons in on-screen order: mode tabs, then panel tabs.
+  toggle.getTabButtons = function()
+    local buttons = {}
+    for i, tab in ipairs(visible) do
+      buttons[i] = tab.btn
+    end
+
+    return buttons
+  end
+  -- fn() runs after setModes, addPanelTab or setPanelTabShown re-lays out
+  -- the tabs, so getTabButtons already holds the new list.
+  toggle.setTabsChangedHandler = function(fn)
+    tabsChangedHandler = fn
   end
   -- fn(mode) runs on a mode-tab click while a panel is selected.
   toggle.setModeClickHandler = function(fn)

@@ -87,6 +87,7 @@ function ContactsWiring.Create(factory, options)
     contactsSearchClearButton = layout.contactsSearchClearButton,
     contactsSearchPlaceholder = layout.contactsSearchPlaceholder,
     getSelectedConversationKey = options.getSelectedConversationKey,
+    onNavTargetsChanged = options.onNavTargetsChanged,
   })
   layout.contactsTabStrip = contactsRuntime.tabToggle and contactsRuntime.tabToggle.frame or nil
   contactsRuntime.bindInputScripts()

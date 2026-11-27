@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ReactionPicker = ns.ChatBubbleReactionPicker or require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
+local ReactionBadge = ns.ChatBubbleReactionBadge or require("WhisperMessenger.UI.ChatBubble.ReactionBadge")
 local select = select
 
 local FramePool = {}
@@ -12,16 +13,6 @@ function FramePool.initPool(contentFrame)
   if not contentFrame._freeFrames then
     contentFrame._freeFrames = {}
     contentFrame._activeFrames = {}
-    -- Migrate legacy _bubblePool if present
-    if contentFrame._bubblePool then
-      for _, f in ipairs(contentFrame._bubblePool) do
-        if f.Hide then
-          f:Hide()
-        end
-        table.insert(contentFrame._freeFrames, f)
-      end
-      contentFrame._bubblePool = nil
-    end
   end
 end
 
@@ -125,36 +116,7 @@ local function clearInteractiveScripts(frame)
   end
 end
 local function clearReactionState(frame)
-  local reactionFrame = frame._reactionFrame
-  if reactionFrame then
-    if reactionFrame._reactionTooltipOwned and _G.GameTooltip and type(_G.GameTooltip.Hide) == "function" then
-      _G.GameTooltip:Hide()
-    end
-    reactionFrame._reactionTooltipOwned = nil
-    clearInteractiveScripts(reactionFrame)
-    if reactionFrame.Hide then
-      reactionFrame:Hide()
-    end
-    if reactionFrame.ClearAllPoints then
-      reactionFrame:ClearAllPoints()
-    end
-  end
-  local texture = frame._reactionTexture
-  if texture then
-    if texture.SetTexture then
-      texture:SetTexture(nil)
-    end
-    if texture.SetTexCoord then
-      texture:SetTexCoord(0, 1, 0, 1)
-    end
-    if texture.Hide then
-      texture:Hide()
-    end
-  end
-  frame._reactionKey = nil
-  if reactionFrame then
-    reactionFrame._wmReactionKey = nil
-  end
+  ReactionBadge.Reset(frame)
 
   local pickerFrame = type(ReactionPicker.GetFrame) == "function" and ReactionPicker.GetFrame() or nil
   if pickerFrame and pickerFrame._anchor == frame and type(ReactionPicker.Close) == "function" then
@@ -175,6 +137,7 @@ local function clearBindingState(frame)
   frame._wmOpenedOnMouseDown = nil
   frame._wmPlayerMenuMessage = nil
   frame._wmPlayerMenuOpener = nil
+  frame._wmOpenMenu = nil
 
   local menuOptions = frame._wmContextMenuOptions
   if menuOptions then

@@ -1,6 +1,6 @@
--- Stub ManualCopy before requiring Hyperlinks. Hyperlinks.HandleClick on a
--- URL link calls require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
--- to copy the URL to clipboard. The real module pulls live UI deps; the stub
+-- Stub the copy Clipboard before requiring Hyperlinks. Hyperlinks.HandleClick
+-- on a URL link calls
+-- require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.Clipboard") to copy the URL to clipboard. The real module pulls live UI deps; the stub
 -- lets us assert the copy invocation without dragging in a fake UI.
 local capturedCopies = {}
 local copyReturn = true
@@ -13,8 +13,8 @@ local manualCopyStub = {
     return copyReturn
   end,
 }
-package.loaded["UI.ChatBubble.ContextMenu.ManualCopy"] = manualCopyStub
-package.loaded["WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy"] = manualCopyStub
+package.loaded["UI.ChatBubble.ContextMenu.ManualCopy.Clipboard"] = manualCopyStub
+package.loaded["WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.Clipboard"] = manualCopyStub
 
 local Hyperlinks = require("WhisperMessenger.UI.Hyperlinks")
 local ReactionAssets = require("WhisperMessenger.UI.ChatBubble.ReactionAssets")

@@ -74,6 +74,87 @@ return function()
     assert(#PerfCounters.Lines("WhisperMessenger") == 8, "no getter means no stored count line")
   end
 
+  -- test_increment_by_source_without_a_source_counts_other
+  do
+    PerfCounters.Reset()
+    PerfCounters.IncrementBySource("snapshotBuilds")
+    assert(PerfCounters.Get("snapshotBuilds") == 1, "the total counts too, got " .. PerfCounters.Get("snapshotBuilds"))
+    assert(PerfCounters.GetSource("snapshotBuilds", "other") == 1, "no active source counts as other")
+  end
+
+  -- test_attribute_counts_increments_under_the_source
+  do
+    PerfCounters.Reset()
+    local result = PerfCounters.Attribute("snapshotBuilds", "ticker", function(a, b)
+      PerfCounters.IncrementBySource("snapshotBuilds")
+      return a + b
+    end, 2, 3)
+    assert(result == 5, "Attribute passes the arguments and returns the result, got " .. tostring(result))
+    assert(PerfCounters.GetSource("snapshotBuilds", "ticker") == 1, "the increment counts under ticker")
+  end
+
+  -- test_attribute_clears_the_source_afterwards
+  do
+    PerfCounters.Reset()
+    PerfCounters.Attribute("snapshotBuilds", "ticker", function() end)
+    PerfCounters.IncrementBySource("snapshotBuilds")
+    assert(PerfCounters.GetSource("snapshotBuilds", "other") == 1, "a later increment counts as other")
+  end
+
+  -- test_nested_attribute_keeps_the_outer_source
+  do
+    PerfCounters.Reset()
+    PerfCounters.Attribute("snapshotBuilds", "ticker", function()
+      PerfCounters.Attribute("snapshotBuilds", "iconSurfaces", PerfCounters.IncrementBySource, "snapshotBuilds")
+    end)
+    assert(PerfCounters.GetSource("snapshotBuilds", "ticker") == 1, "the outer caller triggered the build")
+    assert(PerfCounters.GetSource("snapshotBuilds", "iconSurfaces") == 0, "the inner source does not count")
+  end
+
+  -- test_reset_clears_source_counts
+  do
+    PerfCounters.IncrementBySource("snapshotBuilds")
+    PerfCounters.Reset()
+    assert(PerfCounters.GetSource("snapshotBuilds", "other") == 0, "reset clears source counts")
+  end
+
+  -- test_reset_clears_a_source_left_set_by_an_error
+  do
+    PerfCounters.Reset()
+    local ok = pcall(PerfCounters.Attribute, "snapshotBuilds", "ticker", function()
+      error("boom")
+    end)
+    assert(not ok, "the error reaches the caller")
+    PerfCounters.Reset()
+    PerfCounters.IncrementBySource("snapshotBuilds")
+    assert(PerfCounters.GetSource("snapshotBuilds", "ticker") == 0, "reset drops the source the error left set")
+    assert(PerfCounters.GetSource("snapshotBuilds", "other") == 1, "after reset an increment counts as other")
+  end
+
+  -- test_attribute_returns_every_result
+  do
+    PerfCounters.Reset()
+    local function three()
+      return 1, nil, 3
+    end
+    assert(select("#", PerfCounters.Attribute("snapshotBuilds", "ticker", three)) == 3, "Attribute keeps every result")
+    local first, second, third = PerfCounters.Attribute("snapshotBuilds", "ticker", three)
+    assert(first == 1 and second == nil and third == 3, "Attribute returns the results in order")
+  end
+
+  -- test_lines_break_a_counter_down_by_source
+  do
+    rawset(_G, "C_AddOnProfiler", nil)
+    PerfCounters.Reset()
+    PerfCounters.IncrementBySource("snapshotBuilds")
+    for _ = 1, 2 do
+      PerfCounters.Attribute("snapshotBuilds", "ticker", PerfCounters.IncrementBySource, "snapshotBuilds")
+    end
+    local lines = PerfCounters.Lines("WhisperMessenger")
+    assert(#lines == 8, "the breakdown stays on the counter's line, got " .. #lines)
+    assert(lines[8] == "snapshotBuilds: 3 (ticker 2, other 1)", "busiest source first: " .. lines[8])
+  end
+
   rawset(_G, "C_AddOnProfiler", savedProfiler)
   rawset(_G, "Enum", savedEnum)
 end

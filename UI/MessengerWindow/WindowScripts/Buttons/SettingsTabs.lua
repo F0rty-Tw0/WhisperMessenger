@@ -103,8 +103,11 @@ function SettingsTabs.Wire(options)
     return true
   end
 
+  -- Panels with a remeasure waiting: one timer per panel and frame.
+  local remeasureScheduled = {}
+
   local function scheduleVisibleTabRemeasure(visiblePanel)
-    if not visiblePanel then
+    if not visiblePanel or remeasureScheduled[visiblePanel] then
       return
     end
     -- WoW resolves frame geometry on the next render frame, so a
@@ -113,9 +116,18 @@ function SettingsTabs.Wire(options)
     -- absent in fake_ui — the synchronous attempt above is the only
     -- path the tests exercise.
     if _G.C_Timer and type(_G.C_Timer.After) == "function" then
+      remeasureScheduled[visiblePanel] = true
       _G.C_Timer.After(0, function()
+        remeasureScheduled[visiblePanel] = nil
         applyVisibleTabContentHeight(visiblePanel)
       end)
+    end
+  end
+
+  -- The gamepad nav (set later, read at call time) re-scans the page.
+  local function notifyNavTargets()
+    if type(settingsPanels.onNavTargetsChanged) == "function" then
+      settingsPanels.onNavTargetsChanged()
     end
   end
 
@@ -130,6 +142,7 @@ function SettingsTabs.Wire(options)
     -- call this; the frame size itself does not change, so no OnSizeChanged.
     panel._wmRemeasure = function()
       scheduleVisibleTabRemeasure(panel)
+      notifyNavTargets()
     end
     if type(panel.HookScript) ~= "function" then
       return
@@ -229,6 +242,7 @@ function SettingsTabs.Wire(options)
         end)
       end
     end
+    notifyNavTargets()
   end
 
   for i, tab in ipairs(settingsTabs) do

@@ -7,6 +7,7 @@ local DataBuilder = {}
 
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local SnapshotCache = ns.ContactsListSnapshotCache or require("WhisperMessenger.UI.ContactsList.SnapshotCache")
 
 local function compareItems(left, right)
@@ -70,28 +71,13 @@ local ACCOUNT_GROUP_PREFIXES = {
   "community::",
 }
 
-local function resolvePlayerGuildName()
-  local getGuildInfo = _G.GetGuildInfo
-  if type(getGuildInfo) ~= "function" then
-    return nil
-  end
-  local ok, name = pcall(getGuildInfo, "player")
-  if not ok then
-    return nil
-  end
-  if type(name) == "string" and name ~= "" then
-    return name
-  end
-  return nil
-end
-
 local function resolveGuildOwnership(conversation, conversationKey, localProfileId)
   -- Account-wide guild keys store the guild name directly on the record,
   -- so whichever character is logged in just needs to compare their live
   -- guild name. Fall back to the per-character key shape for legacy
   -- conversations that pre-date account-wide guild storage.
   if conversation and type(conversation.guildName) == "string" and conversation.guildName ~= "" then
-    local playerGuild = resolvePlayerGuildName()
+    local playerGuild = Identity.PlayerGuildName()
     if playerGuild and string.lower(playerGuild) == string.lower(conversation.guildName) then
       return nil, nil -- current char is in this guild — not foreign
     end

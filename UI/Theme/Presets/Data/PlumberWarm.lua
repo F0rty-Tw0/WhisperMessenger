@@ -31,7 +31,6 @@ local roles = {
   text_timestamp = { 0.72, 0.60, 0.48, 1.0 },
   accent = { 0.88, 0.56, 0.22, 1.0 },
   toggle_on = { 0.88, 0.56, 0.22, 1.0 },
-  button_fill_hover = { 0.86, 0.52, 0.28, 1.0 },
   status_online = { 0.30, 0.82, 0.40, 1.0 },
   status_offline = { 0.45, 0.45, 0.50, 1.0 },
   status_away = { 0.90, 0.72, 0.20, 1.0 },

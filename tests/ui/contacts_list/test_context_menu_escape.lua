@@ -1,5 +1,5 @@
 local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
-local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = require("WhisperMessenger.UI.Shared.PopupEscape")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local FakeUI = require("tests.helpers.fake_ui")
 
@@ -39,11 +39,11 @@ local function withMenus(fn)
   rawset(_G, "UnitPopup_OpenMenu", function()
     env.menu:Show()
   end)
-  PickerPopup.SetEscapeFrameShownHandler(function(shown, isGameMenu)
+  PopupEscape.SetEscapeFrameShownHandler(function(shown, isGameMenu)
     table.insert(env.reported, { frame = shown, isGameMenu = isGameMenu })
   end)
   local ok, err = pcall(fn, env)
-  PickerPopup.SetEscapeFrameShownHandler(nil)
+  PopupEscape.SetEscapeFrameShownHandler(nil)
   for _, name in ipairs(SAVED_NAMES) do
     rawset(_G, name, saved[name])
   end

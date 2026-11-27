@@ -1,14 +1,20 @@
 -- The composer runtime builds the composer and holds back its focus on a quiet show.
 local FakeUI = require("tests.helpers.fake_ui")
+local FakeGamepad = require("tests.helpers.fake_gamepad")
+local Flavor = require("tests.helpers.flavor")
+local ConversationPane = require("WhisperMessenger.UI.ConversationPane")
+local BottomBanner = require("WhisperMessenger.UI.ConversationPane.BottomBanner")
+local Theme = require("WhisperMessenger.UI.Theme")
 local ComposerRuntime = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ComposerRuntime")
 
-local function build(settingsConfig, onNavTargetsChanged, windowOptions)
-  local factory = FakeUI.NewFactory()
+-- conversation: the pane the runtime is wired to (a plain table by default).
+local function build(settingsConfig, onNavTargetsChanged, windowOptions, factory, conversation)
+  factory = factory or FakeUI.NewFactory()
   local frame = factory.CreateFrame("Frame", nil, nil)
   local composerPane = factory.CreateFrame("Frame", nil, frame)
   composerPane:SetSize(400, 80)
   local calls = {}
-  local conversation = { tag = "conversation" }
+  conversation = conversation or { tag = "conversation" }
   local runtime = ComposerRuntime.Create(factory, {
     frame = frame,
     layout = { composerPane = composerPane },
@@ -98,5 +104,80 @@ return function()
     input:SetText("")
     input.scripts.OnKeyDown(input, "UP")
     assert(input:GetText() == "hello", "Up recalls from the window's history, got " .. tostring(input:GetText()))
+  end
+
+  -- A real conversation pane and a composer with the controller hint.
+  local function buildWithPane(beforeRuntime)
+    local factory = FakeUI.NewFactory({ wrap = true })
+    local parent = factory.CreateFrame("Frame", nil, nil)
+    parent:SetSize(600, 400)
+    local pane = ConversationPane.Create(factory, parent, { displayName = "Arthas" }, { messages = {} })
+    pane.activeStatusBanner.GetStringHeight = function()
+      return 12
+    end
+    if beforeRuntime then
+      beforeRuntime(pane)
+    end
+    local runtime = build(nil, nil, nil, factory, pane)
+    return runtime, pane
+  end
+
+  -- The strip's base (the conversation pane's bottom edge) sits a divider
+  -- above the composer, whose box starts a gutter below its top.
+  local STRIP_LIFT = BottomBanner.HEIGHT + Theme.LAYOUT.COMPOSER_GUTTER + Theme.DIVIDER_THICKNESS
+
+  local function hintY(runtime)
+    local _, _, _, _, y = runtime.composer.padHint.label:GetPoint()
+    return y
+  end
+
+  -- test_pad_hint_rises_above_a_strip_that_opens_later
+  do
+    local env = FakeGamepad.New()
+    env.install()
+    local ok, err = pcall(function()
+      local runtime, pane = buildWithPane()
+      local baseY = hintY(runtime)
+      ConversationPane.SetNotice(pane, "Historical group chat")
+      assert(hintY(runtime) == baseY + STRIP_LIFT, "hint raised over the strip, got " .. tostring(hintY(runtime)))
+      ConversationPane.SetNotice(pane, "")
+      assert(hintY(runtime) == baseY, "hint back in place once the strip closes, got " .. tostring(hintY(runtime)))
+    end)
+    env.uninstall()
+    assert(ok, tostring(err))
+  end
+
+  -- test_pad_hint_starts_above_a_strip_already_shown
+  do
+    local env = FakeGamepad.New()
+    env.install()
+    local ok, err = pcall(function()
+      local plain = buildWithPane()
+      local runtime = buildWithPane(function(pane)
+        ConversationPane.SetNotice(pane, "Historical group chat")
+      end)
+      local want = hintY(plain) + STRIP_LIFT
+      assert(hintY(runtime) == want, "hint starts raised, want " .. want .. ", got " .. tostring(hintY(runtime)))
+    end)
+    env.uninstall()
+    assert(ok, tostring(err))
+  end
+
+  -- test_pad_hint_rises_when_a_reply_strip_opens_while_focused
+  do
+    local env = FakeGamepad.New()
+    env.install()
+    local ok, err = pcall(function()
+      Flavor.WithPadUI(true, function()
+        local runtime, pane = buildWithPane()
+        local baseY = hintY(runtime)
+        runtime.composer.input:SetFocus()
+        ConversationPane.SetReply(pane, { text = "hi", playerName = "Arthas" }, function() end)
+        assert(runtime.composer.padHint.frame:IsShown(), "the hint stays shown")
+        assert(hintY(runtime) == baseY + STRIP_LIFT, "hint raised over the reply strip, got " .. tostring(hintY(runtime)))
+      end)
+    end)
+    env.uninstall()
+    assert(ok, tostring(err))
   end
 end

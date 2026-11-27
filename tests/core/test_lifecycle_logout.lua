@@ -1,5 +1,6 @@
 local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
-local Presence = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Presence")
+local Logout = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Logout")
+local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local IncomingAlerts = require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 local OnlineWatch = require("WhisperMessenger.Model.OnlineWatch")
 local LivePresence = require("WhisperMessenger.Model.LivePresence")
@@ -52,7 +53,7 @@ return function()
     local saved = accountState.channelMessages
     assert(saved == runtime.channelMessageStore and saved.entryCount == 2, "fixture: two channel lines are saved")
 
-    Presence.handlePlayerLogout({ runtime = runtime })
+    Logout.handlePlayerLogout({ runtime = runtime })
 
     assert(accountState.channelMessages == saved, "the saved table itself is emptied")
     assert(next(saved.entries) == nil and saved.entryCount == 0, "no channel line is left to save")
@@ -63,7 +64,7 @@ return function()
   do
     local runtime, accountState = build(false)
 
-    Presence.handlePlayerLogout({ runtime = runtime })
+    Logout.handlePlayerLogout({ runtime = runtime })
 
     assert(accountState.channelMessages.entryCount == 2, "channel lines stay")
     assert(ChannelMessageStore.GetLatest(accountState.channelMessages, "thrall-realm", NOW) ~= nil, "a kept line is still found")
@@ -74,7 +75,7 @@ return function()
     local runtime, accountState = build(true)
     runtime.channelMessageStore = nil
 
-    assert(Presence.handlePlayerLogout({ runtime = runtime }) == true)
+    assert(Logout.handlePlayerLogout({ runtime = runtime }) == true)
 
     assert(next(accountState.conversations) == nil, "conversations are cleared without a channel store")
   end
@@ -84,7 +85,7 @@ return function()
     local runtime, accountState = build(true)
     local conversations = accountState.conversations
 
-    assert(Presence.handlePlayerLogout({ runtime = runtime }) == true)
+    assert(Logout.handlePlayerLogout({ runtime = runtime }) == true)
 
     assert(conversations[WHISPER] == nil, "whisper history is gone")
     assert(conversations[GROUP] == nil, "group chat history is gone")
@@ -100,7 +101,7 @@ return function()
       forgotten[key] = true
     end
 
-    Presence.handlePlayerLogout({ runtime = runtime })
+    Logout.handlePlayerLogout({ runtime = runtime })
 
     assert(forgotten[WHISPER] and forgotten[GROUP] and forgotten[CHANNEL], "each chat goes through the removal hook")
     assert(runtime.sendStatusByConversation[WHISPER] == nil, "send status is released")
@@ -115,7 +116,7 @@ return function()
   do
     local runtime, _, characterState = build(true)
 
-    Presence.handlePlayerLogout({ runtime = runtime })
+    Logout.handlePlayerLogout({ runtime = runtime })
 
     assert(runtime.activeConversationKey == nil, "runtime selection is cleared")
     assert(characterState.activeConversationKey == nil, "saved selection is cleared")
@@ -128,7 +129,7 @@ return function()
     local runtime, _, characterState = build(true, "me::WOW::expired")
     assert(runtime.activeConversationKey == "me::WOW::expired")
 
-    Presence.handlePlayerLogout({ runtime = runtime })
+    Logout.handlePlayerLogout({ runtime = runtime })
 
     assert(runtime.activeConversationKey == nil, "runtime selection is cleared")
     assert(characterState.activeConversationKey == nil, "saved selection is cleared")
@@ -141,7 +142,7 @@ return function()
       error("nothing may be removed with the setting off")
     end
 
-    assert(Presence.handlePlayerLogout({ runtime = runtime }) == true)
+    assert(Logout.handlePlayerLogout({ runtime = runtime }) == true)
 
     assert(accountState.conversations[WHISPER] ~= nil, "whisper history stays")
     assert(accountState.conversations[GROUP] ~= nil, "group chat history stays")
@@ -154,6 +155,16 @@ return function()
 
   -- test_logout_without_a_runtime_does_nothing
   do
-    assert(Presence.handlePlayerLogout({}) == true)
+    assert(Logout.handlePlayerLogout({}) == true)
+  end
+
+  -- test_player_logout_event_clears_history_with_setting_on
+  do
+    local runtime, accountState = build(true)
+
+    assert(LifecycleHandlers.Handle({ runtime = runtime }, "PLAYER_LOGOUT", {}) == true)
+
+    assert(next(accountState.conversations) == nil, "the logout event clears every chat")
+    assert(accountState.channelMessages.entryCount == 0, "the logout event clears saved channel lines")
   end
 end

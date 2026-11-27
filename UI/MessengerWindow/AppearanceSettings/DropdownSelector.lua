@@ -7,21 +7,28 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local DropdownSkin = ns.MessengerWindowDropdownSkin or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSkin")
 local NativeDropdown = ns.MessengerWindowNativeDropdown or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.NativeDropdown")
+local DropdownSwap = ns.MessengerWindowDropdownSwap or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSwap")
 local DropdownOptionRow = ns.MessengerWindowDropdownOptionRow or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownOptionRow")
-local applyColorTexture = UIHelpers.applyColorTexture
+
+local DropdownPlacement = ns.MessengerWindowDropdownPlacement or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownPlacement")
 
 local DropdownSelector = {}
 
 local DEFAULT_BUTTON_HEIGHT = 26
 local DEFAULT_MENU_HEIGHT = 156
 
-function DropdownSelector.Create(factory, parent, options)
-  options = options or {}
-  local native = NativeDropdown.Create(factory, parent, options)
-  if native then
-    return native
+-- Every menu of WM's own built (either look), so the controller's B can
+-- close an open one.
+local menus = setmetatable({}, { __mode = "k" })
+-- Open or close: the controller re-scans, so the D-pad reaches new options.
+local onMenuToggled
+local function menuToggled()
+  if onMenuToggled then
+    onMenuToggled()
   end
+end
 
+local function buildOwn(factory, parent, options)
   local labelText = options.labelText
   local optionsList = type(options.optionsList) == "table" and options.optionsList or {}
   local getOptions = options.getOptions
@@ -55,23 +62,14 @@ function DropdownSelector.Create(factory, parent, options)
   button.label = buttonLabel
   local skin = DropdownSkin.Attach(button, buttonLabel)
 
-  local menu = factory.CreateFrame("ScrollFrame", nil, row)
-  menu:SetPoint("TOPLEFT", button, "BOTTOMLEFT", 0, -2)
-  menu:SetFrameLevel((row.GetFrameLevel and row:GetFrameLevel() or 1) + 20)
-  menu:SetClampedToScreen(true)
-  menu:EnableMouseWheel(true)
-  if menu.SetClipsChildren then
-    menu:SetClipsChildren(true)
+  local menu, content, menuSkin = DropdownSkin.CreateMenu(factory, row, button, rowWidth, buttonHeight)
+  menus[menu] = true
+  local function onMenuShownOrHidden()
+    DropdownSkin.SyncPanel(menu, menuSkin)
+    menuToggled()
   end
-
-  local menuBg = menu:CreateTexture(nil, "BACKGROUND")
-  menuBg:SetAllPoints(menu)
-
-  local content = factory.CreateFrame("Frame", nil, menu)
-  content:SetSize(rowWidth, buttonHeight)
-  menu:SetScrollChild(content)
-  content:Show()
-  menu:Hide()
+  menu:SetScript("OnShow", onMenuShownOrHidden)
+  menu:SetScript("OnHide", onMenuShownOrHidden)
 
   local optionButtons = {}
   local buttonPool = {}
@@ -120,14 +118,22 @@ function DropdownSelector.Create(factory, parent, options)
   end
 
   local function createOptionButton()
-    local optionButton = DropdownOptionRow.Create(factory, content, palette, getSelected, pickOption)
+    local optionButton = DropdownOptionRow.Create(factory, content, palette, getSelected, pickOption, menuSkin.native)
     buttonPool[#buttonPool + 1] = optionButton
     return optionButton
   end
 
+  local function listHeight()
+    return math.min(menuHeight, math.max(1, #optionButtons) * buttonHeight)
+  end
+
+  -- Under the Native look the menu is menuSkin.inset narrower on each side
+  -- (the tooltip panel's border around it), so the panel stays as wide as
+  -- the button; the visible rows and scroll range match the modern look.
   local function layoutOptions()
+    local listWidth = rowWidth - 2 * menuSkin.inset
     local contentHeight = #optionButtons * buttonHeight
-    local popupHeight = math.min(menuHeight, math.max(buttonHeight, contentHeight))
+    local popupHeight = listHeight()
 
     for i, optionButton in ipairs(optionButtons) do
       optionButton:ClearAllPoints()
@@ -136,15 +142,15 @@ function DropdownSelector.Create(factory, parent, options)
       else
         optionButton:SetPoint("TOPLEFT", optionButtons[i - 1], "BOTTOMLEFT", 0, 0)
       end
-      optionButton:SetSize(rowWidth, buttonHeight)
+      optionButton:SetSize(listWidth, buttonHeight)
     end
 
-    menu:SetSize(rowWidth, popupHeight)
-    content:SetSize(rowWidth, math.max(contentHeight, popupHeight))
+    menu:SetSize(listWidth, popupHeight)
+    content:SetSize(listWidth, math.max(contentHeight, popupHeight))
     if menu.UpdateScrollChildRect then
       menu:UpdateScrollChildRect()
     end
-    menu:SetVerticalScroll(math.min(menu:GetVerticalScroll(), menu:GetVerticalScrollRange()))
+    DropdownSkin.ScrollRows(menu, optionButtons, buttonHeight, math.min(menu:GetVerticalScroll(), menu:GetVerticalScrollRange()))
   end
 
   local function setOptionsList(nextOptions)
@@ -157,16 +163,18 @@ function DropdownSelector.Create(factory, parent, options)
     for i, option in ipairs(optionsList) do
       local optionButton = buttonPool[i] or createOptionButton()
       optionButton._key = option.key
+      -- In the list, though ScrollRows may hide it while scrolled out.
+      optionButton._listed = true
       optionButton._header = option.header == true
       optionButton._hovered = false
       optionButton.label:SetText(option.label)
-      optionButton:Show()
       optionButtons[i] = optionButton
     end
     for i = #optionsList + 1, previousCount do
       optionButtons[i] = nil
     end
     for i = #optionsList + 1, #buttonPool do
+      buttonPool[i]._listed = false
       buttonPool[i]:Hide()
     end
 
@@ -187,13 +195,14 @@ function DropdownSelector.Create(factory, parent, options)
         break
       end
     end
-    menu:SetVerticalScroll(offset)
+    DropdownSkin.ScrollRows(menu, optionButtons, buttonHeight, offset)
   end
 
+  DropdownSkin.FollowScroll(menu, optionButtons, buttonHeight)
   menu:SetScript("OnMouseWheel", function(_, delta)
     local nextOffset = menu:GetVerticalScroll() - delta * buttonHeight
     local scrollRange = menu:GetVerticalScrollRange()
-    menu:SetVerticalScroll(math.max(0, math.min(scrollRange, nextOffset)))
+    DropdownSkin.ScrollRows(menu, optionButtons, buttonHeight, math.max(0, math.min(scrollRange, nextOffset)))
   end)
 
   button:SetScript("OnClick", function()
@@ -208,8 +217,9 @@ function DropdownSelector.Create(factory, parent, options)
         setOptionsList(refreshed)
       end
     end
+    DropdownPlacement.Place(menu, button, menuSkin.inset, buttonHeight, listHeight())
     scrollToSelected()
-    menu:Raise()
+    DropdownSkin.RaiseMenu(menu, menuSkin)
     menu:Show()
   end)
   button:SetScript("OnEnter", function()
@@ -228,12 +238,15 @@ function DropdownSelector.Create(factory, parent, options)
         parentOnHide(...)
       end
       menu:Hide()
+      -- The menu is already invisible here, so WoW fires no OnHide for it:
+      -- sync the native panel by hand.
+      DropdownSkin.SyncPanel(menu, menuSkin)
     end)
   end
 
   setOptionsList(optionsList)
   paintClosedButton()
-  applyColorTexture(menuBg, palette.bg)
+  DropdownSkin.PaintMenu(menuSkin, palette)
 
   return {
     row = row,
@@ -260,9 +273,49 @@ function DropdownSelector.Create(factory, parent, options)
       mergePalette(nextColors)
       paintClosedButton()
       repaintOptions()
-      applyColorTexture(menuBg, palette.bg)
+      DropdownSkin.PaintMenu(menuSkin, palette)
     end,
-  }
+  },
+    menu
+end
+
+function DropdownSelector.Create(factory, parent, options)
+  options = options or {}
+  if DropdownSwap.Applies() then
+    return DropdownSwap.Create(factory, parent, options, buildOwn)
+  end
+  local native = NativeDropdown.Create(factory, parent, options)
+  if native then
+    return native
+  end
+  return (buildOwn(factory, parent, options))
+end
+
+-- Hides every open menu of WM's own (the game's dropdown menu closes
+-- itself); true when one was open.
+function DropdownSelector.HideShownMenu()
+  local hidden = false
+  for menu in pairs(menus) do
+    if menu:IsShown() then
+      menu:Hide()
+      hidden = true
+    end
+  end
+  return hidden
+end
+
+-- True while a menu of WM's own is open.
+function DropdownSelector.IsMenuShown()
+  for menu in pairs(menus) do
+    if menu:IsShown() then
+      return true
+    end
+  end
+  return false
+end
+
+function DropdownSelector.SetMenuToggledHook(fn)
+  onMenuToggled = fn
 end
 
 ns.MessengerWindowDropdownSelector = DropdownSelector

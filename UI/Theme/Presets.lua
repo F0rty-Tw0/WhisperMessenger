@@ -64,7 +64,6 @@ local tokenRoles = {
   contacts_divider_hover = "divider_hover",
   scrollbar = "scrollbar",
   scrollbar_hover = "scrollbar_hover",
-  send_button_hover = "button_fill_hover",
   ghost_button_fill_hover = "contact_hover",
   ghost_button_border = "divider_strong",
   ghost_button_text = "text_soft",

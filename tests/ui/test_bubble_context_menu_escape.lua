@@ -1,6 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local ContextMenu = require("WhisperMessenger.UI.ChatBubble.ContextMenu")
-local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = require("WhisperMessenger.UI.Shared.PopupEscape")
 local Localization = require("WhisperMessenger.Locale.Localization")
 
 -- A bubble's right-click menu is reported to the window, so ESC closes the
@@ -43,11 +43,11 @@ local function withWorld(fn)
   function env.api(name, value)
     rawset(_G, name, value)
   end
-  PickerPopup.SetEscapeFrameShownHandler(function(shown, isGameMenu)
+  PopupEscape.SetEscapeFrameShownHandler(function(shown, isGameMenu)
     table.insert(env.reported, { frame = shown, isGameMenu = isGameMenu })
   end)
   local ok, err = pcall(fn, env)
-  PickerPopup.SetEscapeFrameShownHandler(nil)
+  PopupEscape.SetEscapeFrameShownHandler(nil)
   for _, name in ipairs(SAVED_NAMES) do
     rawset(_G, name, saved[name])
   end

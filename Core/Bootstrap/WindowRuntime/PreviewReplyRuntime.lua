@@ -6,6 +6,7 @@ end
 local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Guards")
 local SendHandler = ns.BootstrapSendHandler or require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 
 local PreviewReplyRuntime = {}
 
@@ -16,22 +17,6 @@ local function findContact(contacts, conversationKey)
     end
   end
   return nil
-end
-
--- Same fields as the composer's send, built from the contact (not the
--- preview), so channel, BN ids and guid always match the window's send.
-local function buildPayload(contact, text)
-  return {
-    conversationKey = contact.conversationKey,
-    target = contact.displayName,
-    displayName = contact.displayName,
-    channel = contact.channel,
-    bnetAccountID = contact.bnetAccountID,
-    conversationID = contact.conversationID,
-    guid = contact.guid,
-    gameAccountName = contact.gameAccountName,
-    text = text,
-  }
 end
 
 -- Runtime side of the reply row under the widget / minimap whisper preview.
@@ -55,7 +40,9 @@ function PreviewReplyRuntime.Create(options)
       return false
     end
 
-    local accepted = onSend(buildPayload(contact, text))
+    -- Built from the contact (not the preview), so channel, BN ids and guid
+    -- always match the window's send.
+    local accepted = onSend(ConversationSnapshot.SendPayload(contact, text))
     if accepted == false then
       return false
     end

@@ -4,7 +4,6 @@ if type(ns) ~= "table" then
 end
 
 -- stylua: ignore start
-local ConversationOps = ns.BootstrapAutoOpenConversationOps or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 local EditBoxInterop = ns.BootstrapAutoOpenEditBoxInterop or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
 -- stylua: ignore end
 
@@ -62,7 +61,6 @@ function DirectHooks.Install(runtime, hooks, deps)
     -- editBox.tellTarget can reintroduce ambiguous name-based routing.
     local isReplyHook = type(nameArg) ~= "string" or nameArg == ""
     local target = (not isReplyHook) and nameArg or nil
-    local hasExplicitSendTellTarget = target ~= nil
 
     local editBox
     if type(_G.ChatEdit_GetActiveWindow) == "function" then
@@ -75,7 +73,6 @@ function DirectHooks.Install(runtime, hooks, deps)
       editBox = EditBoxInterop.findFocusedEditBox(deps)
     end
 
-    local chatType
     if editBox then
       if deps.isInCombat and deps.isInCombat() then
         EditBoxInterop.markCombatDraft(editBox)
@@ -83,13 +80,9 @@ function DirectHooks.Install(runtime, hooks, deps)
       if EditBoxInterop.shouldPreserveCombatDraft(editBox) then
         return
       end
-      chatType = EditBoxInterop.readEditBoxState(editBox, "chatType")
-      if not isReplyHook and not target then
-        target = EditBoxInterop.readEditBoxState(editBox, "tellTarget")
-      end
     end
 
-    local opened = false
+    local opened
     if isReplyHook then
       if type(hooks.onReplyTell) == "function" then
         opened = hooks.onReplyTell() == true
@@ -98,17 +91,6 @@ function DirectHooks.Install(runtime, hooks, deps)
       end
     elseif not target or target == "" then
       return
-    elseif chatType == "BN_WHISPER" and not hasExplicitSendTellTarget then
-      pcall(function()
-        local accountInfo = EditBoxInterop.findBattleNetAccountInfo(target, deps.bnetApi, deps.getNumFriends)
-        if not accountInfo then
-          return
-        end
-        local conversationKey = ConversationOps.ensureBattleNetConversation(runtime, deps.identity, accountInfo)
-        if conversationKey and hooks.onOutgoingWhisper(conversationKey) then
-          opened = true
-        end
-      end)
     else
       -- Default path: ChatFrame_SendTell and resolved whisper targets route by
       -- name, inside the player's click, so the quiet /who may go out.

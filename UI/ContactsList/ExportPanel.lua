@@ -7,7 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
-local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local PopupEscape = ns.PopupEscape or require("WhisperMessenger.UI.Shared.PopupEscape")
 local DialogChrome = ns.DialogChrome or require("WhisperMessenger.UI.Shared.DialogChrome")
 
 local format = string.format
@@ -213,7 +213,7 @@ local function build(factory)
   panel.status:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", PADDING, PADDING)
 
   wireScripts(panel)
-  PickerPopup.RegisterEscape(ExportPanel.FRAME_NAME, panel)
+  PopupEscape.RegisterEscape(ExportPanel.FRAME_NAME, panel)
   panel:Hide()
   return panel
 end

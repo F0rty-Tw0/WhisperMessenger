@@ -59,13 +59,15 @@ end
 -- Whispers: every refresh asked for in one frame runs once on the next frame
 -- (zero-delay timer), never later. Unlike Debounce it also runs while the
 -- window is hidden, since that refresh keeps the icon badges current. It
--- stays a full contact rebuild: an append can expire messages of other
--- chats. Without a timer API each request refreshes at once, still inside
--- the caller's event handler.
+-- rebuilds only the contacts of the keys asked for: a contact snapshot never
+-- reads messages, so expiring messages of other chats changes no card, and
+-- chats the retention sweep removes are pruned from the cache. Without a
+-- timer API each request refreshes at once, in full, still inside the
+-- caller's event handler.
 -- schedule(key, line): line is the chat line that asked, kept for the guard.
--- options: cTimer, refreshWindow(focusKey), getSelectedKey, and optional
--- guard(lines, run), which runs the deferred refresh for those lines (the
--- whisper failsafe, since the event handler has returned by then).
+-- options: cTimer, refreshWindow(focusKey, dirtyKeys), getSelectedKey, and
+-- optional guard(lines, run), which runs the deferred refresh for those lines
+-- (the whisper failsafe, since the event handler has returned by then).
 function IncomingRefresh.NextFrame(options)
   local cTimer = options.cTimer
   local refreshWindow = options.refreshWindow
@@ -82,11 +84,11 @@ function IncomingRefresh.NextFrame(options)
     PerfCounters.Increment("refreshes")
     local focusKey = pickFocusKey(keys, getSelectedKey)
     if guard == nil then
-      refreshWindow(focusKey)
+      refreshWindow(focusKey, keys)
       return
     end
     guard(lines, function()
-      refreshWindow(focusKey)
+      refreshWindow(focusKey, keys)
     end)
   end
 

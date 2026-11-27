@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local FriendScan = ns.BNetResolverFriendScan or require("WhisperMessenger.Transport.BNetResolver.FriendScan")
+local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 
 -- Resolver cache for one synchronous pass over the contacts (one window
 -- refresh, one friend scan). It remembers what BNetResolver.ResolveAccountInfo answered and
@@ -92,22 +93,15 @@ end
 
 -- The resolver writes what it learns for one contact (a probed game account,
 -- GUID evidence) into the table it is handed. Two contacts can point at the
--- same friend, so each lookup gets its own copy of the indexed table.
-local function copyOf(accountInfo)
-  local copy = {}
-  for key, value in pairs(accountInfo) do
-    copy[key] = value
-  end
-  return copy
-end
-
+-- same friend, so each lookup below gets its own copy of the indexed table.
+--
 -- Returns accountInfo, friendIndex.
 function PassCache.FindByAccountId(passCache, bnetApi, bnetAccountID)
   local entry = friendIndex(passCache, bnetApi).byAccountId[bnetAccountID]
   if entry == nil then
     return nil, nil
   end
-  return copyOf(entry.accountInfo), entry.friendIndex
+  return TableUtils.copyState(entry.accountInfo), entry.friendIndex
 end
 
 -- Returns accountInfo, friendIndex, listAvailable.
@@ -117,7 +111,7 @@ function PassCache.FindByBattleTag(passCache, bnetApi, battleTag)
   if entry == nil then
     return nil, nil, index.available
   end
-  return copyOf(entry.accountInfo), entry.friendIndex, true
+  return TableUtils.copyState(entry.accountInfo), entry.friendIndex, true
 end
 
 ns.BNetResolverPassCache = PassCache

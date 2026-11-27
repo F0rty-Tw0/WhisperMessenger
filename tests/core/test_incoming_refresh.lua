@@ -136,13 +136,14 @@ return function()
     assert(h.calls[1].key == "sel", "selected chat among the whispers -> focus it, got " .. tostring(h.calls[1].key))
   end
 
-  -- test_coalesced_whisper_refresh_rebuilds_every_contact
+  -- test_coalesced_whisper_refresh_rebuilds_only_whispered_contacts
   do
     local h = whisperHarness()
     h.schedule("a")
     h.schedule("b")
     h.timers[1]()
-    assert(h.calls[1].dirty == nil, "a whisper refresh stays a full contact rebuild")
+    local dirty = h.calls[1].dirty
+    assert(type(dirty) == "table" and dirty.a and dirty.b, "a whisper refresh carries the whispered keys")
     assert(h.calls[1].key == "a" or h.calls[1].key == "b", "focus is one of the whisper keys, got " .. tostring(h.calls[1].key))
   end
 
@@ -171,6 +172,7 @@ return function()
     })
     schedule("a")
     assert(#calls == 1 and calls[1].key == "a", "no timer API -> refresh at once")
+    assert(calls[1].dirty == nil, "the refresh without a timer stays a full rebuild")
   end
 
   -- test_whisper_flush_counts_one_refresh
@@ -211,6 +213,8 @@ return function()
     assert(#guarded == 1, "one guarded run per flush, got " .. #guarded)
     assert(guarded[1][1] == lineA and guarded[1][2] == lineB, "the guard gets every line of the frame")
     assert(#h.calls == 1, "the guarded run refreshes the window once, got " .. #h.calls)
+    local dirty = h.calls[1].dirty
+    assert(type(dirty) == "table" and dirty.a and dirty.b, "the guarded refresh carries the whispered keys")
   end
 
   -- test_whisper_flush_guard_gets_only_its_own_frame_lines

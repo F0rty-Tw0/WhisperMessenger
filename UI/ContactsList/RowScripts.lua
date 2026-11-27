@@ -169,20 +169,32 @@ function RowScripts.bindHover(row)
   RowHoverOverlay.paint(row)
 end
 
+-- Opens the contact menu for the row's item; false when nothing opened.
+-- rowOptions carries onPin / onRemove, the hover buttons' handlers.
+local function openRowMenu(row)
+  if row.item == nil then
+    return false
+  end
+  local rowOptions = row._wmRowOptions
+  return ContextMenu.Open(row.item, row, rowOptions and rowOptions.onMarkUnread, rowOptions and rowOptions.onUpdatePrefs, rowOptions)
+end
+
 --- Bind OnClick script to a row.
 --- Left-click selects the conversation. Shift + left-click on a WoW row sends a
 --- visible /who instead and does not select. Right-click opens the native player menu.
 --- The handler is created once per row and reads row._wmRowOptions, so a later
 --- refresh with fresh callbacks takes effect without rebinding.
+--- row._wmOpenMenu opens the same menu for the pad's X.
 function RowScripts.bindClick(row, _item, options)
   row._wmRowOptions = options
+  row._wmOpenMenu = openRowMenu
   if row.RegisterForClicks then
     row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
   end
 
   if not row._wmClickBound and row.SetScript then
     row._wmClickBound = true
-    row:SetScript("OnClick", function(self, button)
+    row:SetScript("OnClick", function(_self, button)
       if row.item == nil then
         return
       end
@@ -196,12 +208,8 @@ function RowScripts.bindClick(row, _item, options)
         return
       end
 
-      if button == "RightButton" then
-        local onMarkUnread = rowOptions and rowOptions.onMarkUnread
-        -- rowOptions carries onPin / onRemove, the hover buttons' handlers.
-        if ContextMenu.Open(row.item, self or row, onMarkUnread, rowOptions and rowOptions.onUpdatePrefs, rowOptions) then
-          return
-        end
+      if button == "RightButton" and openRowMenu(row) then
+        return
       end
 
       if rowOptions and rowOptions.onSelect then

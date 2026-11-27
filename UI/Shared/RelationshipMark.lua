@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local GamepadBuild = ns.GamepadBuild or require("WhisperMessenger.UI.Shared.GamepadBuild")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
@@ -67,7 +68,7 @@ function RelationshipMark.Create(parent, size)
   icon:SetSize(size, size)
   icon:Hide()
 
-  local hover = _G.CreateFrame("Frame", nil, parent)
+  local hover = GamepadBuild.CreateFrame(_G, "Frame", nil, parent)
   hover:SetAllPoints(icon)
   -- Without click pass-through a mouse-enabled frame would eat row clicks,
   -- so such clients get no tooltip instead.
