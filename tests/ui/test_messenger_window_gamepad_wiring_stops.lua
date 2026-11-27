@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local GamepadMenuButton = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadMenuButton")
 local GamepadWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadWiring")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
@@ -71,7 +72,7 @@ local function setup(active)
   local nav = fakeNav(active ~= false)
   local wiring = GamepadWiring.Create(shell, nav)
   wiring.attach(refs)
-  return { nav = nav, wiring = wiring, chrome = chrome, tabs = { t1, t2 }, contactTabs = { x, y } }
+  return { nav = nav, wiring = wiring, frame = frame, chrome = chrome, tabs = { t1, t2 }, contactTabs = { x, y } }
 end
 
 local function sameList(got, want)
@@ -187,5 +188,17 @@ return function()
     local t = setup(false)
     t.wiring.refresh()
     assert(#t.nav.calls("setOrder") == 0, "no gamepad UI: no chains")
+  end
+
+  -- test_attach_wires_the_x_listener_once
+  do
+    local saved, calls = GamepadMenuButton.Attach, {}
+    rawset(GamepadMenuButton, "Attach", function(...)
+      calls[#calls + 1] = { ... }
+    end)
+    local ok, t = pcall(setup)
+    rawset(GamepadMenuButton, "Attach", saved)
+    assert(ok, t)
+    assert(#calls == 1 and calls[1][1] == t.nav and calls[1][2] == t.frame, "the window's nav and frame, once")
   end
 end

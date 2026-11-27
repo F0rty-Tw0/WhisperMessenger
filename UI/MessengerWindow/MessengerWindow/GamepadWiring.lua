@@ -11,6 +11,7 @@ local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperM
 local GamepadSettings = ns.MessengerWindowGamepadSettings or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadSettings")
 local GamepadTranscript = ns.MessengerWindowGamepadTranscript or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadTranscript")
 local GamepadComposer = ns.MessengerWindowGamepadComposer or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadComposer")
+local GamepadMenuButton = ns.MessengerWindowGamepadMenuButton or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.GamepadMenuButton")
 
 -- The messenger window's part of the WoW: Forever gamepad UI: register on
 -- show, B closes the topmost layer, the right stick scrolls the chat (the
@@ -18,6 +19,7 @@ local GamepadComposer = ns.MessengerWindowGamepadComposer or require("WhisperMes
 -- composer padding, stops on each message, reaches every settings control,
 -- and walks the top bar and the tabs in on-screen order. Our popups
 -- take pad focus while open; B closes them and the composer pickers first.
+-- X opens the right-click menu of the contact, message or header in focus.
 -- On a client without the gamepad UI API the nav does nothing, so neither
 -- does this.
 local GamepadWiring = {}
@@ -201,6 +203,7 @@ function GamepadWiring.Create(shell, nav)
     local clearComposerFocus = GamepadComposer.Attach(nav, refs.composer)
     nav.setCloseHandler(buildCloseHandler(frame, refs, clearComposerFocus))
     attachPopups(nav)
+    GamepadMenuButton.Attach(nav, frame)
     -- The pickers live inside the window: a re-scan makes their buttons
     -- D-pad stops. Their own SetScript calls ran at build, before this.
     for _, picker in ipairs(composerPickers(refs.composer)) do

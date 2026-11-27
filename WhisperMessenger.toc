@@ -513,6 +513,7 @@ UI/MessengerWindow/MessengerWindow/GamepadSettingsRows.lua
 UI/MessengerWindow/MessengerWindow/GamepadSettings.lua
 UI/MessengerWindow/MessengerWindow/GamepadTranscript.lua
 UI/MessengerWindow/MessengerWindow/GamepadComposer.lua
+UI/MessengerWindow/MessengerWindow/GamepadMenuButton.lua
 UI/MessengerWindow/MessengerWindow/GamepadWiring.lua
 UI/MessengerWindow/MessengerWindow.lua
 
