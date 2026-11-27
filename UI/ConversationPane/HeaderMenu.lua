@@ -90,6 +90,16 @@ local function bindForwarders(headerFrame, view)
   end
 end
 
+-- The frame that holds the header's contact icon, or nil.
+local function iconAnchor(view)
+  local icon = view and view.headerClassIcon
+  if type(icon) ~= "table" or type(icon.GetParent) ~= "function" then
+    return nil
+  end
+  local parent = icon:GetParent()
+  return type(parent) == "table" and parent or nil
+end
+
 -- options: { rowActions, onHeaderClicked } (from the pane). rowActions is the
 -- window's row actions table; the header uses its onMarkUnread, onUpdatePrefs
 -- and whoPlayer. onHeaderClicked(conversationKey) runs on a plain left-click.
@@ -108,6 +118,19 @@ function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
     headerFrame:RegisterForDrag("LeftButton")
   end
 
+  -- The contact is read when the menu opens, so a later selection is used.
+  local function openMenu(anchor, menuOptions)
+    local contact = view and view._selectedContact
+    if contact == nil then
+      return
+    end
+    local cm = contextMenu or ContactsContextMenu
+    if type(cm) ~= "table" or type(cm.Open) ~= "function" then
+      return
+    end
+    cm.Open(contact, anchor, rowActions.onMarkUnread, rowActions.onUpdatePrefs, nil, menuOptions)
+  end
+
   headerFrame:SetScript("OnMouseUp", function(_self, button)
     local contact = view and view._selectedContact
     if view and shouldWho(view, contact, button, rowActions) then
@@ -120,18 +143,16 @@ function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
 
       return
     end
-    if button ~= "RightButton" then
-      return
+    if button == "RightButton" then
+      openMenu(headerFrame, CURSOR_MENU)
     end
-    if contact == nil then
-      return
-    end
-    local cm = contextMenu or ContactsContextMenu
-    if type(cm) ~= "table" or type(cm.Open) ~= "function" then
-      return
-    end
-    cm.Open(contact, headerFrame, rowActions.onMarkUnread, rowActions.onUpdatePrefs, nil, CURSOR_MENU)
   end)
+
+  -- The pad's X has no cursor to open at, so the menu opens beside the
+  -- contact icon.
+  headerFrame._wmOpenMenu = function()
+    openMenu(iconAnchor(view) or headerFrame, nil)
+  end
 
   bindForwarders(headerFrame, view)
 end

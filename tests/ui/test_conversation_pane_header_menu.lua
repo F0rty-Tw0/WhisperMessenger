@@ -118,6 +118,43 @@ return function()
     assert(#calls == 0, "right-click with no conversation should not open a menu")
   end
 
+  -- test_header_opener_opens_beside_the_contact_icon
+  do
+    local _, _, header = buildChain(factory)
+    local iconFrame = factory.CreateFrame("Frame", nil, header)
+    local icon = {
+      GetParent = function()
+        return iconFrame
+      end,
+    }
+    local contact = { displayName = "Arthas", channel = "WOW" }
+    local rowActions = { onMarkUnread = function() end, onUpdatePrefs = function() end }
+    local cm, calls = spyMenu()
+    HeaderMenu.Bind(header, { _selectedContact = contact, headerClassIcon = icon }, { rowActions = rowActions }, cm)
+    header._wmOpenMenu(header)
+    local call = calls[1]
+    assert(#calls == 1 and call[1] == contact and call[2] == iconFrame, "the contact's menu beside the icon")
+    assert(call[3] == rowActions.onMarkUnread and call[4] == rowActions.onUpdatePrefs and call[6] == nil, "same actions, not at the cursor")
+  end
+
+  -- test_header_opener_without_an_icon_anchors_to_the_header
+  do
+    local _, _, header = buildChain(factory)
+    local cm, calls = spyMenu()
+    HeaderMenu.Bind(header, { _selectedContact = { displayName = "Arthas", channel = "WOW" } }, {}, cm)
+    header._wmOpenMenu(header)
+    assert(#calls == 1 and calls[1][2] == header, "falls back to the header")
+  end
+
+  -- test_header_opener_without_a_contact_does_nothing
+  do
+    local _, _, header = buildChain(factory)
+    local cm, calls = spyMenu()
+    HeaderMenu.Bind(header, {}, {}, cm)
+    header._wmOpenMenu(header)
+    assert(#calls == 0, "no chat selected, no menu")
+  end
+
   -- test_drag_moves_window_not_header
   do
     local window, _, header = buildChain(factory)
