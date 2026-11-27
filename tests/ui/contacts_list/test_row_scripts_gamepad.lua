@@ -60,4 +60,38 @@ return function()
     end)
     assert(result.selected == 2 and #result.menu == 0, "A (LeftButton or no button) selects, never opens the menu")
   end
+
+  -- test_row_opener_opens_the_contact_menu_and_does_not_select
+  do
+    local row, item, result = boundRow()
+    withMenuSpy(result, function()
+      row._wmOpenMenu(row)
+    end)
+    assert(#result.menu == 1 and result.menu[1] == item and result.selected == 0, "the row's menu, no select")
+  end
+
+  -- test_row_opener_never_selects_when_no_menu_opens
+  do
+    local row, _, result = boundRow()
+    local original = ContextMenu.Open
+    rawset(ContextMenu, "Open", function()
+      return false
+    end)
+    local ok, err = pcall(row._wmOpenMenu, row)
+    rawset(ContextMenu, "Open", original)
+    assert(ok, err)
+    assert(result.selected == 0, "X never selects")
+  end
+
+  -- test_row_opener_without_an_item_does_nothing
+  do
+    local row, _, result = boundRow()
+    row.item = nil
+    -- The spy can't list a nil target; it returns true when called.
+    local opened
+    withMenuSpy(result, function()
+      opened = row._wmOpenMenu(row)
+    end)
+    assert(not opened, "a recycled row opens nothing")
+  end
 end
